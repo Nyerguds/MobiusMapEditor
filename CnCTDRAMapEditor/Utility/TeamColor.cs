@@ -19,6 +19,7 @@ using System.Drawing.Imaging;
 using System.Globalization;
 using System.Numerics;
 using System.Runtime.InteropServices;
+using System.Runtime.Remoting.Messaging;
 using System.Xml;
 
 namespace MobiusEditor.Utility
@@ -30,6 +31,7 @@ namespace MobiusEditor.Utility
         public string Variant { get; private set; }
 
         public string Name { get; private set; }
+        public byte[] RemapTable => null;
 
         private Color? lowerBounds;
         public Color LowerBounds => lowerBounds.HasValue ? lowerBounds.Value : ((Variant != null) ? teamColorManager.GetItem(Variant).LowerBounds : default);

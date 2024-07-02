@@ -54,6 +54,9 @@ namespace MobiusEditor.Utility
         private Color[] currentlyLoadedPalette;
         private Color[] currentlyLoadedPaletteBare;
 
+        public Color[] CurrentlyLoadedPalette => currentlyLoadedPalette.ToArray();
+        public Color[] CurrentlyLoadedPaletteBare => currentlyLoadedPaletteBare.ToArray();
+
         public TilesetManagerClassic(IArchiveManager archiveManager)
         {
             this.archiveManager = archiveManager;
@@ -112,15 +115,31 @@ namespace MobiusEditor.Utility
         /// Finds the nearest color on the palette matching the given color.
         /// </summary>
         /// <param name="color">Color to find</param>
-        /// <param name="includeShadowColor">Use the palette where the shadow color is adjusted to semitransparent black.</param>
-        /// <returns></returns>
-        public int GetClosestColorIndex(Color color, bool includeShadowColor)
+        /// <param name="includeShadowFilterColor">Use the palette where the shadow filter color is not adjusted to semitransparent black.</param>
+        /// <returns>The index on the palette of the color that most closely matches the requested color.</returns>
+        public int GetClosestColorIndex(Color color, bool includeShadowFilterColor)
+        {
+            return GetClosestColorIndex(color, includeShadowFilterColor, out _);
+        }
+
+        /// <summary>
+        /// Finds the nearest color on the palette matching the given color.
+        /// </summary>
+        /// <param name="color">Color to find</param>
+        /// <param name="includeShadowFilterColor">Use the palette where the shadow filter color is not adjusted to semitransparent black.</param>
+        /// <param name="actualColor">Output parameter giving the actual retrieved color.</param>
+        /// <returns>The index on the palette of the color that most closely matches the requested color.</returns>
+        public int GetClosestColorIndex(Color color, bool includeShadowFilterColor, out Color actualColor)
         {
             if (currentlyLoadedPalette == null)
             {
+                actualColor = Color.Transparent;
                 return 0;
             }
-            return ImageUtils.GetClosestPaletteIndexMatch(color, includeShadowColor ? this.currentlyLoadedPaletteBare : this.currentlyLoadedPalette , 0.Yield());
+            Color[] palette = includeShadowFilterColor ? this.currentlyLoadedPaletteBare : this.currentlyLoadedPalette;
+            int index = ImageUtils.GetClosestPaletteIndexMatch(color, palette, 0.Yield());
+            actualColor = palette[index];
+            return index;
         }
 
         public Boolean GetTeamColorTileData(String name, Int32 shape, ITeamColor teamColor, out Tile tile, Boolean generateFallback, Boolean onlyIfDefined, Boolean withShadow, string remapGraphicsSource, byte[] remapTable, bool clearCachedVersion)
@@ -154,11 +173,7 @@ namespace MobiusEditor.Utility
             {
                 return !shapeFrame.IsDummy;
             }
-            if (shapeFile != null)
-            {
-                tile = this.RemapShapeFile(shapeFile, shape, teamColor, generateFallback, withShadow, out shapeFrame);
-            }
-            else
+            if (shapeFile == null)
             {
                 // If there's a remap graphics source, prefer that.
                 shapeFile = this.GetShapeFile(remapGraphicsSource ?? name);
@@ -186,9 +201,9 @@ namespace MobiusEditor.Utility
                         }
                     }
                 }
-                // Remaps the tile, and takes care of caching it and possibly generating dummies.
-                tile = this.RemapShapeFile(shapeFile, shape, teamColor, generateFallback, withShadow, out shapeFrame);
             }
+            // Remaps the tile, and takes care of caching it and possibly generating dummies.
+            tile = this.RemapShapeFile(shapeFile, shape, teamColor, generateFallback, withShadow, out shapeFrame);
             // shapeFrame is ALWAYS filled in if tile isn't null;
             return tile != null && !shapeFrame.IsDummy;
         }
@@ -477,6 +492,16 @@ namespace MobiusEditor.Utility
                 Array.Copy(data, 0, dataRemap, 0, data.Length);
                 teamColor.ApplyToImage(dataRemap, width, height, 1, width, opaqueBounds);
                 data = dataRemap;
+                // If opaque bounds might have changed due to remapping, recalculate bounds.
+                if (teamColor.RemapTable != null && teamColor.RemapTable.Length > 1)
+                {
+                    int maxIndex = Math.Min(teamColor.RemapTable.Length, data.Max());
+                    // To include index "1", we need 1 more item after skipping 0. So maxIndex needs to be used without adjustment.
+                    if (teamColor.RemapTable.Skip(1).Take(maxIndex).Any(i => i == 0))
+                    {
+                        opaqueBounds = ImageUtils.CalculateOpaqueBounds8bpp(data, width, height, width, 0);
+                    }
+                }
             }
             Color[] pal = withShadow ? currentlyLoadedPalette : currentlyLoadedPaletteBare;
             if (shapeFrame.IsDummy)

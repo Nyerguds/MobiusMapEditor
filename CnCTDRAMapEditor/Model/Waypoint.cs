@@ -76,6 +76,7 @@ namespace MobiusEditor.Model
 
         public CellMetrics Metrics { get; set; }
         public string Name { get; set; }
+        public string ShortName { get; set; }
 
         public WaypointFlag Flag { get; set; }
 
@@ -84,28 +85,47 @@ namespace MobiusEditor.Model
 
         public Color Tint { get; set; } = Color.White;
 
-        public Waypoint(string name, WaypointFlag flag, CellMetrics metrics, int? cell)
+        public Waypoint(string name, string shortName, WaypointFlag flag, CellMetrics metrics, int? cell)
         {
-            this.Metrics = metrics;
+            Metrics = metrics;
             Name = name;
+            ShortName = shortName;
             Flag = flag;
             Cell = cell;
         }
 
+        public Waypoint(string name, WaypointFlag flag, CellMetrics metrics, int? cell)
+            : this (name, name, flag, metrics, cell)
+        {
+        }
+
+        public Waypoint(string name, string shortName, WaypointFlag flag, CellMetrics metrics)
+            : this(name, shortName, flag, metrics, null)
+        {
+        }
+
         public Waypoint(string name, WaypointFlag flag, CellMetrics metrics)
-            : this(name, flag, metrics, null)
+            : this(name, name, flag, metrics, null)
         {
         }
+
         public Waypoint(string name, CellMetrics metrics)
-            : this(name, WaypointFlag.None, metrics, null)
+            : this(name, name, WaypointFlag.None, metrics, null)
         {
         }
+        
+        public Waypoint(string name, string shortName, WaypointFlag flag)
+            : this(name, shortName, flag, null, null)
+        {
+        }
+
         public Waypoint(string name, WaypointFlag flag)
-            : this(name, flag, null, null)
+            : this(name, name, flag, null, null)
         {
         }
+
         public Waypoint(string name)
-            : this(name, WaypointFlag.None, null, null)
+            : this(name, name, WaypointFlag.None, null, null)
         {
         }
 

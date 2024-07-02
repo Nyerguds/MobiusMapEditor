@@ -29,6 +29,8 @@ namespace MobiusEditor.Model
         public abstract GameType GameType { get; }
         /// <summary>Name used for this game.</summary>
         public abstract string Name { get; }
+        /// <summary>Short name used for this game.</summary>
+        public abstract string ShortName { get; }
         /// <summary>Name used for this game in the mixcontent.ini definition.</summary>
         public abstract string IniName { get; }
         /// <summary>Default remaster folder for saving maps of this type.</summary>
@@ -63,8 +65,6 @@ namespace MobiusEditor.Model
         public abstract string ClassicFolderSetting { get; }
         /// <summary>File name of the classic strings file for this game.</summary>
         public abstract string ClassicStringsFile { get; }
-        /// <summary>Classic font from this game to use for celltriggers.</summary>
-        public abstract string ClassicFontCellTriggers { get; }
         /// <summary>Lists all theaters theoretically supported by this type.</summary>
         public abstract TheaterType[] AllTheaters { get; }
         /// <summary>Lists all theaters supported by this type which are actually found.</summary>
@@ -134,11 +134,8 @@ namespace MobiusEditor.Model
         /// <param name="name">Map name to check.</param>
         /// <returns>True if the given name is considered empty by this game type.</returns>
         public abstract bool MapNameIsEmpty(string name);
-        /// <summary>Generates a remap object for the given color index.</summary>
-        /// <param name="tsmc">classic tileset manager to look up the colour on.</param>
-        /// <param name="textColor">colour for the font text.</param>
-        /// <returns>A remap object with a unique name, for the given color index</returns>
-        public abstract TeamRemap GetClassicFontCellTriggerRemap(TilesetManagerClassic tsmc, Color textColor);
+        /// <summary>Retrieves classic font info from this game to use for the requested role.</summary>
+        public abstract string GetClassicFontInfo(ClassicFont font, TilesetManagerClassic tsmc, Color textColor, out bool crop, out TeamRemap remap);
         #endregion
 
         #region protected functions
@@ -185,11 +182,20 @@ namespace MobiusEditor.Model
             return null;
         }
 
-        protected TeamRemap GetClassicFontRemapSimple(string fontName, TilesetManagerClassic tsmc, Color textColor)
+        protected TeamRemap GetClassicFontRemapSimple(string fontName, TilesetManagerClassic tsmc, Color textColor, params int[] clearIndices)
         {
-            int color = tsmc.GetClosestColorIndex(textColor, false);
+            if (fontName == null)
+            {
+                return null;
+            }
+            int color = tsmc.GetClosestColorIndex(textColor, true);
             // Extremely simple: all indices except 0 remap to the given colour.
             byte[] remapIndices = 0.Yield().Concat(Enumerable.Repeat(color, 15)).Select(b => (byte)b).ToArray();
+            foreach (int index in clearIndices)
+            {
+                if (index >= 0 && index < 16)
+                    remapIndices[index] = 0;
+            }
             return new TeamRemap(fontName + "_" + textColor.ToArgb().ToString("X4"), 0, 0, 0, remapIndices);
         }
 
@@ -212,5 +218,23 @@ namespace MobiusEditor.Model
             return this.Name;
         }
         #endregion
+    }
+
+    public enum ClassicFont
+    {
+        /// <summary>Font used for Waypoints</summary>
+        Waypoints,
+        /// <summary>Font used for waypoints with longer names</summary>
+        WaypointsLong,
+        /// <summary>Font used for cell triggers</summary>
+        CellTriggers,
+        /// <summary>Font used for techno triggers, except infantry</summary>
+        TechnoTriggers,
+        /// <summary>Font used for infantry techno triggers. Separate because it needs to be smaller.</summary>
+        InfantryTriggers,
+        /// <summary>Font used for rebuild priority numbers on buildings.</summary>
+        RebuildPriority,
+        /// <summary>Font used for "FAKE" labels on buildings.</summary>
+        FakeLabels
     }
 }

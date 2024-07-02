@@ -32,6 +32,9 @@ namespace MobiusEditor.TiberianDawn
 {
     public class GamePluginTD : IGamePlugin
     {
+        protected const int multiStartPoints = 8;
+        protected const int totalNumberedPoints = 25;
+
         protected bool isMegaMap = false;
 
         protected static readonly Regex singlePlayRegex = new Regex("^SC[A-LN-Z]\\d{2}\\d?[EWX][A-EL]$", RegexOptions.IgnoreCase | RegexOptions.Compiled);
@@ -433,9 +436,9 @@ namespace MobiusEditor.TiberianDawn
             : this()
         {
             this.isMegaMap = megaMap;
-            IEnumerable<Waypoint> playerWaypoints = Enumerable.Range(0, Constants.MultiStartPoints).Select(i => new Waypoint(string.Format("P{0}", i), Waypoint.GetFlagForMpId(i)));
-            IEnumerable<Waypoint> generalWaypoints = Enumerable.Range(Constants.MultiStartPoints, 25 - Constants.MultiStartPoints).Select(i => new Waypoint(i.ToString()));
-            Waypoint[] specialWaypoints = new Waypoint[] { new Waypoint("Flare", WaypointFlag.Flare), new Waypoint("Home", WaypointFlag.Home), new Waypoint("Reinf.", WaypointFlag.Reinforce) };
+            IEnumerable<Waypoint> playerWaypoints = Enumerable.Range(0, multiStartPoints).Select(i => new Waypoint(string.Format("P{0}", i), Waypoint.GetFlagForMpId(i)));
+            IEnumerable<Waypoint> generalWaypoints = Enumerable.Range(multiStartPoints, multiStartPoints - multiStartPoints).Select(i => new Waypoint(i.ToString()));
+            Waypoint[] specialWaypoints = new Waypoint[] { new Waypoint("Flare", "Flr.", WaypointFlag.Flare), new Waypoint("Home", WaypointFlag.Home), new Waypoint("Reinf.", "Rnf.", WaypointFlag.Reinforce) };
             Waypoint[] waypoints = playerWaypoints.Concat(generalWaypoints).Concat(specialWaypoints).ToArray();
             BasicSection basicSection = new BasicSection();
             basicSection.SetDefault();

@@ -35,6 +35,8 @@ using System.Drawing.Imaging;
 using System.Drawing.Text;
 using System.Linq;
 using System.Text;
+using static System.Net.Mime.MediaTypeNames;
+using static System.Windows.Forms.VisualStyles.VisualStyleElement.StartPanel;
 
 namespace MobiusEditor.Render
 {
@@ -1971,7 +1973,7 @@ namespace MobiusEditor.Render
             }
         }
 
-        public static void RenderWayPointIndicators(Graphics graphics, Map map, Rectangle visibleCells, Size tileSize, Color textColor, bool forPreview, bool excludeSpecified, params Waypoint[] specified)
+        public static void RenderWayPointIndicators(Graphics graphics, Map map, GameInfo gameInfo, Rectangle visibleCells, Size tileSize, Color textColor, bool forPreview, bool excludeSpecified, params Waypoint[] specified)
         {
             HashSet<Waypoint> specifiedWaypoints = specified.ToHashSet();
 
@@ -1984,34 +1986,72 @@ namespace MobiusEditor.Render
                     {
                         continue;
                     }
-                    RenderWayPointIndicator(graphics, waypoint, point, tileSize, textColor, forPreview);
+                    RenderWayPointIndicator(graphics, gameInfo, waypoint, point, tileSize, textColor, forPreview);
                 }
             }
         }
 
-        public static void RenderWayPointIndicator(Graphics graphics, Waypoint waypoint, Point topLeft, Size tileSize, Color textColor, bool forPreview)
+        public static void RenderWayPointIndicator(Graphics graphics, GameInfo gameInfo, Waypoint waypoint, Point topLeft, Size tileSize, Color textColor, bool forPreview)
         {
-            StringFormat stringFormat = new StringFormat
-            {
-                Alignment = StringAlignment.Center,
-                LineAlignment = StringAlignment.Center
-            };
             Rectangle paintBounds = new Rectangle(new Point(topLeft.X * tileSize.Width, topLeft.Y * tileSize.Height), tileSize);
+            string classicFont = null;
+            bool cropClassicFont = false;
+            TeamRemap remapClassicFont = null;
+            string wpText = waypoint.Name;
+            if (Globals.TheTilesetManager is TilesetManagerClassic tsmc)
+            {
+                wpText = waypoint.ShortName;
+                ClassicFont role = wpText.Length > 3 ? ClassicFont.WaypointsLong : ClassicFont.Waypoints;
+                classicFont = gameInfo.GetClassicFontInfo(role, tsmc, textColor, out cropClassicFont, out remapClassicFont);
+            }
+            Color backPaintColor = Color.FromArgb(128, Color.Black);
             // Adjust calcuations to tile size. The below adjustments are done assuming the tile is 128 wide.
             double tileScaleHor = tileSize.Width / 128.0;
-            string wpText = waypoint.Name;
-            using (SolidBrush baseBackgroundBrush = new SolidBrush(Color.FromArgb(forPreview ? 64 : 128, Color.Black)))
-            using (SolidBrush baseTextBrush = new SolidBrush(Color.FromArgb(forPreview ? 128 : 255, textColor)))
+            using (SolidBrush baseBackgroundBrush = new SolidBrush(backPaintColor))
+            using (ImageAttributes imageAttributes = new ImageAttributes())
+            using (Bitmap bm = new Bitmap(tileSize.Width * 3, tileSize.Height * 3))
             {
-                using (Font font = graphics.GetAdjustedFont(wpText, SystemFonts.DefaultFont, paintBounds.Width, paintBounds.Height,
-                    Math.Max(1, (int)Math.Round(12 * tileScaleHor)), Math.Max(1, (int)Math.Round(55 * tileScaleHor)), stringFormat, true))
+                imageAttributes.SetColorMatrix(GetColorMatrix(Color.White, 1.0f, forPreview ? 0.5f : 1.0f));
+                using (Graphics bmgr = Graphics.FromImage(bm))
                 {
-                    SizeF textBounds = graphics.MeasureString(wpText, font, paintBounds.Width, stringFormat);
-                    RectangleF backgroundBounds = new RectangleF(paintBounds.Location, textBounds);
-                    backgroundBounds.Offset((paintBounds.Width - textBounds.Width) / 2.0f, (paintBounds.Height - textBounds.Height) / 2.0f);
-                    graphics.FillRectangle(baseBackgroundBrush, backgroundBounds);
-                    graphics.DrawString(wpText, font, baseTextBrush, backgroundBounds, stringFormat);
+                    if (classicFont == null)
+                    {
+                        StringFormat stringFormat = new StringFormat
+                        {
+                            Alignment = StringAlignment.Center,
+                            LineAlignment = StringAlignment.Center
+                        };
+                        using (SolidBrush baseTextBrush = new SolidBrush(textColor))
+                        using (Font font = graphics.GetAdjustedFont(wpText, SystemFonts.DefaultFont, tileSize.Width, tileSize.Height,
+                            Math.Max(1, (int)Math.Round(12 * tileScaleHor)), Math.Max(1, (int)Math.Round(55 * tileScaleHor)), stringFormat, true))
+                        {
+                            SizeF textBounds = graphics.MeasureString(wpText, font, tileSize.Width, stringFormat);
+                            RectangleF backgroundBounds = new RectangleF(new PointF(tileSize.Width, tileSize.Height), textBounds);
+                            backgroundBounds.Offset((tileSize.Width - textBounds.Width) / 2.0f, (tileSize.Height - textBounds.Height) / 2.0f);
+                            bmgr.FillRectangle(baseBackgroundBrush, backgroundBounds);
+                            bmgr.DrawString(wpText, font, baseTextBrush, backgroundBounds, stringFormat);
+                        }
+                    }
+                    else
+                    {
+                        int[] indices = Encoding.ASCII.GetBytes(wpText).Select(x => (int)x).ToArray();
+                        using (Bitmap txt = RenderTextFromSprite(classicFont, remapClassicFont, Size.Empty, indices, false, cropClassicFont))
+                        {
+                            int textOffsetX = (tileSize.Width - txt.Width) / 2;
+                            int textOffsetY = (tileSize.Height - txt.Height) / 2;
+                            int frameOffsetX = Math.Max(textOffsetX, -tileSize.Width) - 1;
+                            int frameOffsetY = Math.Max(textOffsetY, -tileSize.Height) - 1;
+                            int frameWidth = Math.Min(txt.Width + 2, tileSize.Width * 3);
+                            int frameHeight = Math.Min(txt.Height + 2, tileSize.Height * 3);
+                            Rectangle frameRect = new Rectangle(tileSize.Width + frameOffsetX, tileSize.Height + frameOffsetY, frameWidth, frameHeight);
+                            Rectangle textRect = new Rectangle(tileSize.Width + textOffsetX, tileSize.Height + textOffsetY, txt.Width, txt.Height);
+                            bmgr.FillRectangle(baseBackgroundBrush, frameRect);
+                            bmgr.DrawImage(txt, textRect, 0, 0, txt.Width, txt.Height, GraphicsUnit.Pixel);
+                        }
+                    }
                 }
+                Rectangle paintRect = new Rectangle(paintBounds.Location.X - tileSize.Width, paintBounds.Location.Y - tileSize.Height, bm.Width, bm.Height);
+                graphics.DrawImage(bm, paintRect, 0, 0, bm.Width, bm.Height, GraphicsUnit.Pixel, imageAttributes);
             }
         }
 
@@ -2213,16 +2253,14 @@ namespace MobiusEditor.Render
 
         public static void RenderCellTriggers(Graphics graphics, GameInfo gameInfo, Map map, Rectangle visibleCells, Size tileSize, Color fillColor, Color borderColor, Color textColor, double alphaAdjust, bool thickborder, bool excludeSpecified, params string[] specified)
         {
-            // For bounds, add one more cell to get all borders showing.
-            bool hiResGraphics = true;
             string classicFont = null;
-            ITeamColor scoreCol = null;
+            bool cropClassicFont = false;
+            TeamRemap remapClassicFont = null;
             if (Globals.TheTilesetManager is TilesetManagerClassic tsmc)
             {
-                hiResGraphics = false;
-                classicFont = gameInfo.ClassicFontCellTriggers;
-                scoreCol = gameInfo.GetClassicFontCellTriggerRemap(tsmc, textColor);
+                classicFont = gameInfo.GetClassicFontInfo(ClassicFont.CellTriggers, tsmc, textColor, out cropClassicFont, out remapClassicFont);
             }
+            // For bounds, add one more cell to get all borders showing.
             Rectangle boundRenderCells = visibleCells;
             boundRenderCells.Inflate(1, 1);
             boundRenderCells.Intersect(map.Metrics.Bounds);
@@ -2265,6 +2303,8 @@ namespace MobiusEditor.Render
             int sizeH = tileSize.Height;
             
             // Actual balance is fixed; border is 1, text is 1/2, background is 3/8. The original alpha inside the given colors is ignored.
+            // Should probably rewrite this to paint text as opaque on 6/8 alpha background, then paint that as 50% alpha and add solid border,
+            // and then paint that with the final adjusted alpha factor.
             fillColor = ApplyAlpha(fillColor, 0x60, alphaAdjust);
             borderColor = ApplyAlpha(borderColor, 0xFF, alphaAdjust);
             textColor = ApplyAlpha(textColor, 0x80, alphaAdjust);
@@ -2306,8 +2346,8 @@ namespace MobiusEditor.Render
                         using (Graphics ctg = Graphics.FromImage(bm))
                         using (Graphics fillctg = Graphics.FromImage(fillbm))
                         {
-                            SetRenderSettings(ctg, hiResGraphics);
-                            SetRenderSettings(fillctg, hiResGraphics);
+                            SetRenderSettings(ctg, classicFont == null);
+                            SetRenderSettings(fillctg, classicFont == null);
                             Rectangle textBounds = new Rectangle(Point.Empty, tileBounds.Size);
                             StringFormat stringFormat = new StringFormat
                             {
@@ -2319,12 +2359,12 @@ namespace MobiusEditor.Render
                             {
                                 using (Graphics textGr = Graphics.FromImage(textBm))
                                 {
-                                    if (hiResGraphics)
+                                    if (classicFont == null)
                                     {
                                         using (Font font = ctg.GetAdjustedFont(text, SystemFonts.DefaultFont, textBounds.Width, textBounds.Height,
                                             Math.Max(1, (int)Math.Round(24 * tileScaleHor)), Math.Max(1, (int)Math.Round(48 * tileScaleHor)), stringFormat, true))
                                         {
-                                            SetRenderSettings(ctg, hiResGraphics);
+                                            SetRenderSettings(ctg, true);
                                             // If not set, the text will have ugly black fades at the edges.
                                             textGr.TextRenderingHint = TextRenderingHint.SingleBitPerPixel;
                                             textGr.DrawString(text, font, isPreview ? prevCellTriggersBrush : cellTriggersBrush, textBounds, stringFormat);
@@ -2336,7 +2376,7 @@ namespace MobiusEditor.Render
                                         using (ImageAttributes imageAttributes = new ImageAttributes())
                                         {
                                             imageAttributes.SetColorMatrix(GetColorMatrix(isPreview ? previewAdjustColor : adjustColor, 1.0f, 1.0f));
-                                            using (Bitmap txt = RenderTextFromSprite(classicFont, scoreCol, tileBounds.Size, indices))
+                                            using (Bitmap txt = RenderTextFromSprite(classicFont, remapClassicFont, tileBounds.Size, indices, false, cropClassicFont))
                                             {
                                                 Rectangle paintBounds = new Rectangle(Point.Empty, tileSize);
                                                 textGr.DrawImage(txt, textBounds, 0,0, tileBounds.Width, tileBounds.Height, GraphicsUnit.Pixel, imageAttributes);
@@ -2365,7 +2405,7 @@ namespace MobiusEditor.Render
                 var backupInterpolationMode = graphics.InterpolationMode;
                 var backupSmoothingMode = graphics.SmoothingMode;
                 var backupPixelOffsetMode = graphics.PixelOffsetMode;
-                SetRenderSettings(graphics, hiResGraphics);
+                SetRenderSettings(graphics, classicFont == null);
 
                 foreach ((Point p, CellTrigger cellTrigger) in toRender)
                 {
@@ -2557,6 +2597,7 @@ namespace MobiusEditor.Render
             // with extension, this will simply not return anything in Remastered mode.
             Globals.TheTilesetManager.GetTileData("trans.icn", 0, out Tile tile);
             // -1 and 0 are used for respectively partially-filled infantry cells, and fully filled techno cells.
+            // But including them in the loop is a lot simpler than extracting the loop process into a function.
             for (int i = -1; i < landTypes.Length; i++)
             {
                 LandType landType = LandType.None;
@@ -2822,7 +2863,7 @@ namespace MobiusEditor.Render
                 Math.Max(1, (int)Math.Round(newSize.Width * scaleFactorX)), Math.Max(1, (int)Math.Round(newSize.Height * scaleFactorY)));
         }
 
-        private static Bitmap RenderTextFromSprite(string fontsprite, ITeamColor remap, Size bounds, int[] shapes)
+        private static Bitmap RenderTextFromSprite(string fontsprite, TeamRemap remap, Size bounds, int[] shapes, bool wrap, bool cropSpacingToOne)
         {
             int nrOfChars = shapes.Length;
             if (nrOfChars == 0)
@@ -2830,15 +2871,51 @@ namespace MobiusEditor.Render
                 return null;
             }
             Tile[] tiles = new Tile[nrOfChars];
-            int maxwidth = bounds.Width;
+            Dictionary<int, Rectangle> allBounds = new Dictionary<int, Rectangle>();
+            int[] offsets = new int[nrOfChars];
+            int[] widths = new int[nrOfChars];
+            int lineLength = wrap ? 0 : bounds.Width;
             int maxHeight = bounds.Height;
             int lineSize = 0;
+            // Make sure the width of the target image is at least as large as the
+            // largest character, to avoid endless loops on line breaks.
             for (int i = 0; i < nrOfChars; ++i)
             {
-                if (Globals.TheTilesetManager.GetTeamColorTileData(fontsprite, shapes[i], remap, true, out Tile character))
+                int charIndex = shapes[i];
+                if (Globals.TheTilesetManager.GetTeamColorTileData(fontsprite, charIndex, remap, true, out Tile character))
                 {
                     tiles[i] = character;
-                    maxwidth = Math.Max(maxwidth, character.Image.Width);
+                    // If cropping is requested, crop character.
+                    if (cropSpacingToOne)
+                    {
+                        Rectangle tileBounds;
+                        if (!allBounds.TryGetValue(charIndex, out tileBounds))
+                        {
+                            tileBounds = character.OpaqueBounds;
+                            allBounds[charIndex] = tileBounds;
+                        }
+                        if (tileBounds.Width != 0)
+                        {
+                            offsets[i] = tileBounds.X;
+                            widths[i] = tileBounds.Width + 1;
+                        }
+                        else
+                        {
+                            widths[i] = character.Image.Width;
+                        }
+                    }
+                    else
+                    {
+                        widths[i] = character.Image.Width;
+                    }
+                    if (wrap)
+                    {
+                        lineLength = Math.Max(lineLength, character.Image.Width);
+                    }
+                    else
+                    {
+                        lineLength += widths[i];
+                    }
                     maxHeight = Math.Max(maxHeight, character.Image.Height);
                     lineSize = Math.Max(lineSize, character.Image.Height);
                 }
@@ -2846,13 +2923,13 @@ namespace MobiusEditor.Render
             int lineHeight = 0;
             int usedWidth = 0;
             int curWidth = 0;
-            Bitmap bitmap = new Bitmap(maxwidth, maxHeight, PixelFormat.Format32bppArgb);
+            Bitmap bitmap = new Bitmap(lineLength, maxHeight, PixelFormat.Format32bppArgb);
             using (Graphics g = Graphics.FromImage(bitmap))
             {
                 for (int i = 0; i < nrOfChars; ++i)
                 {
                     usedWidth = Math.Max(usedWidth, curWidth);
-                    if (curWidth >= maxwidth)
+                    if (curWidth >= lineLength)
                     {
                         lineHeight += lineSize;
                         if (lineHeight >= maxHeight)
@@ -2863,8 +2940,8 @@ namespace MobiusEditor.Render
                         curWidth = 0;
                     }
                     Tile curChar = tiles[i];
-                    int nextWidth = curWidth + curChar.Image.Width;
-                    if (nextWidth > maxwidth)
+                    int nextWidth = curWidth + widths[i];
+                    if (nextWidth > lineLength)
                     {
                         lineHeight += lineSize;
                         if (lineHeight >= maxHeight)
@@ -2877,13 +2954,13 @@ namespace MobiusEditor.Render
                     {
                         usedWidth = Math.Max(usedWidth, nextWidth);
                     }
-                    g.DrawImage(curChar.Image, curWidth, lineHeight);
+                    g.DrawImage(curChar.Image, curWidth - offsets[i], lineHeight);
                     curWidth = nextWidth;
                 }
             }
             lineHeight += lineSize;
             // Chop off if it exceeds bounds.
-            if (maxwidth > bounds.Width || maxHeight > bounds.Height || lineHeight < bounds.Height || usedWidth < bounds.Width)
+            if (!bounds.IsEmpty && (lineLength > bounds.Width || maxHeight > bounds.Height || lineHeight < bounds.Height || usedWidth < bounds.Width))
             {
                 Bitmap curBm = bitmap;
                 Bitmap newBm = new Bitmap(bounds.Width, bounds.Height, PixelFormat.Format32bppArgb);

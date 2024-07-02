@@ -167,8 +167,9 @@ namespace MobiusEditor.Model
             "Building 'fake' labels",
             "Jam / gap radiuses",
             "Waypoint reveal radiuses",
-            "Object outlines",
-            "Land types"
+            "Overlapped object outlines",
+            "Map terrain types hashing",
+            "Object occupancy hashing"
         };
 
         private static int[] tiberiumStages = new int[] { 0, 1, 3, 4, 6, 7, 8, 10, 11 };
@@ -556,7 +557,7 @@ namespace MobiusEditor.Model
             for (int i = 0; i < wp.Length; ++i)
             {
                 // Deep clone with current metrics, to allow showing waypoints as cell coordinates.
-                this.Waypoints[i] = new Waypoint(wp[i].Name, wp[i].Flag, this.Metrics, wp[i].Cell);
+                this.Waypoints[i] = new Waypoint(wp[i].Name, wp[i].ShortName, wp[i].Flag, this.Metrics, wp[i].Cell);
             }
             this.DropZoneRadius = dropZoneRadius;
             this.GapRadius = gapRadius;

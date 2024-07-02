@@ -25,7 +25,6 @@ namespace MobiusEditor.TiberianDawn
 
         public const int MaxBriefLengthClassic = 510;
         public const int BriefLineCutoffClassic = 74;
-        public const int MultiStartPoints = 8;
         public const int TiberiumValue = 25;
         public const string EmptyMapName = "None";
 

@@ -20,6 +20,8 @@ namespace MobiusEditor.Interface
         /// <summary>Name of the color, used as identifier.</summary>
         string Name { get; }
 
+        byte[] RemapTable { get; }
+
         /// <summary>
         /// Apply this color to a given image.
         /// </summary>

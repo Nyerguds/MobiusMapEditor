@@ -28,6 +28,7 @@ namespace MobiusEditor.RedAlert
     {
         public override GameType GameType => GameType.RedAlert;
         public override string Name => "Red Alert";
+        public override string ShortName => "RA";
         public override string IniName => "RedAlert";
         public override string DefaultSaveDirectory => Path.Combine(Globals.RootSaveDirectory, "Red_Alert");
         public override string SaveFilter => Constants.FileFilter;
@@ -45,7 +46,6 @@ namespace MobiusEditor.RedAlert
         public override string ClassicFolderDefault => "Classic\\RA\\";
         public override string ClassicFolderSetting => "ClassicPathRA";
         public override string ClassicStringsFile => "conquer.eng";
-        public override string ClassicFontCellTriggers => "scorefnt.fnt";
         public override TheaterType[] AllTheaters => TheaterTypes.GetAllTypes().ToArray();
         public override TheaterType[] AvailableTheaters => TheaterTypes.GetTypes().ToArray();
         public override bool MegamapIsSupported => true;
@@ -93,7 +93,7 @@ namespace MobiusEditor.RedAlert
             // Check files
             mfm.Reset(GameType.RedAlert, null);
             List<string> loadedFiles = mfm.ToList();
-            const string prefix = "RA: ";
+            string prefix = ShortName + ": ";
             // Allow loading without expansion files.
             //TestMixExists(loadedFiles, loadErrors, prefix, "expand2.mix");
             StartupLoader.TestMixExists(loadedFiles, loadErrors, prefix, "local.mix");
@@ -231,9 +231,35 @@ namespace MobiusEditor.RedAlert
             return String.IsNullOrEmpty(name) || Constants.EmptyMapName.Equals(name, StringComparison.OrdinalIgnoreCase);
         }
 
-        public override TeamRemap GetClassicFontCellTriggerRemap(TilesetManagerClassic tsmc, Color textColor)
+        public override string GetClassicFontInfo(ClassicFont font, TilesetManagerClassic tsmc, Color textColor, out bool crop, out TeamRemap remap)
         {
-            return GetClassicFontRemapSimple(ClassicFontCellTriggers, tsmc, textColor);
+            crop = false;
+            remap = null;
+            string fontName = null;
+            switch (font)
+            {
+                case ClassicFont.Waypoints:
+                    crop = true;
+                    fontName = "8point.fnt";
+                    remap = GetClassicFontRemapSimple(fontName, tsmc, textColor, 2, 3);
+                    break;
+                case ClassicFont.WaypointsLong:
+                    crop = true;
+                    fontName = "6point.fnt";
+                    remap = GetClassicFontRemapSimple(fontName, tsmc, textColor, 2, 3);
+                    break;
+                case ClassicFont.CellTriggers:
+                    crop = false;
+                    fontName = "scorefnt.fnt";
+                    remap = GetClassicFontRemapSimple(fontName, tsmc, textColor);
+                    break;
+                case ClassicFont.TechnoTriggers:
+                case ClassicFont.InfantryTriggers:
+                case ClassicFont.RebuildPriority:
+                case ClassicFont.FakeLabels:
+                    break;
+            }
+            return fontName;
         }
     }
 }

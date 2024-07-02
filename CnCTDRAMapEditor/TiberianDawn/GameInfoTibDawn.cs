@@ -27,6 +27,7 @@ namespace MobiusEditor.TiberianDawn
     {
         public override GameType GameType => GameType.TiberianDawn;
         public override string Name => "Tiberian Dawn";
+        public override string ShortName => "TD";
         public override string IniName => "TiberianDawn";
         public override string DefaultSaveDirectory => Path.Combine(Globals.RootSaveDirectory, "Tiberian_Dawn");
         public override string OpenFilter => Constants.FileFilter;
@@ -44,7 +45,6 @@ namespace MobiusEditor.TiberianDawn
         public override string ClassicFolderDefault => "Classic\\TD\\";
         public override string ClassicFolderSetting => "ClassicPathTD";
         public override string ClassicStringsFile => "conquer.eng";
-        public override string ClassicFontCellTriggers => "scorefnt.fnt";
         public override TheaterType[] AllTheaters => TheaterTypes.GetAllTypes().ToArray();
         public override TheaterType[] AvailableTheaters => TheaterTypes.GetTypes().ToArray();
         public override bool MegamapIsSupported => true;
@@ -63,22 +63,24 @@ namespace MobiusEditor.TiberianDawn
 
         public override void InitClassicFiles(MixfileManager mfm, List<string> loadErrors, List<string> fileLoadErrors, bool forRemaster)
         {
+            // This function is used by Sole Survivor too, so it references the local GameType and ShortName.
+            string prefix = ShortName + ": ";
             mfm.Reset(GameType.None, null);
             // Contains cursors / strings file
-            mfm.LoadArchive(GameType.TiberianDawn, "local.mix", false);
-            mfm.LoadArchive(GameType.TiberianDawn, "cclocal.mix", false);
+            mfm.LoadArchive(GameType, "local.mix", false);
+            mfm.LoadArchive(GameType, "cclocal.mix", false);
             // Mod addons
-            mfm.LoadArchives(GameType.TiberianDawn, "sc*.mix", false);
-            mfm.LoadArchive(GameType.TiberianDawn, "conquer.mix", false);
+            mfm.LoadArchives(GameType, "sc*.mix", false);
+            mfm.LoadArchive(GameType, "conquer.mix", false);
             // Theaters
             foreach (TheaterType tdTheater in AllTheaters)
             {
-                StartupLoader.LoadClassicTheater(mfm, GameType.TiberianDawn, tdTheater, false);
+                StartupLoader.LoadClassicTheater(mfm, GameType, tdTheater, false);
             }
             // Check files.
-            mfm.Reset(GameType.TiberianDawn, null);
+            mfm.Reset(GameType, null);
             List<string> loadedFiles = mfm.ToList();
-            const string prefix = "TD: ";
+            // Check required files.
             if (!forRemaster)
             {
                 StartupLoader.TestMixExists(loadedFiles, loadErrors, prefix, "local.mix", "cclocal.mix");
@@ -141,9 +143,32 @@ namespace MobiusEditor.TiberianDawn
             return String.IsNullOrEmpty(name) || Constants.EmptyMapName.Equals(name, StringComparison.OrdinalIgnoreCase);
         }
 
-        public override TeamRemap GetClassicFontCellTriggerRemap(TilesetManagerClassic tsmc, Color textColor)
+        public override string GetClassicFontInfo(ClassicFont font, TilesetManagerClassic tsmc, Color textColor, out bool crop, out TeamRemap remap)
         {
-            return GetClassicFontRemapSimple(ClassicFontCellTriggers, tsmc, textColor);
+            crop = false;
+            remap = null;
+            string fontName = null;
+            switch (font)
+            {
+                case ClassicFont.Waypoints:
+                    crop = true;
+                    fontName = "8point.fnt";
+                    remap = GetClassicFontRemapSimple(fontName, tsmc, textColor, 2, 3);
+                    break;
+                case ClassicFont.WaypointsLong: // The DOS 6point.fnt would be ideal for this, but they replaced it with a much larger one in C&C95.
+                case ClassicFont.CellTriggers:
+                    crop = false;
+                    fontName = "scorefnt.fnt";
+                    remap = GetClassicFontRemapSimple(fontName, tsmc, textColor);
+                    break;
+                case ClassicFont.TechnoTriggers:
+                case ClassicFont.InfantryTriggers:
+                case ClassicFont.RebuildPriority:
+                case ClassicFont.FakeLabels:
+                    break;
+            }
+            return fontName;
         }
+
     }
 }

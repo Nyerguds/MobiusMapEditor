@@ -581,7 +581,7 @@ namespace MobiusEditor.Utility
             try
             {
                 PixelFormat dataFormat = bitmap.PixelFormat;
-                if (dataFormat == PixelFormat.Format24bppRgb || dataFormat == PixelFormat.Format32bppRgb)
+                if (!dataFormat.HasFlag(PixelFormat.Indexed) && dataFormat != PixelFormat.Format24bppRgb || dataFormat != PixelFormat.Format32bppRgb)
                 {
                     return new Rectangle(0, 0, bitmap.Width, bitmap.Height);
                 }
@@ -591,23 +591,28 @@ namespace MobiusEditor.Utility
                     dataFormat = PixelFormat.Format8bppIndexed;
                     Color[] entries = bitmap.Palette.Entries;
                     transColors = new List<int>();
-                    for (Int32 i = 0; i < entries.Length; i++)
+                    for (int i = 0; i < entries.Length; i++)
                     {
                         if (entries[i].A == 0)
                             transColors.Add(i);
                     }
                 }
                 data = bitmap.LockBits(new Rectangle(0, 0, bitmap.Width, bitmap.Height), ImageLockMode.ReadWrite, dataFormat);
-                var bytes = new byte[data.Stride * data.Height];
+                int stride = data.Stride;
+                byte[] bytes = new byte[stride * data.Height];
                 Marshal.Copy(data.Scan0, bytes, 0, bytes.Length);
-                if (bitmap.PixelFormat == PixelFormat.Format8bppIndexed)
+                int pfs = Image.GetPixelFormatSize(bitmap.PixelFormat);
+                if (dataFormat.HasFlag(PixelFormat.Indexed))
                 {
-                    return CalculateOpaqueBounds8bpp(bytes, data.Width, data.Height, data.Stride, transColors.ToArray());
+                    if (dataFormat != PixelFormat.Format8bppIndexed)
+                    {
+                        bytes = ConvertTo8Bit(bytes, bitmap.Width, bitmap.Height, 0, pfs, pfs == 1, ref stride);
+                    }
+                    return CalculateOpaqueBounds8bpp(bytes, data.Width, data.Height, stride, transColors.ToArray());
                 }
                 else
                 {
-                    var bpp = Image.GetPixelFormatSize(dataFormat) / 8;
-                    return CalculateOpaqueBoundsHiCol(bytes, data.Width, data.Height, bpp, data.Stride);
+                    return CalculateOpaqueBoundsHiCol(bytes, data.Width, data.Height, pfs / 8, data.Stride);
                 }
             }
             finally
@@ -642,6 +647,7 @@ namespace MobiusEditor.Utility
                 var start = y * stride;
                 for (var i = bytespp - 1; i < lineWidth; i += bytespp)
                 {
+                    // Bytes are [A,R,G,B], so alpha is first.
                     if (data[start + i] != 0)
                     {
                         return false;
