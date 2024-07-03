@@ -26,6 +26,7 @@ namespace MobiusEditor.Model
         public Size OverlapSize => new Size(1, 1);
 
         public bool[,] OccupyMask => Type.OccupyMask;
+        public bool[,] BaseOccupyMask => Type.OccupyMask;
 
         private Color? tint;
         public Color Tint

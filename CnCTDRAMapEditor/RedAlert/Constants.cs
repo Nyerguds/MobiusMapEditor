@@ -24,7 +24,6 @@ namespace MobiusEditor.RedAlert
 
         public const int MaxBriefLengthClassic = 1022;
         public const int BriefLineCutoffClassic = 74;
-        public const int MultiStartPoints = 8;
 
         public const int DefaultGoldValue = 25;
         public const int DefaultGemValue = 50;

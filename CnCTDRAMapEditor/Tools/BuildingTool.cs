@@ -235,7 +235,14 @@ namespace MobiusEditor.Tools
             }
             if (e.PropertyName == "House")
             {
-                plugin.ActiveHouse = mockBuilding.House;
+                // Fix for House "None" set on unbuilt buildings.
+                HouseType newHouse = mockBuilding.House;
+                if (newHouse == null || newHouse.Flags.HasFlag(HouseTypeFlag.BaseHouse | HouseTypeFlag.Special))
+                {
+                    string opposing = plugin.GameInfo.GetClassicOpposingPlayer(plugin.Map.BasicSection.Player);
+                    newHouse = plugin.Map.Houses.Where(h => h.Type.Equals(opposing)).FirstOrDefault()?.Type ?? plugin.Map.Houses.First().Type;
+                }
+                plugin.ActiveHouse = newHouse;
             }
             RefreshPreviewPanel();
         }
@@ -947,7 +954,7 @@ namespace MobiusEditor.Tools
                     }
                 }
                 RenderInfo render = MapRenderer.RenderBuilding(plugin.GameInfo, null, new Point(0, 0), Globals.PreviewTileSize, Globals.PreviewTileScale, mockBuilding);
-                Size previewSize = mockBuilding.OverlapBounds.Size;
+                Size previewSize = mockBuilding.OccupyMask.GetDimensions();
                 Bitmap buildingPreview = new Bitmap(previewSize.Width * Globals.PreviewTileWidth, previewSize.Height * Globals.PreviewTileHeight);
                 buildingPreview.SetResolution(96, 96);
                 using (Graphics g = Graphics.FromImage(buildingPreview))
@@ -964,16 +971,17 @@ namespace MobiusEditor.Tools
                     {
                         render.RenderAction(g);
                     }
-                    List<(Point p, Building ter)> buildingList = new List<(Point p, Building ter)>();
-                    buildingList.Add((new Point(0, 0), mockBuilding));
-                    MapRenderer.RenderAllOccupierBounds(g, new Rectangle(Point.Empty, previewSize), Globals.PreviewTileSize, buildingList);
+                    List<(Point p, Building ter)> buildingList = new List<(Point p, Building ter)>
+                        { (new Point(0, 0), mockBuilding) };
+                    Rectangle visibleBounds = new Rectangle(Point.Empty, previewSize);
+                    MapRenderer.RenderAllOccupierBounds(g, visibleBounds, Globals.PreviewTileSize, buildingList);
                     if (Layers.HasFlag(MapLayerFlag.BuildingFakes))
                     {
                         MapRenderer.RenderFakeBuildingLabel(g, mockBuilding, new Point(0, 0), Globals.PreviewTileSize, false);
                     }
                     if (Layers.HasFlag(MapLayerFlag.BuildingRebuild))
                     {
-                        MapRenderer.RenderRebuildPriorityLabel(g, mockBuilding, new Point(0, 0), Globals.PreviewTileSize, false);
+                        MapRenderer.RenderAllRebuildPriorityLabels(g, plugin.GameInfo, buildingList, visibleBounds, Globals.PreviewTileSize, Globals.PreviewTileScale);
                     }
                     if (Layers.HasFlag(MapLayerFlag.TechnoTriggers))
                     {
@@ -1127,7 +1135,7 @@ namespace MobiusEditor.Tools
             }
             if (Layers.HasFlag(MapLayerFlag.BuildingRebuild))
             {
-                MapRenderer.RenderAllRebuildPriorityLabels(graphics, previewMap, visibleCells, Globals.MapTileSize);
+                MapRenderer.RenderAllRebuildPriorityLabels(graphics, plugin.GameInfo, previewMap.Buildings.OfType<Building>(), visibleCells, Globals.MapTileSize, Globals.MapTileScale);
             }
             if (Layers.HasFlag(MapLayerFlag.TechnoTriggers))
             {

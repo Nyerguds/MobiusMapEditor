@@ -224,7 +224,7 @@ namespace MobiusEditor.Model
     {
         /// <summary>Font used for Waypoints</summary>
         Waypoints,
-        /// <summary>Font used for waypoints with longer names</summary>
+        /// <summary>Font used for waypoints with longer names. Separate because it needs a smaller font to fit inside one cell.</summary>
         WaypointsLong,
         /// <summary>Font used for cell triggers</summary>
         CellTriggers,

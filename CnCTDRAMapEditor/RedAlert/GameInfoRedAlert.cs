@@ -249,13 +249,17 @@ namespace MobiusEditor.RedAlert
                     remap = GetClassicFontRemapSimple(fontName, tsmc, textColor, 2, 3);
                     break;
                 case ClassicFont.CellTriggers:
-                    crop = false;
+                    crop = true;
                     fontName = "scorefnt.fnt";
                     remap = GetClassicFontRemapSimple(fontName, tsmc, textColor);
                     break;
                 case ClassicFont.TechnoTriggers:
                 case ClassicFont.InfantryTriggers:
                 case ClassicFont.RebuildPriority:
+                    crop = true;
+                    fontName = "scorefnt.fnt";
+                    remap = GetClassicFontRemapSimple(fontName, tsmc, textColor);
+                    break;
                 case ClassicFont.FakeLabels:
                     break;
             }

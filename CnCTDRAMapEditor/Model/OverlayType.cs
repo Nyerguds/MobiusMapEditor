@@ -62,6 +62,7 @@ namespace MobiusEditor.Model
         public String GraphicsSource { get; private set; }
         public int ForceTileNr { get; private set; }
         public bool[,] OccupyMask => new bool[1, 1] { { true } };
+        public bool[,] BaseOccupyMask => new bool[1, 1] { { true } };
         public bool IsResource => (this.Flag & (OverlayTypeFlag.TiberiumOrGold | OverlayTypeFlag.Gems)) != OverlayTypeFlag.None;
         public bool IsTiberiumOrGold => (this.Flag & OverlayTypeFlag.TiberiumOrGold) != OverlayTypeFlag.None;
         public bool IsGem => (this.Flag & OverlayTypeFlag.Gems) != OverlayTypeFlag.None;

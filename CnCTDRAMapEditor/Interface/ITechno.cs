@@ -12,11 +12,12 @@
 //
 //   0. You just DO WHAT THE FUCK YOU WANT TO.
 using MobiusEditor.Model;
+using System.Drawing;
 
 namespace MobiusEditor.Interface
 {
     /// <summary>
-    /// Split off so things can be more easily iterable as techno types.
+    /// Techno objects.
     /// </summary>
     public interface ITechno
     {
@@ -30,5 +31,9 @@ namespace MobiusEditor.Interface
         int Strength { get; set; }
         /// <summary>Trigger attached to this object.</summary>
         string Trigger { get; set; }
+        /// <summary>Direction that the object is facing.</summary>
+        DirectionType Direction { get; set; }
+        /// <summary>Color modifier for drawing this object on the map. Generally used to tweak the alpha.</summary>
+        Color Tint { get; set; }
     }
 }

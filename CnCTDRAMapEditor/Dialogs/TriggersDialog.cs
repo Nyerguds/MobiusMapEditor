@@ -1395,7 +1395,7 @@ namespace MobiusEditor.Dialogs
                 string[] classes = teamtype.Classes.Where(cl => cl.Count > 0).Select(cl => String.Format("{0}:{1}", cl.Type.Name, cl.Count)).ToArray();
                 if (classes.Length > 0)
                 {
-                    return String.Join(", ", classes);
+                    return teamtype.House + ": " + String.Join(", ", classes);
                 }
             }
             return null;

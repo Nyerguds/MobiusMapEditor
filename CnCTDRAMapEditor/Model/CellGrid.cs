@@ -218,12 +218,24 @@ namespace MobiusEditor.Model
 
         public IEnumerator<(int Cell, T Value)> GetEnumerator()
         {
-            for (var i = 0; i < metrics.Length; ++i)
+            for (int i = 0; i < metrics.Length; ++i)
             {
-                var cell = this[i];
+                T cell = this[i];
                 if (cell != null)
                 {
                     yield return (i, cell);
+                }
+            }
+        }
+
+        public IEnumerable<(Point Point, T Value)> FromPoints()
+        {
+            for (var i = 0; i < metrics.Length; ++i)
+            {
+                T cellVal = this[i];
+                if (cellVal != null && metrics.GetLocation(i, out Point location))
+                {
+                    yield return (location, cellVal);
                 }
             }
         }

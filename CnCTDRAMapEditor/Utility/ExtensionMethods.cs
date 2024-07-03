@@ -148,6 +148,18 @@ namespace MobiusEditor.Utility
             return new Point(rectangle.X, rectangle.Y);
         }
 
+        public static Point OffsetPoint(this Point origin, int dx, int dy)
+        {
+            Point p = new Point(origin.X, origin.Y);
+            p.Offset(dx, dy);
+            return p;
+        }
+
+        public static Size GetDimensions(this bool[,] mask)
+        {
+            return mask == null ? Size.Empty : new Size(mask.GetLength(1), mask.GetLength(0));
+        }
+
         public static IEnumerable<Point> Points(this Rectangle rectangle)
         {
             for (var y = rectangle.Top; y < rectangle.Bottom; ++y)

@@ -437,7 +437,7 @@ namespace MobiusEditor.TiberianDawn
         {
             this.isMegaMap = megaMap;
             IEnumerable<Waypoint> playerWaypoints = Enumerable.Range(0, multiStartPoints).Select(i => new Waypoint(string.Format("P{0}", i), Waypoint.GetFlagForMpId(i)));
-            IEnumerable<Waypoint> generalWaypoints = Enumerable.Range(multiStartPoints, multiStartPoints - multiStartPoints).Select(i => new Waypoint(i.ToString()));
+            IEnumerable<Waypoint> generalWaypoints = Enumerable.Range(multiStartPoints, totalNumberedPoints - multiStartPoints).Select(i => new Waypoint(i.ToString()));
             Waypoint[] specialWaypoints = new Waypoint[] { new Waypoint("Flare", "Flr.", WaypointFlag.Flare), new Waypoint("Home", WaypointFlag.Home), new Waypoint("Reinf.", "Rnf.", WaypointFlag.Reinforce) };
             Waypoint[] waypoints = playerWaypoints.Concat(generalWaypoints).Concat(specialWaypoints).ToArray();
             BasicSection basicSection = new BasicSection();

@@ -310,26 +310,36 @@ namespace MobiusEditor.Tools
             bool renderOverlay = layersToRender.HasFlag(MapLayerFlag.Overlay);
             if (layersToRender.HasFlag(MapLayerFlag.OverlapOutlines) && autoHandleOutlines)
             {
-                if (layersToRender.HasFlag(MapLayerFlag.Infantry) && gameInfo.SupportsMapLayer(MapLayerFlag.Infantry))
-                {
-                    MapRenderer.RenderAllInfantryOutlines(graphics, map, visibleCells, tileSize, true);
-                }
-                if (layersToRender.HasFlag(MapLayerFlag.Units) && gameInfo.SupportsMapLayer(MapLayerFlag.Units))
-                {
-                    MapRenderer.RenderAllVehicleOutlines(graphics, gameInfo, map, visibleCells, tileSize, true);
-                }
                 if (layersToRender.HasFlag(MapLayerFlag.Buildings) && gameInfo.SupportsMapLayer(MapLayerFlag.Buildings))
                 {
                     MapRenderer.RenderAllBuildingOutlines(graphics, gameInfo, map, visibleCells, tileSize, tileScale, true);
                 }
-                if (renderOverlay && !Globals.OutlineAllCrates && plugin.Map.CrateOverlaysAvailable)
+                if (layersToRender.HasFlag(MapLayerFlag.Terrain) && gameInfo.SupportsMapLayer(MapLayerFlag.Terrain))
                 {
-                    MapRenderer.RenderAllCrateOutlines(graphics, gameInfo, map, visibleCells, tileSize, tileScale, !Globals.OutlineAllCrates);
+                    MapRenderer.RenderAllTerrainOutlines(graphics, gameInfo, map, visibleCells, tileSize, tileScale, true);
+                }
+                if (layersToRender.HasFlag(MapLayerFlag.Units) && gameInfo.SupportsMapLayer(MapLayerFlag.Units))
+                {
+                    MapRenderer.RenderAllUnitOutlines(graphics, gameInfo, map, visibleCells, tileSize, true);
+                }
+                if (layersToRender.HasFlag(MapLayerFlag.Infantry) && gameInfo.SupportsMapLayer(MapLayerFlag.Infantry))
+                {
+                    MapRenderer.RenderAllInfantryOutlines(graphics, map, visibleCells, tileSize, true);
+                }
+                if (renderOverlay)
+                {
+                    if (!Globals.OutlineAllCrates && map.CrateOverlaysAvailable)
+                    {
+                        MapRenderer.RenderAllCrateOutlines(graphics, gameInfo, map, visibleCells, tileSize, tileScale, true);
+                    }
+                    MapRenderer.RenderAllOverlayOutlines(graphics, gameInfo, map, visibleCells, tileSize, tileScale,
+                        OverlayTypeFlag.Solid | OverlayTypeFlag.Wall, true, Color.Purple);
+
                 }
             }
             // Special case: while it's not handled by OverlapOutlines, tools indicating that they handle the OverlapOutlines
             // manually will also paint this, so of all the outlines, it's drawn last.
-            if (renderOverlay && autoHandleOutlines && Globals.OutlineAllCrates)
+            if (renderOverlay && autoHandleOutlines && Globals.OutlineAllCrates && map.CrateOverlaysAvailable)
             {
                 MapRenderer.RenderAllCrateOutlines(graphics, gameInfo, map, visibleCells, tileSize, tileScale, false);
             }
@@ -372,7 +382,7 @@ namespace MobiusEditor.Tools
             if (layersToRender.HasFlag(MapLayerFlag.Buildings | MapLayerFlag.BuildingRebuild)
                 && !manuallyHandledLayers.HasFlag(MapLayerFlag.BuildingRebuild) && gameInfo.SupportsMapLayer(MapLayerFlag.BuildingRebuild))
             {
-                MapRenderer.RenderAllRebuildPriorityLabels(graphics, map, visibleCells, tileSize);
+                MapRenderer.RenderAllRebuildPriorityLabels(graphics, gameInfo, map.Buildings.OfType<Building>(), visibleCells, tileSize, tileScale);
             }
             if (layersToRender.HasFlag(MapLayerFlag.TechnoTriggers)
                 && !manuallyHandledLayers.HasFlag(MapLayerFlag.TechnoTriggers))
@@ -394,21 +404,29 @@ namespace MobiusEditor.Tools
                 }
                 if (layers.HasFlag(MapLayerFlag.Units) && gameInfo.SupportsMapLayer(MapLayerFlag.Units))
                 {
-                    MapRenderer.RenderAllVehicleOutlines(graphics, gameInfo, map, visibleCells, tileSize, true);
+                    MapRenderer.RenderAllUnitOutlines(graphics, gameInfo, map, visibleCells, tileSize, true);
                 }
                 if (layers.HasFlag(MapLayerFlag.Buildings) && gameInfo.SupportsMapLayer(MapLayerFlag.Buildings))
                 {
                     MapRenderer.RenderAllBuildingOutlines(graphics, gameInfo, map, visibleCells, tileSize, tileScale, true);
                 }
-                if (renderOverlay && !renderAllCrateOutlines)
+                if (layers.HasFlag(MapLayerFlag.Terrain) && gameInfo.SupportsMapLayer(MapLayerFlag.Terrain))
                 {
-                    MapRenderer.RenderAllCrateOutlines(graphics, gameInfo, map, visibleCells, tileSize, tileScale, true);
+                    MapRenderer.RenderAllTerrainOutlines(graphics, gameInfo, map, visibleCells, tileSize, tileScale, true);
+                }
+                if (renderOverlay)
+                {
+                    if (!renderAllCrateOutlines && map.CrateOverlaysAvailable) {
+                        MapRenderer.RenderAllCrateOutlines(graphics, gameInfo, map, visibleCells, tileSize, tileScale, true);
+                    }
+                    MapRenderer.RenderAllOverlayOutlines(graphics, gameInfo, map, visibleCells, tileSize, tileScale,
+                        OverlayTypeFlag.Solid | OverlayTypeFlag.Wall, true, Color.Purple);
                 }
             }
             // Special case: while it's not handled by the OverlapOutlines flag being enabled, tools indicating
             // that they handle the OverlapOutlines flag manually will also takr care of painting this, so of
             // all the outlines, it's drawn last.
-            if (renderOverlay && renderAllCrateOutlines)
+            if (renderOverlay && renderAllCrateOutlines && map.CrateOverlaysAvailable)
             {
                 MapRenderer.RenderAllCrateOutlines(graphics, gameInfo, map, visibleCells, tileSize, tileScale, false);
             }

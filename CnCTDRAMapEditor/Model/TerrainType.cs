@@ -30,7 +30,8 @@ namespace MobiusEditor.Model
         public Rectangle OverlapBounds => new Rectangle(Point.Empty, this.Size);
         public bool[,] OpaqueMask { get; private set; }
         public bool[,] OccupyMask { get; private set; }
-        public Size Size => new Size(this.OccupyMask.GetLength(1), this.OccupyMask.GetLength(0));
+        public Size Size => this.OccupyMask.GetDimensions();
+        public bool[,] BaseOccupyMask => OccupyMask;
         public bool ExistsInTheater { get; private set; }
         public int DisplayIcon { get; private set; }
         public LandType PlacementLand { get; private set; }

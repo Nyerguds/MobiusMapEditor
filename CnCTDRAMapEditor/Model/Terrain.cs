@@ -33,9 +33,12 @@ namespace MobiusEditor.Model
         public bool[,] OpaqueMask => Type.OpaqueMask;
 
         public bool[,] OccupyMask => Type.OccupyMask;
+        public bool[,] BaseOccupyMask => Type.OccupyMask;
 
         private string trigger = Model.Trigger.None;
         public string Trigger { get => trigger; set => SetField(ref trigger, value); }
+
+        public DirectionType Direction { get { return null; } set { } }
 
         // Terrain has no House; ignore this.
         public HouseType House

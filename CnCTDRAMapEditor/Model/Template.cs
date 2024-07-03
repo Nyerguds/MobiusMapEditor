@@ -20,12 +20,10 @@ namespace MobiusEditor.Model
     public class Template : ICellOccupier
     {
         public TemplateType Type { get; set; }
-
         public int Icon { get; set; }
-
         public Size OverlapSize => new Size(1, 1);
-
         public bool[,] OccupyMask => new bool[1, 1] { { true } };
+        public bool[,] BaseOccupyMask => new bool[1, 1] { { true } };
 
         public override string ToString()
         {

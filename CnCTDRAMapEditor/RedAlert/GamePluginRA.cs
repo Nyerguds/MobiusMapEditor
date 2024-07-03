@@ -31,6 +31,9 @@ namespace MobiusEditor.RedAlert
 {
     class GamePluginRA : IGamePlugin
     {
+        protected const int multiStartPoints = 8;
+        protected const int totalNumberedPoints = 98;
+
         private readonly IEnumerable<string> movieTypes;
         private bool isLoading = false;
 
@@ -533,8 +536,8 @@ namespace MobiusEditor.RedAlert
 
         public GamePluginRA(bool mapImage)
         {
-            IEnumerable<Waypoint> playerWaypoints = Enumerable.Range(0, Constants.MultiStartPoints).Select(i => new Waypoint(string.Format("P{0}", i), Waypoint.GetFlagForMpId(i)));
-            IEnumerable<Waypoint> generalWaypoints = Enumerable.Range(Constants.MultiStartPoints, 98 - Constants.MultiStartPoints).Select(i => new Waypoint(i.ToString()));
+            IEnumerable<Waypoint> playerWaypoints = Enumerable.Range(0, multiStartPoints).Select(i => new Waypoint(string.Format("P{0}", i), Waypoint.GetFlagForMpId(i)));
+            IEnumerable<Waypoint> generalWaypoints = Enumerable.Range(multiStartPoints, totalNumberedPoints - multiStartPoints).Select(i => new Waypoint(i.ToString()));
             Waypoint[] specialWaypoints = new Waypoint[] { new Waypoint("Home", WaypointFlag.Home), new Waypoint("Reinf.", "Rnf.", WaypointFlag.Reinforce), new Waypoint("Special", "Spc.", WaypointFlag.Special) };
             IEnumerable<Waypoint> waypoints = playerWaypoints.Concat(generalWaypoints).Concat(specialWaypoints);
             // Do not load these from the .meg archive; RA movies list is 100% fixed.

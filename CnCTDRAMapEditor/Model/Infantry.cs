@@ -118,6 +118,33 @@ namespace MobiusEditor.Model
 
     public class InfantryGroup : ICellOverlapper, ICellOccupier
     {
+        private static readonly Point[] stoppingLocations = new Point[Globals.NumInfantryStops];
+
+        public Rectangle OverlapBounds => new Rectangle(-1, -1, 3, 3);
+        public bool[,] OpaqueMask => new bool[1, 1] { { true } };
+        public bool[,] OccupyMask => new bool[1, 1] { { true } };
+        public bool[,] BaseOccupyMask => new bool[1, 1] { { true } };
+
+        public readonly Infantry[] Infantry = new Infantry[Globals.NumInfantryStops];
+
+        static InfantryGroup()
+        {
+            stoppingLocations[(int)InfantryStoppingType.Center] = new Point(Globals.PixelWidth / 2, Globals.PixelHeight / 2);
+            stoppingLocations[(int)InfantryStoppingType.UpperLeft] = new Point(Globals.PixelWidth / 4, Globals.PixelHeight / 4);
+            stoppingLocations[(int)InfantryStoppingType.UpperRight] = new Point(3 * Globals.PixelWidth / 4, Globals.PixelHeight / 4);
+            stoppingLocations[(int)InfantryStoppingType.LowerLeft] = new Point(Globals.PixelWidth / 4, 3 * Globals.PixelHeight / 4);
+            stoppingLocations[(int)InfantryStoppingType.LowerRight] = new Point(3 * Globals.PixelWidth / 4, 3 * Globals.PixelHeight / 4);
+        }
+
+        public static IEnumerable<InfantryStoppingType> ClosestStoppingTypes(Point subPixel)
+        {
+            var stoppingDistances = new (InfantryStoppingType type, float dist)[stoppingLocations.Length];
+            for (int i = 0; i < stoppingDistances.Length; ++i)
+            {
+                stoppingDistances[i] = ((InfantryStoppingType)i, new Vector2(subPixel.X - stoppingLocations[i].X, subPixel.Y - stoppingLocations[i].Y).LengthSquared());
+            }
+            return stoppingDistances.OrderBy(sd => sd.dist).Select(sd => sd.type);
+        }
         public static InfantryStoppingType[] RenderOrder =
         {
             InfantryStoppingType.UpperRight,
@@ -207,33 +234,6 @@ namespace MobiusEditor.Model
                 }
             }
             return location;
-        }
-
-        private static readonly Point[] stoppingLocations = new Point[Globals.NumInfantryStops];
-
-        public Rectangle OverlapBounds => new Rectangle(-1, -1, 3, 3);
-        public bool[,] OpaqueMask => new bool[1, 1] { { true } };
-        public bool[,] OccupyMask => new bool[1, 1] { { true } };
-
-        public readonly Infantry[] Infantry = new Infantry[Globals.NumInfantryStops];
-
-        static InfantryGroup()
-        {
-            stoppingLocations[(int)InfantryStoppingType.Center] = new Point(Globals.PixelWidth / 2, Globals.PixelHeight / 2);
-            stoppingLocations[(int)InfantryStoppingType.UpperLeft] = new Point(Globals.PixelWidth / 4, Globals.PixelHeight / 4);
-            stoppingLocations[(int)InfantryStoppingType.UpperRight] = new Point(3 * Globals.PixelWidth / 4, Globals.PixelHeight / 4);
-            stoppingLocations[(int)InfantryStoppingType.LowerLeft] = new Point(Globals.PixelWidth / 4, 3 * Globals.PixelHeight / 4);
-            stoppingLocations[(int)InfantryStoppingType.LowerRight] = new Point(3 * Globals.PixelWidth / 4, 3 * Globals.PixelHeight / 4);
-        }
-
-        public static IEnumerable<InfantryStoppingType> ClosestStoppingTypes(Point subPixel)
-        {
-            var stoppingDistances = new (InfantryStoppingType type, float dist)[stoppingLocations.Length];
-            for (int i = 0; i < stoppingDistances.Length; ++i)
-            {
-                stoppingDistances[i] = ((InfantryStoppingType)i, new Vector2(subPixel.X - stoppingLocations[i].X, subPixel.Y - stoppingLocations[i].Y).LengthSquared());
-            }
-            return stoppingDistances.OrderBy(sd => sd.dist).Select(sd => sd.type);
         }
     }
 }

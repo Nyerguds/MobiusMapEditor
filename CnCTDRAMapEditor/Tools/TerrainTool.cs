@@ -34,7 +34,7 @@ namespace MobiusEditor.Tools
         /// Layers that are not painted by the PostRenderMap function on ViewTool level because they are handled
         /// at a specific point in the PostRenderMap override by the implementing tool.
         /// </summary>
-        protected override MapLayerFlag ManuallyHandledLayers => MapLayerFlag.TechnoTriggers;
+        protected override MapLayerFlag ManuallyHandledLayers => MapLayerFlag.TechnoTriggers | MapLayerFlag.OverlapOutlines;
 
         private readonly TypeListBox terrainTypeListBox;
         private readonly MapPanel terrainTypeMapPanel;
@@ -658,6 +658,7 @@ namespace MobiusEditor.Tools
             {
                 MapRenderer.RenderAllBoundsFromPoint(graphics, boundRenderCells, Globals.MapTileSize, highlightPoints, Color.Red);
             }
+            this.HandlePaintOutlines(graphics, previewMap, visibleCells, Globals.MapTileSize, Globals.MapTileScale, this.Layers);
             if (Layers.HasFlag(MapLayerFlag.TechnoTriggers))
             {
                 MapRenderer.RenderAllTechnoTriggers(graphics, plugin.GameInfo, previewMap, visibleCells, Globals.MapTileSize, Layers);

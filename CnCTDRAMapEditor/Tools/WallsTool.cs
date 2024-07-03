@@ -33,7 +33,7 @@ namespace MobiusEditor.Tools
         /// Layers that are not painted by the PostRenderMap function on ViewTool level because they are handled
         /// at a specific point in the PostRenderMap override by the implementing tool.
         /// </summary>
-        protected override MapLayerFlag ManuallyHandledLayers => MapLayerFlag.None;
+        protected override MapLayerFlag ManuallyHandledLayers => MapLayerFlag.OverlapOutlines;
 
         private readonly TypeListBox wallTypeListBox;
         private readonly MapPanel wallTypeMapPanel;
@@ -443,10 +443,11 @@ namespace MobiusEditor.Tools
             Rectangle boundRenderCells = visibleCells;
             boundRenderCells.Inflate(1, 1);
             boundRenderCells.Intersect(map.Metrics.Bounds);
-            int secondRow = map.Metrics.Width;
-            int lastRow = map.Metrics.Length - map.Metrics.Width;
+            this.HandlePaintOutlines(graphics, previewMap, boundRenderCells, Globals.MapTileSize, Globals.MapTileScale, this.Layers);
+            int secondRowStartCell = map.Metrics.Width;
+            int lastRowStartCell = map.Metrics.Length - map.Metrics.Width;
             MapRenderer.RenderAllBoundsFromCell(graphics, boundRenderCells, Globals.MapTileSize,
-                previewMap.Overlay.Where(x => x.Value.Type.IsWall && x.Cell >= secondRow && x.Cell < lastRow), previewMap.Metrics);
+                previewMap.Overlay.Where(x => x.Value.Type.IsWall && x.Cell >= secondRowStartCell && x.Cell < lastRowStartCell), previewMap.Metrics);
         }
 
         public override void Activate()

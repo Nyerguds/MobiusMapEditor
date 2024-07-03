@@ -2233,7 +2233,9 @@ namespace MobiusEditor.Model
                 Waypoint waypoint = this.Waypoints[i];
                 if (waypoint.Flag.HasFlag(WaypointFlag.PlayerStart))
                 {
-                    this.Waypoints[i].Name = isSolo ? i.ToString() : string.Format("P{0}", i);
+                    string newName = isSolo ? i.ToString() : string.Format("P{0}", i);
+                    this.Waypoints[i].Name = newName;
+                    this.Waypoints[i].ShortName = newName;
                     if (waypoint.Point.HasValue)
                     {
                         updated.Add(waypoint.Point.Value);

@@ -32,8 +32,9 @@ namespace MobiusEditor.Model
 
         public Rectangle OverlapBounds => Type.OverlapBounds;
         public bool[,] OpaqueMask => Type.OpaqueMask;
-
         public bool[,] OccupyMask => Type.OccupyMask;
+        public bool[,] BaseOccupyMask => Type.BaseOccupyMask;
+        public Size Size => type.Size;
 
         private HouseType house;
         public HouseType House { get => house; set => SetField(ref house, value); }

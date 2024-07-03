@@ -157,13 +157,17 @@ namespace MobiusEditor.TiberianDawn
                     break;
                 case ClassicFont.WaypointsLong: // The DOS 6point.fnt would be ideal for this, but they replaced it with a much larger one in C&C95.
                 case ClassicFont.CellTriggers:
-                    crop = false;
+                    crop = true;
                     fontName = "scorefnt.fnt";
                     remap = GetClassicFontRemapSimple(fontName, tsmc, textColor);
                     break;
                 case ClassicFont.TechnoTriggers:
                 case ClassicFont.InfantryTriggers:
                 case ClassicFont.RebuildPriority:
+                    crop = true;
+                    fontName = "scorefnt.fnt";
+                    remap = GetClassicFontRemapSimple(fontName, tsmc, textColor);
+                    break;
                 case ClassicFont.FakeLabels:
                     break;
             }

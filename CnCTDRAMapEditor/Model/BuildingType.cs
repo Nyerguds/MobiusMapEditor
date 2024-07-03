@@ -75,14 +75,13 @@ namespace MobiusEditor.Model
         public int PowerUsage { get; set; }
         public int PowerProduction { get; set; }
         public int Storage { get; set; }
-        public Rectangle OverlapBounds => new Rectangle(Point.Empty, new Size(this.OccupyMask.GetLength(1), this.OccupyMask.GetLength(0)));
+        public Rectangle OverlapBounds => new Rectangle(Point.Empty, OccupyMask.GetDimensions());
         public bool[,] OpaqueMask { get; private set; }
         public bool[,] OccupyMask { get; private set; }
 
         /// <summary>Actual footprint of the building, without bibs involved.</summary>
         public bool[,] BaseOccupyMask { get; private set; }
-        public Rectangle BaseOccupyBounds => new Rectangle(Point.Empty, new Size(this.BaseOccupyMask.GetLength(1), this.BaseOccupyMask.GetLength(0)));
-        public Size Size { get; private set; }
+        public Size Size => BaseOccupyMask.GetDimensions();
         public bool HasBib
         {
             get { return this.Flag.HasFlag(BuildingTypeFlag.Bib); }
@@ -138,7 +137,6 @@ namespace MobiusEditor.Model
             this.PowerUsage = powerUse;
             this.Storage = storage;
             this.BaseOccupyMask = GeneralUtils.GetMaskFromString(width, height, occupyMask, '0', ' ');
-            this.Size = new Size(width, height);
             this.OwnerHouse = ownerHouse;
             this.FactoryOverlay = factoryOverlay;
             this.ZOrder = zOrder;

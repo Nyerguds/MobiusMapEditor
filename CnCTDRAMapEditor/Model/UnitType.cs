@@ -160,6 +160,7 @@ namespace MobiusEditor.Model
         public Rectangle OverlapBounds => new Rectangle(-1, -1, 3, 3);
         public bool[,] OpaqueMask => new bool[1, 1] { { true } };
         public bool[,] OccupyMask => new bool[1, 1] { { true } };
+        public bool[,] BaseOccupyMask => new bool[1, 1] { { true } };
         public string OwnerHouse { get; private set; }
         public abstract bool IsGroundUnit { get; }
         public abstract bool IsAircraft { get; }

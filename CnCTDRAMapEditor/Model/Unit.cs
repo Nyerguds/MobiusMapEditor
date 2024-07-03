@@ -33,6 +33,7 @@ namespace MobiusEditor.Model
         public bool[,] OpaqueMask => Type.OpaqueMask;
 
         public bool[,] OccupyMask => Type.OccupyMask;
+        public bool[,] BaseOccupyMask => Type.OccupyMask;
 
         private HouseType house;
         public HouseType House { get => house; set => SetField(ref house, value); }
