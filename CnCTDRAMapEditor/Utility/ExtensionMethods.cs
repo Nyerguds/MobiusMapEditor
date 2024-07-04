@@ -148,6 +148,12 @@ namespace MobiusEditor.Utility
             return new Point(rectangle.X, rectangle.Y);
         }
 
+        /// <summary>Returns a new point that is offset compared to the origin point.</summary>
+        /// <remarks>Unlike <see cref="Point.Offset(int, int)"/>, this does not change the original point, but returns a new one.</remarks>
+        /// <param name="origin">Origin point</param>
+        /// <param name="dx">The amount to offset the x-coordinate.</param>
+        /// <param name="dy">The amount to offset the y-coordinate.</param>
+        /// <returns>A new point that is offset compared to the origin point.</returns>
         public static Point OffsetPoint(this Point origin, int dx, int dy)
         {
             Point p = new Point(origin.X, origin.Y);

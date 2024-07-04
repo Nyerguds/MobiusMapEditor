@@ -794,5 +794,15 @@ namespace MobiusEditor.Utility
             return ms;
         }
 
+        /// <summary>
+        /// Sends a message to a window control.
+        /// </summary>
+        /// <param name="hWnd">Pointer to the control's handle.</param>
+        /// <param name="msg">The message to be sent.</param>
+        /// <param name="wParam">Additional message-specific information</param>
+        /// <param name="lParam">Additional message-specific information.</param>
+        /// <returns></returns>
+        [DllImport("user32.dll")]
+        public static extern int SendMessage(IntPtr hWnd, int msg, IntPtr wParam, IntPtr lParam);
     }
 }

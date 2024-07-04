@@ -604,19 +604,16 @@ namespace MobiusEditor.Controls
             }
         }
 
-        [DllImport("user32.dll")]
-        private static extern int SendMessage(IntPtr hWnd, Int32 wMsg, bool wParam, Int32 lParam);
-
         private const int WM_SETREDRAW = 11;
 
         private void SuspendDrawing()
         {
-            SendMessage(Handle, WM_SETREDRAW, false, 0);
+            GeneralUtils.SendMessage(Handle, WM_SETREDRAW, (IntPtr)0, (IntPtr)0);
         }
 
         private void ResumeDrawing()
         {
-            SendMessage(Handle, WM_SETREDRAW, true, 0);
+            GeneralUtils.SendMessage(Handle, WM_SETREDRAW, (IntPtr)1, (IntPtr)0);
         }
     }
 }

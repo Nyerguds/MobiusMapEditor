@@ -39,9 +39,6 @@ namespace MobiusEditor.Dialogs
         private const int TV_FIRST = 0x1100;
         private const int TVM_SETITEM = TV_FIRST + 63;
 
-        [DllImport("user32.dll")]
-        static extern IntPtr SendMessage(IntPtr hWnd, uint Msg, IntPtr wParam, IntPtr lParam);
-
         private struct TVITEM
         {
             public int mask;
@@ -234,8 +231,15 @@ namespace MobiusEditor.Dialogs
                 lParam = IntPtr.Zero
             };
             IntPtr lparam = Marshal.AllocHGlobal(Marshal.SizeOf(tvi));
-            Marshal.StructureToPtr(tvi, lparam, false);
-            SendMessage(node.TreeView.Handle, TVM_SETITEM, IntPtr.Zero, lparam);
+            try
+            {
+                Marshal.StructureToPtr(tvi, lparam, false);
+                GeneralUtils.SendMessage(node.TreeView.Handle, TVM_SETITEM, IntPtr.Zero, lparam);
+            }
+            finally
+            {
+                Marshal.FreeHGlobal(lparam);
+            }
         }
 
         private void settingsTreeView_AfterCheck(object sender, TreeViewEventArgs e)

@@ -1342,10 +1342,12 @@ namespace MobiusEditor.Render
             // Optimised to only get the paint area once per crate type.
             // Sadly can't easily be cached because everything in this class is static.
             Dictionary<string, RegionData> paintAreas = new Dictionary<string, RegionData>();
-            Dictionary<Point, OverlayType> includedPoints = new Dictionary<Point, OverlayType>();
+            Dictionary<Point, Overlay> includedPoints = new Dictionary<Point, Overlay>();
+            List<int> includedCells = new List<int>();
             float outlineThickness = 0.05f;
             byte alphaThreshold = (byte)(Globals.UseClassicFiles ? 0x80 : 0x40);
             //double lumThreshold = 0.01d;
+            // Get all included points in an initial sweep so they're all available in the second processing step.
             foreach ((int cell, Overlay overlay) in map.Overlay)
             {
                 OverlayType ovlt = overlay.Type;
@@ -1357,25 +1359,27 @@ namespace MobiusEditor.Render
                 {
                     continue;
                 }
-                includedPoints.Add(location, ovlt);
+                includedCells.Add(cell);
+                includedPoints.Add(location, overlay);
             }
-            foreach ((int cell, Overlay overlay) in map.Overlay)
+            // Now we have all cells to process, we can ensure the outlines for neighbouring wall cells are combined.
+            foreach (int cell in includedCells)
             {
-                OverlayType ovlt = overlay.Type;
-                if (!map.Overlay.Metrics.GetLocation(cell, out Point p) || !includedPoints.ContainsKey(p))
+                if (!map.Overlay.Metrics.GetLocation(cell, out Point p) || !includedPoints.TryGetValue(p, out Overlay overlay))
                 {
                     continue;
                 }
+                OverlayType ovlt = overlay.Type;
                 Size cellSize = new Size(1, 1);
                 Color outlineCol = Color.FromArgb(0xA0, outlineColor);
                 if ((ovlt.Flag & OverlayTypeFlag.Crate) == OverlayTypeFlag.WoodCrate) outlineCol = Color.FromArgb(0xA0, 0xFF, 0xC0, 0x40);
                 if ((ovlt.Flag & OverlayTypeFlag.Crate) == OverlayTypeFlag.SteelCrate) outlineCol = Color.FromArgb(0xA0, Color.White);
-                OverlayType tstOvl;
+                Overlay tstOvl;
                 // don't include the edge cells of overlay that are the same type.
-                bool includeAbove = !ovlt.IsWall || !includedPoints.TryGetValue(p.OffsetPoint(0, -1), out tstOvl) || tstOvl.ID != ovlt.ID;
-                bool includeRight = !ovlt.IsWall ||!includedPoints.TryGetValue(p.OffsetPoint(1, 0), out tstOvl) || tstOvl.ID != ovlt.ID;
-                bool includeBelow = !ovlt.IsWall ||!includedPoints.TryGetValue(p.OffsetPoint(0, 1), out tstOvl) || tstOvl.ID != ovlt.ID;
-                bool includeLefty = !ovlt.IsWall || !includedPoints.TryGetValue(p.OffsetPoint(-1, 0), out tstOvl) || tstOvl.ID != ovlt.ID;
+                bool includeAbove = !ovlt.IsWall || !includedPoints.TryGetValue(p.OffsetPoint(0, -1), out tstOvl) || tstOvl.Type.ID != ovlt.ID;
+                bool includeRight = !ovlt.IsWall || !includedPoints.TryGetValue(p.OffsetPoint(1, 0), out tstOvl) || tstOvl.Type.ID != ovlt.ID;
+                bool includeBelow = !ovlt.IsWall || !includedPoints.TryGetValue(p.OffsetPoint(0, 1), out tstOvl) || tstOvl.Type.ID != ovlt.ID;
+                bool includeLefty = !ovlt.IsWall || !includedPoints.TryGetValue(p.OffsetPoint(-1, 0), out tstOvl) || tstOvl.Type.ID != ovlt.ID;
                 int aroundMask = (includeAbove ? 1 : 0) | (includeRight ? 2 : 0) | (includeBelow ? 4 : 0) | (includeLefty ? 8 : 0);
                 string lookupName = overlay.Type.Name + "_" + overlay.Icon + "_" + aroundMask;
                 if (!paintAreas.TryGetValue(lookupName, out RegionData paintAreaRel))

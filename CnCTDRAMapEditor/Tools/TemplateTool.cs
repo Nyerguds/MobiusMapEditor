@@ -271,6 +271,9 @@ namespace MobiusEditor.Tools
             imageList.ColorDepth = ColorDepth.Depth24Bit;
             this.templateTypeListView.BeginUpdate();
             this.templateTypeListView.LargeImageList = imageList;
+            this.templateTypeListView.View = View.LargeIcon;
+            const int padding = 12;
+            ListViewItem_SetPadding(this.templateTypeListView, padding, padding);
             // Fixed constantly growing items list.
             if (this.templateTypeListView.Groups.Count > 0)
                 this.templateTypeListView.Groups.Clear();
@@ -311,6 +314,23 @@ namespace MobiusEditor.Tools
             this.mouseTooltip = mouseTooltip;
             // Select first actually-initialised non-clear tile.
             SelectedTemplateType = templateTypes.FirstOrDefault(gr => gr.Any(t => t.ExistsInTheater))?.FirstOrDefault(t => t.ExistsInTheater);
+        }
+
+        public void ListViewItem_SetPadding(ListView listview, int horizontalPadding, int verticalPadding)
+        {
+            if (listview != null && listview.View == View.LargeIcon && listview.LargeImageList != null)
+            {
+                Size imgSize = listview.LargeImageList.ImageSize;
+                ListViewItem_SetSpacing(listview, imgSize.Width + horizontalPadding, imgSize.Height + 4 + listview.Font.Height + verticalPadding);
+            }
+        }
+
+        public void ListViewItem_SetSpacing(ListView listview, int itemWidth, int itemHeight)
+        {
+            const int LVM_FIRST = 0x1000;
+            const int LVM_SETICONSPACING = LVM_FIRST + 53;
+            uint arg = (uint)(itemWidth & 0xFFFF) | (uint)((itemHeight & 0xFFFF) << 16);
+            GeneralUtils.SendMessage(listview.Handle, LVM_SETICONSPACING, IntPtr.Zero, (IntPtr)arg);
         }
 
         private void Url_UndoRedoDone(object sender, UndoRedoEventArgs e)
