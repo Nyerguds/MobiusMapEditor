@@ -627,6 +627,7 @@ Released on 31 Jan 2023 at 20:50 GMT
 Unreleased.
 
 * Added .mix files to the supported formats to open, giving the ability to load official maps straight from the game's internal archives.
+* Compacted the space around the objects in the Map tool, making it show a lot more items at once.
 * The editor will now only connect to Steam if the Publish function is opened, making it possible to leave the editor open while testing maps in-game.
 * Dropping a file into the editor that causes a dialog to be opened (like mix files and images) will no longer freeze the source you dragged the file from while the dialog in the editor is open.
 * Removed theater restrictions on Terrain objects; if the object is found in the theater, it will be shown.
