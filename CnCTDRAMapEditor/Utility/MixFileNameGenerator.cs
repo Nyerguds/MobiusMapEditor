@@ -14,6 +14,7 @@
 using MobiusEditor.Utility.Hashing;
 using System;
 using System.Collections.Generic;
+using System.Globalization;
 using System.IO;
 using System.Linq;
 using System.Text;
@@ -677,6 +678,7 @@ namespace MobiusEditor.Utility
             public string[][] ModTheaterInfo { get; set; }
             public bool HasMixNesting { get; set; }
             public bool NewMixFormat { get; set; }
+            private static Regex idOnlyEntry = new Regex("^\\*([0-9A-F]+)\\*$", RegexOptions.Compiled);
 
             public GameDefinition(string name)
             {
@@ -746,7 +748,15 @@ namespace MobiusEditor.Utility
                         {
                             continue;
                         }
-                        yield return new MixEntry(hashMethod.GetNameId(name), name, info);
+                        Match idMatch = idOnlyEntry.Match(name);
+                        if (idMatch.Success)
+                        {
+                            yield return new MixEntry(UInt32.Parse(idMatch.Groups[1].Value, NumberStyles.HexNumber), null , info);
+                        }
+                        else
+                        {
+                            yield return new MixEntry(hashMethod.GetNameId(name), name, info);
+                        }
                     }
                     else
                     {

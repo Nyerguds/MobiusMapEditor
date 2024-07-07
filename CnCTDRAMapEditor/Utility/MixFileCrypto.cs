@@ -77,7 +77,8 @@ namespace MobiusEditor.Utility
                 // Fill output key. Seems this always needs to be 39 or lower.
                 int toWrite = new[] { 39, decryptedBlowfishKey.Length - j, l + 1 }.Min();
                 Array.ConstrainedCopy(decrypted, 0, decryptedBlowfishKey, j, toWrite);
-                j += toWrite;
+                // Not sure why, but always needs to continue as 39?
+                j += i == 0 ? 39 : toWrite;
             }
             return decryptedBlowfishKey;
         }

@@ -58,16 +58,16 @@ namespace MobiusEditor.Dialogs
             this.Text = titleMain + " - " + string.Join(" -> ", openedMixFiles.Select(mix => mix.FileName).ToArray());
         }
 
-        private void LoadMixContents()
+        private void LoadMixContents(uint? idToSelect)
         {
             MixFile current = GetCurrentMix();
             if (current == null)
             {
-                FillList(null);
+                FillList(null, null);
             }
             analysisMultiThreader.ExecuteThreaded(
                 () => MixContentAnalysis.AnalyseFiles(current, false, () => this.CheckAbort()),
-                (list) => FillList(list), true,
+                (list) => FillList(list, idToSelect), true,
                 (bl, str) => EnableDisableUi(bl, str, analysisMultiThreader),
                 "Analysis in progress");
         }
@@ -95,11 +95,6 @@ namespace MobiusEditor.Dialogs
             {
                 SimpleMultiThreading.RemoveBusyLabel(this);
                 btnCloseFile.Enabled = openedMixFiles.Count > 1;
-                if (mixContentsListView.Items.Count > 0)
-                {
-                    mixContentsListView.Select();
-                    mixContentsListView.Items[0].Selected = true;
-                }
                 mixContentsListView.Focus();
             }
         }
@@ -268,7 +263,7 @@ namespace MobiusEditor.Dialogs
                     }
                     openedMixFiles.Add(subMix);
                 }
-                LoadMixContents();
+                LoadMixContents(null);
                 btnCloseFile.Enabled = openedMixFiles.Count > 1;
             }
             else if (type == MixContentType.MapRa)
@@ -334,10 +329,11 @@ namespace MobiusEditor.Dialogs
             MixFile current = GetCurrentMix();
             openedMixFiles.Remove(current);
             btnCloseFile.Enabled = openedMixFiles.Count > 1;
-            LoadMixContents();
+            uint id = current.FileName == null ? current.FileId : GetCurrentMix().GetFileId(current.FileName);
+            LoadMixContents(id);
         }
 
-        private void FillList(List<MixEntry> mixInfo)
+        private void FillList(List<MixEntry> mixInfo, uint? idToSelect)
         {
             currentMixInfo = mixInfo;
             if (mixInfo == null)
@@ -349,14 +345,22 @@ namespace MobiusEditor.Dialogs
             mixContentsListView.BeginUpdate();
             mixContentsListView.Items.Clear();
             int nrofFiles = mixInfo.Count;
+            bool selectFirst = !idToSelect.HasValue;
+            ListViewItem selected = null;
             for (int i = 0; i < nrofFiles; ++i)
             {
                 MixEntry mixFileInfo = mixInfo[i];
                 MixContentType mt = mixFileInfo.Type;
-                var item = new ListViewItem(mixFileInfo.DisplayName)
+                ListViewItem item = new ListViewItem(mixFileInfo.DisplayName)
                 {
                     Tag = mixFileInfo,
                 };
+                if (selectFirst || idToSelect.HasValue && mixFileInfo.Id == idToSelect.Value)
+                {
+                    selected = item;
+                    idToSelect = null;
+                    selectFirst = false;
+                }
                 switch (mixFileInfo.Type)
                 {
                     case MixContentType.MapTd:
@@ -377,6 +381,10 @@ namespace MobiusEditor.Dialogs
                 mixContentsListView.Items.Add(item).ToolTipText = mixFileInfo.Name ?? mixFileInfo.IdString;
             }
             mixContentsListView.EndUpdate();
+            if (selected != null)
+            {
+                selected.Selected = true;
+            }
         }
 
         private void MixContentsListView_SizeChanged(object sender, EventArgs e)
@@ -501,7 +509,7 @@ namespace MobiusEditor.Dialogs
                     }
                 }
             }
-            LoadMixContents();
+            LoadMixContents(null);
         }
 
         private void mixContentsListView_ColumnWidthChanging(object sender, ColumnWidthChangingEventArgs e)
