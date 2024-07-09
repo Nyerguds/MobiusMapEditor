@@ -1107,7 +1107,7 @@ namespace MobiusEditor.Render
                 // Beacon only exists in remastered graphics. Get fallback.
                 tileGraphics = "trans.icn";
                 icon = 3;
-                gotTile = Globals.TheTilesetManager.GetTeamColorTileData(tileGraphics, icon, teamColor, out tile);
+                gotTile = Globals.TheTilesetManager.GetTileData(tileGraphics, icon, out tile);
             }
             if (!gotTile)
             {
@@ -1769,17 +1769,30 @@ namespace MobiusEditor.Render
             }
             // Re-render flags on top of football areas.
             List<Waypoint> footballWayPoints = new List<Waypoint>();
+            Dictionary<int, int> flagOverlapPoints = new Dictionary<int, int>();
+            Dictionary<Waypoint, int> flagOffsets = new Dictionary<Waypoint, int>();
             foreach (Waypoint waypoint in map.Waypoints)
             {
-                if (waypoint.Point.HasValue && Waypoint.GetMpIdFromFlag(waypoint.Flag) >= 0 && visibleCells.Contains(waypoint.Point.Value))
+                if (waypoint.Point.HasValue && Waypoint.GetMpIdFromFlag(waypoint.Flag) >= 0 && visibleCells.Contains(waypoint.Point.Value)
+                    && map.Metrics.GetCell(waypoint.Point.Value, out int cell))
                 {
                     footballWayPoints.Add(waypoint);
+                    if (!flagOverlapPoints.TryGetValue(cell, out int amount))
+                    {
+                        flagOverlapPoints.Add(cell, 1);
+                    }
+                    else
+                    {
+                        flagOverlapPoints[cell] = amount + 1;
+                    }
+                    flagOffsets[waypoint] = amount * 2;
                 }
             }
             ITeamColor[] flagColors = map.FlagColors;
             foreach (Waypoint wp in footballWayPoints)
             {
-                RenderWaypoint(gameInfo, false, tileSize, flagColors, wp, 1.0f, 0).Item2(graphics);
+                flagOffsets.TryGetValue(wp, out int offset);
+                RenderWaypoint(gameInfo, false, tileSize, flagColors, wp, 1.0f, offset).Item2(graphics);
             }
         }
 

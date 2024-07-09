@@ -657,3 +657,4 @@ Unreleased.
 * Fixed the fact RA mission rules were only applied after the map was populated, which could make buildings disappear from overlapping with bibs that were actually disabled in the rules.
 * Fixed classic mode not using the classic hash pattern tile to draw the terrain type indicators on the map tiles tool window.
 * Fixed a crash that happened on Tiberian Dawn maps when switching to Infantry or Unit editing mode after having been in the Building tool, if the template building there had the Prebuilt option unchecked.
+* Fixed overlapping flags not working in combination with Sole Survivor football areas.

@@ -336,7 +336,7 @@ namespace MobiusEditor.Utility
                 if (tmpData != null)
                 {
                     mixInfo.Type = MixContentType.TmpTd;
-                    mixInfo.Info = string.Format("C&C Template; {0} frame{1}", tmpData.Length, tmpData.Length == 1 ? string.Empty : "s");
+                    mixInfo.Info = string.Format("C&C Template; {0} tile{1}", tmpData.Length, tmpData.Length == 1 ? string.Empty : "s");
                     return true;
                 }
             }
