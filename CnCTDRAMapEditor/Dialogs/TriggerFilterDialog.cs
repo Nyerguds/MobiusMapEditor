@@ -65,14 +65,14 @@ namespace MobiusEditor.Dialogs
             chkPersistenceType.Checked = filter.FilterPersistenceType;
             if (chkPersistenceType.Checked)
             {
-                cmbPersistenceType.SelectedIndex = ListItem.GetIndexInDropdown(filter.PersistenceType, cmbPersistenceType);
+                cmbPersistenceType.SelectedIndex = ListItem.GetIndexInComboBox(filter.PersistenceType, cmbPersistenceType);
             }
             if (isRA)
             {
                 chkEventControl.Checked = filter.FilterEventControl;
                 if (chkEventControl.Checked)
                 {
-                    cmbEventControl.SelectedIndex = ListItem.GetIndexInDropdown(filter.EventControl, cmbEventControl);
+                    cmbEventControl.SelectedIndex = ListItem.GetIndexInComboBox(filter.EventControl, cmbEventControl);
                 }
             }
             chkEventType.Checked = filter.FilterEventType;

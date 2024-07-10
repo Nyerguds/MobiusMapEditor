@@ -18,6 +18,9 @@ using System.Windows.Forms;
 
 namespace MobiusEditor.Utility
 {
+    /// <summary>
+    /// Static tool class to handle <see cref="ListItem{T}"/>
+    /// </summary>
     public static class ListItem
     {
         public static ListItem<T> MakeListItem<T>(T value, string Label)
@@ -61,7 +64,7 @@ namespace MobiusEditor.Utility
         public static int GetIndexInList<T>(T value, ListItem<T>[] items, int defaultIndex)
         {
             int len = items.Length;
-            for (Int32 i = 0; i < len; ++i)
+            for (int i = 0; i < len; ++i)
             {
                 ListItem<T> item = items[i];
                 if (item != null && item.Value.Equals(value))
@@ -72,16 +75,16 @@ namespace MobiusEditor.Utility
             return defaultIndex;
         }
 
-        public static int GetIndexInDropdown<T>(T value, ComboBox dropdown)
+        public static int GetIndexInComboBox<T>(T value, ComboBox comboBox)
         {
-            return GetIndexInDropdown(value, dropdown, -1);
+            return GetIndexInComboBox(value, comboBox, -1);
         }
 
-        public static int GetIndexInDropdown<T>(T value, ComboBox dropdown, int defaultIndex)
+        public static int GetIndexInComboBox<T>(T value, ComboBox comboBox, int defaultIndex)
         {
-            for (Int32 i = 0; i < dropdown.Items.Count; ++i)
+            for (int i = 0; i < comboBox.Items.Count; ++i)
             {
-                ListItem<T> item = dropdown.Items[i] as ListItem<T>;
+                ListItem<T> item = comboBox.Items[i] as ListItem<T>;
                 if (item != null && item.Value.Equals(value))
                 {
                     return i;
@@ -90,15 +93,15 @@ namespace MobiusEditor.Utility
             return defaultIndex;
         }
 
-        public static int GetIndexInListByLabel<T>(String label, ListItem<T>[] items)
+        public static int GetIndexInListByLabel<T>(string label, ListItem<T>[] items)
         {
-            return GetIndexInListByLabel<T>(label, items, -1);
+            return GetIndexInListByLabel(label, items, -1);
         }
 
-        public static int GetIndexInListByLabel<T>(String label, ListItem<T>[] items, int defaultIndex)
+        public static int GetIndexInListByLabel<T>(string label, ListItem<T>[] items, int defaultIndex)
         {
             int len = items.Length;
-            for (Int32 i = 0; i < len; ++i)
+            for (int i = 0; i < len; ++i)
             {
                 ListItem<T> item = items[i];
                 if (item != null && item.Label.Equals(label))
@@ -109,14 +112,14 @@ namespace MobiusEditor.Utility
             return defaultIndex;
         }
 
-        public static int GetIndexInDropdownByLabel<T>(String label, ComboBox dropdown)
+        public static int GetIndexInDropdownByLabel<T>(string label, ComboBox dropdown)
         {
             return GetIndexInDropdownByLabel<T>(label, dropdown, -1);
         }
 
-        public static int GetIndexInDropdownByLabel<T>(String label, ComboBox dropdown, int defaultIndex)
+        public static int GetIndexInDropdownByLabel<T>(string label, ComboBox dropdown, int defaultIndex)
         {
-            for (Int32 i = 0; i < dropdown.Items.Count; ++i)
+            for (int i = 0; i < dropdown.Items.Count; ++i)
             {
                 ListItem<T> item = dropdown.Items[i] as ListItem<T>;
                 if (item != null && item.Label.Equals(label))
@@ -143,18 +146,18 @@ namespace MobiusEditor.Utility
                 }
             }
             ListItem<T> firstItem = items.FirstOrDefault();
-            T first = firstItem == null ? default(T) : firstItem.Value;
+            T first = firstItem == null ? default : firstItem.Value;
             return first;
         }
 
         /// <summary>
-        /// If the value exists in the given list, this returns the value itself. Otherwise it returns the given <see cref="errValue"/>
+        /// If the value exists in the given list, return the value itself. Otherwise, return the given <paramref name="defaultValue"/>
         /// </summary>
         /// <param name="value">Value to find.</param>
         /// <param name="items">List to check.</param>
-        /// <param name="errValue">Value to return as default on failure.</param>
+        /// <param name="defaultValue">Value to return as default on failure.</param>
         /// <returns></returns>
-        public static T CheckInList<T>(T value, IEnumerable<ListItem<T>> items, T errValue)
+        public static T CheckInList<T>(T value, IEnumerable<ListItem<T>> items, T defaultValue)
         {
             foreach (ListItem<T> item in items)
             {
@@ -163,22 +166,27 @@ namespace MobiusEditor.Utility
                     return value;
                 }
             }
-            return errValue;
+            return defaultValue;
         }
     }
 
+    /// <summary>
+    /// Class to use as items in <see cref="ComboBox"/> controls, containing
+    /// both a value and an explicit string to show.
+    /// </summary>
+    /// <typeparam name="T">Type of the value.</typeparam>
     public class ListItem<T>
     {
         public T Value { get; private set; }
-        public String Label { get; private set; }
+        public string Label { get; private set; }
 
-        public ListItem(T value, String label)
+        public ListItem(T value, string label)
         {
             this.Value = value;
             this.Label = label;
         }
 
-        public override String ToString()
+        public override string ToString()
         {
             return this.Label;
         }

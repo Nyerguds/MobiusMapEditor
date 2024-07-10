@@ -70,7 +70,7 @@ namespace MobiusEditor.Controls
             {
                 this.m_Loading = true;
                 this.Info = info;
-                this.cmbTechno.SelectedIndex = ListItem.GetIndexInDropdown(info != null ? info.Type : defaultType, this.cmbTechno);
+                this.cmbTechno.SelectedIndex = ListItem.GetIndexInComboBox(info != null ? info.Type : defaultType, this.cmbTechno);
                 //this.cmbTechno.SelectedItem = info != null ? info.Type : defaultType;
                 this.numAmount.Value = info != null ? info.Count : 0;
             }

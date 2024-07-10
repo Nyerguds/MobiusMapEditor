@@ -72,7 +72,7 @@ namespace MobiusEditor.Dialogs
             string description = plugin.Map.SteamSection.Description ?? String.Empty;
             txtDescription.Text = GeneralUtils.RestoreLinebreaks(description, '@', Environment.NewLine);
             txtPreview.Text = plugin.Map.SteamSection.PreviewFile ?? String.Empty;
-            cmbVisibility.SelectedIndex = ListItem.GetIndexInDropdown(plugin.Map.SteamSection.VisibilityAsEnum, cmbVisibility, 0);
+            cmbVisibility.SelectedIndex = ListItem.GetIndexInComboBox(plugin.Map.SteamSection.VisibilityAsEnum, cmbVisibility, 0);
             UpdatePublishButton();
             btnFromBriefing.Enabled = plugin.Map.BasicSection.SoloMission;
             FixSizeAndLocation(800, 500);
