@@ -1896,7 +1896,7 @@ namespace MobiusEditor.Render
                     else
                     {
                         Rectangle buildingBounds = new Rectangle(
-                            new Point(0,0), 
+                            new Point(0,0),
                             new Size((int)Math.Round(maxSize.Width * Globals.OriginalTileWidth * tilescale),
                                     (int)Math.Round(maxSize.Height * Globals.OriginalTileHeight * tilescale)));
                         using (Bitmap bm = new Bitmap(buildingBounds.Width, buildingBounds.Height))
@@ -2091,7 +2091,6 @@ namespace MobiusEditor.Render
                             graphics.FillRectangle(baseBackgroundBrush, backgroundBounds);
                             graphics.DrawString(wpText, font, baseTextBrush, backgroundBounds, stringFormat);
                         }
-                        
                     }
                     else
                     {
@@ -2368,7 +2367,6 @@ namespace MobiusEditor.Render
             };
             int sizeW = tileSize.Width;
             int sizeH = tileSize.Height;
-            
             // Actual balance is fixed; border is 1, text is 1/2, background is 3/8. The original alpha inside the given colors is ignored.
             // Should probably rewrite this to paint text as opaque on 6/8 alpha background, then paint that as 50% alpha and add solid border,
             // and then paint that with the final adjusted alpha factor.
@@ -2377,7 +2375,6 @@ namespace MobiusEditor.Render
             textColor = ApplyAlpha(textColor, 0x80, alphaAdjust);
             // for classic fonts
             Color adjustColor = ApplyAlpha(Color.White, 0x80, alphaAdjust);
-            
             // Preview versions
             Color previewFillColor = ApplyAlpha(fillColor, 0x60, alphaAdjust / 2);
             Color previewBorderColor = ApplyAlpha(borderColor, 0xFF, alphaAdjust / 2);

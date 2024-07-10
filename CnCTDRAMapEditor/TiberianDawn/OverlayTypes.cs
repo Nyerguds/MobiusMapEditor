@@ -61,7 +61,7 @@ namespace MobiusEditor.TiberianDawn
 
         static OverlayTypes()
         {
-            List<OverlayType> types = 
+            List<OverlayType> types =
                 (from field in typeof(OverlayTypes).GetFields(BindingFlags.Static | BindingFlags.Public)
                  where field.IsInitOnly && typeof(OverlayType).IsAssignableFrom(field.FieldType)
                  select field.GetValue(null) as OverlayType).OrderBy(t => t.ID).ToList();

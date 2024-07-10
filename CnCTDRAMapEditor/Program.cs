@@ -32,7 +32,7 @@ namespace MobiusEditor
     static class Program
     {
         public const string SteamGameId = "1213210";
-        
+
         public const string ProgramName = "Mobius Map Editor";
         public const string GithubOwner = "Nyerguds";
         public const string GithubProject = "MobiusMapEditor";

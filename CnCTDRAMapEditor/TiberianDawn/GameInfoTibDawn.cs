@@ -97,7 +97,7 @@ namespace MobiusEditor.TiberianDawn
         }
 
         public override string GetClassicOpposingPlayer(string player) => HouseTypes.GetClassicOpposingPlayer(player);
-        
+
         public override bool SupportsMapLayer(MapLayerFlag mlf)
         {
             MapLayerFlag badLayers = MapLayerFlag.BuildingFakes | MapLayerFlag.EffectRadius | MapLayerFlag.FootballArea;

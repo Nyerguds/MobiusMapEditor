@@ -47,7 +47,7 @@ namespace MobiusEditor.RedAlert
         {
             return Types;
         }
-        
+
         public static IEnumerable<TheaterType> GetTypes()
         {
             if (Globals.UseClassicFiles)

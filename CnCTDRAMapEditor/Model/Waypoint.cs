@@ -113,7 +113,7 @@ namespace MobiusEditor.Model
             : this(name, name, WaypointFlag.None, metrics, null)
         {
         }
-        
+
         public Waypoint(string name, string shortName, WaypointFlag flag)
             : this(name, shortName, flag, null, null)
         {

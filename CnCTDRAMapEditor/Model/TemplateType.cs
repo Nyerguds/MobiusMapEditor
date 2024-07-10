@@ -113,7 +113,6 @@ namespace MobiusEditor.Model
         /// <param name="landsDefault">Defaults for the terrain types for each cell. See <see cref="LandTypesMapping"/> for the characters to use.</param>
         /// <param name="flag">Indicates special terrain types.</param>
         /// <param name="maskOverrides">Overrides the shape for different theaters. An empty string is used as default.</param>
-        /// 
         public TemplateType(ushort id, string name, int iconWidth, int iconHeight, string landsDefault, TemplateTypeFlag flag, Dictionary<string, bool[,]> maskOverrides)
         {
             ID = id;

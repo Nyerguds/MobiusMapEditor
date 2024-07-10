@@ -75,7 +75,7 @@ namespace MobiusEditor.Utility
             // Very strict requirements, and jumps over the majority of file contents while checking, so check this first.
             // These are ALWAYS identified, even if set to "missions only", because not identifying them slows down the rest of the analysis.
             // Ideally, all file types will eventually end up in here. Sadly, for ini that won't be the case.
-            if (identifyMix(source, mixInfo))
+            if (IdentifyMix(source, mixInfo))
                 return;
             if (IdentifyAud(fileStream, mixInfo))
                 return;
@@ -128,7 +128,7 @@ namespace MobiusEditor.Utility
                     if (IdentifyText(fileContents, mixInfo))
                         return;
                 }
-                if (IdentifyTdMap(fileContents, mixInfo))
+                if (IdentifyTdMap(fileStream, mixInfo))
                     return;
                 // Always needs to happen before sole maps since all palettes will technically match that format.
                 if (IdentifyPalette(fileContents, mixInfo))
@@ -171,7 +171,7 @@ namespace MobiusEditor.Utility
                     return false;
                 }
                 byte[] fileContents = new byte[128];
-                fileStream.Position = 0;
+                fileStream.Seek(0, SeekOrigin.Begin);
                 fileStream.Read(fileContents, 0, fileContents.Length);
                 if (fileContents[0] != 10) // ID byte
                 {
@@ -243,7 +243,7 @@ namespace MobiusEditor.Utility
             if (dataLen < headerLen)
                 return false;
             byte[] header1 = new byte[headerLen];
-            fileStream.Position = 0;
+            fileStream.Seek(0, SeekOrigin.Begin);
             fileStream.Read(header1 , 0, header1.Length);
             if (header1[0] != 0x42 || header1[1] != 0x4D)
                 return false;
@@ -311,7 +311,7 @@ namespace MobiusEditor.Utility
                     return false;
                 }
                 byte[] header = new byte[headerLen];
-                fileStream.Position = 0;
+                fileStream.Seek(0, SeekOrigin.Begin);
                 fileStream.Read(header, 0, header.Length);
                 int fileSize = ArrayUtils.ReadUInt16FromByteArrayLe(header, 0);
                 int compression = ArrayUtils.ReadUInt16FromByteArrayLe(header, 2);
@@ -644,7 +644,7 @@ namespace MobiusEditor.Utility
             return false;
         }
 
-        private static bool identifyMix(MixFile source, MixEntry mixInfo)
+        private static bool IdentifyMix(MixFile source, MixEntry mixInfo)
         {
             try
             {
@@ -761,7 +761,7 @@ namespace MobiusEditor.Utility
             {
                 return false;
             }
-            // Always either the header length plus the following 
+            // Always either the header length plus the following
             int formLength = ArrayUtils.ReadInt32FromByteArrayBe(headerInfo, 4);
             if (formLength < vqHdrSize)
             {
@@ -877,7 +877,7 @@ namespace MobiusEditor.Utility
         public static bool IdentifyXccNames(Stream fileStream, MixEntry mixInfo)
         {
             byte[] fileContents = new byte[XccHeaderLength];
-            fileStream.Position = 0;
+            fileStream.Seek(0, SeekOrigin.Begin);
             int amountRead = fileStream.Read(fileContents, 0, XccHeaderLength);
             if (amountRead != XccHeaderLength)
             {
@@ -923,7 +923,7 @@ namespace MobiusEditor.Utility
             {
                 return false;
             }
-            fileStream.Position = 0;
+            fileStream.Seek(0, SeekOrigin.Begin);
             byte[] fileContents = new byte[minsize];
             fileStream.Read(fileContents, 0, minsize);
             int headerSize = ArrayUtils.ReadInt16FromByteArrayLe(fileContents, 0);
@@ -951,10 +951,17 @@ namespace MobiusEditor.Utility
             return true;
         }
 
-        private static bool IdentifyTdMap(byte[] fileContents, MixEntry mixInfo)
+        private static bool IdentifyTdMap(Stream fileStream, MixEntry mixInfo)
         {
             int highestTdMapVal = TiberianDawn.TemplateTypes.GetTypes().Max(t => (int)t.ID);
-            int fileLength = fileContents.Length;
+            int fileLength = (int)mixInfo.Length;
+            if (fileLength != 8192)
+            {
+                return false;
+            }
+            fileStream.Seek(0, SeekOrigin.Begin);
+            byte[] fileContents = new byte[fileLength];
+            fileLength = fileStream.Read(fileContents, 0, fileLength);
             if (fileLength != 8192)
             {
                 return false;
@@ -1007,25 +1014,26 @@ namespace MobiusEditor.Utility
         private static bool IdentifyMrf(Stream fileStream, MixEntry mixInfo)
         {
             const int mrfLen = 0x100;
-            if (mixInfo.Length >= mrfLen && mixInfo.Length % mrfLen == 0)
+            if (mixInfo.Length < mrfLen || mixInfo.Length % mrfLen != 0)
             {
-                int blocks = (int)(mixInfo.Length / mrfLen);
-                bool hasIndex = false;
-                byte[] firstBlock = new byte[mrfLen];
-                fileStream.Seek(0, SeekOrigin.Begin);
-                fileStream.Read(firstBlock, 0, mrfLen);
-                List<byte> indices = firstBlock.Where(b => b != 0xFF).ToList();
-                int blocksNoIndex = blocks - 1;
-                if (blocksNoIndex > 0 && indices.Count == blocksNoIndex && Enumerable.Range(0, blocksNoIndex).All(ind => indices.Contains((byte)ind)))
-                {
-                    hasIndex = true;
-                }
-                mixInfo.Type = MixContentType.Mrf;
-                int reportBlocks = hasIndex ? blocksNoIndex : blocks;
-                mixInfo.Info = string.Format("Fading table{0} ({1} table{2})", hasIndex ? " with index" : string.Empty, reportBlocks, reportBlocks != 1 ? "s" : string.Empty);
-                return true;
+                return false;
             }
-            return false;
+            int blocks = (int)(mixInfo.Length / mrfLen);
+            bool hasIndex = false;
+            byte[] firstBlock = new byte[mrfLen];
+            fileStream.Seek(0, SeekOrigin.Begin);
+            fileStream.Read(firstBlock, 0, mrfLen);
+            List<byte> indices = firstBlock.Where(b => b != 0xFF).ToList();
+            int blocksNoIndex = blocks - 1;
+            // If all non-FF values that are found in the first block are valid indices of other blocks in the file, it's considered valid.
+            if (blocksNoIndex > 0 && indices.Count == blocksNoIndex && Enumerable.Range(0, blocksNoIndex).All(ind => indices.Contains((byte)ind)))
+            {
+                hasIndex = true;
+            }
+            mixInfo.Type = MixContentType.Mrf;
+            int reportBlocks = hasIndex ? blocksNoIndex : blocks;
+            mixInfo.Info = string.Format("Fading table{0} ({1} table{2})", hasIndex ? " with index" : string.Empty, reportBlocks, reportBlocks != 1 ? "s" : string.Empty);
+            return true;
         }
     }
 

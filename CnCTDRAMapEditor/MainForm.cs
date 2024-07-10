@@ -3407,7 +3407,6 @@ namespace MobiusEditor
             SmudgeType smudge = plugin.Map.SmudgeTypes.Where(sm => !sm.IsAutoBib && sm.Size.Width == 1 && sm.Size.Height == 1 && sm.Thumbnail != null
                 && (!Globals.FilterTheaterObjects || sm.ExistsInTheater))
                 .OrderBy(sm => sm.Icons).ThenBy(sm => sm.ID).FirstOrDefault();
-            
             OverlayType overlay = plugin.Map.OverlayTypes.Where(ov => (ov.Flag & plugin.GameInfo.OverlayIconType) != OverlayTypeFlag.None && ov.Thumbnail != null
                 && (!Globals.FilterTheaterObjects || ov.ExistsInTheater))
                 .OrderBy(ov => ov.ID).FirstOrDefault();

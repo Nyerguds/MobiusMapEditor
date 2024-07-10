@@ -97,7 +97,7 @@ namespace MobiusEditor.Utility
             int dataLen = fileData.Length;
             if (dataLen < 10)
             {
-                if (!throwWhenParsing) 
+                if (!throwWhenParsing)
                 {
                     return null;
                 }
@@ -267,7 +267,7 @@ namespace MobiusEditor.Utility
         /// <exception cref="FileTypeLoadException">Thrown when parsing failed, indicating this is not a valid file of this format.</exception>
         public static byte[][] GetCcShpData(Stream fileStream, int length, out int width, out int height, bool throwWhenParsing)
         {
-            fileStream.Position = 0;
+            fileStream.Seek(0, SeekOrigin.Begin);
             if (length == -1)
             {
                 length = (int)fileStream.Length;
@@ -317,7 +317,7 @@ namespace MobiusEditor.Utility
                 throw new FileTypeLoadException("File size does not match size value in header.", "TD/RA SHP file");
             }
             byte[] fileData = new byte[fileSize];
-            fileStream.Position = 0;
+            fileStream.Seek(0, SeekOrigin.Begin);
             readAmount = fileStream.Read(fileData, 0, fileSize);
             if (readAmount != fileSize)
             {
@@ -625,7 +625,7 @@ namespace MobiusEditor.Utility
         /// <exception cref="ArgumentException">Thrown when parsing failed, indicating this is not a valid file of this format.</exception>
         public static byte[][] GetD2ShpData(Stream fileStream, int length, out int[] widths, out int[] heights, bool throwWhenParsing)
         {
-            fileStream.Position = 0;
+            fileStream.Seek(0, SeekOrigin.Begin);
             if (length == -1)
             {
                 length = (int)fileStream.Length;
@@ -1255,13 +1255,13 @@ namespace MobiusEditor.Utility
         }
 
         /// <summary>
-        /// 
+        /// Gets data from a C&C font file
         /// </summary>
-        /// <param name="fileData"></param>
-        /// <param name="widths"></param>
-        /// <param name="height"></param>
+        /// <param name="fileData">File data to parse</param>
+        /// <param name="widths">Output for the widths of all symbols</param>
+        /// <param name="height">Output for the height of all symbols</param>
         /// <param name="throwWhenParsing">If false, parse errors will simply return <see langword="false"/> instead of throwing an exception.</param>
-        /// <returns></returns>
+        /// <returns>The parsed font data as array of arrays of 8-bit pixels.</returns>
         /// <exception cref="FileTypeLoadException"></exception>
         /// <exception cref="IndexOutOfRangeException"></exception>
         public static byte[][] GetCCFontData(byte[] fileData, out int[] widths, out int height, bool throwWhenParsing)
@@ -1383,7 +1383,6 @@ namespace MobiusEditor.Utility
                 byte sbWidth = widthsList[i];
                 byte sbHeight = heightsList[i];
                 byte yOffset = yOffsetsList[i];
-                
                 byte[] dataFullFrame;
                 try
                 {

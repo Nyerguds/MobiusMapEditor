@@ -918,7 +918,7 @@ namespace MobiusEditor.Utility
             /// <param name="chunkEntries">The current key represented as int array, to be filled ith the array of items to iterate.</param>
             /// <param name="chunkLength">The length of the full key, to know when to end.</param>
             /// <param name="indexOfLastChunk">The length of the full key minus one, to know when to end.</param>
-            /// <returns></returns>            
+            /// <returns>The list of all names with their corresponding descriptions.</returns>
             private IEnumerable<(string, string)> CreateNames(string baseName, string extraInfo, string[][] theaterInfo, int currentChunkPosition, int[] chunkEntries, Int32 chunkLength, Int32 indexOfLastChunk)
             {
                 int nextCharPosition = currentChunkPosition + 1;

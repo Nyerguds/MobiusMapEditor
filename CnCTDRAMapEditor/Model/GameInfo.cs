@@ -203,7 +203,7 @@ namespace MobiusEditor.Model
         {
             return GetMissionName(side, number, suffix, '\0');
         }
-        
+
         protected static string GetMissionName(char side, int number, string suffix, char aftermathLetter)
         {
             const string formatNormal = "sc{0}{1:00}{2}";

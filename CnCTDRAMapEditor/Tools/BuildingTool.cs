@@ -186,7 +186,6 @@ namespace MobiusEditor.Tools
                     building.Trigger = Trigger.None;
                 }
                 InvalidateBuildingArea(ev.MapPanel, ev.Map, building);
-                
                 if (baseBuildings != null && buildingPrioritiesOld != null && baseBuildings.Length == buildingPrioritiesOld.Length)
                 {
                     for (Int32 i = 0; i < baseBuildings.Length; ++i)
