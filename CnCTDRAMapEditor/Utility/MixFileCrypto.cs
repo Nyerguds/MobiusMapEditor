@@ -60,8 +60,10 @@ namespace MobiusEditor.Utility
 
             byte[] decryptedBlowfishKey = new byte[BlowfishStream.SIZE_OF_BLOWFISH_KEY];
 
-            var j = 0;
+            var writeOffs = 0;
             int remainingLength = encryptedBlowfishKey.Length;
+            // For some reason write blocks are ALWAYS 39 bytes, even if returned data is less.
+            const int writeBlock = 39;
             for (int i = 0; i < SIZE_OF_ENCRYPTED_KEY; i += SIZE_OF_RSA_KEY)
             {
                 byte[] part = new byte[SIZE_OF_RSA_KEY];
@@ -69,16 +71,30 @@ namespace MobiusEditor.Utility
                 remainingLength -= SIZE_OF_RSA_KEY;
                 // Perform RSA decryption on 40 byte chunks.
                 var decrypted = BigInteger.ModPow(new BigInteger(part), publicExponent, publicModulus).ToByteArray();
-
-                // Trim trailing zeros.
-                int l = decrypted.Length;
-                while (decrypted[--l] == 0) { }
-
-                // Fill output key. Seems this always needs to be 39 or lower.
-                int toWrite = new[] { 39, decryptedBlowfishKey.Length - j, l + 1 }.Min();
-                Array.ConstrainedCopy(decrypted, 0, decryptedBlowfishKey, j, toWrite);
-                // Not sure why, but always needs to continue as 39?
-                j += i == 0 ? 39 : toWrite;
+                // Adjust length to write.
+                int writeLength = decrypted.Length;
+                while (decrypted[--writeLength] == 0) { }
+                ++writeLength;
+                if (writeLength > writeBlock)
+                {
+                    writeLength = writeBlock;
+                }
+                int remainingWriteLength = BlowfishStream.SIZE_OF_BLOWFISH_KEY - writeOffs;
+                if (remainingWriteLength <= 0)
+                {
+                    break;
+                }
+                else if (writeLength > remainingWriteLength)
+                {
+                    writeLength = remainingWriteLength;
+                }
+                Array.ConstrainedCopy(decrypted, 0, decryptedBlowfishKey, writeOffs, writeLength);
+                int writtenBlock = Math.Max(writeBlock, writeLength);
+                writeOffs += writtenBlock;
+                if (writeOffs >= BlowfishStream.SIZE_OF_BLOWFISH_KEY)
+                {
+                    break;
+                }
             }
             return decryptedBlowfishKey;
         }

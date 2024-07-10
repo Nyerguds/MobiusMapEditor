@@ -1,7 +1,19 @@
-﻿using MobiusEditor.Model;
+﻿//         DO WHAT THE FUCK YOU WANT TO PUBLIC LICENSE
+//                     Version 2, December 2004
+//
+//  Copyright (C) 2004 Sam Hocevar<sam@hocevar.net>
+//
+//  Everyone is permitted to copy and distribute verbatim or modified
+//  copies of this license document, and changing it is allowed as long
+//  as the name is changed.
+//
+//             DO WHAT THE FUCK YOU WANT TO PUBLIC LICENSE
+//    TERMS AND CONDITIONS FOR COPYING, DISTRIBUTION AND MODIFICATION
+//
+//   0. You just DO WHAT THE FUCK YOU WANT TO.
+using MobiusEditor.Model;
 using System;
 using System.Collections.Generic;
-using System.Drawing;
 using System.IO;
 using System.Linq;
 using System.Text;
@@ -62,6 +74,7 @@ namespace MobiusEditor.Utility
             }
             // Very strict requirements, and jumps over the majority of file contents while checking, so check this first.
             // These are ALWAYS identified, even if set to "missions only", because not identifying them slows down the rest of the analysis.
+            // Ideally, all file types will eventually end up in here. Sadly, for ini that won't be the case.
             if (identifyMix(source, mixInfo))
                 return;
             if (IdentifyAud(fileStream, mixInfo))
@@ -74,7 +87,17 @@ namespace MobiusEditor.Utility
                 return;
             if (IdentifyShp(fileStream, mixInfo))
                 return;
+            if (IdentifyD2Shp(fileStream, mixInfo))
+                return;
+            if (IdentifyBmp(fileStream, mixInfo))
+                return;
             if (IdentifyXccNames(fileStream, mixInfo))
+                return;
+            if (IdentifyRaMixNames(fileStream, mixInfo))
+                return;
+            if (IdentifyPcx(fileStream, mixInfo))
+                return;
+            if (IdentifyCps(fileStream, mixInfo))
                 return;
             // These types analyse the full file from byte array. I'm restricting the buffer for them to 5mb; they shouldn't need more.
             // Eventually, all of these (except ini I guess) should ideally be switched to stream to speed up the processing.
@@ -87,14 +110,6 @@ namespace MobiusEditor.Utility
                 fileStream.Seek(0, SeekOrigin.Begin);
                 if (!missionsAndMixFilesOnly)
                 {
-                    if (IdentifyRaMixNames(fileContents, mixInfo))
-                        return;
-                    if (IdentifyPcx(fileContents, mixInfo))
-                        return;
-                    if (IdentifyD2Shp(fileContents, mixInfo))
-                        return;
-                    if (IdentifyCps(fileContents, mixInfo))
-                        return;
                     if (IdentifyWsa(fileContents, mixInfo))
                         return;
                     if (IdentifyCcTmp(fileContents, mixInfo))
@@ -147,14 +162,17 @@ namespace MobiusEditor.Utility
             return false;
         }
 
-        private static bool IdentifyPcx(byte[] fileContents, MixEntry mixInfo)
+        private static bool IdentifyPcx(Stream fileStream, MixEntry mixInfo)
         {
             try
             {
-                if (fileContents.Length < 128)
+                if (mixInfo.Length < 128)
                 {
                     return false;
                 }
+                byte[] fileContents = new byte[128];
+                fileStream.Position = 0;
+                fileStream.Read(fileContents, 0, fileContents.Length);
                 if (fileContents[0] != 10) // ID byte
                 {
                     return false;
@@ -211,14 +229,67 @@ namespace MobiusEditor.Utility
             catch (Exception)
             {
                 return false;
-            }            
+            }
         }
 
-        private static bool IdentifyD2Shp(byte[] fileContents, MixEntry mixInfo)
+        private static bool IdentifyBmp(Stream fileStream, MixEntry mixInfo)
+        {
+            uint dataLen = mixInfo.Length;
+            // Header is 14 in length.
+            // The next 4 are the start of the specific DIB header, which says how large the header is.
+            // The next 8 are two int32 values with the width and height of the image.
+            // The next 4 are two int16 values with the amount of planes and the bits per pixel.
+            const int headerLen = 0x1E;
+            if (dataLen < headerLen)
+                return false;
+            byte[] header1 = new byte[headerLen];
+            fileStream.Position = 0;
+            fileStream.Read(header1 , 0, header1.Length);
+            if (header1[0] != 0x42 || header1[1] != 0x4D)
+                return false;
+            uint size = ArrayUtils.ReadUInt32FromByteArrayLe(header1, 0x02);
+            uint reserved = ArrayUtils.ReadUInt32FromByteArrayLe(header1, 0x06);
+            int headerEnd = ArrayUtils.ReadInt32FromByteArrayLe(header1, 0x0A);
+            if (size != dataLen || reserved != 0 || dataLen < headerEnd)
+                return false;
+            // Read size from DIB hheader
+            int headerSize = ArrayUtils.ReadInt32FromByteArrayLe(header1, 0x0E);
+            int width = ArrayUtils.ReadInt32FromByteArrayLe(header1, 0x12);
+            int height = ArrayUtils.ReadInt32FromByteArrayLe(header1, 0x16);
+            int planes = ArrayUtils.ReadInt16FromByteArrayLe(header1, 0x1A);
+            int bitsPerPixel = ArrayUtils.ReadInt16FromByteArrayLe(header1, 0x1C);
+            if (headerEnd < headerSize + 14)
+                return false;
+            try
+            {
+                int dibformat;
+                if (headerSize == 40)
+                {
+                    dibformat = 1;
+                }
+                else if (headerSize == 124)
+                {
+                    dibformat = 5;
+                }
+                else
+                {
+                    return false;
+                }
+                mixInfo.Type = MixContentType.Bmp;
+                mixInfo.Info = string.Format("Bitmap Image; DIB v{0}, {1}x{2}, {3} bpp", dibformat, width, height, bitsPerPixel);
+                return true;
+            }
+            catch (Exception)
+            {
+                return false;
+            }
+        }
+
+        private static bool IdentifyD2Shp(Stream fileStream, MixEntry mixInfo)
         {
             try
             {
-                byte[][] shpData = ClassicSpriteLoader.GetD2ShpData(fileContents, out int[] widths, out int[] heights, false);
+                byte[][] shpData = ClassicSpriteLoader.GetD2ShpData(fileStream, (int)mixInfo.Length, out int[] widths, out int[] heights, false);
                 if (shpData != null)
                 {
                     mixInfo.Type = MixContentType.ShpD2;
@@ -230,17 +301,55 @@ namespace MobiusEditor.Utility
             return false;
         }
 
-        private static bool IdentifyCps(byte[] fileContents, MixEntry mixInfo)
+        private static bool IdentifyCps(Stream fileStream, MixEntry mixInfo)
         {
             try
             {
-                byte[] cpsData = ClassicSpriteLoader.GetCpsData(fileContents, out Color[] palette, false);
-                if (cpsData != null)
+                const int headerLen = 10;
+                if (mixInfo.Length < 10)
                 {
-                    mixInfo.Type = MixContentType.Cps;
-                    mixInfo.Info = "CPS Image; 320x200";
-                    return true;
+                    return false;
                 }
+                byte[] header = new byte[headerLen];
+                fileStream.Position = 0;
+                fileStream.Read(header, 0, header.Length);
+                int fileSize = ArrayUtils.ReadUInt16FromByteArrayLe(header, 0);
+                int compression = ArrayUtils.ReadUInt16FromByteArrayLe(header, 2);
+                if (compression != 0 && compression != 4)
+                {
+                    return false;
+                }
+                fileSize += 2;
+                if (fileSize != mixInfo.Length)
+                {
+                    return false;
+                }
+                int bufferSize = ArrayUtils.ReadInt32FromByteArrayLe(header, 4);
+                int paletteLength = ArrayUtils.ReadInt16FromByteArrayLe(header, 8);
+                if (bufferSize != 64000)
+                {
+                    return false;
+                }
+                if (paletteLength > 0)
+                {
+                    if (paletteLength % 3 != 0 || paletteLength + 10 > fileSize)
+                    {
+                        return false;
+                    }
+                    byte[] pal = new byte[paletteLength];
+                    fileStream.Read(pal, 0, paletteLength);
+                    for (int i = 0; i < paletteLength; i++)
+                    {
+                        // verify 6-bit palette
+                        if (pal[i] > 0x3F)
+                        {
+                            return false;
+                        }
+                    }
+                }
+                mixInfo.Type = MixContentType.Cps;
+                mixInfo.Info = "CPS Image; 320x200";
+                return true;
             }
             catch (FileTypeLoadException) { /* ignore */ }
             return false;
@@ -763,13 +872,14 @@ namespace MobiusEditor.Utility
             return true;
         }
 
+        const int XccHeaderLength = 0x34;
+
         public static bool IdentifyXccNames(Stream fileStream, MixEntry mixInfo)
         {
-            const int headerLength = 0x34;
-            byte[] fileContents = new byte[headerLength];
+            byte[] fileContents = new byte[XccHeaderLength];
             fileStream.Position = 0;
-            int amountRead = fileStream.Read(fileContents, 0, headerLength);
-            if (amountRead != headerLength)
+            int amountRead = fileStream.Read(fileContents, 0, XccHeaderLength);
+            if (amountRead != XccHeaderLength)
             {
                 return false;
             }
@@ -778,6 +888,10 @@ namespace MobiusEditor.Utility
 
         public static bool IdentifyXccNames(byte[] fileContents, MixEntry mixInfo)
         {
+            if (fileContents.Length < XccHeaderLength)
+            {
+                return false;
+            }
             const string xccCheck = "XCC by Olaf van der Spek";
             byte[] xccPattern = Encoding.ASCII.GetBytes(xccCheck);
             for (int i = 0; i < xccPattern.Length; ++i)
@@ -787,36 +901,40 @@ namespace MobiusEditor.Utility
                     return false;
                 }
             }
-            int fileSize = fileContents[0x20] | (fileContents[0x21] << 8) | (fileContents[0x22] << 16) | (fileContents[0x23] << 24);
+            int fileSize = ArrayUtils.ReadInt32FromByteArrayLe(fileContents, 0x20);
             if (fileSize != mixInfo.Length)
             {
                 return false;
             }
-            int files = fileContents[0x30] | (fileContents[0x31] << 8) | (fileContents[0x32] << 16) | (fileContents[0x33] << 24);
+            int files = ArrayUtils.ReadInt32FromByteArrayLe(fileContents, 0x30);
             mixInfo.Type = MixContentType.XccNames;
             mixInfo.Info = string.Format("XCC filenames database ({0} file{1})", files, files == 1 ? string.Empty : "s");
             return true;
         }
 
-        public static bool IdentifyRaMixNames(byte[] fileContents, MixEntry mixInfo)
+        public static bool IdentifyRaMixNames(Stream fileStream, MixEntry mixInfo)
         {
             const string RaMixCheck = "RA-MIXer 5.1, (C) MoehrchenSoft, moehrchen@bigfoot.com";
             const int entrySize = 0x44;
             const int expectedHeaderSize = 0x100;
+            int minsize = expectedHeaderSize + 8 + entrySize;
             byte[] raMixPattern = Encoding.ASCII.GetBytes(RaMixCheck);
-            if (fileContents.Length < expectedHeaderSize + 8 + entrySize)
+            if (mixInfo.Length < minsize)
             {
                 return false;
             }
-            int headerSize = fileContents[0] | (fileContents[1] << 8);
+            fileStream.Position = 0;
+            byte[] fileContents = new byte[minsize];
+            fileStream.Read(fileContents, 0, minsize);
+            int headerSize = ArrayUtils.ReadInt16FromByteArrayLe(fileContents, 0);
             if (headerSize != expectedHeaderSize)
             {
                 return false;
             }
-            int files = fileContents[2] | (fileContents[3] << 8);
+            int files = ArrayUtils.ReadInt16FromByteArrayLe(fileContents, 2);
             int expectedFileSize = 2 + headerSize + 6 + files * entrySize;
             // check expected file length and pascal string length of header check string.
-            if (fileContents.Length != expectedFileSize || fileContents[4] != raMixPattern.Length)
+            if (mixInfo.Length != expectedFileSize || fileContents[4] != raMixPattern.Length)
             {
                 return false;
             }
@@ -934,6 +1052,7 @@ namespace MobiusEditor.Utility
         Wsa,
         Font,
         Pcx,
+        Bmp,
         Pal,
         PalTbl,
         Mrf,

@@ -616,6 +616,76 @@ namespace MobiusEditor.Utility
         /// <summary>
         /// Retrieves the Dune II SHP image data. (used for mouse cursors in C&amp;C1/RA1)
         /// </summary>
+        /// <param name="fileStream">File data stream</param>
+        /// <param name="length">Data length as given by the mix header.</param>
+        /// <param name="widths">The widths of all frames</param>
+        /// <param name="heights">The heights of all frames</param>
+        /// <param name="throwWhenParsing">If false, parse errors will simply return <see langword="false"/> instead of throwing an exception.</param>
+        /// <returns>An array of byte arrays containing the 8-bit image data for each frame.</returns>
+        /// <exception cref="ArgumentException">Thrown when parsing failed, indicating this is not a valid file of this format.</exception>
+        public static byte[][] GetD2ShpData(Stream fileStream, int length, out int[] widths, out int[] heights, bool throwWhenParsing)
+        {
+            fileStream.Position = 0;
+            if (length == -1)
+            {
+                length = (int)fileStream.Length;
+            }
+            widths = null;
+            heights = null;
+            // OffsetInfo / ShapeFileHeader
+            if (length < 6)
+            {
+                if (!throwWhenParsing)
+                {
+                    return null;
+                }
+                throw new FileTypeLoadException("Not long enough for header.", "Dune II SHP file");
+            }
+            byte[] header = new byte[2];
+            fileStream.Read(header, 0, header.Length);
+            int hdrFrames = ArrayUtils.ReadUInt16FromByteArrayLe(header, 0);
+            if (hdrFrames == 0)
+            {
+                if (!throwWhenParsing)
+                {
+                    return null;
+                }
+                throw new FileTypeLoadException("Not a Dune II SHP file", "Dune II SHP file");
+            }
+            if (length < 2 + (hdrFrames + 1) * 2)
+            {
+                if (!throwWhenParsing)
+                {
+                    return null;
+                }
+                throw new FileTypeLoadException("Not long enough for frames index.", "Dune II SHP file");
+            }
+            int indexLen = Math.Min(length, 2 + (hdrFrames + 1) * 4);
+            byte[] index = new byte[indexLen];
+            Array.Copy(header, index, header.Length);
+            fileStream.Read(index, 2, index.Length - 2);
+            uint endoffset = (uint)length;
+            // test v1.00 first, since it might accidentally be possible that the offset 2x as far happens to contain data matching the file end address.
+            // However, in 32-bit addressing, it is impossible for even partial addresses halfway down the array to ever match the file end value.
+            if (!(endoffset < ushort.MaxValue && endoffset >= 2 + (hdrFrames + 1) * 2 && ArrayUtils.ReadUInt16FromByteArrayLe(index, 2 + hdrFrames * 2) == endoffset)
+                && !(endoffset >= 2 + (hdrFrames + 1) * 4 && ArrayUtils.ReadUInt32FromByteArrayLe(index, 2 + hdrFrames * 4) == endoffset - 2))
+            {
+                if (!throwWhenParsing)
+                {
+                    return null;
+                }
+                throw new FileTypeLoadException("File size in header does not match; cannot detect version.", "Dune II SHP file");
+            }
+            byte[] fileContents = new byte[length];
+            Array.Copy(index, fileContents, indexLen);
+            // Add last part of the stream to allow full parsing.
+            fileStream.Read(fileContents, indexLen, length - indexLen);
+            return GetD2ShpData(fileContents, out widths, out heights, throwWhenParsing);
+        }
+
+        /// <summary>
+        /// Retrieves the Dune II SHP image data. (used for mouse cursors in C&amp;C1/RA1)
+        /// </summary>
         /// <param name="fileData">File data</param>
         /// <param name="widths">The widths of all frames</param>
         /// <param name="heights">The heights of all frames</param>

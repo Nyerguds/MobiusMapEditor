@@ -538,14 +538,18 @@ namespace MobiusEditor.Utility
                     {
                         continue;
                     }
-                    byte[] fileContents = mixFile.ReadFile(dbEntry);
                     try
                     {
-                        bool isXccHeader = MixContentAnalysis.IdentifyXccNames(fileContents, dbEntry);
+                        bool isXccHeader;
+                        using (Stream fileStream = mixFile.OpenFile(dbEntry))
+                        {
+                            isXccHeader = MixContentAnalysis.IdentifyXccNames(fileStream, dbEntry);
+                        }
                         if (!isXccHeader)
                         {
                             continue;
                         }
+                        byte[] fileContents = mixFile.ReadFile(dbEntry);
                         MixEntry xccEntry = new MixEntry(xccId, xccFileName, "XCC filenames database");
                         xccEntry.Type = MixContentType.XccNames;
                         xccEntry.Info = dbEntry.Info;
@@ -607,14 +611,18 @@ namespace MobiusEditor.Utility
                     {
                         continue;
                     }
-                    byte[] fileContents = mixFile.ReadFile(dbEntry);
                     try
                     {
-                        bool isRaMixHeader = MixContentAnalysis.IdentifyRaMixNames(fileContents, dbEntry);
+                        bool isRaMixHeader;
+                        using (Stream fileStream = mixFile.OpenFile(dbEntry))
+                        {
+                            isRaMixHeader = MixContentAnalysis.IdentifyRaMixNames(fileStream, dbEntry);
+                        }
                         if (!isRaMixHeader)
                         {
                             continue;
                         }
+                        byte[] fileContents = mixFile.ReadFile(dbEntry);
                         MixEntry raMixEntry = new MixEntry(raMixId, null, "RAMIX filenames database");
                         raMixEntry.Type = MixContentType.RaMixNames;
                         raMixEntry.Info = dbEntry.Info;

@@ -2466,6 +2466,37 @@ namespace MobiusEditor.RedAlert
                     modified = true;
                     continue;
                 }
+                ICellOccupier techno = Map.Technos[i];
+                if ((overlayType.IsWall || overlayType.IsSolid) && techno != null)
+                {
+                    string desc = overlayType.IsWall ? "Wall" : "Solid overlay";
+                    if (techno is Building building)
+                    {
+                        errors.Add(string.Format("{0} '{1}' overlaps structure '{2}' at cell {3}; skipping.", desc, overlayType.Name, building.Type.Name, i));
+                        modified = true;
+                    }
+                    else if (techno is Terrain terrain)
+                    {
+                        errors.Add(string.Format("{0} '{1}' overlaps terrain '{2}' at cell {3}; skipping.", desc, overlayType.Name, terrain.Type.Name, i));
+                        modified = true;
+                    }
+                    else if (techno is Unit unit)
+                    {
+                        errors.Add(string.Format("{0} '{1}' overlaps unit '{2}' at cell {3}; skipping.", desc, overlayType.Name, unit.Type.Name, i));
+                        modified = true;
+                    }
+                    else if (techno is InfantryGroup igrp)
+                    {
+                        errors.Add(string.Format("{0} '{1}' overlaps infantry at cell {2}; skipping.", desc, overlayType.Name, i));
+                        modified = true;
+                    }
+                    else
+                    {
+                        errors.Add(string.Format("{0} '{1}' overlaps unknown techno in cell {2}; skipping.", desc, overlayType.Name, i));
+                        modified = true;
+                    }
+                    continue;
+                }
                 Map.Overlay[i] = new Overlay { Type = overlayType, Icon = 0 };
             }
         }
