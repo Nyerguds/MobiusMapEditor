@@ -1494,7 +1494,7 @@ namespace MobiusEditor.Render
                             continue;
                         }
                     }
-                    Color outlineCol = Color.FromArgb(0xA0, Globals.TheTeamColorManager.GetBaseColor(infantry.House?.UnitTeamColor));
+                    Color outlineCol = Color.FromArgb(0x80, Globals.TheTeamColorManager.GetBaseColor(infantry.House?.UnitTeamColor));
                     RegionData paintAreaRel;
                     string id = infantry.Type.Name + '_' + ((int)ist) + '_' + infantry.Direction.ID;
                     if (!paintAreas.TryGetValue(id, out paintAreaRel))
@@ -1609,7 +1609,7 @@ namespace MobiusEditor.Render
                 Color houseCol = fallbackColor;
                 if (placedObj.House != null && colorPick != null)
                 {
-                    houseCol = Globals.TheTeamColorManager.GetBaseColor(colorPick(placedObj.House));
+                    houseCol = Color.FromArgb(0x80, Globals.TheTeamColorManager.GetBaseColor(colorPick(placedObj.House)));
                 }
                 RegionData paintAreaRel;
                 string id = placedObj.TechnoType.Name + '_' + (placedObj.Direction == null ? 0 : placedObj.Direction.ID).ToString();

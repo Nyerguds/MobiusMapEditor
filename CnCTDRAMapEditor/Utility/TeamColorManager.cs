@@ -27,7 +27,7 @@ namespace MobiusEditor.Utility
         private readonly Dictionary<string, TeamColor> teamColors = new Dictionary<string, TeamColor>();
 
         private readonly IArchiveManager megafileManager;
-        public Color RemapBaseColor => Color.FromArgb(0x00, 0xFF, 0x00);
+        public Color RemapBaseColor => Color.FromArgb(0x00, 0xE0, 0x00);
 
         public ITeamColor this[string key] => !string.IsNullOrEmpty(key) && teamColors.ContainsKey(key) ? (ITeamColor)teamColors[key]: null;
 

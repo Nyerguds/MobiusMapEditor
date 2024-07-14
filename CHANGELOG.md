@@ -659,3 +659,4 @@ Unreleased.
 * Fixed classic mode not using the classic hash pattern tile to draw the terrain type indicators on the map tiles tool window.
 * Fixed a crash that happened on Tiberian Dawn maps when switching to Infantry or Unit editing mode after having been in the Building tool, if the template building there had the Prebuilt option unchecked.
 * Fixed overlapping multiplayer starting point flags not working in combination with Sole Survivor football areas.
+* Rebalanced House-specific indicator colors (used for range indicators and overlap outlines) to be more similar in the remastered and classic view.

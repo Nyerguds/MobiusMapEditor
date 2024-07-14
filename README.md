@@ -8,7 +8,7 @@ The editor can edit maps for Command & Conquer Tiberian Dawn, Sole Survivor and 
 
 As of v1.5.0.0, the editor does not require the C&C Remaster; if the C&C Remastered Collection is not installed on the PC, you can launch the editor in Classic mode instead, using the original 90's graphics.
 
-Updates are regularly posted on my little corner of [the C&C Tiberian Dawn Remastered Multiplayer Discord server](https://discord.gg/m4wcAZd).
+Updates are regularly posted on my little corner of [the C&C Mod Haven Discord server](https://discord.gg/fGbEYfxqkZ).
 
 ### Screenshots
 

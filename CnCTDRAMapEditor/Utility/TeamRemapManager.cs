@@ -16,7 +16,6 @@ using MobiusEditor.Model;
 using System;
 using System.Collections.Generic;
 using System.Drawing;
-using System.IO;
 using System.Linq;
 using System.Reflection;
 
@@ -42,6 +41,8 @@ namespace MobiusEditor.Utility
         //public static readonly TeamRemap RemapTdPink = new TeamRemap("MULTI8", 217, 218, 176, new byte[] { 17, 17, 217, 218, 209, 213, 174, 120, 217, 217, 218, 209, 213, 214, 214, 174 });
         // For unowned buildings on the rebuild list.
         public static readonly TeamRemap RemapTdBlack = new TeamRemap("NONE", 199, 199, 176, new byte[] { 195, 196, 196, 13, 169, 198, 199, 112, 196, 13, 13, 169, 154, 198, 198, 199 });
+
+        private static byte RA_BASE_INDEX = 3;
 
         private static readonly Dictionary<string, TeamRemap> RemapsTd;
 
@@ -153,7 +154,7 @@ namespace MobiusEditor.Utility
             Dictionary<string, TeamRemap> raRemapColors = new Dictionary<string, TeamRemap>();
             byte[] remapSource = new byte[16];
             Array.Copy(cpsData, 0, remapSource, 0, 16);
-            currentRemapBaseIndex = remapSource[6];
+            currentRemapBaseIndex = remapSource[RA_BASE_INDEX];
             for (int y = 0; y < height; ++y)
             {
                 int ptr = 320 * y;
@@ -197,10 +198,10 @@ namespace MobiusEditor.Utility
             {
                 case GameType.TiberianDawn:
                 case GameType.SoleSurvivor:
-                    this.currentRemapBaseIndex = RemapTdGood.BuildingRadarColor;
+                    this.currentRemapBaseIndex = RemapTdGood.UnitRadarColor;
                     break;
                 case GameType.RedAlert:
-                    this.currentRemapBaseIndex = 86;
+                    this.currentRemapBaseIndex = (byte)(80 + RA_BASE_INDEX);
                     break;
                 default:
                     this.currentRemapBaseIndex = 0;
