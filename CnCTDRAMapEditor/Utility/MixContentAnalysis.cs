@@ -99,6 +99,8 @@ namespace MobiusEditor.Utility
                 return;
             if (IdentifyCps(fileStream, mixInfo))
                 return;
+            if (IdentifyLut(fileStream, mixInfo))
+                return;
             // These types analyse the full file from byte array. I'm restricting the buffer for them to 5mb; they shouldn't need more.
             // Eventually, all of these (except ini I guess) should ideally be switched to stream to speed up the processing.
             if (mixInfo.Length <= maxProcessed)
@@ -351,9 +353,52 @@ namespace MobiusEditor.Utility
                 mixInfo.Info = "CPS Image; 320x200";
                 return true;
             }
-            catch (FileTypeLoadException) { /* ignore */ }
-            return false;
+            catch (Exception)
+            {
+                return false;
+            }
+            
         }
+
+        private static bool IdentifyLut(Stream fileStream, MixEntry mixInfo)
+        {
+            // RA chrono vortex lookup table
+            const int lutDimensions = 64;
+            const int lutSize = lutDimensions * lutDimensions * 3;
+            const int maxBrightness = 16;
+            if (mixInfo.Length != lutSize)
+            {
+                return false;
+            }
+            try
+            {
+                byte[] table = new byte[lutSize];
+                fileStream.Seek(0, SeekOrigin.Begin);
+                int read = fileStream.Read(table, 0, lutSize);
+                if (read < lutSize)
+                {
+                    return false;
+                }
+                for (int i = 0; i < lutSize; i += 3)
+                {
+                    int x = table[i + 0];
+                    int y = table[i + 1];
+                    int b = table[i + 2];
+                    // boundaries check. Pretty much all we can do.
+                    if (x >= lutDimensions || y >= lutDimensions || b >= maxBrightness)
+                    {
+                        return false;
+                    }
+                }
+                mixInfo.Type = MixContentType.VortexLut;
+                mixInfo.Info = "Chrono vortex distortion effect lookup table";
+                return true;
+            }
+            catch (Exception)
+            {
+                return false;
+            }
+}
 
         private static bool IdentifyWsa(byte[] fileContents, MixEntry mixInfo)
         {
@@ -1057,6 +1102,7 @@ namespace MobiusEditor.Utility
         TmpTd,
         TmpRa,
         Cps,
+        VortexLut,
         Wsa,
         Font,
         Pcx,

@@ -73,7 +73,7 @@ namespace MobiusEditor.Model
             {
                 if (metrics.Contains(x, y) && !EqualityComparer<T>.Default.Equals(cells[y, x], value))
                 {
-                    var lastValue = cells[y, x];
+                    T lastValue = cells[y, x];
                     cells[y, x] = value;
                     OnCellChanged(new CellChangedEventArgs<T>(metrics, new Point(x, y), lastValue, cells[y, x]));
                 }
@@ -138,7 +138,7 @@ namespace MobiusEditor.Model
                 return false;
             }
 
-            for (var i = 0; i < metrics.Length; ++i)
+            for (int i = 0; i < metrics.Length; ++i)
             {
                 other[i] = this[i];
             }
@@ -158,11 +158,11 @@ namespace MobiusEditor.Model
 
         public IEnumerable<(int Cell, T Value)> IntersectsWithCells(ISet<int> cells)
         {
-            foreach (var i in cells)
+            foreach (int i in cells)
             {
                 if (metrics.Contains(i))
                 {
-                    var cell = this[i];
+                    T cell = this[i];
                     if (cell != null)
                     {
                         yield return (i, cell);
@@ -173,11 +173,11 @@ namespace MobiusEditor.Model
 
         public IEnumerable<(int Cell, T Value)> IntersectsWithCells(ISet<Point> locations)
         {
-            foreach (var location in locations)
+            foreach (Point location in locations)
             {
                 if (metrics.Contains(location))
                 {
-                    var cell = this[location];
+                    T cell = this[location];
                     if (cell != null)
                     {
                         metrics.GetCell(location, out int i);
@@ -188,11 +188,11 @@ namespace MobiusEditor.Model
         }
         public IEnumerable<(Point Point, T Value)> IntersectsWithPoints(ISet<int> cells)
         {
-            foreach (var i in cells)
+            foreach (int i in cells)
             {
                 if (metrics.GetLocation(i, out Point location))
                 {
-                    var cell = this[i];
+                    T cell = this[i];
                     if (cell != null)
                     {
                         yield return (location, cell);
@@ -203,11 +203,11 @@ namespace MobiusEditor.Model
 
         public IEnumerable<(Point Point, T Value)> IntersectsWithPoints(ISet<Point> locations)
         {
-            foreach (var location in locations)
+            foreach (Point location in locations)
             {
                 if (metrics.Contains(location))
                 {
-                    var cell = this[location];
+                    T cell = this[location];
                     if (cell != null)
                     {
                         yield return (location, cell);
@@ -230,7 +230,7 @@ namespace MobiusEditor.Model
 
         public IEnumerable<(Point Point, T Value)> FromPoints()
         {
-            for (var i = 0; i < metrics.Length; ++i)
+            for (int i = 0; i < metrics.Length; ++i)
             {
                 T cellVal = this[i];
                 if (cellVal != null && metrics.GetLocation(i, out Point location))
@@ -243,6 +243,23 @@ namespace MobiusEditor.Model
         IEnumerator IEnumerable.GetEnumerator()
         {
             return GetEnumerator();
+        }
+
+        public bool ObjectAt(Point point, out T occupyingObject)
+        {
+            occupyingObject = this[point];
+            return occupyingObject != null;
+        }
+
+        public bool ObjectAt(int cell, out T occupyingObject)
+        {
+            if (!metrics.GetLocation(cell, out Point location))
+            {
+                occupyingObject = default;
+                return false;
+            }
+            occupyingObject = this[location];
+            return occupyingObject != null;
         }
     }
 }

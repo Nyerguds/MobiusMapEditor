@@ -2095,27 +2095,58 @@ namespace MobiusEditor.TiberianDawn
                     continue;
                 }
                 OverlayType overlayType = Map.OverlayTypes.Where(t => t.Equals(kvp.Value)).FirstOrDefault();
-                if (overlayType != null)
+                if (overlayType == null)
                 {
-                    if (Globals.FilterTheaterObjects && !overlayType.ExistsInTheater)
+                    if (OverlayTypes.Squishy.Equals(kvp.Value))
                     {
-                        errors.Add(string.Format("Overlay '{0}' is not available in the set theater; skipping.", overlayType.Name));
+                        string disabledObjExpl = String.Format(consultManual, "DisableSquishMark");
+                        errors.Add(string.Format("Overlay '{0}' is disabled in the editor. {1}", OverlayTypes.Squishy.Name, disabledObjExpl));
                         modified = true;
-                        continue;
                     }
-                    Map.Overlay[cell] = new Overlay { Type = overlayType, Icon = 0 };
+                    else
+                    {
+                        errors.Add(string.Format("Overlay '{0}' references unknown overlay.", kvp.Value));
+                        modified = true;
+                    }
+                    continue;
                 }
-                else if (OverlayTypes.Squishy.Equals(kvp.Value))
+                if (Globals.FilterTheaterObjects && !overlayType.ExistsInTheater)
                 {
-                    string disabledObjExpl = String.Format(consultManual, "DisableSquishMark");
-                    errors.Add(string.Format("Overlay '{0}' is disabled in the editor. {1}", OverlayTypes.Squishy.Name, disabledObjExpl));
+                    errors.Add(string.Format("Overlay '{0}' is not available in the set theater; skipping.", overlayType.Name));
                     modified = true;
+                    continue;
                 }
-                else
+                if ((overlayType.IsWall || overlayType.IsSolid) && Map.Technos.ObjectAt(cell, out ICellOccupier techno))
                 {
-                    errors.Add(string.Format("Overlay '{0}' references unknown overlay.", kvp.Value));
-                    modified = true;
+                    string desc = overlayType.IsWall ? "Wall" : "Solid overlay";
+                    if (techno is Building building)
+                    {
+                        errors.Add(string.Format("{0} '{1}' overlaps structure '{2}' at cell {3}; skipping.", desc, overlayType.Name, building.Type.Name, cell));
+                        modified = true;
+                    }
+                    else if (techno is Terrain terrain)
+                    {
+                        errors.Add(string.Format("{0} '{1}' overlaps terrain '{2}' at cell {3}; skipping.", desc, overlayType.Name, terrain.Type.Name, cell));
+                        modified = true;
+                    }
+                    else if (techno is Unit unit)
+                    {
+                        errors.Add(string.Format("{0} '{1}' overlaps unit '{2}' at cell {3}; skipping.", desc, overlayType.Name, unit.Type.Name, cell));
+                        modified = true;
+                    }
+                    else if (techno is InfantryGroup)
+                    {
+                        errors.Add(string.Format("{0} '{1}' overlaps infantry at cell {2}; skipping.", desc, overlayType.Name, cell));
+                        modified = true;
+                    }
+                    else
+                    {
+                        errors.Add(string.Format("{0} '{1}' overlaps unknown techno in cell {2}; skipping.", desc, overlayType.Name, cell));
+                        modified = true;
+                    }
+                    continue;
                 }
+                Map.Overlay[cell] = new Overlay { Type = overlayType, Icon = 0 };
             }
         }
 

@@ -232,6 +232,23 @@ namespace MobiusEditor.Model
             }
             return true;
         }
+
+        public bool ObjectAt(Point point, out T occupyingObject)
+        {
+            occupyingObject = this[point];
+            return occupyingObject != null;
+        }
+
+        public bool ObjectAt(int cell, out T occupyingObject)
+        {
+            if (!metrics.GetLocation(cell, out Point location))
+            {
+                occupyingObject = null;
+                return false;
+            }
+            occupyingObject = this[location];
+            return occupyingObject != null;
+        }
     }
 
     public static class OccupierSet

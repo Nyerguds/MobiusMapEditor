@@ -600,7 +600,7 @@ Released on 31 Jan 2023 at 20:50 GMT
 * The Base and Briefing sections can no longer remain behind as empty sections in the extra ini rules.
 * The Digest section will now also be removed from TD / SS maps.
 * Upgraded the logic to detect missing rules for ant-related objects on RA maps, so it includes the Mandible weapon, and checks in triggers too. The check now also goes through the rules files, so when using a rules mod that does define these things, no warnings will be shown.
-* Added config option for the behaviour to recolour the classic DOS Einstein to RA95/remastered colours.
+* Added config option for the behaviour to recolor the classic DOS Einstein to RA95/remastered colors.
 * Added code to filter out special houses (e.g. "None") by HouseTypeFlag rather than using hardcoded exceptions.
 * Fixed the alliances list in the house settings scrolling past the first selected alliance.
 * The Alliances list now uses a specific list for alliance-houses, which is filtered and sorted to potentially include special houses.
@@ -631,7 +631,7 @@ Unreleased.
 * The editor will now only connect to Steam if the Publish function is opened, making it possible to leave the editor open while testing maps in-game.
 * Dropping a file into the editor that causes a dialog to be opened (like mix files and images) will no longer freeze the source you dragged the file from while the dialog in the editor is open.
 * Removed theater restrictions on Terrain objects; if the object is found in the theater, it will be shown.
-* Fixed bug that prevented the Red Alert civilian "C3" from loading, and that prevented the Einstein colour fix from working.
+* Fixed bug that prevented the Red Alert civilian "C3" from loading, and that prevented the Einstein color fix from working.
 * Added tooltips to Triggers editor that give a summary of teamtypes and triggers used as trigger arguments. This includes a tooltip on the trigger action on Tiberian Dawn's "Destroy Trigger" and "DZ at 'Z'" actions, respectively showing info on the corresponding trigger and the flare waypoint.
 * Added mission load checks and warnings on teamtype arguments, and on the limits of units/orders list lengths.
 * Added system to avoid loading the same mod from both the workshop items and from the local mods under the Documents folder. If given by name, local mods are given priority.
@@ -639,22 +639,23 @@ Unreleased.
 * Added a specific "PreviewScaleClassic" setting.
 * Fixed Red Alert map load not giving feedback on the removal of Aircraft.
 * Added an indicator on the Autocreate option on Teams if the Max Allowed setting is set to 0.
-* Enabling map terrain type indicators will now show a different colour for each terrain type, editable per type in the settings file.
+* Enabling map terrain type indicators will now show a different color for each terrain type, editable per type in the settings file.
 * The placement previews for map templates will now always show the terrain types. This indication will be less pronounced when the map terrain type indicators option is disabled.
 * Added extra indicators (shortcut: F4) for cells occupied by objects on the map.
 * Added outlines for overlapped buildings and Terrain objects. They will be considered overlapped if all of their cells that contain graphics are considered overlapped, since that would imply the object is obscured from view.
-* Added outlines for overlapped overlay and walls. This only affects overlay that obstructs the map, not pavement types.
+* Added outlines for overlapped overlay and walls. This only affects solid overlay that obstructs the map, not pavement types.
 * Implemented a new scaling method that vastly reduces saving times of multiplayer map thumbnails and image exports.
 * Fixed issue that caused any unknown video names configured on TD missions to be marked as "Remaster only".
 * Fixed a bug where the values of teamtype orders, trigger events and trigger actions were saved as value "-1" when a new item's value was not changed from its default.
-* Fixed RA sound effects string: "water impace".
+* Fixed RA sound effect string "water impace".
 * Fixed bug in RA trigger reading where it would complain about House "None", fix it back to house None, and erroneously show the trigger's Persistence value instead of the House value in the error report.
 * Added indication in House settings that the configured house credits value is multiplied by 100 in-game.
 * Removed incorrect indication on RA's "Credits Exceed" trigger event that claimed the value was multiplied by 100.
 * Fixed RA "Build Aircraft Type" trigger event to correctly save the unit ID.
 * Added checks on Events in Red Alert triggers that crash the game if no House is set on the trigger itself.
 * Fixed RA mission load checks on buildings overlapping non-buildings.
+* Added mission load checks in both TD and RA on solid overlay objects ovelapping other objects.
 * Fixed the fact RA mission rules were only applied after the map was populated, which could make buildings disappear from overlapping with bibs that were actually disabled in the rules.
 * Fixed classic mode not using the classic hash pattern tile to draw the terrain type indicators on the map tiles tool window.
 * Fixed a crash that happened on Tiberian Dawn maps when switching to Infantry or Unit editing mode after having been in the Building tool, if the template building there had the Prebuilt option unchecked.
-* Fixed overlapping flags not working in combination with Sole Survivor football areas.
+* Fixed overlapping multiplayer starting point flags not working in combination with Sole Survivor football areas.

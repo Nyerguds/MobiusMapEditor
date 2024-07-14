@@ -2429,8 +2429,7 @@ namespace MobiusEditor.RedAlert
             {
                 return;
             }
-            int secondRow = Map.Metrics.Width;
-            int lastRow = Map.Metrics.Length - Map.Metrics.Width;
+            int lastLine = Map.Metrics.Height - 1;
             for (int i = 0; i < Map.Metrics.Length; ++i)
             {
                 byte overlayId = data[i];
@@ -2439,10 +2438,12 @@ namespace MobiusEditor.RedAlert
                 {
                     continue;
                 }
+                // Can't fail; we're literally looping over Metrics
+                Map.Metrics.GetLocation(i, out Point point);
                 OverlayType overlayType = Map.OverlayTypes.Where(t => t.Equals(overlayId)).FirstOrDefault();
                 if (overlayType == null)
                 {
-                    if (i < secondRow || i >= lastRow)
+                    if (point.Y == 0 || point.Y == lastLine)
                     {
                         errors.Add(string.Format("Overlay can not be placed on the first and last lines of the map. Cell: '{0}', Id: '{1}' (unknown); skipping.", i, overlayId));
                         modified = true;
@@ -2454,7 +2455,7 @@ namespace MobiusEditor.RedAlert
                     }
                     continue;
                 }
-                if (i < secondRow || i >= lastRow)
+                if (point.Y == 0 || point.Y == lastLine)
                 {
                     errors.Add(string.Format("Overlay can not be placed on the first and last lines of the map. Cell: '{0}', Type: '{1}'; skipping.", i, overlayType.Name));
                     modified = true;
@@ -2466,8 +2467,7 @@ namespace MobiusEditor.RedAlert
                     modified = true;
                     continue;
                 }
-                ICellOccupier techno = Map.Technos[i];
-                if ((overlayType.IsWall || overlayType.IsSolid) && techno != null)
+                if ((overlayType.IsWall || overlayType.IsSolid) && Map.Technos.ObjectAt(i, out ICellOccupier techno))
                 {
                     string desc = overlayType.IsWall ? "Wall" : "Solid overlay";
                     if (techno is Building building)
@@ -2485,7 +2485,7 @@ namespace MobiusEditor.RedAlert
                         errors.Add(string.Format("{0} '{1}' overlaps unit '{2}' at cell {3}; skipping.", desc, overlayType.Name, unit.Type.Name, i));
                         modified = true;
                     }
-                    else if (techno is InfantryGroup igrp)
+                    else if (techno is InfantryGroup)
                     {
                         errors.Add(string.Format("{0} '{1}' overlaps infantry at cell {2}; skipping.", desc, overlayType.Name, i));
                         modified = true;
