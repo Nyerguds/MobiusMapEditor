@@ -135,7 +135,7 @@ namespace MobiusEditor.Model
         /// <returns>True if the given name is considered empty by this game type.</returns>
         public abstract bool MapNameIsEmpty(string name);
         /// <summary>Retrieves classic font info from this game to use for the requested role.</summary>
-        public abstract string GetClassicFontInfo(ClassicFont font, TilesetManagerClassic tsmc, Color textColor, out bool crop, out TeamRemap remap);
+        public abstract string GetClassicFontInfo(ClassicFont font, TilesetManagerClassic tsmc, TeamRemapManager trm, Color textColor, out bool crop, out TeamRemap remap);
         #endregion
 
         #region protected functions
@@ -182,21 +182,43 @@ namespace MobiusEditor.Model
             return null;
         }
 
-        protected TeamRemap GetClassicFontRemapSimple(string fontName, TilesetManagerClassic tsmc, Color textColor, params int[] clearIndices)
+        /// <summary>
+        /// Creates a remap object for a specific font, by remapping all indices to the closest color on te palette.
+        /// A list of indices to clear can be given, which remaps those to index 0 on the palette.
+        /// </summary>
+        /// <param name="fontName">font name, to use in the remap name.</param>
+        /// <param name="tsmc">Classic tileset manager, to get the color info from.</param>
+        /// <param name="textColor">Requested color for the text. Probably won't match exactly since it is looked up in the palette.</param>
+        /// <param name="clearIndices">Indices on the graphics that need to be cleared to transparent (index 0).</param>
+        /// <returns></returns>
+        protected TeamRemap GetClassicFontRemapSimple(string fontName, TilesetManagerClassic tsmc, TeamRemapManager trm, Color textColor, params int[] clearIndices)
         {
             if (fontName == null)
             {
                 return null;
             }
+            List<int> indicesFiltered = clearIndices.Where(x => x > 0 && x < 16).ToList();
+            indicesFiltered.Sort();
+            string cleared = String.Join("-", indicesFiltered.Select(i => i.ToString("X")));
+            string remapName = fontName + "_" + textColor.ToArgb().ToString("X4") + (cleared.Length > 0 ? "_" : string.Empty) + cleared;
+            TeamRemap fontRemap = trm.GetItem(remapName);
+            if (fontRemap != null)
+            {
+                return fontRemap;
+            }
             int color = tsmc.GetClosestColorIndex(textColor, true);
             // Extremely simple: all indices except 0 remap to the given colour.
             byte[] remapIndices = 0.Yield().Concat(Enumerable.Repeat(color, 15)).Select(b => (byte)b).ToArray();
-            foreach (int index in clearIndices)
+            if (indicesFiltered.Count > 0)
             {
-                if (index >= 0 && index < 16)
+                foreach (int index in indicesFiltered)
+                {
                     remapIndices[index] = 0;
+                }
             }
-            return new TeamRemap(fontName + "_" + textColor.ToArgb().ToString("X4"), 0, 0, 0, remapIndices);
+            fontRemap = new TeamRemap(remapName, 0, 0, 0, remapIndices);
+            trm.AddTeamColor(fontRemap);
+            return fontRemap;
         }
 
         protected static string GetMissionName(char side, int number, string suffix)
@@ -230,7 +252,7 @@ namespace MobiusEditor.Model
         CellTriggers,
         /// <summary>Font used for techno triggers, except infantry</summary>
         TechnoTriggers,
-        /// <summary>Font used for infantry techno triggers. Separate because it needs to be smaller.</summary>
+        /// <summary>Font used for infantry techno triggers. Separate because it might need to be smaller.</summary>
         InfantryTriggers,
         /// <summary>Font used for rebuild priority numbers on buildings.</summary>
         RebuildPriority,

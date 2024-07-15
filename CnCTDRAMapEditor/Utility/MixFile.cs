@@ -39,6 +39,7 @@ namespace MobiusEditor.Utility
     {
         private static readonly string PublicKey = "AihRvNoIbTn85FZRYNZRcT+i6KpU+maCsEqr3Q5q+LDB5tH7Tz2qQ38V";
         private static readonly string PrivateKey = "AigKVje8mROcR8QixnxUEF5b29Curkq01DNDWCdOG99XBqH79OaCiTCB";
+        private static readonly int Exponent = 65537;
 
         private Dictionary<uint, MixEntry[]> mixFileContents = new Dictionary<uint, MixEntry[]>();
         private HashMethod hasher = HashMethod.GetRegisteredMethods().FirstOrDefault();
@@ -618,14 +619,14 @@ namespace MobiusEditor.Utility
                 {
                     return null;
                 }
-                throw new MixParseException("Not a valid mix file: encrypted header key info is incorrect.");
+                throw new MixParseException("Program error: internal header key info is incorrect.");
             }
             // Get the 40-byte key.
             byte[] modulusBytes = new byte[40];
             Array.Copy(derKeyBytes, 2, modulusBytes, 0, modulusBytes.Length);
             Array.Reverse(modulusBytes);
             BigInteger publicModulus = new BigInteger(modulusBytes);
-            BigInteger publicExponent = new BigInteger(65537);
+            BigInteger publicExponent = new BigInteger(Exponent);
             // Read blocks
             byte[] readBlock;
             using (Stream headerStream = this.CreateViewStream(mixMap, mixStart, mixLength, readOffset, 80, throwWhenParsing))

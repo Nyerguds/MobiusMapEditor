@@ -330,6 +330,20 @@ namespace MobiusEditor.Utility
             return dictionary == null || !dictionary.ContainsKey(key) ? defVal : dictionary[key];
         }
 
+        public static void MergeWith<T1, T2>(this Dictionary<T1, T2> mergeTarget, params Dictionary<T1, T2>[] dictionariesToCombine)
+        {
+            foreach (Dictionary<T1, T2> dict in dictionariesToCombine)
+            {
+                foreach (KeyValuePair<T1, T2> item in dict)
+                {
+                    if (!mergeTarget.ContainsKey(item.Key))
+                    {
+                        mergeTarget.Add(item.Key, item.Value);
+                    }
+                }
+            }
+        }
+
         public static Bitmap FitToBoundingBox(this Image image, int maxWidth, int maxHeight)
         {
             return FitToBoundingBox(image, maxWidth, maxHeight, Color.Transparent);

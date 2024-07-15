@@ -377,7 +377,7 @@ namespace MobiusEditor.Tools
             if (layersToRender.HasFlag(MapLayerFlag.Buildings | MapLayerFlag.BuildingFakes)
                 && !manuallyHandledLayers.HasFlag(MapLayerFlag.BuildingFakes) && gameInfo.SupportsMapLayer(MapLayerFlag.BuildingFakes))
             {
-                MapRenderer.RenderAllFakeBuildingLabels(graphics, map, visibleCells, tileSize);
+                MapRenderer.RenderAllFakeBuildingLabels(graphics, gameInfo, map, visibleCells, tileSize);
             }
             if (layersToRender.HasFlag(MapLayerFlag.Buildings | MapLayerFlag.BuildingRebuild)
                 && !manuallyHandledLayers.HasFlag(MapLayerFlag.BuildingRebuild) && gameInfo.SupportsMapLayer(MapLayerFlag.BuildingRebuild))

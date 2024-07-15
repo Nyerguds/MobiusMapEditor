@@ -660,3 +660,4 @@ Unreleased.
 * Fixed a crash that happened on Tiberian Dawn maps when switching to Infantry or Unit editing mode after having been in the Building tool, if the template building there had the Prebuilt option unchecked.
 * Fixed overlapping multiplayer starting point flags not working in combination with Sole Survivor football areas.
 * Rebalanced House-specific indicator colors (used for range indicators and overlap outlines) to be more similar in the remastered and classic view.
+* Fixed the "FAKE" label on fake buildings not being shown as more transparent on placement previews.

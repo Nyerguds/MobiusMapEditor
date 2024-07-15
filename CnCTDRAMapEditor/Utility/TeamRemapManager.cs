@@ -21,7 +21,7 @@ using System.Reflection;
 
 namespace MobiusEditor.Utility
 {
-    class TeamRemapManager : ITeamColorManager
+    public class TeamRemapManager : ITeamColorManager, ITeamColorManager<TeamRemap>
     {
         // TD remap
         public static readonly TeamRemap RemapTdGood = new TeamRemap("GOOD", 176, 180, 176, new byte[] { 176, 177, 178, 179, 180, 181, 182, 183, 184, 185, 186, 187, 188, 189, 190, 191 });
@@ -53,11 +53,13 @@ namespace MobiusEditor.Utility
                         select field.GetValue(null) as TeamRemap).ToDictionary(trm => trm.Name);
         }
 
-        private Dictionary<string, TeamRemap> remapsRa = new Dictionary<string, TeamRemap>();
+        private Dictionary<string, TeamRemap> currentRemaps = new Dictionary<string, TeamRemap>();
         private GameType currentlyLoadedGameType;
         private Color[] currentlyLoadedPalette;
         private byte currentRemapBaseIndex = 0;
         private readonly IArchiveManager mixfileManager;
+
+        /// <summary>List of remaps found inside the palette.cps file</summary>
         private readonly string[] remapsColorsRa =
             {
                 "GOLD",
@@ -73,6 +75,7 @@ namespace MobiusEditor.Utility
                 //"DIALOG_BLUE",
         };
 
+        /// <summary>Maps Red Alert's colors loaded from palette.cps to the actual remaster team color names.</summary>
         private readonly Dictionary<string, string[]> remapUseRa = new Dictionary<string, string[]> {
             { "GOLD", new string[]{ "SPAIN", "NEUTRAL", "SPECIAL" , "MULTI1" } },
             { "LTBLUE", new string[]{ "GREECE", "GOOD", "MULTI2" } },
@@ -87,7 +90,7 @@ namespace MobiusEditor.Utility
             //{ "DIALOG_BLUE", new string[]{ } },
         };
 
-        public ITeamColor this[string key] => this.GetforCurrentGame(key);
+        public ITeamColor this[string key] => GetItem(key);
         public Color GetBaseColor(string key)
         {
             if (this.currentlyLoadedPalette == null)
@@ -95,7 +98,7 @@ namespace MobiusEditor.Utility
                 // Standard yellow. Identical in TD and RA, so give this as hardcoded default.
                 return Color.FromArgb(246, 214, 121);
             }
-            TeamRemap tc = this.GetforCurrentGame(key);
+            TeamRemap tc = GetItem(key);
             if (tc == null)
             {
                 return this.currentlyLoadedPalette[this.currentRemapBaseIndex];
@@ -107,35 +110,15 @@ namespace MobiusEditor.Utility
 
         public Color RemapBaseColor => this.GetBaseColor(null);
 
-        private TeamRemap GetforCurrentGame(string key)
-        {
-            if (string.IsNullOrEmpty(key))
-            {
-                return null;
-            }
-            Dictionary<string, TeamRemap> currentRemaps;
-            switch (this.currentlyLoadedGameType)
-            {
-                case GameType.TiberianDawn:
-                case GameType.SoleSurvivor:
-                    currentRemaps = RemapsTd;
-                    break;
-                case GameType.RedAlert:
-                    currentRemaps = this.remapsRa;
-                    break;
-                default:
-                    return null;
-            }
-            return currentRemaps.ContainsKey(key) ? currentRemaps[key] : null;
-        }
-
         public void Load(string path)
         {
+            currentRemaps.Clear();
             if (this.currentlyLoadedGameType != GameType.RedAlert)
             {
+                currentRemaps.MergeWith(RemapsTd);
                 return;
             }
-            Byte[] cpsFileBytes = this.mixfileManager.ReadFile(path);
+            byte[] cpsFileBytes = this.mixfileManager.ReadFile(path);
             if (cpsFileBytes == null)
             {
                 // Not found; ignore and do nothing. Don't reset the current remaps unless a valid cps file is actually
@@ -149,7 +132,7 @@ namespace MobiusEditor.Utility
                 return;
             }
             // CPS file found and decoded successfully; re-initialise RA remap data.
-            this.remapsRa.Clear();
+            Dictionary<string, TeamRemap> remapsRa = new Dictionary<string, TeamRemap>();
             int height = Math.Min(200, this.remapsColorsRa.Length);
             Dictionary<string, TeamRemap> raRemapColors = new Dictionary<string, TeamRemap>();
             byte[] remapSource = new byte[16];
@@ -158,28 +141,29 @@ namespace MobiusEditor.Utility
             for (int y = 0; y < height; ++y)
             {
                 int ptr = 320 * y;
-                String name = this.remapsColorsRa[y];
-                Byte[] remap = new byte[16];
+                string name = remapsColorsRa[y];
+                byte[] remap = new byte[16];
                 Array.Copy(cpsData, ptr, remap, 0, 16);
                 // Apparently the same for units and buildings in RA.
                 byte radarColor = cpsData[ptr + 6];
                 TeamRemap col = new TeamRemap(name, radarColor, radarColor, remapSource, remap);
                 raRemapColors.Add(name, col);
             }
-            foreach (String col in this.remapsColorsRa)
+            foreach (string col in remapsColorsRa)
             {
                 string[] usedRemaps;
                 TeamRemap remapColor;
-                if (this.remapUseRa.TryGetValue(col, out usedRemaps) && raRemapColors.TryGetValue(col, out remapColor))
+                if (remapUseRa.TryGetValue(col, out usedRemaps) && raRemapColors.TryGetValue(col, out remapColor))
                 {
                     for (int i = 0; i < usedRemaps.Length; ++i)
                     {
-                        String actualName = usedRemaps[i];
+                        string actualName = usedRemaps[i];
                         TeamRemap actualCol = new TeamRemap(usedRemaps[i], remapColor);
-                        this.remapsRa.Add(actualName, actualCol);
+                        remapsRa.Add(actualName, actualCol);
                     }
                 }
             }
+            currentRemaps.MergeWith(remapsRa);
         }
 
         public TeamRemapManager(IArchiveManager fileManager)
@@ -190,10 +174,13 @@ namespace MobiusEditor.Utility
 
         public void Reset(GameType gameType, TheaterType theater)
         {
-            // Need to be re-fetched from palette.cps after the reset.
-            this.remapsRa.Clear();
-            this.currentlyLoadedGameType = gameType;
+            if (gameType != currentlyLoadedGameType)
+            {
+                this.currentRemaps.Clear();
+                this.currentlyLoadedGameType = gameType;
+            }
             this.currentlyLoadedPalette = GetPaletteForTheater(this.mixfileManager, theater);
+            this.currentRemapBaseIndex = 0;
             switch (this.currentlyLoadedGameType)
             {
                 case GameType.TiberianDawn:
@@ -202,9 +189,6 @@ namespace MobiusEditor.Utility
                     break;
                 case GameType.RedAlert:
                     this.currentRemapBaseIndex = (byte)(80 + RA_BASE_INDEX);
-                    break;
-                default:
-                    this.currentRemapBaseIndex = 0;
                     break;
             }
         }
@@ -229,6 +213,32 @@ namespace MobiusEditor.Utility
                 colors = ClassicSpriteLoader.LoadSixBitPalette(pal, 0, 0x100);
             }
             return colors;
+        }
+
+        public TeamRemap GetItem(string key) => !string.IsNullOrEmpty(key) && currentRemaps.ContainsKey(key) ? currentRemaps[key] : null;
+
+        public void RemoveTeamColor(string col)
+        {
+            if (col != null && currentRemaps.ContainsKey(col))
+            {
+                currentRemaps.Remove(col);
+            }
+        }
+
+        public void AddTeamColor(TeamRemap col)
+        {
+            if (col != null && col.Name != null)
+            {
+                currentRemaps[col.Name] = col;
+            }
+        }
+
+        public void RemoveTeamColor(TeamRemap col)
+        {
+            if (col != null && col.Name != null && currentRemaps.ContainsKey(col.Name))
+            {
+                currentRemaps.Remove(col.Name);
+            }
         }
     }
 }

@@ -1803,46 +1803,93 @@ namespace MobiusEditor.Render
             }
         }
 
-        public static void RenderAllFakeBuildingLabels(Graphics graphics, Map map, Rectangle visibleCells, Size tileSize)
+        public static void RenderAllFakeBuildingLabels(Graphics graphics, GameInfo gameInfo, Map map, Rectangle visibleCells, Size tileSize)
         {
-            foreach ((Point topLeft, Building building) in map.Buildings.OfType<Building>())
-            {
-                Rectangle buildingBounds = new Rectangle(topLeft, building.Type.Size);
-                if (visibleCells.IntersectsWith(buildingBounds))
-                {
-                    RenderFakeBuildingLabel(graphics, building, topLeft, tileSize, false);
-                }
-            }
+            RenderAllFakeBuildingLabels(graphics, gameInfo, map.Buildings.OfType<Building>(), visibleCells, tileSize);
         }
 
-        public static void RenderFakeBuildingLabel(Graphics graphics, Building building, Point topLeft, Size tileSize, bool forPreview)
+        public static void RenderAllFakeBuildingLabels(Graphics graphics, GameInfo gameInfo, IEnumerable<(Point topLeft, Building building)> buildings, Rectangle visibleCells, Size tileSize)
         {
-            if (!building.Type.IsFake)
-            {
-                return;
-            }
+            Color textColor = Color.White;
+            Color backPaintColor = Color.Black;
             StringFormat stringFormat = new StringFormat
             {
                 Alignment = StringAlignment.Center,
                 LineAlignment = StringAlignment.Center
             };
-            Size maxSize = building.Type.Size;
-            Rectangle buildingBounds = new Rectangle(
-                new Point(topLeft.X * tileSize.Width, topLeft.Y * tileSize.Height),
-                new Size(maxSize.Width * tileSize.Width, maxSize.Height * tileSize.Height)
-            );
+            string classicFont = null;
+            bool cropClassicFont = false;
+            TeamRemap remapClassicFont = null;
+            if (Globals.TheTilesetManager is TilesetManagerClassic tsmc && Globals.TheTeamColorManager is TeamRemapManager trm)
+            {
+                classicFont = gameInfo.GetClassicFontInfo(ClassicFont.CellTriggers, tsmc, trm, textColor, out cropClassicFont, out remapClassicFont);
+            }
             string fakeText = Globals.TheGameTextManager["TEXT_UI_FAKE"];
             double tileScaleHor = tileSize.Width / 128.0;
-            using (SolidBrush fakeBackgroundBrush = new SolidBrush(Color.FromArgb((forPreview ? 128 : 256) * 2 / 3, Color.Black)))
-            using (SolidBrush fakeTextBrush = new SolidBrush(Color.FromArgb(forPreview ? building.Tint.A : 255, Color.White)))
+
+            using (SolidBrush fakeBackgroundBrushPrev = new SolidBrush(Color.FromArgb(128 * 2 / 3, backPaintColor)))
+            using (SolidBrush fakeBackgroundBrush = new SolidBrush(Color.FromArgb(256 * 2 / 3, backPaintColor)))
+            using (ImageAttributes imageAttributes = new ImageAttributes())
             {
-                using (Font font = graphics.GetAdjustedFont(fakeText, SystemFonts.DefaultFont, buildingBounds.Width, buildingBounds.Height,
-                    Math.Max(1, (int)Math.Round(12 * tileScaleHor)), Math.Max(1, (int)Math.Round(24 * tileScaleHor)), stringFormat, true))
+                foreach ((Point topLeft, Building building) in buildings)
                 {
-                    SizeF textBounds = graphics.MeasureString(fakeText, font, buildingBounds.Width, stringFormat);
-                    RectangleF backgroundBounds = new RectangleF(buildingBounds.Location, textBounds);
-                    graphics.FillRectangle(fakeBackgroundBrush, backgroundBounds);
-                    graphics.DrawString(fakeText, font, fakeTextBrush, backgroundBounds, stringFormat);
+                    if (!building.Type.IsFake)
+                    {
+                        continue;
+                    }
+                    Rectangle buildingCellBounds = new Rectangle(topLeft, building.Type.Size);
+                    if (!visibleCells.IntersectsWith(buildingCellBounds))
+                    {
+                        continue;
+                    }
+                    bool forPreview = building.IsPreview;
+                    Size maxSize = building.Type.Size;
+                    Rectangle buildingBounds = new Rectangle(
+                        new Point(topLeft.X * tileSize.Width, topLeft.Y * tileSize.Height),
+                        new Size(maxSize.Width * tileSize.Width, maxSize.Height * tileSize.Height)
+                    );
+                    if (classicFont == null)
+                    {
+
+                        using (SolidBrush fakeTextBrush = new SolidBrush(Color.FromArgb(forPreview ? building.Tint.A : 255, textColor)))
+                        {
+                            using (Font font = graphics.GetAdjustedFont(fakeText, SystemFonts.DefaultFont, buildingBounds.Width, buildingBounds.Height,
+                                Math.Max(1, (int)Math.Round(12 * tileScaleHor)), Math.Max(1, (int)Math.Round(24 * tileScaleHor)), stringFormat, true))
+                            {
+                                SizeF textBounds = graphics.MeasureString(fakeText, font, buildingBounds.Width, stringFormat);
+                                RectangleF backgroundBounds = new RectangleF(buildingBounds.Location, textBounds);
+                                graphics.FillRectangle(forPreview ? fakeBackgroundBrushPrev : fakeBackgroundBrush, backgroundBounds);
+                                graphics.DrawString(fakeText, font, fakeTextBrush, backgroundBounds, stringFormat);
+                            }
+                        }
+                    }
+                    else
+                    {
+                        Rectangle buildingRenderBounds = new Rectangle(
+                            new Point(topLeft.X * tileSize.Width, topLeft.Y * tileSize.Height),
+                            new Size(maxSize.Width * tileSize.Width, maxSize.Height * tileSize.Height)
+                        );
+                        Rectangle buildingBoundsClassic = new Rectangle(Point.Empty, new Size(maxSize.Width * Globals.OriginalTileWidth, maxSize.Height * Globals.OriginalTileHeight));
+                        using (Bitmap bm = new Bitmap(buildingBoundsClassic.Width, buildingBoundsClassic.Height))
+                        {
+                            using (Graphics bmgr = Graphics.FromImage(bm))
+                            {
+                                int[] indices = Encoding.ASCII.GetBytes(fakeText).Select(x => (int)x).ToArray();
+                                using (Bitmap txt = RenderTextFromSprite(classicFont, remapClassicFont, Size.Empty, indices, false, cropClassicFont))
+                                {
+                                    int frameWidth = Math.Min(txt.Width + 2, buildingBoundsClassic.Width);
+                                    int frameHeight = Math.Min(txt.Height + 2, buildingBoundsClassic.Height);
+                                    Rectangle backgroundBounds = new Rectangle(Point.Empty, new Size(frameWidth, frameHeight));
+                                    Rectangle frameRect = new Rectangle(0, 0, frameWidth, frameHeight);
+                                    Rectangle textRect = new Rectangle(1, 1, txt.Width, txt.Height);
+                                    bmgr.FillRectangle(fakeBackgroundBrush, frameRect);
+                                    bmgr.DrawImage(txt, textRect, 0, 0, txt.Width, txt.Height, GraphicsUnit.Pixel);
+                                }
+                            }
+                            imageAttributes.SetColorMatrix(GetColorMatrix(Color.White, 1.0f, building.IsPreview ? 0.5f : 1.0f));
+                            graphics.DrawImage(bm, buildingRenderBounds, 0, 0, bm.Width, bm.Height, GraphicsUnit.Pixel, imageAttributes);
+                        }
+                    }
                 }
             }
         }
@@ -1859,13 +1906,13 @@ namespace MobiusEditor.Render
             string classicFont = null;
             bool cropClassicFont = false;
             TeamRemap remapClassicFont = null;
-            if (Globals.TheTilesetManager is TilesetManagerClassic tsmc)
+            if (Globals.TheTilesetManager is TilesetManagerClassic tsmc && Globals.TheTeamColorManager is TeamRemapManager trm)
             {
-                classicFont = gameInfo.GetClassicFontInfo(ClassicFont.CellTriggers, tsmc, textColor, out cropClassicFont, out remapClassicFont);
+                classicFont = gameInfo.GetClassicFontInfo(ClassicFont.CellTriggers, tsmc, trm, textColor, out cropClassicFont, out remapClassicFont);
             }
             foreach ((Point topLeft, Building building) in buildings)
             {
-                if (building.BasePriority <= 0 || !visibleCells.IntersectsWith(new Rectangle(topLeft, building.Type.Size)))
+                if (building.BasePriority < 0 || !visibleCells.IntersectsWith(new Rectangle(topLeft, building.Type.Size)))
                 {
                     continue;
                 }
@@ -1895,10 +1942,7 @@ namespace MobiusEditor.Render
                     }
                     else
                     {
-                        Rectangle buildingBounds = new Rectangle(
-                            new Point(0,0),
-                            new Size((int)Math.Round(maxSize.Width * Globals.OriginalTileWidth * tilescale),
-                                    (int)Math.Round(maxSize.Height * Globals.OriginalTileHeight * tilescale)));
+                        Rectangle buildingBounds = new Rectangle(Point.Empty, new Size(maxSize.Width * Globals.OriginalTileWidth, maxSize.Height * Globals.OriginalTileHeight));
                         using (Bitmap bm = new Bitmap(buildingBounds.Width, buildingBounds.Height))
                         {
                             using (Graphics bmgr = Graphics.FromImage(bm))
@@ -1918,6 +1962,7 @@ namespace MobiusEditor.Render
                                     bmgr.DrawImage(txt, textRect, 0, 0, txt.Width, txt.Height, GraphicsUnit.Pixel);
                                 }
                             }
+                            imageAttributes.SetColorMatrix(GetColorMatrix(Color.White, 1.0f, building.IsPreview ? 0.5f : 1.0f));
                             graphics.DrawImage(bm, buildingRenderBounds, 0, 0, bm.Width, bm.Height, GraphicsUnit.Pixel, imageAttributes);
                         }
                     }
@@ -2049,6 +2094,18 @@ namespace MobiusEditor.Render
             HashSet<Waypoint> specifiedWaypoints = specified.ToHashSet();
 
             Waypoint[] toPaint = excludeSpecified ? map.Waypoints : specified;
+            string classicFontShort = null;
+            bool cropClassicFontShort = false;
+            TeamRemap remapClassicFontShort = null;
+            string classicFontLong = null;
+            bool cropClassicFontLong = false;
+            TeamRemap remapClassicFontLong = null;
+
+            if (Globals.TheTilesetManager is TilesetManagerClassic tsmc && Globals.TheTeamColorManager is TeamRemapManager trm)
+            {
+                classicFontShort = gameInfo.GetClassicFontInfo(ClassicFont.Waypoints, tsmc, trm, textColor, out cropClassicFontShort, out remapClassicFontShort);
+                classicFontLong = gameInfo.GetClassicFontInfo(ClassicFont.WaypointsLong, tsmc, trm, textColor, out cropClassicFontLong, out remapClassicFontLong);
+            }
             foreach (Waypoint waypoint in toPaint)
             {
                 if ((excludeSpecified && specifiedWaypoints.Contains(waypoint)) || !waypoint.Cell.HasValue
@@ -2057,15 +2114,14 @@ namespace MobiusEditor.Render
                     continue;
                 }
                 Rectangle paintBounds = new Rectangle(new Point(topLeft.X * tileSize.Width, topLeft.Y * tileSize.Height), tileSize);
-                string classicFont = null;
-                bool cropClassicFont = false;
-                TeamRemap remapClassicFont = null;
                 string wpText = waypoint.Name;
-                if (Globals.TheTilesetManager is TilesetManagerClassic tsmc)
+                bool isLong = wpText.Length > 3;
+                string classicFont = isLong ? classicFontLong : classicFontShort;
+                bool cropClassicFont = isLong ? cropClassicFontLong : cropClassicFontShort;
+                TeamRemap remapClassicFont = isLong ? remapClassicFontLong : remapClassicFontShort;
+                if (classicFont != null && isLong)
                 {
                     wpText = waypoint.ShortName;
-                    ClassicFont role = wpText.Length > 3 ? ClassicFont.WaypointsLong : ClassicFont.Waypoints;
-                    classicFont = gameInfo.GetClassicFontInfo(role, tsmc, textColor, out cropClassicFont, out remapClassicFont);
                 }
                 Color backPaintColor = Color.FromArgb(128, Color.Black);
                 // Adjust calcuations to tile size. The below adjustments are done assuming the tile is 128 wide.
@@ -2322,9 +2378,9 @@ namespace MobiusEditor.Render
             string classicFont = null;
             bool cropClassicFont = false;
             TeamRemap remapClassicFont = null;
-            if (Globals.TheTilesetManager is TilesetManagerClassic tsmc)
+            if (Globals.TheTilesetManager is TilesetManagerClassic tsmc && Globals.TheTeamColorManager is TeamRemapManager trm)
             {
-                classicFont = gameInfo.GetClassicFontInfo(ClassicFont.CellTriggers, tsmc, textColor, out cropClassicFont, out remapClassicFont);
+                classicFont = gameInfo.GetClassicFontInfo(ClassicFont.CellTriggers, tsmc, trm, textColor, out cropClassicFont, out remapClassicFont);
             }
             // For bounds, add one more cell to get all borders showing.
             Rectangle boundRenderCells = visibleCells;

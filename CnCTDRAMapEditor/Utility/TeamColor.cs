@@ -19,7 +19,6 @@ using System.Drawing.Imaging;
 using System.Globalization;
 using System.Numerics;
 using System.Runtime.InteropServices;
-using System.Runtime.Remoting.Messaging;
 using System.Xml;
 
 namespace MobiusEditor.Utility

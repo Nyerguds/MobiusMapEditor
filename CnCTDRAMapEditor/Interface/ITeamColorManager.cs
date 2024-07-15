@@ -12,6 +12,7 @@
 //
 //   0. You just DO WHAT THE FUCK YOU WANT TO.
 using MobiusEditor.Model;
+using MobiusEditor.Utility;
 using System.Drawing;
 
 namespace MobiusEditor.Interface
@@ -28,5 +29,13 @@ namespace MobiusEditor.Interface
 
         void Load(string path);
         void Reset(GameType gameType, TheaterType theater);
+    }
+
+    public interface ITeamColorManager<T> where T : ITeamColor
+    {
+        T GetItem(string key);
+        void RemoveTeamColor(string col);
+        void AddTeamColor(T col);
+        void RemoveTeamColor(T col);
     }
 }

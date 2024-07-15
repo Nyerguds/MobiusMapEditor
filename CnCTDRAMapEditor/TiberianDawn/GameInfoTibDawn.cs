@@ -143,7 +143,7 @@ namespace MobiusEditor.TiberianDawn
             return String.IsNullOrEmpty(name) || Constants.EmptyMapName.Equals(name, StringComparison.OrdinalIgnoreCase);
         }
 
-        public override string GetClassicFontInfo(ClassicFont font, TilesetManagerClassic tsmc, Color textColor, out bool crop, out TeamRemap remap)
+        public override string GetClassicFontInfo(ClassicFont font, TilesetManagerClassic tsmc, TeamRemapManager trm, Color textColor, out bool crop, out TeamRemap remap)
         {
             crop = false;
             remap = null;
@@ -153,20 +153,28 @@ namespace MobiusEditor.TiberianDawn
                 case ClassicFont.Waypoints:
                     crop = true;
                     fontName = "8point.fnt";
-                    remap = GetClassicFontRemapSimple(fontName, tsmc, textColor, 2, 3);
+                    remap = GetClassicFontRemapSimple(fontName, tsmc, trm, textColor, 2, 3);
                     break;
                 case ClassicFont.WaypointsLong: // The DOS 6point.fnt would be ideal for this, but they replaced it with a much larger one in C&C95.
+                    crop = true;
+                    fontName = "scorefnt.fnt";
+                    remap = GetClassicFontRemapSimple(fontName, tsmc, trm, textColor);
+                    break;
                 case ClassicFont.CellTriggers:
                     crop = true;
                     fontName = "scorefnt.fnt";
-                    remap = GetClassicFontRemapSimple(fontName, tsmc, textColor);
+                    remap = GetClassicFontRemapSimple(fontName, tsmc, trm, textColor);
                     break;
-                case ClassicFont.TechnoTriggers:
-                case ClassicFont.InfantryTriggers:
                 case ClassicFont.RebuildPriority:
                     crop = true;
                     fontName = "scorefnt.fnt";
-                    remap = GetClassicFontRemapSimple(fontName, tsmc, textColor);
+                    remap = GetClassicFontRemapSimple(fontName, tsmc, trm, textColor);
+                    break;
+                case ClassicFont.TechnoTriggers:
+                case ClassicFont.InfantryTriggers:
+                    crop = true;
+                    fontName = "3point.fnt";
+                    remap = GetClassicFontRemapSimple(fontName, tsmc, trm, textColor);
                     break;
                 case ClassicFont.FakeLabels:
                     break;

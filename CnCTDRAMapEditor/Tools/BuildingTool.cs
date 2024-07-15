@@ -974,20 +974,21 @@ namespace MobiusEditor.Tools
                         { (new Point(0, 0), mockBuilding) };
                     Rectangle visibleBounds = new Rectangle(Point.Empty, previewSize);
                     MapRenderer.RenderAllOccupierBounds(g, visibleBounds, Globals.PreviewTileSize, buildingList);
+                    GameInfo gameInfo = plugin.GameInfo;
                     if (Layers.HasFlag(MapLayerFlag.BuildingFakes))
                     {
-                        MapRenderer.RenderFakeBuildingLabel(g, mockBuilding, new Point(0, 0), Globals.PreviewTileSize, false);
+                        MapRenderer.RenderAllFakeBuildingLabels(g, gameInfo, buildingList, visibleBounds, Globals.PreviewTileSize);
                     }
                     if (Layers.HasFlag(MapLayerFlag.BuildingRebuild))
                     {
-                        MapRenderer.RenderAllRebuildPriorityLabels(g, plugin.GameInfo, buildingList, visibleBounds, Globals.PreviewTileSize, Globals.PreviewTileScale);
+                        MapRenderer.RenderAllRebuildPriorityLabels(g, gameInfo, buildingList, visibleBounds, Globals.PreviewTileSize, Globals.PreviewTileScale);
                     }
                     if (Layers.HasFlag(MapLayerFlag.TechnoTriggers))
                     {
                         CellMetrics tm = new CellMetrics(mockBuilding.Type.OverlapBounds.Size);
                         OccupierSet<ICellOccupier> technoSet = new OccupierSet<ICellOccupier>(tm);
                         technoSet.Add(0, mockBuilding);
-                        MapRenderer.RenderAllTechnoTriggers(g, plugin.GameInfo, technoSet, tm.Bounds, Globals.PreviewTileSize, Layers, Color.LimeGreen, null, false);
+                        MapRenderer.RenderAllTechnoTriggers(g, gameInfo, technoSet, tm.Bounds, Globals.PreviewTileSize, Layers, Color.LimeGreen, null, false);
                     }
                 }
                 buildingTypeMapPanel.MapImage = buildingPreview;
@@ -1128,17 +1129,18 @@ namespace MobiusEditor.Tools
                 MapRenderer.RenderBuildingEffectRadius(graphics, boundRenderCells, Globals.MapTileSize, map.GapRadius, selected, loc.Value, selected);
             }
             this.HandlePaintOutlines(graphics, previewMap, visibleCells, Globals.MapTileSize, Globals.MapTileScale, this.Layers);
+            GameInfo gameInfo = plugin.GameInfo;
             if (Layers.HasFlag(MapLayerFlag.BuildingFakes))
             {
-                MapRenderer.RenderAllFakeBuildingLabels(graphics, previewMap, visibleCells, Globals.MapTileSize);
+                MapRenderer.RenderAllFakeBuildingLabels(graphics, gameInfo, previewMap, visibleCells, Globals.MapTileSize);
             }
             if (Layers.HasFlag(MapLayerFlag.BuildingRebuild))
             {
-                MapRenderer.RenderAllRebuildPriorityLabels(graphics, plugin.GameInfo, previewMap.Buildings.OfType<Building>(), visibleCells, Globals.MapTileSize, Globals.MapTileScale);
+                MapRenderer.RenderAllRebuildPriorityLabels(graphics, gameInfo, previewMap.Buildings.OfType<Building>(), visibleCells, Globals.MapTileSize, Globals.MapTileScale);
             }
             if (Layers.HasFlag(MapLayerFlag.TechnoTriggers))
             {
-                MapRenderer.RenderAllTechnoTriggers(graphics, plugin.GameInfo, previewMap, visibleCells, Globals.MapTileSize, Layers);
+                MapRenderer.RenderAllTechnoTriggers(graphics, gameInfo, previewMap, visibleCells, Globals.MapTileSize, Layers);
             }
         }
 

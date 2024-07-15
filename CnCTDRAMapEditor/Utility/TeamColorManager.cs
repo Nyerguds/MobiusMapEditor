@@ -22,14 +22,14 @@ using System.Xml;
 
 namespace MobiusEditor.Utility
 {
-    public class TeamColorManager : ITeamColorManager
+    public class TeamColorManager : ITeamColorManager, ITeamColorManager<TeamColor>
     {
         private readonly Dictionary<string, TeamColor> teamColors = new Dictionary<string, TeamColor>();
 
         private readonly IArchiveManager megafileManager;
         public Color RemapBaseColor => Color.FromArgb(0x00, 0xE0, 0x00);
 
-        public ITeamColor this[string key] => !string.IsNullOrEmpty(key) && teamColors.ContainsKey(key) ? (ITeamColor)teamColors[key]: null;
+        public ITeamColor this[string key] => GetItem(key);
 
         public Color GetBaseColor(string key)
         {
@@ -39,7 +39,8 @@ namespace MobiusEditor.Utility
             }
             return RemapBaseColor;
         }
-        public TeamColor GetItem(string key) => !string.IsNullOrEmpty(key) ? teamColors[key] : null;
+
+        public TeamColor GetItem(string key) => !string.IsNullOrEmpty(key) && teamColors.ContainsKey(key) ? teamColors[key] : null;
 
         public void RemoveTeamColor(string col)
         {
