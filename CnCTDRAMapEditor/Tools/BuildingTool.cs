@@ -33,6 +33,8 @@ namespace MobiusEditor.Tools
         private readonly TypeListBox buildingTypeListBox;
         private readonly MapPanel buildingTypeMapPanel;
         private readonly ObjectProperties objectProperties;
+        // for caching bibs.
+        private readonly ShapeCacheManager shapeCache = new ShapeCacheManager();
 
         private Map previewMap;
         protected override Map RenderMap => previewMap;
@@ -940,6 +942,7 @@ namespace MobiusEditor.Tools
         protected override void RefreshPreviewPanel()
         {
             Image oldImage = buildingTypeMapPanel.MapImage;
+            bool isSmooth = Globals.PreviewSmoothScale;
             if (mockBuilding.Type != null)
             {
                 Dictionary <Point, Smudge> bibCells = mockBuilding.GetBib(new Point(0, 0), map.SmudgeTypes);
@@ -948,7 +951,8 @@ namespace MobiusEditor.Tools
                 {
                     foreach (Point point in bibCells.Keys)
                     {
-                        (Rectangle, Action<Graphics>) bibCellRender = MapRenderer.RenderSmudge(point, Globals.PreviewTileSize, Globals.PreviewTileScale, bibCells[point]);
+                        (Rectangle, Action<Graphics>) bibCellRender = 
+                            MapRenderer.RenderSmudge(point, Globals.PreviewTileSize, Globals.PreviewTileScale, bibCells[point], isSmooth, shapeCache);
                         bibRender.Add(bibCellRender);
                     }
                 }
@@ -958,7 +962,7 @@ namespace MobiusEditor.Tools
                 buildingPreview.SetResolution(96, 96);
                 using (Graphics g = Graphics.FromImage(buildingPreview))
                 {
-                    MapRenderer.SetRenderSettings(g, Globals.PreviewSmoothScale);
+                    MapRenderer.SetRenderSettings(g, false);
                     foreach ((Rectangle, Action<Graphics>) bib in bibRender)
                     {
                         if (!bib.Item1.IsEmpty)
@@ -966,6 +970,7 @@ namespace MobiusEditor.Tools
                             bib.Item2(g);
                         }
                     }
+                    MapRenderer.SetRenderSettings(g, Globals.PreviewSmoothScale);
                     if (render.RenderedObject != null)
                     {
                         render.RenderAction(g);
@@ -1202,6 +1207,7 @@ namespace MobiusEditor.Tools
                     selectedObjectProperties?.Close();
                     selectedObjectProperties = null;
                     buildingTypeListBox.SelectedIndexChanged -= BuildingTypeListBox_SelectedIndexChanged;
+                    shapeCache.Reset();
                     Deactivate();
                 }
                 disposedValue = true;

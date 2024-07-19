@@ -51,7 +51,7 @@ namespace MobiusEditor.Interface
         Byte[] ReadFile(string path);
 
         /// <summary>
-        /// Check whether a file exists in the currently loaded files.
+        /// Check whether a file exists in the currently loaded classic files.
         /// </summary>
         /// <param name="path">The internal path of the file to open.</param>
         /// <returns>True if the file exists.</returns>

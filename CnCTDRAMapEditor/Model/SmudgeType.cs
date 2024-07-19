@@ -133,15 +133,17 @@ namespace MobiusEditor.Model
             Bitmap th = new Bitmap(this.Size.Width * Globals.PreviewTileSize.Width, this.Size.Height * Globals.PreviewTileSize.Height);
             th.SetResolution(96, 96);
             int icon = 0;
+            using (ShapeCacheManager cm = new ShapeCacheManager())
             using (Graphics g = Graphics.FromImage(th))
             {
-                MapRenderer.SetRenderSettings(g, Globals.PreviewSmoothScale);
+                bool isSmooth = Globals.PreviewSmoothScale;
+                MapRenderer.SetRenderSettings(g, false);
                 for (int y = 0; y < this.Size.Height; y++)
                 {
                     for (int x = 0; x < this.Size.Width; x++)
                     {
                         Smudge mockSmudge = new Smudge(this) { Icon = icon++ };
-                        MapRenderer.RenderSmudge(new Point(x, y), Globals.PreviewTileSize, Globals.PreviewTileScale, mockSmudge).Item2(g);
+                        MapRenderer.RenderSmudge(new Point(x, y), Globals.PreviewTileSize, Globals.PreviewTileScale, mockSmudge, isSmooth, cm).Item2(g);
                     }
                 }
             }

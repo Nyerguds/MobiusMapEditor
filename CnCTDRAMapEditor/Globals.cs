@@ -13,6 +13,7 @@
 // GNU General Public License along with permitted additional restrictions
 // with this program. If not, see https://github.com/electronicarts/CnC_Remastered_Collection
 using MobiusEditor.Interface;
+using MobiusEditor.Utility;
 using System;
 using System.Drawing;
 using System.IO;
@@ -52,6 +53,12 @@ namespace MobiusEditor
             HashColorLandWater = Properties.Settings.Default.HashColorLandWater;
             HashColorLandRiver = Properties.Settings.Default.HashColorLandRiver;
             HashColorLandRough = Properties.Settings.Default.HashColorLandRough;
+
+            OutlineColorCrateWood = Properties.Settings.Default.OutlineColorCrateWood;
+            OutlineColorCrateSteel = Properties.Settings.Default.OutlineColorCrateSteel;
+            OutlineColorTerrain = Properties.Settings.Default.OutlineColorTerrain;
+            OutlineColorWall = Properties.Settings.Default.OutlineColorWall;
+            OutlineColorSolidOverlay = Properties.Settings.Default.OutlineColorSolidOverlay;
 
             UndoRedoStackSize = Properties.Settings.Default.UndoRedoStackSize;
             MinimumClampSize = Properties.Settings.Default.MinimumClampSize;
@@ -135,6 +142,12 @@ namespace MobiusEditor
         public static Color HashColorLandRiver { get; private set; }
         public static Color HashColorLandRough { get; private set; }
 
+        public static Color OutlineColorCrateWood { get; private set; }
+        public static Color OutlineColorCrateSteel { get; private set; }
+        public static Color OutlineColorTerrain { get; private set; }
+        public static Color OutlineColorWall { get; private set; }
+        public static Color OutlineColorSolidOverlay { get; private set; }
+
         private static double GetMinScale(){ return 1.0 / Math.Min(OriginalTileWidth, OriginalTileHeight); }
         public static double MapTileScale => Math.Max(GetMinScale(), Math.Abs(UseClassicFiles ? Properties.Settings.Default.MapScaleClassic : Properties.Settings.Default.MapScale));
         public static bool MapSmoothScale => (UseClassicFiles ? Properties.Settings.Default.MapScaleClassic : Properties.Settings.Default.MapScale) < 0;
@@ -185,6 +198,7 @@ namespace MobiusEditor
         public static ITilesetManager TheTilesetManager;
         public static ITeamColorManager TheTeamColorManager;
         public static IGameTextManager TheGameTextManager;
+        public static ShapeCacheManager TheShapeCacheManager;
 
         public static readonly string RootSaveDirectory = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.Personal), @"CnCRemastered\Local_Custom_Maps");
         public static readonly string ModDirectory = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.Personal), @"CnCRemastered\Mods");

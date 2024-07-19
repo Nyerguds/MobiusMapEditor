@@ -49,6 +49,12 @@ namespace MobiusEditor.Utility
             this.attachForm = attachForm;
         }
 
+        public SimpleMultiThreading(Form attachForm, BorderStyle processingLabelBorder)
+            :this(attachForm)
+        {
+            this.ProcessingLabelBorder = processingLabelBorder;
+        }
+
         public bool AbortThreadedOperation(int timeout)
         {
             if (this.processingThread == null || !this.processingThread.IsAlive)

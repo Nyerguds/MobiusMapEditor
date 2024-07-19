@@ -23,7 +23,6 @@ using System.ComponentModel;
 using System.Drawing;
 using System.Drawing.Drawing2D;
 using System.Linq;
-using System.Runtime.InteropServices;
 using System.Windows.Forms;
 
 namespace MobiusEditor.Controls
@@ -37,11 +36,11 @@ namespace MobiusEditor.Controls
 
         private (Point map, SizeF client)? referencePositions;
 
-        private Matrix mapToViewTransform = new Matrix();
-        private Matrix viewToPageTransform = new Matrix();
+        private readonly Matrix mapToViewTransform = new Matrix();
+        private readonly Matrix viewToPageTransform = new Matrix();
 
-        private Matrix compositeTransform = new Matrix();
-        private Matrix invCompositeTransform = new Matrix();
+        private readonly Matrix compositeTransform = new Matrix();
+        private readonly Matrix invCompositeTransform = new Matrix();
 
         private readonly HashSet<Point> invalidateCells = new HashSet<Point>();
         private bool fullInvalidation;
@@ -192,8 +191,8 @@ namespace MobiusEditor.Controls
             // Add space if needed to center it.
             if (scrollBarVert && scrollBarHor)
             {
-                x = x - (clientCur.Width - (int)(cellsWidth * basicTileSize * zoom)) / 2;
-                y = y - (clientCur.Height - (int)(cellsHeight * basicTileSize * zoom)) / 2;
+                x -= (clientCur.Width - (int)(cellsWidth * basicTileSize * zoom)) / 2;
+                y -= (clientCur.Height - (int)(cellsHeight * basicTileSize * zoom)) / 2;
             }
             this.AutoScrollPosition = new Point(x, y);
             this.InvalidateScroll();
@@ -297,14 +296,15 @@ namespace MobiusEditor.Controls
             return new Rectangle(points[0], new Size(points[1].X - points[0].X, points[1].Y - points[0].Y));
         }
 
-        public void Invalidate(Map invalidateMap)
+        public void InvalidateFull()
         {
-            if (!fullInvalidation)
+            if (fullInvalidation)
             {
-                invalidateCells.Clear();
-                fullInvalidation = true;
-                Invalidate();
+                return;
             }
+            invalidateCells.Clear();
+            fullInvalidation = true;
+            Invalidate();
         }
 
         public void Invalidate(Map invalidateMap, Rectangle cellBounds)
@@ -385,7 +385,6 @@ namespace MobiusEditor.Controls
             {
                 return;
             }
-
             Rectangle? rectangle = invalidateMap.Overlappers[overlapper];
             if (rectangle.HasValue)
             {

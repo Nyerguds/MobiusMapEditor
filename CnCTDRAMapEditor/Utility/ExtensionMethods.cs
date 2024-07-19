@@ -563,19 +563,44 @@ namespace MobiusEditor.Utility
             // to make the border in the resulting image at least 4 pixels wide.
             int bmWidth = bitmap.Width;
             int bmHeight = bitmap.Height;
-            int borderFraction = 1;
-            const int fractionDivider = 16;
+            Size imageSize = new Size(bmWidth, bmHeight);
+            Size maxSize = new Size(width, height);
+            Size newSize = new Size(width, height);
+            // If graphics are too large, scale them down using the largest dimension
+            if (imageSize.Width > imageSize.Height)
+            {
+                newSize.Height = imageSize.Height * maxSize.Width / imageSize.Width;
+                newSize.Width = maxSize.Width;
+            }
+            else if (imageSize.Height > imageSize.Width)
+            {
+                newSize.Width = imageSize.Width * maxSize.Height / imageSize.Height;
+                newSize.Height = maxSize.Height;
+            }
+            // center graphics inside bounding box
+            int locX = (maxSize.Width - newSize.Width) / 2;
+            int locY = (maxSize.Height - newSize.Height) / 2;
+
+            int borderFractionX = 1;
+            const int fractionDividerX = 16;
             const int minimumEdge = 4;
             // Use larger border fraction if result is less than 'minimumEdge' pixels.
-            while (width * borderFraction / fractionDivider < minimumEdge || bmWidth * borderFraction / fractionDivider < minimumEdge)
+            while (newSize.Width * borderFractionX / fractionDividerX < minimumEdge || bmWidth * borderFractionX / fractionDividerX < minimumEdge)
             {
                 // Increase is exponential until the full size (16/16) is reached, then the full size is added each time.
-                borderFraction = borderFraction < fractionDivider ? borderFraction * 2 : borderFraction + fractionDivider;
+                borderFractionX = borderFractionX < fractionDividerX ? borderFractionX * 2 : borderFractionX + fractionDividerX;
             }
-            int bmBorderWidth = bmWidth * borderFraction / fractionDivider;
-            int bmBorderHeight = bmHeight * borderFraction / fractionDivider;
+            int bmBorderWidth = bmWidth * borderFractionX / fractionDividerX;
+            int borderFractionY = 1;
+            const int fractionDividerY = 16;
+            while (newSize.Height * borderFractionY / fractionDividerY < minimumEdge || bmHeight * borderFractionY / fractionDividerY < minimumEdge)
+            {
+                // Increase is exponential until the full size (16/16) is reached, then the full size is added each time.
+                borderFractionY = borderFractionY < fractionDividerY ? borderFractionY * 2 : borderFractionY + fractionDividerY;
+            }
+            int bmBorderHeight = bmHeight * borderFractionY / fractionDividerY;
             // Get original image data.
-            BitmapData sourceData = bitmap.LockBits(new Rectangle(0, 0, width, height), ImageLockMode.ReadOnly, PixelFormat.Format32bppArgb);
+            BitmapData sourceData = bitmap.LockBits(new Rectangle(0, 0, bmWidth, bmHeight), ImageLockMode.ReadOnly, PixelFormat.Format32bppArgb);
             int stride = sourceData.Stride;
             byte[] bitmapData = new byte[stride * bmHeight];
             Marshal.Copy(sourceData.Scan0, bitmapData, 0, bitmapData.Length);
@@ -632,7 +657,7 @@ namespace MobiusEditor.Utility
                 writeIndex += expandStride;
             }
             // Construct image from the data, scale it, crop it, and return the result.
-            using (Bitmap expandImage = new Bitmap(expandWidth, expandHeight, PixelFormat.Format32bppRgb))
+            using (Bitmap expandImage = new Bitmap(expandWidth, expandHeight, PixelFormat.Format32bppArgb))
             {
                 BitmapData targetData = expandImage.LockBits(new Rectangle(0, 0, expandWidth, expandHeight), ImageLockMode.WriteOnly, PixelFormat.Format32bppArgb);
                 int targetStride = targetData.Stride;
@@ -641,30 +666,32 @@ namespace MobiusEditor.Utility
                     Marshal.Copy(expandData, y * expandStride, new IntPtr(scan0 + y * targetStride), expandStride);
                 expandImage.UnlockBits(targetData);
                 expandImage.SetResolution(bitmap.HorizontalResolution, bitmap.VerticalResolution);
-                int borderWidth = width * borderFraction / fractionDivider;
-                int borderHeight = height * borderFraction / fractionDivider;
-                using (Bitmap scaledImage = new Bitmap(width + borderWidth * 2, height + borderHeight * 2, PixelFormat.Format32bppArgb))
+                int borderWidth = newSize.Width * borderFractionX / fractionDividerX;
+                int borderHeight = newSize.Height * borderFractionY / fractionDividerY;
+                using (Bitmap scaledImage = new Bitmap(newSize.Width + borderWidth * 2, newSize.Height + borderHeight * 2, PixelFormat.Format32bppArgb))
                 {
                     scaledImage.SetResolution(bitmap.HorizontalResolution, bitmap.VerticalResolution);
                     // Scale expanded image to (twice) the intended size
                     using (Graphics g2 = Graphics.FromImage(scaledImage))
                     {
                         g2.CompositingQuality = compositingQuality;
+                        g2.CompositingMode = CompositingMode.SourceCopy;
                         g2.InterpolationMode = interpolationMode;
                         g2.SmoothingMode = smoothingMode;
                         g2.PixelOffsetMode = pixelOffsetMode;
-                        g2.DrawImage(expandImage, new Rectangle(0, 0, width + borderWidth * 2, height + borderHeight * 2));
+                        g2.DrawImage(expandImage, new Rectangle(0, 0, newSize.Width + borderWidth * 2, newSize.Height + borderHeight * 2));
                     }
                     // Finally, create actual image at intended size.
-                    Bitmap cutoutImage = new Bitmap(width, height, PixelFormat.Format32bppArgb);
+                    Bitmap cutoutImage = new Bitmap(newSize.Width, newSize.Height, PixelFormat.Format32bppArgb);
                     // Copy center part out of stretched image.
                     using (Graphics g3 = Graphics.FromImage(cutoutImage))
                     {
                         g3.CompositingQuality = CompositingQuality.AssumeLinear;
+                        g3.CompositingMode = CompositingMode.SourceCopy;
                         g3.InterpolationMode = InterpolationMode.NearestNeighbor;
                         g3.SmoothingMode = SmoothingMode.None;
                         g3.PixelOffsetMode = PixelOffsetMode.Half;
-                        g3.DrawImage(scaledImage, new Rectangle(0, 0, width, height), new Rectangle(borderWidth, borderHeight, width, height), GraphicsUnit.Pixel);
+                        g3.DrawImage(scaledImage, new Rectangle(0, 0, newSize.Width, newSize.Height), new Rectangle(borderWidth, borderHeight, newSize.Width, newSize.Height), GraphicsUnit.Pixel);
                     }
                     //expandImage.Save(System.IO.Path.Combine(Program.ApplicationPath, "test_1_expand.png"), ImageFormat.Png);
                     //scaledImage.Save(System.IO.Path.Combine(Program.ApplicationPath, "test_2_scaled.png"), ImageFormat.Png);

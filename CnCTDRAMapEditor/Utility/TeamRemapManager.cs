@@ -53,6 +53,7 @@ namespace MobiusEditor.Utility
                         select field.GetValue(null) as TeamRemap).ToDictionary(trm => trm.Name);
         }
 
+        private Dictionary<string, TeamRemap> remapsRa = new Dictionary<string, TeamRemap>();
         private Dictionary<string, TeamRemap> currentRemaps = new Dictionary<string, TeamRemap>();
         private GameType currentlyLoadedGameType;
         private Color[] currentlyLoadedPalette;
@@ -132,7 +133,7 @@ namespace MobiusEditor.Utility
                 return;
             }
             // CPS file found and decoded successfully; re-initialise RA remap data.
-            Dictionary<string, TeamRemap> remapsRa = new Dictionary<string, TeamRemap>();
+            this.remapsRa.Clear();
             int height = Math.Min(200, this.remapsColorsRa.Length);
             Dictionary<string, TeamRemap> raRemapColors = new Dictionary<string, TeamRemap>();
             byte[] remapSource = new byte[16];
@@ -149,6 +150,7 @@ namespace MobiusEditor.Utility
                 TeamRemap col = new TeamRemap(name, radarColor, radarColor, remapSource, remap);
                 raRemapColors.Add(name, col);
             }
+            // Assign read remaps to actual remaster-named team colors.
             foreach (string col in remapsColorsRa)
             {
                 string[] usedRemaps;
@@ -159,11 +161,11 @@ namespace MobiusEditor.Utility
                     {
                         string actualName = usedRemaps[i];
                         TeamRemap actualCol = new TeamRemap(usedRemaps[i], remapColor);
-                        remapsRa.Add(actualName, actualCol);
+                        this.remapsRa.Add(actualName, actualCol);
                     }
                 }
             }
-            currentRemaps.MergeWith(remapsRa);
+            currentRemaps.MergeWith(this.remapsRa);
         }
 
         public TeamRemapManager(IArchiveManager fileManager)
@@ -174,11 +176,8 @@ namespace MobiusEditor.Utility
 
         public void Reset(GameType gameType, TheaterType theater)
         {
-            if (gameType != currentlyLoadedGameType)
-            {
-                this.currentRemaps.Clear();
-                this.currentlyLoadedGameType = gameType;
-            }
+            this.currentlyLoadedGameType = gameType;
+            this.currentRemaps.Clear();
             this.currentlyLoadedPalette = GetPaletteForTheater(this.mixfileManager, theater);
             this.currentRemapBaseIndex = 0;
             switch (this.currentlyLoadedGameType)
@@ -186,9 +185,11 @@ namespace MobiusEditor.Utility
                 case GameType.TiberianDawn:
                 case GameType.SoleSurvivor:
                     this.currentRemapBaseIndex = RemapTdGood.UnitRadarColor;
+                    this.currentRemaps.MergeWith(RemapsTd);
                     break;
                 case GameType.RedAlert:
                     this.currentRemapBaseIndex = (byte)(80 + RA_BASE_INDEX);
+                    this.currentRemaps.MergeWith(remapsRa);
                     break;
             }
         }

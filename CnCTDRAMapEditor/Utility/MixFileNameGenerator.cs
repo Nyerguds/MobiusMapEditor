@@ -512,7 +512,7 @@ namespace MobiusEditor.Utility
             {
                 forcedHasher = maxGame.Hasher;
             }
-            return maxGame == null ? null : maxGame.Name;
+            return maxGame?.Name;
         }
 
         private Dictionary<uint, MixEntry> GetXccDatabaseInfo(MixFile mixFile, out HashMethod hm)
@@ -575,7 +575,7 @@ namespace MobiusEditor.Utility
                         hm = hasher;
                         return xccInfoFilenames;
                     }
-                    catch (Exception e)
+                    catch (Exception)
                     {
                         /* ignore */
                     }
@@ -664,7 +664,7 @@ namespace MobiusEditor.Utility
                         hm = hasher;
                         return raMixInfoFilenames;
                     }
-                    catch (Exception e)
+                    catch (Exception)
                     {
                         /* ignore */
                     }
@@ -686,7 +686,7 @@ namespace MobiusEditor.Utility
             public string[][] ModTheaterInfo { get; set; }
             public bool HasMixNesting { get; set; }
             public bool NewMixFormat { get; set; }
-            private static Regex idOnlyEntry = new Regex("^\\*([0-9A-F]+)\\*$", RegexOptions.Compiled);
+            private static readonly Regex idOnlyEntry = new Regex("^\\*([0-9A-F]+)\\*$", RegexOptions.Compiled);
 
             public GameDefinition(string name)
             {
@@ -827,7 +827,7 @@ namespace MobiusEditor.Utility
             public bool IsTheaterDependent { get; private set; }
             public int HighestArg { get; private set; }
             public string ExtraInfo { get; set; }
-            private string[][] iterations;
+            private readonly string[][] iterations;
 
             public FileNameGeneratorEntry(string format)
                 : this(format, null)

@@ -43,8 +43,9 @@ namespace MobiusEditor
     {
 
         const string MAP_UNTITLED = "Untitled";
-        private Dictionary<string, Bitmap> theaterIcons = new Dictionary<string, Bitmap>();
-        private MixFileNameGenerator romfis = null;
+        private readonly Dictionary<string, Bitmap> theaterIcons = new Dictionary<string, Bitmap>();
+        private readonly MixFileNameGenerator romfis = null;
+        FormWindowState lastWindowState = FormWindowState.Normal;
 
         private readonly object abortLockObj = new object();
         private bool windowCloseRequested = false;
@@ -81,13 +82,10 @@ namespace MobiusEditor
             get => activeLayers;
             set
             {
-                if (activeLayers != value)
+                if (activeLayers != value && activeTool != null)
                 {
                     activeLayers = value;
-                    if (activeTool != null)
-                    {
-                        activeTool.Layers = activeLayers;
-                    }
+                    activeTool.Layers = activeLayers;
                 }
             }
         }
@@ -96,11 +94,11 @@ namespace MobiusEditor
         private Form activeToolForm;
 
         // Save and re-use tool instances
-        private Dictionary<ToolType, IToolDialog> toolForms;
+        private readonly Dictionary<ToolType, IToolDialog> toolForms = new Dictionary<ToolType, IToolDialog>();
         private GameType oldMockGame;
         private ToolType oldSelectedTool = ToolType.None;
-        private Dictionary<ToolType, object> oldMockObjects;
-        private ViewToolStripButton[] viewToolStripButtons;
+        private readonly Dictionary<ToolType, object> oldMockObjects;
+        private readonly ViewToolStripButton[] viewToolStripButtons;
 
         private IGamePlugin plugin;
         private FileType loadedFileType;
@@ -117,10 +115,10 @@ namespace MobiusEditor
 
         private readonly Timer steamUpdateTimer = new Timer();
 
-        private SimpleMultiThreading mixLoadMultiThreader;
-        private SimpleMultiThreading openMultiThreader;
-        private SimpleMultiThreading loadMultiThreader;
-        private SimpleMultiThreading saveMultiThreader;
+        private readonly SimpleMultiThreading mixLoadMultiThreader;
+        private readonly SimpleMultiThreading openMultiThreader;
+        private readonly SimpleMultiThreading loadMultiThreader;
+        private readonly SimpleMultiThreading saveMultiThreader;
         public Label StatusLabel { get; set; }
         private Point lastInfoPoint = new Point(-1, -1);
         private Point lastInfoSubPixelPoint = new Point(-1, -1);
@@ -155,7 +153,6 @@ namespace MobiusEditor
             this.mapPanel.SmoothScale = Globals.MapSmoothScale;
             this.mapPanel.BackColor = Globals.MapBackColor;
             SetTitle();
-            toolForms = new Dictionary<ToolType, IToolDialog>();
             oldMockGame = GameType.None;
             oldMockObjects = Globals.RememberToolData ? new Dictionary<ToolType, object>() : null;
             viewToolStripButtons = new ViewToolStripButton[]
@@ -190,14 +187,10 @@ namespace MobiusEditor
             UpdateUndoRedo();
             steamUpdateTimer.Interval = 500;
             steamUpdateTimer.Tick += SteamUpdateTimer_Tick;
-            mixLoadMultiThreader = new SimpleMultiThreading(this);
-            mixLoadMultiThreader.ProcessingLabelBorder = BorderStyle.Fixed3D;
-            openMultiThreader = new SimpleMultiThreading(this);
-            openMultiThreader.ProcessingLabelBorder = BorderStyle.Fixed3D;
-            loadMultiThreader = new SimpleMultiThreading(this);
-            loadMultiThreader.ProcessingLabelBorder = BorderStyle.Fixed3D;
-            saveMultiThreader = new SimpleMultiThreading(this);
-            saveMultiThreader.ProcessingLabelBorder = BorderStyle.Fixed3D;
+            mixLoadMultiThreader = new SimpleMultiThreading(this, BorderStyle.Fixed3D);
+            openMultiThreader = new SimpleMultiThreading(this, BorderStyle.Fixed3D);
+            loadMultiThreader = new SimpleMultiThreading(this, BorderStyle.Fixed3D);
+            saveMultiThreader = new SimpleMultiThreading(this, BorderStyle.Fixed3D);
         }
 
         private void LoadMixTree()
@@ -797,7 +790,6 @@ namespace MobiusEditor
         {
             base.OnLoad(e);
             RefreshUI();
-            UpdateVisibleLayers();
             steamUpdateTimer.Start();
         }
 
@@ -807,6 +799,31 @@ namespace MobiusEditor
             steamUpdateTimer.Stop();
             steamUpdateTimer.Dispose();
             mru.Dispose();
+        }
+
+        protected override void OnResize(EventArgs e)
+        {
+            // Make sure to hide the active tool when minimising, and to correctly reopen and refresh it
+            // when restoring the window, rather than letting Windows' automatic dialog behaviour handle it.
+            // Note that RefreshActiveTool() will abort immediately if the window state is Minimised.
+            FormWindowState curWs = WindowState;
+            FormWindowState oldWs = lastWindowState;
+            if (curWs != oldWs)
+            {
+                lastWindowState = WindowState;
+                if (plugin != null)
+                {
+                    if ((curWs == FormWindowState.Maximized || curWs == FormWindowState.Normal) && oldWs == FormWindowState.Minimized)
+                    {
+                        RefreshActiveTool(true);
+                    }
+                    else if (curWs == FormWindowState.Minimized)
+                    {
+                        ClearActiveTool();
+                    }
+                }
+            }
+            base.OnResize(e);
         }
 
         private void FileNewMenuItem_Click(object sender, EventArgs e)
@@ -2007,6 +2024,7 @@ namespace MobiusEditor
             Globals.TheArchiveManager.Reset(gameType, theaterType);
             Globals.TheGameTextManager.Reset(gameType);
             Globals.TheTilesetManager.Reset(gameType, theaterType);
+            Globals.TheShapeCacheManager.Reset();
             Globals.TheTeamColorManager.Reset(gameType, theaterType);
             // Load game-specific data
             plugin.Initialize();
@@ -2377,6 +2395,7 @@ namespace MobiusEditor
                 }
                 // Unload graphics
                 Globals.TheTilesetManager.Reset(GameType.None, null);
+                Globals.TheShapeCacheManager.Reset();
                 // Clean up loaded file status
                 filename = null;
                 loadedFileType = FileType.None;
@@ -2510,7 +2529,7 @@ namespace MobiusEditor
         /// <param name="soft">If true, a full map repaint will not be done.</param>
         private void RefreshActiveTool(bool soft)
         {
-            if (plugin == null)
+            if (plugin == null || this.WindowState == FormWindowState.Minimized)
             {
                 return;
             }
@@ -2730,99 +2749,49 @@ namespace MobiusEditor
             }
         }
 
-        private void UpdateVisibleLayers()
+        private MapLayerFlag UpdateVisibleLayers()
         {
             MapLayerFlag layers = MapLayerFlag.All;
-            if (!viewIndicatorsMapBoundariesMenuItem.Checked)
-            {
-                layers &= ~MapLayerFlag.Boundaries;
-            }
-            if (!viewExtraIndicatorsMapSymmetryMenuItem.Checked)
-            {
-                layers &= ~MapLayerFlag.MapSymmetry;
-            }
-            if (!viewExtraIndicatorsMapGridMenuItem.Checked)
-            {
-                layers &= ~MapLayerFlag.MapGrid;
-            }
-            if (!viewLayersBuildingsMenuItem.Checked)
-            {
-                layers &= ~MapLayerFlag.Buildings;
-            }
-            if (!viewLayersUnitsMenuItem.Checked)
-            {
-                layers &= ~MapLayerFlag.Units;
-            }
-            if (!viewLayersInfantryMenuItem.Checked)
-            {
-                layers &= ~MapLayerFlag.Infantry;
-            }
-            if (!viewLayersTerrainMenuItem.Checked)
-            {
-                layers &= ~MapLayerFlag.Terrain;
-            }
-            if (!viewLayersOverlayMenuItem.Checked)
-            {
-                layers &= ~MapLayerFlag.OverlayAll;
-            }
-            if (!viewLayersSmudgeMenuItem.Checked)
-            {
-                layers &= ~MapLayerFlag.Smudge;
-            }
-            if (!viewLayersWaypointsMenuItem.Checked)
-            {
-                layers &= ~MapLayerFlag.Waypoints;
-            }
-            if (!viewIndicatorsWaypointsMenuItem.Checked)
-            {
-                layers &= ~MapLayerFlag.WaypointsIndic;
-            }
-            if (!viewIndicatorsCellTriggersMenuItem.Checked)
-            {
-                layers &= ~MapLayerFlag.CellTriggers;
-            }
-            if (!viewIndicatorsObjectTriggersMenuItem.Checked)
-            {
-                layers &= ~MapLayerFlag.TechnoTriggers;
-            }
-            if (!viewIndicatorsBuildingFakeLabelsMenuItem.Checked)
-            {
-                layers &= ~MapLayerFlag.BuildingFakes;
-            }
-            if (!viewIndicatorsBuildingRebuildLabelsMenuItem.Checked)
-            {
-                layers &= ~MapLayerFlag.BuildingRebuild;
-            }
-            if (!viewIndicatorsFootballAreaMenuItem.Checked)
-            {
-                layers &= ~MapLayerFlag.FootballArea;
-            }
-            if (!viewExtraIndicatorsWaypointRevealRadiusMenuItem.Checked)
-            {
-                layers &= ~MapLayerFlag.WaypointRadius;
-            }
-            if (!viewExtraIndicatorsEffectAreaRadiusMenuItem.Checked)
-            {
-                layers &= ~MapLayerFlag.EffectRadius;
-            }
-            if (!viewExtraIndicatorsTerrainTypesMenuItem.Checked)
-            {
-                layers &= ~MapLayerFlag.LandTypes;
-            }
-            if (!viewExtraIndicatorsPlacedObjectsMenuItem.Checked)
-            {
-                layers &= ~MapLayerFlag.TechnoOccupancy;
-            }
-            if (!viewIndicatorsOutlinesMenuItem.Checked)
-            {
-                layers &= ~MapLayerFlag.OverlapOutlines;
-            }
+            // Map objects
+            RemoveLayerIfUnchecked(ref layers, viewLayersTerrainMenuItem.Checked, MapLayerFlag.Terrain);
+            RemoveLayerIfUnchecked(ref layers, viewLayersInfantryMenuItem.Checked, MapLayerFlag.Infantry);
+            RemoveLayerIfUnchecked(ref layers, viewLayersUnitsMenuItem.Checked, MapLayerFlag.Units);
+            RemoveLayerIfUnchecked(ref layers, viewLayersBuildingsMenuItem.Checked, MapLayerFlag.Buildings);
+            RemoveLayerIfUnchecked(ref layers, viewLayersOverlayMenuItem.Checked, MapLayerFlag.OverlayAll);
+            RemoveLayerIfUnchecked(ref layers, viewLayersSmudgeMenuItem.Checked, MapLayerFlag.Smudge);
+            RemoveLayerIfUnchecked(ref layers, viewLayersWaypointsMenuItem.Checked, MapLayerFlag.Waypoints);
+            // Indicators
+            RemoveLayerIfUnchecked(ref layers, viewIndicatorsMapBoundariesMenuItem.Checked, MapLayerFlag.Boundaries);
+            RemoveLayerIfUnchecked(ref layers, viewIndicatorsWaypointsMenuItem.Checked, MapLayerFlag.WaypointsIndic);
+            RemoveLayerIfUnchecked(ref layers, viewIndicatorsFootballAreaMenuItem.Checked, MapLayerFlag.FootballArea);
+            RemoveLayerIfUnchecked(ref layers, viewIndicatorsCellTriggersMenuItem.Checked, MapLayerFlag.CellTriggers);
+            RemoveLayerIfUnchecked(ref layers, viewIndicatorsObjectTriggersMenuItem.Checked, MapLayerFlag.TechnoTriggers);
+            RemoveLayerIfUnchecked(ref layers, viewIndicatorsBuildingRebuildLabelsMenuItem.Checked, MapLayerFlag.BuildingRebuild);
+            RemoveLayerIfUnchecked(ref layers, viewIndicatorsBuildingFakeLabelsMenuItem.Checked, MapLayerFlag.BuildingFakes);
+            RemoveLayerIfUnchecked(ref layers, viewIndicatorsOutlinesMenuItem.Checked, MapLayerFlag.OverlapOutlines);
+            // Extra indicators
+            RemoveLayerIfUnchecked(ref layers, viewExtraIndicatorsMapSymmetryMenuItem.Checked, MapLayerFlag.MapSymmetry);
+            RemoveLayerIfUnchecked(ref layers, viewExtraIndicatorsMapGridMenuItem.Checked, MapLayerFlag.MapGrid);
+            RemoveLayerIfUnchecked(ref layers, viewExtraIndicatorsTerrainTypesMenuItem.Checked, MapLayerFlag.LandTypes);
+            RemoveLayerIfUnchecked(ref layers, viewExtraIndicatorsPlacedObjectsMenuItem.Checked, MapLayerFlag.TechnoOccupancy);
+            RemoveLayerIfUnchecked(ref layers, viewExtraIndicatorsWaypointRevealRadiusMenuItem.Checked, MapLayerFlag.WaypointRadius);
+            RemoveLayerIfUnchecked(ref layers, viewExtraIndicatorsEffectAreaRadiusMenuItem.Checked, MapLayerFlag.EffectRadius);
+            // this will only have an effect if a tool is active.
             ActiveLayers = layers;
+            return layers;
+        }
+
+        private void RemoveLayerIfUnchecked(ref MapLayerFlag layers, bool isChecked, MapLayerFlag layerToRemove)
+        {
+            if (!isChecked)
+            {
+                layers &= ~layerToRemove;
+            }
         }
 
         #endregion
 
-        private void mainToolStripButton_Click(object sender, EventArgs e)
+        private void MainToolStripButton_Click(object sender, EventArgs e)
         {
             if (plugin == null)
             {
@@ -2883,20 +2852,21 @@ namespace MobiusEditor
             ITool activeTool = this.activeTool;
             try
             {
-                // Suppress updates.
+                // Suppress updates for bulk operation, so only one refresh needs to be done.
                 this.activeTool = null;
                 SwitchLayers(baseLayers, enabled);
             }
             finally
             {
                 // Re-enable tool, force refresh.
-                MapLayerFlag layerBackup = this.activeLayers;
+                // While activeTool is null, this call will not affect activeLayers.
+                MapLayerFlag newLayers = UpdateVisibleLayers();
                 // Clear without refresh
                 this.activeLayers = MapLayerFlag.None;
-                // Restore tool
+                // Restore tool without refresh
                 this.activeTool = activeTool;
-                // Set with refresh
-                ActiveLayers = layerBackup;
+                // Force refresh by using Setter
+                ActiveLayers = newLayers;
             }
         }
 

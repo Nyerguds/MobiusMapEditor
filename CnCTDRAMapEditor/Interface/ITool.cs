@@ -15,7 +15,6 @@
 using MobiusEditor.Model;
 using MobiusEditor.Widgets;
 using System;
-using System.Windows.Forms;
 
 namespace MobiusEditor.Interface
 {

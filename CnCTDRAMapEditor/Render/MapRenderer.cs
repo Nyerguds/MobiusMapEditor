@@ -194,8 +194,14 @@ namespace MobiusEditor.Render
             new Point(1, 2)
         };
 
-        public static void Render(GameInfo gameInfo, Map map, Graphics graphics, ISet<Point> locations, MapLayerFlag layers, double tileScale)
+        public static void Render(GameInfo gameInfo, Map map, Graphics graphics, ISet<Point> locations, MapLayerFlag layers, double tileScale, ShapeCacheManager cacheManager)
         {
+            bool disposeCacheManager = false;
+            if (cacheManager == null)
+            {
+                cacheManager = new ShapeCacheManager();
+                disposeCacheManager = true;
+            }
             // tileScale should always be given so it results in an exact integer tile size. Math.Round was added to account for .999 situations in the floats.
             Size tileSize = new Size(Math.Max(1, (int)Math.Round(Globals.OriginalTileWidth * tileScale)), Math.Max(1, (int)Math.Round(Globals.OriginalTileHeight * tileScale)));
             //Size tileSize = new Size(Math.Max(1, (int)(Globals.OriginalTileWidth * tileScale)), Math.Max(1, (int)(Globals.OriginalTileHeight * tileScale)));
@@ -236,67 +242,52 @@ namespace MobiusEditor.Render
             if ((layers & MapLayerFlag.Template) != MapLayerFlag.None)
             {
                 TemplateType clear = map.TemplateTypes.Where(t => t.Flag == TemplateTypeFlag.Clear).FirstOrDefault();
-                // This process removes the transparency of each painted tile. Cache the results to avoid too much processing.
-                Dictionary<string, Bitmap> processedTiles = new Dictionary<string, Bitmap>();
-                try
+                foreach (Point topLeft in renderLocations())
                 {
-                    foreach (Point topLeft in renderLocations())
+                    Template template = map.Templates[topLeft];
+                    TemplateType ttype = template?.Type ?? clear;
+                    string name = ttype.Name;
+                    // For clear terrain, calculate icon from 0-15 using map position.
+                    int icon = template?.Icon ?? ((topLeft.X & 0x03) | ((topLeft.Y) & 0x03) << 2);
+                    // If something is actually placed on the map, show it, even if it has no graphics.
+                    string tileName = "template_" + name + "_" + icon.ToString("D4") + "_" + tileSize.Width + "x" + tileSize.Height + (isSmooth ? "_smooth" : String.Empty);
+                    Bitmap tileImg = cacheManager.GetImage(tileName);
+                    Rectangle renderBounds = new Rectangle(topLeft.X * tileSize.Width, topLeft.Y * tileSize.Height, tileSize.Width, tileSize.Height);
+                    if (tileImg == null)
                     {
-                        Template template = map.Templates[topLeft];
-                        TemplateType ttype = template?.Type ?? clear;
-                        string name = ttype.Name;
-                        // For clear terrain, calculate icon from 0-15 using map position.
-                        int icon = template?.Icon ?? ((topLeft.X & 0x03) | ((topLeft.Y) & 0x03) << 2);
-                        // If something is actually placed on the map, show it, even if it has no graphics.
                         bool success = Globals.TheTilesetManager.GetTileData(name, icon, out Tile tile, true, false);
-                        if (tile != null)
+                        if (tile != null && tile.Image != null)
                         {
-                            string tileName = name + "_" + icon.ToString("D4");
-                            Rectangle renderBounds = new Rectangle(topLeft.X * tileSize.Width, topLeft.Y * tileSize.Height, tileSize.Width, tileSize.Height);
-                            if (!processedTiles.TryGetValue(tileName, out Bitmap tileImg) && tile.Image != null)
+                            Bitmap tileImage = tile.Image;
+                            if (!isSmooth || (tileSize.Width == tileImage.Width && tileSize.Height == tileImage.Height))
                             {
-                                Bitmap tileImage = tile.Image;
-                                if (!isSmooth || (tileSize.Width == tileImage.Width && tileSize.Height == tileImage.Height))
-                                {
-                                    tileImg = tileImage.RemoveAlpha();
-                                }
-                                else
-                                {
-                                    // Results in a new image that is scaled to the correct size, without edge artifacts.
-                                    Bitmap scaledImage = tileImage.HighQualityScale(tileSize.Width, tileSize.Height,
-                                            backupCompositingQuality, backupInterpolationMode, backupSmoothingMode, backupPixelOffsetMode);
-                                    scaledImage.RemoveAlphaOnCurrent();
-                                    tileImg = scaledImage;
-                                }
-                                processedTiles.Add(tileName, tileImg);
+                                tileImg = tileImage.RemoveAlpha();
                             }
-                            if (tileImg != null)
+                            else
                             {
-                                graphics.DrawImage(tileImg, renderBounds);
+                                // Results in a new image that is scaled to the correct size, without edge artifacts.
+                                Bitmap scaledImage = tileImage.HighQualityScale(tileSize.Width, tileSize.Height,
+                                        backupCompositingQuality, backupInterpolationMode, backupSmoothingMode, backupPixelOffsetMode);
+                                scaledImage.RemoveAlphaOnCurrent();
+                                tileImg = scaledImage;
                             }
-                        }
-                        else
-                        {
-                            Debug.Print(string.Format("Template {0} ({1}) not found", name, icon));
+                            cacheManager.AddImage(tileName, tileImg);
+                            
                         }
                     }
-                }
-                finally
-                {
-                    // Clean up cached non-alpha images
-                    foreach (KeyValuePair<string, Bitmap> kvp in processedTiles)
+                    if (tileImg != null)
                     {
-                        try
-                        {
-                            kvp.Value.Dispose();
-                        }
-                        catch { /*ignore*/ }
+                        graphics.DrawImage(tileImg, renderBounds);
                     }
-                    processedTiles.Clear();
+                    else
+                    {
+                        Debug.Print(string.Format("Template {0} ({1}) could not be rendered.", name, icon));
+                    }
                 }
             }
-            // With the high-quality resizing, all map tile painting is done with pixel interpolation mode because
-            // it is faster and the tiles are correctly sized anyway. So now, restore the actual requested settings.
+            // Since high-quality scaling is now done on the tiles themselves, the actual map tile painting is done
+            // with pixel interpolation mode because it is faster, and the tiles are already correctly sized anyway.
+            // So now, restore the actual requested settings.
             graphics.CompositingQuality = backupCompositingQuality;
             graphics.InterpolationMode = backupInterpolationMode;
             graphics.SmoothingMode = backupSmoothingMode;
@@ -310,7 +301,7 @@ namespace MobiusEditor.Render
                     // Don't render bibs in theaters which don't contain them.
                     if (smudge != null && smudge.Type.IsAutoBib && (!Globals.FilterTheaterObjects || smudge.Type.ExistsInTheater))
                     {
-                        RenderSmudge(topLeft, tileSize, tileScale, smudge).Item2(graphics);
+                        RenderSmudge(topLeft, tileSize, tileScale, smudge, isSmooth, cacheManager).Item2(graphics);
                     }
                 }
             }
@@ -321,11 +312,10 @@ namespace MobiusEditor.Render
                     Smudge smudge = map.Smudge[topLeft];
                     if (smudge != null && !smudge.Type.IsAutoBib)
                     {
-                        RenderSmudge(topLeft, tileSize, tileScale, smudge).Item2(graphics);
+                        RenderSmudge(topLeft, tileSize, tileScale, smudge, isSmooth, cacheManager).Item2(graphics);
                     }
                 }
             }
-
             if ((layers & MapLayerFlag.OverlayAll) != MapLayerFlag.None)
             {
                 foreach (Point location in renderLocations())
@@ -464,14 +454,18 @@ namespace MobiusEditor.Render
                     RenderWaypoint(gameInfo, isSp, tileSize, flagColors, waypoint, alpha, offset).Item2(graphics);
                 }
             }
+            if (disposeCacheManager)
+            {
+                cacheManager.Reset();
+            }
         }
 
         public static void Render(GameInfo gameInfo, Map map, Graphics graphics, ISet<Point> locations, MapLayerFlag layers)
         {
-            Render(gameInfo, map, graphics, locations, layers, Globals.MapTileScale);
+            Render(gameInfo, map, graphics, locations, layers, Globals.MapTileScale, Globals.TheShapeCacheManager);
         }
 
-        public static (Rectangle, Action<Graphics>) RenderSmudge(Point topLeft, Size tileSize, double tileScale, Smudge smudge)
+        public static (Rectangle, Action<Graphics>) RenderSmudge(Point topLeft, Size tileSize, double tileScale, Smudge smudge, bool isSmooth, ShapeCacheManager cacheManager)
         {
             if (Globals.FilterTheaterObjects && !smudge.Type.ExistsInTheater)
             {
@@ -479,18 +473,41 @@ namespace MobiusEditor.Render
                 return (Rectangle.Empty, (g) => { });
             }
             Color tint = smudge.Tint;
-
-            bool success = Globals.TheTilesetManager.GetTileData(smudge.Type.Name, smudge.Icon, out Tile tile, true, false);
-            if (tile != null && tile.Image != null)
+            string tileName = "smudge_" + smudge.Type.Name + "_" + smudge.Icon.ToString("D4") + "_" + tileSize.Width + "x" + tileSize.Height + (isSmooth ? "_smooth" : String.Empty);
+            Bitmap tileImg = cacheManager.GetImage(tileName);
+            if (tileImg == null)
             {
-                Rectangle smudgeBounds = RenderBounds(tile.Image.Size, new Size(1, 1), tileScale);
-                smudgeBounds.X += topLeft.X * tileSize.Width;
-                smudgeBounds.Y += topLeft.Y * tileSize.Width;
-                if (!success)
+                bool success = Globals.TheTilesetManager.GetTileData(smudge.Type.Name, smudge.Icon, out Tile tile, true, false);
+                if (tile != null && tile.Image != null)
                 {
-                    smudgeBounds.Width = tileSize.Width;
-                    smudgeBounds.Height = tileSize.Height;
+                    Bitmap tileImage = tile.Image;
+                    // Check if high-quality tile resizing is useful.
+                    if (!isSmooth || (tileSize.Width == tileImage.Width && tileSize.Height == tileImage.Height))
+                    {
+                        tileImg = new Bitmap(tileSize.Width, tileSize.Height);
+                        Rectangle smudgeBounds = RenderBounds(tile.Image.Size, new Size(1, 1), tileScale);
+                        using (Graphics g = Graphics.FromImage(tileImg))
+                        {
+                            g.DrawImage(tileImage, smudgeBounds, new Rectangle(0, 0, tileImage.Width, tileImage.Height), GraphicsUnit.Pixel);
+                        }
+                    }
+                    else
+                    {
+                        // Results in a new image that is scaled to the correct size, without edge artifacts.
+                        tileImg = tileImage.HighQualityScale(tileSize.Width, tileSize.Height);
+                    }
+                    cacheManager.AddImage(tileName, tileImg);
+                    
                 }
+            }
+            if (tileImg != null)
+            {
+                Rectangle smudgeBounds = new Rectangle(
+                    (tileSize.Width - tileImg.Width) / 2,
+                    (tileSize.Height - tileImg.Height) / 2,
+                    tileImg.Width, tileImg.Height);
+                smudgeBounds.X += topLeft.X * tileSize.Width;
+                smudgeBounds.Y += topLeft.Y * tileSize.Height;
                 void render(Graphics g)
                 {
                     using (ImageAttributes imageAttributes = new ImageAttributes())
@@ -499,7 +516,7 @@ namespace MobiusEditor.Render
                         {
                             imageAttributes.SetColorMatrix(GetColorMatrix(tint, 1.0f, 1.0f));
                         }
-                        g.DrawImage(tile.Image, smudgeBounds, 0, 0, tile.Image.Width, tile.Image.Height, GraphicsUnit.Pixel, imageAttributes);
+                        g.DrawImage(tileImg, smudgeBounds, 0, 0, tileImg.Width, tileImg.Height, GraphicsUnit.Pixel, imageAttributes);
                     }
                 }
                 return (smudgeBounds, render);
@@ -1351,17 +1368,26 @@ namespace MobiusEditor.Render
                 }
             }
         }
+
         public static void RenderAllCrateOutlines(Graphics g, GameInfo gameInfo, Map map, Rectangle visibleCells, Size tileSize, double tileScale, bool onlyIfBehindObjects)
         {
-            RenderAllOverlayOutlines(g, gameInfo, map, visibleCells, tileSize, tileScale, OverlayTypeFlag.Crate, onlyIfBehindObjects, Color.Red);
+            RenderAllOverlayOutlines(g, gameInfo, map, visibleCells, tileSize, tileScale, OverlayTypeFlag.WoodCrate, onlyIfBehindObjects, Globals.OutlineColorCrateWood);
+            RenderAllOverlayOutlines(g, gameInfo, map, visibleCells, tileSize, tileScale, OverlayTypeFlag.SteelCrate, onlyIfBehindObjects, Globals.OutlineColorCrateSteel);
+        }
+        
+        public static void RenderAllSolidOverlayOutlines(Graphics g, GameInfo gameInfo, Map map, Rectangle visibleCells, Size tileSize, double tileScale, bool onlyIfBehindObjects)
+        {
+            RenderAllOverlayOutlines(g, gameInfo, map, visibleCells, tileSize, tileScale, OverlayTypeFlag.Solid, onlyIfBehindObjects, Globals.OutlineColorSolidOverlay);
+            RenderAllOverlayOutlines(g, gameInfo, map, visibleCells, tileSize, tileScale, OverlayTypeFlag.Wall, onlyIfBehindObjects, Globals.OutlineColorWall);
         }
 
         public static void RenderAllOverlayOutlines(Graphics g, GameInfo gameInfo, Map map, Rectangle visibleCells, Size tileSize, double tileScale, OverlayTypeFlag types,
             bool onlyIfBehindObjects, Color outlineColor)
         {
-            // Optimised to only get the paint area once per overlay shape and type.
-            // Sadly can't easily be cached because everything in this class is static.
-            Dictionary<string, RegionData> paintAreas = new Dictionary<string, RegionData>();
+            if (outlineColor.A == 0)
+            {
+                return;
+            }
             Dictionary<Point, Overlay> includedPoints = new Dictionary<Point, Overlay>();
             List<int> includedCells = new List<int>();
             float outlineThickness = 0.05f;
@@ -1394,17 +1420,16 @@ namespace MobiusEditor.Render
                 OverlayType ovlt = overlay.Type;
                 Size cellSize = new Size(1, 1);
                 Color outlineCol = Color.FromArgb(0xA0, outlineColor);
-                if ((ovlt.Flag & OverlayTypeFlag.Crate) == OverlayTypeFlag.WoodCrate) outlineCol = Color.FromArgb(0xA0, 0xFF, 0xC0, 0x40);
-                if ((ovlt.Flag & OverlayTypeFlag.Crate) == OverlayTypeFlag.SteelCrate) outlineCol = Color.FromArgb(0xA0, Color.White);
                 Overlay tstOvl;
-                // don't include the edge cells of overlay that are the same type.
+                // If this is a wall, exclude edge cells on sides that are the same type of wall, so they connect properly.
                 bool includeAbove = !ovlt.IsWall || !includedPoints.TryGetValue(p.OffsetPoint(0, -1), out tstOvl) || tstOvl.Type.ID != ovlt.ID;
                 bool includeRight = !ovlt.IsWall || !includedPoints.TryGetValue(p.OffsetPoint(1, 0), out tstOvl) || tstOvl.Type.ID != ovlt.ID;
                 bool includeBelow = !ovlt.IsWall || !includedPoints.TryGetValue(p.OffsetPoint(0, 1), out tstOvl) || tstOvl.Type.ID != ovlt.ID;
                 bool includeLefty = !ovlt.IsWall || !includedPoints.TryGetValue(p.OffsetPoint(-1, 0), out tstOvl) || tstOvl.Type.ID != ovlt.ID;
                 int aroundMask = (includeAbove ? 1 : 0) | (includeRight ? 2 : 0) | (includeBelow ? 4 : 0) | (includeLefty ? 8 : 0);
-                string lookupName = overlay.Type.Name + "_" + overlay.Icon + "_" + aroundMask;
-                if (!paintAreas.TryGetValue(lookupName, out RegionData paintAreaRel))
+                string ovlId = "outline_ovl_" + overlay.Type.Name + "_" + overlay.Icon + "_" + aroundMask + "_" + tileSize.Width + "x" + tileSize.Height;
+                RegionData paintAreaRel = Globals.TheShapeCacheManager.GetShape(ovlId);
+                if (paintAreaRel == null)
                 {
                     // Clone with full opacity
                     Overlay toRender = overlay;
@@ -1424,7 +1449,7 @@ namespace MobiusEditor.Render
                             RenderOverlay(gameInfo, new Point(1, 1), tileSize, tileScale, toRender).Item2(ig);
                         }
                         paintAreaRel = ImageUtils.GetOutline(tileSize, bm, outlineThickness, alphaThreshold, Globals.UseClassicFiles);
-                        // Wall connectng: if any side cells should be excluded so they connect to neighbouring cells,
+                        // Wall connecting: if any side cells should be excluded so they connect to neighbouring cells,
                         // intersect the region with another region containing only the desired side cells.
                         if (ovlt.IsWall && aroundMask != (1 | 2 | 4 | 8))
                         {
@@ -1447,7 +1472,7 @@ namespace MobiusEditor.Render
                                 }
                             }
                         }
-                        paintAreas[lookupName] = paintAreaRel;
+                        Globals.TheShapeCacheManager.AddShape(ovlId, paintAreaRel);
                     }
                 }
                 int actualTopLeftX = tileSize.Width * (p.X -1);
@@ -1466,9 +1491,6 @@ namespace MobiusEditor.Render
 
         public static void RenderAllInfantryOutlines(Graphics g, Map map, Rectangle visibleCells, Size tileSize, bool onlyIfBehindObjects)
         {
-            // Optimised to only get the paint area once per crate type.
-            // Sadly can't easily be cached because everything in this class is static.
-            Dictionary<string, RegionData> paintAreas = new Dictionary<string, RegionData>();
             float outlineThickness = 0.05f;
             byte alphaThreshold = (byte)(Globals.UseClassicFiles ? 0x80 : 0x40);
             //double lumThreshold = 0.01d;
@@ -1495,9 +1517,9 @@ namespace MobiusEditor.Render
                         }
                     }
                     Color outlineCol = Color.FromArgb(0x80, Globals.TheTeamColorManager.GetBaseColor(infantry.House?.UnitTeamColor));
-                    RegionData paintAreaRel;
-                    string id = infantry.Type.Name + '_' + ((int)ist) + '_' + infantry.Direction.ID;
-                    if (!paintAreas.TryGetValue(id, out paintAreaRel))
+                    string infId = "outline_inf_" + infantry.Type.Name + '_' + ((int)ist) + '_' + infantry.Direction.ID + "_" + tileSize.Width + "x" + tileSize.Height;
+                    RegionData paintAreaRel = Globals.TheShapeCacheManager.GetShape(infId);
+                    if (paintAreaRel == null)
                     {
                         // Clone with full opacity
                         if (infantry.Tint.A != 255)
@@ -1512,7 +1534,7 @@ namespace MobiusEditor.Render
                                 RenderInfantry(new Point(1, 1), tileSize, infantry, (InfantryStoppingType)ist).RenderAction(ig);
                             }
                             paintAreaRel = ImageUtils.GetOutline(tileSize, bm, outlineThickness, alphaThreshold, Globals.UseClassicFiles);
-                            paintAreas[id] = paintAreaRel;
+                            Globals.TheShapeCacheManager.AddShape(infId, paintAreaRel);
                         }
                     }
                     // Rendered in a 3x3 cell frame, so subtract one.
@@ -1546,7 +1568,7 @@ namespace MobiusEditor.Render
         public static void RenderAllTerrainOutlines(Graphics g, GameInfo gameInfo, Map map, Rectangle visibleCells, Size tileSize, double tileScale, bool onlyIfBehindObjects)
         {
             RenderAllObjectOutlines(g, gameInfo, map, map.Technos.OfType<Terrain>(), visibleCells, tileSize, true,
-                null, (gr, p, trn) => RenderTerrain(p, tileSize, tileScale, trn).RenderAction(gr), Color.Lime);
+                null, (gr, p, trn) => RenderTerrain(p, tileSize, tileScale, trn).RenderAction(gr), Globals.OutlineColorTerrain);
         }
 
         /// <summary>
@@ -1567,9 +1589,6 @@ namespace MobiusEditor.Render
             Rectangle visibleCells, Size tileSize, bool onlyIfBehindObjects, Func<HouseType, string> colorPick ,Action<Graphics, Point, T> RenderAction, Color fallbackColor)
             where T: ITechno, ICellOverlapper, ICellOccupier, ICloneable
         {
-            // Optimised to only get the paint area once per object type.
-            // Sadly can't easily be cached because everything in this class is static.
-            Dictionary<string, RegionData> paintAreas = new Dictionary<string, RegionData>();
             float outlineThickness = 0.05f;
             byte alphaThreshold = (byte)(Globals.UseClassicFiles ? 0x80 : 0x40);
             //double lumThreshold = 0.01d;
@@ -1611,9 +1630,9 @@ namespace MobiusEditor.Render
                 {
                     houseCol = Color.FromArgb(0x80, Globals.TheTeamColorManager.GetBaseColor(colorPick(placedObj.House)));
                 }
-                RegionData paintAreaRel;
-                string id = placedObj.TechnoType.Name + '_' + (placedObj.Direction == null ? 0 : placedObj.Direction.ID).ToString();
-                if (!paintAreas.TryGetValue(id, out paintAreaRel))
+                string id = "outline_" + typeof(T).Name + "_" + placedObj.TechnoType.Name + '_' + (placedObj.Direction == null ? 0 : placedObj.Direction.ID).ToString() + "_" + tileSize.Width + "x" + tileSize.Height;
+                RegionData paintAreaRel = Globals.TheShapeCacheManager.GetShape(id);
+                if (paintAreaRel == null)
                 {
                     // Clone with full opacity
                     T toRender = placedObj;
@@ -1629,7 +1648,7 @@ namespace MobiusEditor.Render
                             RenderAction(ig, new Point(1, 1), toRender);
                         }
                         paintAreaRel = ImageUtils.GetOutline(tileSize, bm, outlineThickness, alphaThreshold, Globals.UseClassicFiles);
-                        paintAreas[id] = paintAreaRel;
+                        Globals.TheShapeCacheManager.AddShape(id, paintAreaRel);
                     }
                 }
                 int paintPosTopLeftX = (objLocation.X - 1) * tileSize.Width;
@@ -1850,7 +1869,6 @@ namespace MobiusEditor.Render
                     );
                     if (classicFont == null)
                     {
-
                         using (SolidBrush fakeTextBrush = new SolidBrush(Color.FromArgb(forPreview ? building.Tint.A : 255, textColor)))
                         {
                             using (Font font = graphics.GetAdjustedFont(fakeText, SystemFonts.DefaultFont, buildingBounds.Width, buildingBounds.Height,
@@ -1869,10 +1887,13 @@ namespace MobiusEditor.Render
                             new Point(topLeft.X * tileSize.Width, topLeft.Y * tileSize.Height),
                             new Size(maxSize.Width * tileSize.Width, maxSize.Height * tileSize.Height)
                         );
-                        Rectangle buildingBoundsClassic = new Rectangle(Point.Empty, new Size(maxSize.Width * Globals.OriginalTileWidth, maxSize.Height * Globals.OriginalTileHeight));
-                        using (Bitmap bm = new Bitmap(buildingBoundsClassic.Width, buildingBoundsClassic.Height))
+                        string fkId = "fake_classic_" + maxSize.Width + "x" + maxSize.Height;
+                        Bitmap fkBm = Globals.TheShapeCacheManager.GetImage(fkId);
+                        if (fkBm == null)
                         {
-                            using (Graphics bmgr = Graphics.FromImage(bm))
+                            Rectangle buildingBoundsClassic = new Rectangle(Point.Empty, new Size(maxSize.Width * Globals.OriginalTileWidth, maxSize.Height * Globals.OriginalTileHeight));
+                            fkBm = new Bitmap(buildingBoundsClassic.Width, buildingBoundsClassic.Height);
+                            using (Graphics bmgr = Graphics.FromImage(fkBm))
                             {
                                 int[] indices = Encoding.ASCII.GetBytes(fakeText).Select(x => (int)x).ToArray();
                                 using (Bitmap txt = RenderTextFromSprite(classicFont, remapClassicFont, Size.Empty, indices, false, cropClassicFont))
@@ -1886,9 +1907,11 @@ namespace MobiusEditor.Render
                                     bmgr.DrawImage(txt, textRect, 0, 0, txt.Width, txt.Height, GraphicsUnit.Pixel);
                                 }
                             }
-                            imageAttributes.SetColorMatrix(GetColorMatrix(Color.White, 1.0f, building.IsPreview ? 0.5f : 1.0f));
-                            graphics.DrawImage(bm, buildingRenderBounds, 0, 0, bm.Width, bm.Height, GraphicsUnit.Pixel, imageAttributes);
+                            Globals.TheShapeCacheManager.AddImage(fkId, fkBm);
                         }
+                        imageAttributes.SetColorMatrix(GetColorMatrix(Color.White, 1.0f, building.IsPreview ? 0.5f : 1.0f));
+                        graphics.DrawImage(fkBm, buildingRenderBounds, 0, 0, fkBm.Width, fkBm.Height, GraphicsUnit.Pixel, imageAttributes);
+                        
                     }
                 }
             }
@@ -1942,10 +1965,13 @@ namespace MobiusEditor.Render
                     }
                     else
                     {
-                        Rectangle buildingBounds = new Rectangle(Point.Empty, new Size(maxSize.Width * Globals.OriginalTileWidth, maxSize.Height * Globals.OriginalTileHeight));
-                        using (Bitmap bm = new Bitmap(buildingBounds.Width, buildingBounds.Height))
+                        string priId = "priority_classic_" + maxSize.Width + "x" + maxSize.Height + "_" + priText;
+                        Bitmap priBm = Globals.TheShapeCacheManager.GetImage(priId);
+                        if (priBm == null)
                         {
-                            using (Graphics bmgr = Graphics.FromImage(bm))
+                            Rectangle buildingBounds = new Rectangle(Point.Empty, new Size(maxSize.Width * Globals.OriginalTileWidth, maxSize.Height * Globals.OriginalTileHeight));
+                            priBm = new Bitmap(buildingBounds.Width, buildingBounds.Height);
+                            using (Graphics bmgr = Graphics.FromImage(priBm))
                             {
                                 int[] indices = Encoding.ASCII.GetBytes(priText).Select(x => (int)x).ToArray();
                                 using (Bitmap txt = RenderTextFromSprite(classicFont, remapClassicFont, Size.Empty, indices, false, cropClassicFont))
@@ -1962,9 +1988,11 @@ namespace MobiusEditor.Render
                                     bmgr.DrawImage(txt, textRect, 0, 0, txt.Width, txt.Height, GraphicsUnit.Pixel);
                                 }
                             }
-                            imageAttributes.SetColorMatrix(GetColorMatrix(Color.White, 1.0f, building.IsPreview ? 0.5f : 1.0f));
-                            graphics.DrawImage(bm, buildingRenderBounds, 0, 0, bm.Width, bm.Height, GraphicsUnit.Pixel, imageAttributes);
+                            Globals.TheShapeCacheManager.AddImage(priId, priBm);
                         }
+                        imageAttributes.SetColorMatrix(GetColorMatrix(Color.White, 1.0f, building.IsPreview ? 0.5f : 1.0f));
+                        graphics.DrawImage(priBm, buildingRenderBounds, 0, 0, priBm.Width, priBm.Height, GraphicsUnit.Pixel, imageAttributes);
+                        
                     }
                 }
             }
@@ -2150,28 +2178,31 @@ namespace MobiusEditor.Render
                     }
                     else
                     {
-                        using (Bitmap bm = new Bitmap(tileSize.Width, tileSize.Height))
+                        string wpId = "waypoint_" + wpText + "_" + classicFont + "_" + remapClassicFont.Name;
+                        Bitmap wpBm = Globals.TheShapeCacheManager.GetImage(wpId);
+                        if (wpBm == null)
                         {
-                            using (Graphics bmgr = Graphics.FromImage(bm))
+                            wpBm = new Bitmap(tileSize.Width, tileSize.Height);
+                            int[] indices = Encoding.ASCII.GetBytes(wpText).Select(x => (int)x).ToArray();
+                            using (Graphics bmgr = Graphics.FromImage(wpBm))
+                            using (Bitmap txt = RenderTextFromSprite(classicFont, remapClassicFont, Size.Empty, indices, false, cropClassicFont))
                             {
-                                int[] indices = Encoding.ASCII.GetBytes(wpText).Select(x => (int)x).ToArray();
-                                using (Bitmap txt = RenderTextFromSprite(classicFont, remapClassicFont, Size.Empty, indices, false, cropClassicFont))
-                                {
-                                    int textOffsetX = (tileSize.Width - txt.Width) / 2;
-                                    int textOffsetY = (tileSize.Height - txt.Height) / 2;
-                                    int frameOffsetX = Math.Max(textOffsetX, -tileSize.Width) - 1;
-                                    int frameOffsetY = Math.Max(textOffsetY, -tileSize.Height) - 1;
-                                    int frameWidth = Math.Min(txt.Width + 2, tileSize.Width * 3);
-                                    int frameHeight = Math.Min(txt.Height + 2, tileSize.Height * 3);
-                                    Rectangle frameRect = new Rectangle(frameOffsetX, frameOffsetY, frameWidth, frameHeight);
-                                    Rectangle textRect = new Rectangle(textOffsetX, textOffsetY, txt.Width, txt.Height);
-                                    bmgr.FillRectangle(baseBackgroundBrush, frameRect);
-                                    bmgr.DrawImage(txt, textRect, 0, 0, txt.Width, txt.Height, GraphicsUnit.Pixel);
-                                }
+                                int textOffsetX = (tileSize.Width - txt.Width) / 2;
+                                int textOffsetY = (tileSize.Height - txt.Height) / 2;
+                                int frameOffsetX = Math.Max(textOffsetX, -tileSize.Width) - 1;
+                                int frameOffsetY = Math.Max(textOffsetY, -tileSize.Height) - 1;
+                                int frameWidth = Math.Min(txt.Width + 2, tileSize.Width * 3);
+                                int frameHeight = Math.Min(txt.Height + 2, tileSize.Height * 3);
+                                Rectangle frameRect = new Rectangle(frameOffsetX, frameOffsetY, frameWidth, frameHeight);
+                                Rectangle textRect = new Rectangle(textOffsetX, textOffsetY, txt.Width, txt.Height);
+                                bmgr.FillRectangle(baseBackgroundBrush, frameRect);
+                                bmgr.DrawImage(txt, textRect, 0, 0, txt.Width, txt.Height, GraphicsUnit.Pixel);
                             }
-                            Rectangle paintRect = new Rectangle(paintBounds.Location.X, paintBounds.Location.Y, bm.Width, bm.Height);
-                            graphics.DrawImage(bm, paintRect, 0, 0, bm.Width, bm.Height, GraphicsUnit.Pixel, imageAttributes);
                         }
+                        Globals.TheShapeCacheManager.AddImage(wpId, wpBm);
+                        Rectangle paintRect = new Rectangle(paintBounds.Location.X, paintBounds.Location.Y, wpBm.Width, wpBm.Height);
+                        graphics.DrawImage(wpBm, paintRect, 0, 0, wpBm.Width, wpBm.Height, GraphicsUnit.Pixel, imageAttributes);
+                        
                     }
                 }
             }
@@ -2441,50 +2472,49 @@ namespace MobiusEditor.Render
             // Render each trigger once, and just paint the rendered image multiple times.
             Dictionary<string, Bitmap> backRenders = new Dictionary<string, Bitmap>();
             Dictionary<string, Bitmap> renders = new Dictionary<string, Bitmap>();
-            try
+            double tileScaleHor = sizeW / 128.0;
+            Rectangle tileBounds = new Rectangle(0, 0, sizeW, sizeH);
+            using (SolidBrush prevCellTriggersBackgroundBrush = new SolidBrush(previewFillColor))
+            using (SolidBrush prevCellTriggersBrush = new SolidBrush(previewTextColor))
+            using (SolidBrush cellTriggersBackgroundBrush = new SolidBrush(fillColor))
+            using (SolidBrush cellTriggersBrush = new SolidBrush(textColor))
             {
-                double tileScaleHor = sizeW / 128.0;
-                Rectangle tileBounds = new Rectangle(0, 0, sizeW, sizeH);
-                using (SolidBrush prevCellTriggersBackgroundBrush = new SolidBrush(previewFillColor))
-                using (SolidBrush prevCellTriggersBrush = new SolidBrush(previewTextColor))
-                using (SolidBrush cellTriggersBackgroundBrush = new SolidBrush(fillColor))
-                using (SolidBrush cellTriggersBrush = new SolidBrush(textColor))
+                foreach (string trigger in toRenderSet)
                 {
-                    foreach (string trigger in toRenderSet)
+                    string[] trigPart = trigger.Split('=');
+                    if (trigPart.Length != 2)
                     {
-                        string[] trigPart = trigger.Split('=');
-                        if (trigPart.Length != 2)
-                        {
-                            continue;
-                        }
-                        string text = trigPart[0];
-                        bool isPreview = trigPart[1] == "P";
-                        Color textCol = isPreview ? previewTextColor : textColor;
+                        continue;
+                    }
+                    string text = trigPart[0];
+                    bool isPreview = trigPart[1] == "P";
+                    Color textCol = isPreview ? previewTextColor : textColor;
+                    Rectangle textBounds = new Rectangle(Point.Empty, tileBounds.Size);
+                    string trId = "trigger_" + trigger + "_" + ((uint)(isPreview ? previewTextColor : textColor).ToArgb()).ToString("X4");
+                    string bgId = "trig_bg_" + trigger + "_" + ((uint)(isPreview ? previewFillColor : fillColor).ToArgb()).ToString("X4");
 
-                        Bitmap fillbm = new Bitmap(sizeW, sizeH);
-                        Bitmap bm = new Bitmap(sizeW, sizeH);
-                        using (Graphics ctg = Graphics.FromImage(bm))
-                        using (Graphics fillctg = Graphics.FromImage(fillbm))
+                    Bitmap trigbm = Globals.TheShapeCacheManager.GetImage(trId);
+                    if (trigbm == null)
+                    {
+                        trigbm = new Bitmap(sizeW, sizeH);
+                        using (Graphics trigctg = Graphics.FromImage(trigbm))
                         {
-                            SetRenderSettings(ctg, classicFont == null);
-                            SetRenderSettings(fillctg, classicFont == null);
-                            Rectangle textBounds = new Rectangle(Point.Empty, tileBounds.Size);
+                            SetRenderSettings(trigctg, classicFont == null);
                             StringFormat stringFormat = new StringFormat
                             {
                                 Alignment = StringAlignment.Center,
                                 LineAlignment = StringAlignment.Center
                             };
-                            fillctg.FillRectangle(isPreview ? prevCellTriggersBackgroundBrush : cellTriggersBackgroundBrush, textBounds);
                             using (Bitmap textBm = new Bitmap(sizeW, sizeH))
                             {
                                 using (Graphics textGr = Graphics.FromImage(textBm))
                                 {
                                     if (classicFont == null)
                                     {
-                                        using (Font font = ctg.GetAdjustedFont(text, SystemFonts.DefaultFont, textBounds.Width, textBounds.Height,
+                                        using (Font font = trigctg.GetAdjustedFont(text, SystemFonts.DefaultFont, textBounds.Width, textBounds.Height,
                                             Math.Max(1, (int)Math.Round(24 * tileScaleHor)), Math.Max(1, (int)Math.Round(48 * tileScaleHor)), stringFormat, true))
                                         {
-                                            SetRenderSettings(ctg, true);
+                                            SetRenderSettings(trigctg, true);
                                             // If not set, the text will have ugly black fades at the edges.
                                             textGr.TextRenderingHint = TextRenderingHint.SingleBitPerPixel;
                                             textGr.DrawString(text, font, isPreview ? prevCellTriggersBrush : cellTriggersBrush, textBounds, stringFormat);
@@ -2499,81 +2529,82 @@ namespace MobiusEditor.Render
                                             using (Bitmap txt = RenderTextFromSprite(classicFont, remapClassicFont, tileBounds.Size, indices, false, cropClassicFont))
                                             {
                                                 Rectangle paintBounds = new Rectangle(Point.Empty, tileSize);
-                                                textGr.DrawImage(txt, textBounds, 0,0, tileBounds.Width, tileBounds.Height, GraphicsUnit.Pixel, imageAttributes);
+                                                textGr.DrawImage(txt, textBounds, 0, 0, tileBounds.Width, tileBounds.Height, GraphicsUnit.Pixel, imageAttributes);
                                             }
                                         }
                                     }
                                 }
-                                // Clear background under text to make it more transparent. There are probably more elegant ways to do this, but this works.
-                                RegionData textInline = ImageUtils.GetOutline(new Size(sizeW, sizeH), textBm, 0.00f, (byte)Math.Max(0, textCol.A - 1), false);
-                                using (Region clearArea = new Region(textInline))
-                                using (Brush clear = new SolidBrush(Color.Transparent))
-                                {
-                                    fillctg.CompositingMode = CompositingMode.SourceCopy;
-                                    fillctg.FillRegion(clear, clearArea);
-                                    fillctg.CompositingMode = CompositingMode.SourceOver;
-                                }
-                                ctg.DrawImage(textBm, 0, 0);
+                                trigctg.DrawImage(textBm, 0, 0);
                             }
                         }
-                        backRenders.Add(trigger, fillbm);
-                        renders.Add(trigger, bm);
+                        Globals.TheShapeCacheManager.AddImage(trId, trigbm);
                     }
-                }
-
-                var backupCompositingQuality = graphics.CompositingQuality;
-                var backupInterpolationMode = graphics.InterpolationMode;
-                var backupSmoothingMode = graphics.SmoothingMode;
-                var backupPixelOffsetMode = graphics.PixelOffsetMode;
-                SetRenderSettings(graphics, classicFont == null);
-
-                foreach ((Point p, CellTrigger cellTrigger) in toRender)
-                {
-                    bool isPreview = cellTrigger.Tint.A != 255;
-                    string requestName = cellTrigger.Trigger + "=" + (isPreview ? 'P' : 'N');
-                    if (backRenders.TryGetValue(requestName, out Bitmap fillCtBm))
+                    Bitmap fillbm = Globals.TheShapeCacheManager.GetImage(bgId);
+                    if (fillbm == null)
                     {
-                        graphics.DrawImage(fillCtBm, p.X * tileSize.Width, p.Y * tileSize.Height);
+                        fillbm = new Bitmap(sizeW, sizeH);
+                        using (Graphics fillctg = Graphics.FromImage(fillbm))
+                        {
+                            SetRenderSettings(fillctg, classicFont == null);
+                            fillctg.FillRectangle(isPreview ? prevCellTriggersBackgroundBrush : cellTriggersBackgroundBrush, textBounds);
+                            // Clear background under text to make it more transparent. There are probably more elegant ways to do this, but this works.
+                            RegionData textInline = ImageUtils.GetOutline(new Size(sizeW, sizeH), trigbm, 0.00f, (byte)Math.Max(0, textCol.A - 1), false);
+                            using (Region clearArea = new Region(textInline))
+                            using (Brush clear = new SolidBrush(Color.Transparent))
+                            {
+                                fillctg.CompositingMode = CompositingMode.SourceCopy;
+                                fillctg.FillRegion(clear, clearArea);
+                                fillctg.CompositingMode = CompositingMode.SourceOver;
+                            }
+                        }
+                        Globals.TheShapeCacheManager.AddImage(bgId, fillbm);
                     }
+                    backRenders.Add(trigger, fillbm);
+                    renders.Add(trigger, trigbm);
                 }
-
-                float borderSize = Math.Max(0.5f, tileSize.Width / 60.0f);
-                float thickBorderSize = Math.Max(1f, tileSize.Width / 20.0f);
-                using (Pen prevBorderPen = new Pen(previewBorderColor, thickborder ? thickBorderSize : borderSize))
-                using (Pen borderPen = new Pen(borderColor, thickborder ? thickBorderSize : borderSize))
-                {
-                    foreach ((Point p, CellTrigger cellTrigger) in boundsToDraw)
-                    {
-                        bool isPreview = cellTrigger.Tint.A != 255;
-                        Rectangle bounds = new Rectangle(new Point(p.X * tileSize.Width, p.Y * tileSize.Height), tileSize);
-                        graphics.DrawRectangle(isPreview ? prevBorderPen : borderPen, bounds);
-                    }
-                }
-
-                foreach ((Point p, CellTrigger cellTrigger) in toRender)
-                {
-                    bool isPreview = cellTrigger.Tint.A != 255;
-                    string requestName = cellTrigger.Trigger + "=" + (isPreview ? 'P' : 'N');
-                    if (renders.TryGetValue(requestName, out Bitmap ctBm))
-                    {
-                        graphics.DrawImage(ctBm, p.X * tileSize.Width, p.Y * tileSize.Height);
-                    }
-                }
-                graphics.CompositingQuality = backupCompositingQuality;
-                graphics.InterpolationMode = backupInterpolationMode;
-                graphics.SmoothingMode = backupSmoothingMode;
-                graphics.PixelOffsetMode = backupPixelOffsetMode;
-
             }
-            finally
+
+            var backupCompositingQuality = graphics.CompositingQuality;
+            var backupInterpolationMode = graphics.InterpolationMode;
+            var backupSmoothingMode = graphics.SmoothingMode;
+            var backupPixelOffsetMode = graphics.PixelOffsetMode;
+            SetRenderSettings(graphics, classicFont == null);
+
+            foreach ((Point p, CellTrigger cellTrigger) in toRender)
             {
-                Bitmap[] bms = renders.Values.ToArray();
-                for (int i = 0; i < bms.Length; i++)
+                bool isPreview = cellTrigger.Tint.A != 255;
+                string requestName = cellTrigger.Trigger + "=" + (isPreview ? 'P' : 'N');
+                if (backRenders.TryGetValue(requestName, out Bitmap fillCtBm))
                 {
-                    try { bms[i].Dispose(); }
-                    catch { /* ignore */ }
+                    graphics.DrawImage(fillCtBm, p.X * tileSize.Width, p.Y * tileSize.Height);
                 }
             }
+
+            float borderSize = Math.Max(0.5f, tileSize.Width / 60.0f);
+            float thickBorderSize = Math.Max(1f, tileSize.Width / 20.0f);
+            using (Pen prevBorderPen = new Pen(previewBorderColor, thickborder ? thickBorderSize : borderSize))
+            using (Pen borderPen = new Pen(borderColor, thickborder ? thickBorderSize : borderSize))
+            {
+                foreach ((Point p, CellTrigger cellTrigger) in boundsToDraw)
+                {
+                    bool isPreview = cellTrigger.Tint.A != 255;
+                    Rectangle bounds = new Rectangle(new Point(p.X * tileSize.Width, p.Y * tileSize.Height), tileSize);
+                    graphics.DrawRectangle(isPreview ? prevBorderPen : borderPen, bounds);
+                }
+            }
+            foreach ((Point p, CellTrigger cellTrigger) in toRender)
+            {
+                bool isPreview = cellTrigger.Tint.A != 255;
+                string requestName = cellTrigger.Trigger + "=" + (isPreview ? 'P' : 'N');
+                if (renders.TryGetValue(requestName, out Bitmap ctBm))
+                {
+                    graphics.DrawImage(ctBm, p.X * tileSize.Width, p.Y * tileSize.Height);
+                }
+            }
+            graphics.CompositingQuality = backupCompositingQuality;
+            graphics.InterpolationMode = backupInterpolationMode;
+            graphics.SmoothingMode = backupSmoothingMode;
+            graphics.PixelOffsetMode = backupPixelOffsetMode;
         }
 
         public static void RenderMapBoundaries(Graphics graphics, Map map, Rectangle visibleCells, Size tileSize)
@@ -2752,16 +2783,16 @@ namespace MobiusEditor.Render
                     continue;
                 }
                 curCol = Color.FromArgb(255, curCol);
-                using (Bitmap curBmp = GenerateLinesBitmap(tile, tileWidth, tileHeight, curCol, lineSize, lineOffsetW, lineOffsetH, graphics))
+                string hashId = "hashing_" + tileWidth + "x" + tileHeight + "_" + ((uint)curCol.ToArgb()).ToString("X4");
+                Bitmap hashBmp = Globals.TheShapeCacheManager.GetImage(hashId);
+                if (hashBmp == null)
+                {
+                    hashBmp = GenerateLinesBitmap(tile, tileWidth, tileHeight, curCol, lineSize, lineOffsetW, lineOffsetH, graphics);
+                    Globals.TheShapeCacheManager.AddImage(hashId, hashBmp);
+                }
                 using (ImageAttributes imageAttributes = new ImageAttributes())
                 {
-                    float brightness = 1.0f;
-                    float alpha = 0.50f;
-                    if (soft)
-                    {
-                        alpha /= 2;
-                    }
-                    imageAttributes.SetColorMatrix(GetColorMatrix(Color.White, brightness, alpha));
+                    imageAttributes.SetColorMatrix(GetColorMatrix(Color.White, 1.0f, soft ? 0.25f : 0.50f));
                     for (int y = visibleCells.Y; y < visibleCells.Bottom; ++y)
                     {
                         for (int x = visibleCells.X; x < visibleCells.Right; ++x)
@@ -2801,8 +2832,8 @@ namespace MobiusEditor.Render
                                     continue;
                                 }
                             }
-                            graphics.DrawImage(curBmp, new Rectangle(tileWidth * x, tileHeight * y, tileWidth, tileHeight),
-                                0, 0, curBmp.Width, curBmp.Height, GraphicsUnit.Pixel, imageAttributes);
+                            graphics.DrawImage(hashBmp, new Rectangle(tileWidth * x, tileHeight * y, tileWidth, tileHeight),
+                                0, 0, hashBmp.Width, hashBmp.Height, GraphicsUnit.Pixel, imageAttributes);
                         }
                     }
                 }

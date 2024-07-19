@@ -123,7 +123,7 @@
       <Value Profile="(Default)">170, 0, 0</Value>
     </Setting>
     <Setting Name="HashColorLandRoad" Type="System.Drawing.Color" Scope="Application">
-      <Value Profile="(Default)">186, 127, 040</Value>
+      <Value Profile="(Default)">186, 127, 40</Value>
     </Setting>
     <Setting Name="HashColorLandWater" Type="System.Drawing.Color" Scope="Application">
       <Value Profile="(Default)">186, 186, 255</Value>
@@ -133,6 +133,21 @@
     </Setting>
     <Setting Name="HashColorLandRough" Type="System.Drawing.Color" Scope="Application">
       <Value Profile="(Default)">186, 128, 186</Value>
+    </Setting>
+    <Setting Name="OutlineColorCrateWood" Type="System.Drawing.Color" Scope="Application">
+      <Value Profile="(Default)">255, 192, 64</Value>
+    </Setting>
+    <Setting Name="OutlineColorCrateSteel" Type="System.Drawing.Color" Scope="Application">
+      <Value Profile="(Default)">255, 255, 255</Value>
+    </Setting>
+    <Setting Name="OutlineColorWall" Type="System.Drawing.Color" Scope="Application">
+      <Value Profile="(Default)">192, 0, 192</Value>
+    </Setting>
+    <Setting Name="OutlineColorSolidOverlay" Type="System.Drawing.Color" Scope="Application">
+      <Value Profile="(Default)">192, 192, 192</Value>
+    </Setting>
+    <Setting Name="OutlineColorTerrain" Type="System.Drawing.Color" Scope="Application">
+      <Value Profile="(Default)">0, 192, 0</Value>
     </Setting>
     <Setting Name="ReportMissionDetection" Type="System.Boolean" Scope="Application">
       <Value Profile="(Default)">True</Value>

@@ -101,7 +101,7 @@ namespace MobiusEditor.Tools
             else if (modifiedBits.HasFlag(MapLayerFlag.Template))
             {
                 // Full repaint. Normally only done on initial load.
-                mapPanel.Invalidate(RenderMap);
+                mapPanel.InvalidateFull();
             }
             else
             {
@@ -245,10 +245,13 @@ namespace MobiusEditor.Tools
                 return;
             }
             PreRenderMap();
-            using (var g = Graphics.FromImage(mapPanel.MapImage))
+            if (mapPanel.MapImage != null)
             {
-                MapRenderer.SetRenderSettings(g, Globals.MapSmoothScale);
-                MapRenderer.Render(plugin.GameInfo, RenderMap, g, e.Points?.Where(p => map.Metrics.Contains(p)).ToHashSet(), Layers);
+                using (var g = Graphics.FromImage(mapPanel.MapImage))
+                {
+                    MapRenderer.SetRenderSettings(g, Globals.MapSmoothScale);
+                    MapRenderer.Render(plugin.GameInfo, RenderMap, g, e.Points?.Where(p => map.Metrics.Contains(p)).ToHashSet(), Layers);
+                }
             }
         }
 
@@ -332,9 +335,7 @@ namespace MobiusEditor.Tools
                     {
                         MapRenderer.RenderAllCrateOutlines(graphics, gameInfo, map, visibleCells, tileSize, tileScale, true);
                     }
-                    MapRenderer.RenderAllOverlayOutlines(graphics, gameInfo, map, visibleCells, tileSize, tileScale,
-                        OverlayTypeFlag.Solid | OverlayTypeFlag.Wall, true, Color.Purple);
-
+                    MapRenderer.RenderAllSolidOverlayOutlines(graphics, gameInfo, map, visibleCells, tileSize, tileScale, true);
                 }
             }
             // Special case: while it's not handled by OverlapOutlines, tools indicating that they handle the OverlapOutlines
@@ -419,8 +420,7 @@ namespace MobiusEditor.Tools
                     if (!renderAllCrateOutlines && map.CrateOverlaysAvailable) {
                         MapRenderer.RenderAllCrateOutlines(graphics, gameInfo, map, visibleCells, tileSize, tileScale, true);
                     }
-                    MapRenderer.RenderAllOverlayOutlines(graphics, gameInfo, map, visibleCells, tileSize, tileScale,
-                        OverlayTypeFlag.Solid | OverlayTypeFlag.Wall, true, Color.Purple);
+                    MapRenderer.RenderAllSolidOverlayOutlines(graphics, gameInfo, map, visibleCells, tileSize, tileScale, true);
                 }
             }
             // Special case: while it's not handled by the OverlapOutlines flag being enabled, tools indicating

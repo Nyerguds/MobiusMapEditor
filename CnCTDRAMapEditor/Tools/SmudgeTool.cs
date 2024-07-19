@@ -39,6 +39,7 @@ namespace MobiusEditor.Tools
         private readonly TypeListBox smudgeTypeListBox;
         private readonly MapPanel smudgeTypeMapPanel;
         private readonly SmudgeProperties smudgeProperties;
+        private readonly ShapeCacheManager shapeCache = new ShapeCacheManager();
 
         private Map previewMap;
         protected override Map RenderMap => previewMap;
@@ -628,7 +629,8 @@ namespace MobiusEditor.Tools
                 smudgePreview.SetResolution(96, 96);
                 using (var g = Graphics.FromImage(smudgePreview))
                 {
-                    MapRenderer.SetRenderSettings(g, Globals.PreviewSmoothScale);
+                    bool isSmooth = Globals.PreviewSmoothScale;
+                    MapRenderer.SetRenderSettings(g, isSmooth);
                     // Needs to be done here manually since "one" multi-cell smudge is really just a collection of smudge cells.
                     List<(int, Smudge)> smudgeList = new List<(int, Smudge)>();
                     int icons = mockSize.Width * mockSize.Height;
@@ -637,7 +639,7 @@ namespace MobiusEditor.Tools
                         Smudge smudge = new Smudge(mockType, mockType.IsMultiCell ? i : mockSmudge.Icon);
                         smudgeList.Add((i, smudge));
                         mockMetrics.GetLocation(i, out Point p);
-                        var render = MapRenderer.RenderSmudge(p, Globals.PreviewTileSize, Globals.PreviewTileScale, smudge);
+                        var render = MapRenderer.RenderSmudge(p, Globals.PreviewTileSize, Globals.PreviewTileScale, smudge, isSmooth, shapeCache);
                         if (!render.Item1.IsEmpty)
                         {
                             render.Item2(g);
@@ -784,6 +786,7 @@ namespace MobiusEditor.Tools
             {
                 if (disposing)
                 {
+                    shapeCache.Reset();
                     Deactivate();
                     smudgeTypeListBox.SelectedIndexChanged -= SmudgeTypeComboBox_SelectedIndexChanged;
                 }

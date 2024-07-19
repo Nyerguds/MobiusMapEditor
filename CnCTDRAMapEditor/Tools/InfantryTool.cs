@@ -458,10 +458,10 @@ namespace MobiusEditor.Tools
                 InfantryGroup finalGroup = ev.Map.Technos[endLocation] as InfantryGroup;
                 if (finalGroup == startGroup)
                 {
-                    ev.MapPanel.Invalidate(ev.Map, finalGroup);
-                    finalGroup.Infantry[startStop] = null;
-                    finalGroup.Infantry[finalStop] = toMove;
-                    toMove.InfantryGroup = finalGroup;
+                    ev.MapPanel.Invalidate(ev.Map, startGroup);
+                    startGroup.Infantry[finalStop] = toMove;
+                    startGroup.Infantry[startStop] = null;
+                    toMove.InfantryGroup = startGroup;
                 }
                 else
                 {
@@ -470,10 +470,10 @@ namespace MobiusEditor.Tools
                         finalGroup = new InfantryGroup();
                         ev.Map.Technos.Add(endLocation, finalGroup);
                     }
-                    finalGroup.Infantry[startStop] = toMove;
+                    finalGroup.Infantry[finalStop] = toMove;
                     toMove.InfantryGroup = finalGroup;
                     ev.MapPanel.Invalidate(ev.Map, finalGroup);
-                    startGroup.Infantry[finalStop] = null;
+                    startGroup.Infantry[startStop] = null;
                     ev.MapPanel.Invalidate(ev.Map, startGroup);
                     if (startGroup.Infantry.All(x => x == null))
                     {

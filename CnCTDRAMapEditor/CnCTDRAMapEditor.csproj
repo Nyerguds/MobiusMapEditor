@@ -648,6 +648,7 @@
     <Compile Include="Utility\MRU.cs" />
     <Compile Include="Utility\PropertyTracker.cs" />
     <Compile Include="Event\MapRefreshEventArgs.cs" />
+    <Compile Include="Utility\ShapeCacheManager.cs" />
     <Compile Include="Utility\SimpleMultiThreading.cs" />
     <Compile Include="Utility\StartupLoader.cs" />
     <Compile Include="Utility\SteamAssist.cs" />

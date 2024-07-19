@@ -35,6 +35,7 @@ namespace MobiusEditor.Model
     public enum MapLayerFlag: int
     {
         None            /**/ = 0,
+        // Map objects
         Template        /**/ = 1 << 00,
         Terrain         /**/ = 1 << 01,
         Infantry        /**/ = 1 << 02,
@@ -45,21 +46,22 @@ namespace MobiusEditor.Model
         Resources       /**/ = 1 << 07,
         Smudge          /**/ = 1 << 08,
         Waypoints       /**/ = 1 << 09,
-
+        // Indicators
         Boundaries      /**/ = 1 << 10,
-        MapSymmetry     /**/ = 1 << 11,
-        MapGrid         /**/ = 1 << 12,
-        WaypointsIndic  /**/ = 1 << 13,
-        FootballArea    /**/ = 1 << 14,
-        CellTriggers    /**/ = 1 << 15,
-        TechnoTriggers  /**/ = 1 << 16,
-        BuildingRebuild /**/ = 1 << 17,
-        BuildingFakes   /**/ = 1 << 18,
-        EffectRadius    /**/ = 1 << 19,
-        WaypointRadius  /**/ = 1 << 20,
-        OverlapOutlines /**/ = 1 << 21,
-        LandTypes       /**/ = 1 << 22,
-        TechnoOccupancy /**/ = 1 << 23,
+        WaypointsIndic  /**/ = 1 << 11,
+        FootballArea    /**/ = 1 << 12,
+        CellTriggers    /**/ = 1 << 13,
+        TechnoTriggers  /**/ = 1 << 14,
+        BuildingRebuild /**/ = 1 << 15,
+        BuildingFakes   /**/ = 1 << 16,
+        OverlapOutlines /**/ = 1 << 17,
+        // Extra Indicators
+        MapSymmetry     /**/ = 1 << 18,
+        MapGrid         /**/ = 1 << 19,
+        LandTypes       /**/ = 1 << 20,
+        TechnoOccupancy /**/ = 1 << 21,
+        WaypointRadius  /**/ = 1 << 22,
+        EffectRadius    /**/ = 1 << 23,
 
         OverlayAll = Resources | Walls | Overlay,
         Technos = Terrain | Infantry | Units | Buildings,
@@ -157,19 +159,20 @@ namespace MobiusEditor.Model
             "Waypoints",
             // Indicators
             "Map boundaries",
-            "Map symmetry",
-            "Map grid",
             "Waypoint labels",
             "Football goal areas",
             "Cell triggers",
             "Object triggers",
             "Building rebuild priorities",
             "Building 'fake' labels",
-            "Jam / gap radiuses",
-            "Waypoint reveal radiuses",
             "Overlapped object outlines",
+            // Extra indicators
+            "Map symmetry",
+            "Map grid",
             "Map terrain types hashing",
-            "Object occupancy hashing"
+            "Object occupancy hashing",
+            "Waypoint reveal radiuses",
+            "Jam / gap radiuses",
         };
 
         private static int[] tiberiumStages = new int[] { 0, 1, 3, 4, 6, 7, 8, 10, 11 };
@@ -2052,13 +2055,14 @@ namespace MobiusEditor.Model
             float previewScale = Math.Min(previewSize.Width / (float)mapBounds.Width, previewSize.Height / (float)mapBounds.Height);
             Size scaledSize = new Size((int)Math.Round(previewSize.Width / previewScale), (int)Math.Round(previewSize.Height / previewScale));
 
+            using (ShapeCacheManager shapeCache = new ShapeCacheManager())
             using (Bitmap fullBitmap = new Bitmap(this.Metrics.Width * renderTileSize.Width, this.Metrics.Height * renderTileSize.Height))
             using (Bitmap croppedBitmap = new Bitmap(previewSize.Width, previewSize.Height))
             {
                 using (Graphics g = Graphics.FromImage(fullBitmap))
                 {
                     MapRenderer.SetRenderSettings(g, smooth);
-                    MapRenderer.Render(plugin.GameInfo, this, g, locations, toRender, tileScale);
+                    MapRenderer.Render(plugin.GameInfo, this, g, locations, toRender, tileScale, shapeCache);
                     if (toRender.HasAnyFlags(MapLayerFlag.Indicators))
                     {
                         ViewTool.PostRenderMap(g, plugin, this, tileScale, toRender, MapLayerFlag.None, false, plugin.Map.Metrics.Bounds);

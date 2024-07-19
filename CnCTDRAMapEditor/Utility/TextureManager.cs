@@ -24,6 +24,7 @@ using System.IO.Compression;
 using System.Runtime.InteropServices;
 using TGASharpLib;
 using MobiusEditor.Interface;
+using System.Drawing.Drawing2D;
 
 namespace MobiusEditor.Utility
 {
@@ -83,9 +84,9 @@ namespace MobiusEditor.Utility
                 {
                     TGA tga = null;
                     JObject metadata = null;
-                    var name = Path.GetFileNameWithoutExtension(filename);
-                    var archiveDir = Path.GetDirectoryName(filename);
-                    var archivePath = archiveDir + ".ZIP";
+                    string name = Path.GetFileNameWithoutExtension(filename);
+                    string archiveDir = Path.GetDirectoryName(filename);
+                    string archivePath = archiveDir + ".ZIP";
                     // First attempt to find the texture in an archive
                     if (tga == null)
                     {
@@ -108,12 +109,12 @@ namespace MobiusEditor.Utility
                         }
                         if (tga != null)
                         {
-                            var meta = Path.ChangeExtension(filename, ".meta");
+                            string meta = Path.ChangeExtension(filename, ".meta");
                             using (Stream metaStream = megafileManager.OpenFile(meta))
                             {
                                 if (metaStream != null)
                                 {
-                                    using (var reader = new StreamReader(metaStream))
+                                    using (StreamReader reader = new StreamReader(metaStream))
                                     {
                                         metadata = JObject.Parse(reader.ReadToEnd());
                                     }
@@ -125,20 +126,21 @@ namespace MobiusEditor.Utility
                     {
                         if (metadata != null)
                         {
-                            using (var bitmap = tga.ToBitmap(true))
+                            using (Bitmap bitmap = tga.ToBitmap(true))
                             {
                                 bitmap.SetResolution(96, 96);
-                                var size = new Size(metadata["size"][0].ToObject<int>(), metadata["size"][1].ToObject<int>());
-                                var crop = Rectangle.FromLTRB(
+                                Size size = new Size(metadata["size"][0].ToObject<int>(), metadata["size"][1].ToObject<int>());
+                                Rectangle crop = Rectangle.FromLTRB(
                                     metadata["crop"][0].ToObject<int>(),
                                     metadata["crop"][1].ToObject<int>(),
                                     metadata["crop"][2].ToObject<int>(),
                                     metadata["crop"][3].ToObject<int>()
                                 );
-                                var uncroppedBitmap = new Bitmap(size.Width, size.Height, bitmap.PixelFormat);
+                                Bitmap uncroppedBitmap = new Bitmap(size.Width, size.Height, bitmap.PixelFormat);
                                 uncroppedBitmap.SetResolution(96, 96);
-                                using (var g = Graphics.FromImage(uncroppedBitmap))
+                                using (Graphics g = Graphics.FromImage(uncroppedBitmap))
                                 {
+                                    g.CompositingMode = CompositingMode.SourceCopy;
                                     g.DrawImage(bitmap, crop, new Rectangle(Point.Empty, bitmap.Size), GraphicsUnit.Pixel);
                                 }
                                 cachedTextures[filename] = uncroppedBitmap;
@@ -146,7 +148,7 @@ namespace MobiusEditor.Utility
                         }
                         else
                         {
-                            var bitmap = tga.ToBitmap(true);
+                            Bitmap bitmap = tga.ToBitmap(true);
                             bitmap.SetResolution(96, 96);
                             cachedTextures[filename] = bitmap;
                         }
@@ -155,7 +157,7 @@ namespace MobiusEditor.Utility
                 if (!cachedTextures.TryGetValue(filename, out resBitmap))
                 {
                     // Try loading as a DDS
-                    var ddsFilename = Path.ChangeExtension(filename, ".DDS");
+                    string ddsFilename = Path.ChangeExtension(filename, ".DDS");
                     Bitmap bitmap = null;
                     using (Stream fileStream = megafileManager.OpenFile(ddsFilename))
                     {
@@ -207,8 +209,8 @@ namespace MobiusEditor.Utility
                     }
                     if (tga == null && ".tga".Equals(Path.GetExtension(entry.Name), StringComparison.InvariantCultureIgnoreCase))
                     {
-                        using (var stream = entry.Open())
-                        using (var memStream = new MemoryStream())
+                        using (Stream stream = entry.Open())
+                        using (MemoryStream memStream = new MemoryStream())
                         {
                             stream.CopyTo(memStream);
                             tga = new TGA(memStream);
@@ -216,8 +218,8 @@ namespace MobiusEditor.Utility
                     }
                     else if (metadata == null && ".meta".Equals(Path.GetExtension(entry.Name), StringComparison.InvariantCultureIgnoreCase))
                     {
-                        using (var stream = entry.Open())
-                        using (var reader = new StreamReader(stream))
+                        using (Stream stream = entry.Open())
+                        using (StreamReader reader = new StreamReader(stream))
                         {
                             metadata = JObject.Parse(reader.ReadToEnd());
                         }
@@ -236,9 +238,9 @@ namespace MobiusEditor.Utility
             {
                 return null;
             }
-            var bytes = new byte[fileStream.Length];
+            byte[] bytes = new byte[fileStream.Length];
             fileStream.Read(bytes, 0, bytes.Length);
-            using (var image = Dds.Create(bytes, new PfimConfig()))
+            using (Dds image = Dds.Create(bytes, new PfimConfig()))
             {
                 PixelFormat format;
                 switch (image.Format)
@@ -265,8 +267,8 @@ namespace MobiusEditor.Utility
                         format = PixelFormat.DontCare;
                         break;
                 }
-                var bitmap = new Bitmap(image.Width, image.Height, format);
-                var bitmapData = bitmap.LockBits(new Rectangle(0, 0, image.Width, image.Height), ImageLockMode.WriteOnly, bitmap.PixelFormat);
+                Bitmap bitmap = new Bitmap(image.Width, image.Height, format);
+                BitmapData bitmapData = bitmap.LockBits(new Rectangle(0, 0, image.Width, image.Height), ImageLockMode.WriteOnly, bitmap.PixelFormat);
                 Marshal.Copy(image.Data, 0, bitmapData.Scan0, image.Stride * image.Height);
                 bitmap.UnlockBits(bitmapData);
                 bitmap.SetResolution(96, 96);
@@ -291,7 +293,7 @@ namespace MobiusEditor.Utility
                         using (SolidBrush ring = new SolidBrush(Color.FromArgb(128, 0, 0, 0)))
                         using (SolidBrush center = new SolidBrush(Color.FromArgb(128, 250, 250, 250)))
                         {
-                            graphics.CompositingMode = System.Drawing.Drawing2D.CompositingMode.SourceCopy;
+                            graphics.CompositingMode = CompositingMode.SourceCopy;
                             graphics.FillRectangle(outside, new Rectangle(0, 0, 48, 48));
                             graphics.FillRectangle(ring, new Rectangle(5, 5, 38, 38));
                             graphics.FillRectangle(center, new Rectangle(7, 7, 34, 34));
@@ -308,8 +310,8 @@ namespace MobiusEditor.Utility
                     imageAttributes.SetColorMatrix(colorMatrix, ColorMatrixFlag.Default, ColorAdjustType.Bitmap);
                     using (Graphics g = Graphics.FromImage(newBm))
                     {
-                        g.InterpolationMode = System.Drawing.Drawing2D.InterpolationMode.HighQualityBicubic;
-                        g.SmoothingMode = System.Drawing.Drawing2D.SmoothingMode.AntiAlias;
+                        g.InterpolationMode = InterpolationMode.HighQualityBicubic;
+                        g.SmoothingMode = SmoothingMode.AntiAlias;
                         g.DrawImage(bm, r, 0, 0, bm.Width, bm.Height, GraphicsUnit.Pixel, imageAttributes);
                     }
                 }

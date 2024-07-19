@@ -385,7 +385,7 @@ namespace MobiusEditor.Properties {
         
         [global::System.Configuration.ApplicationScopedSettingAttribute()]
         [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
-        [global::System.Configuration.DefaultSettingValueAttribute("186, 127, 040")]
+        [global::System.Configuration.DefaultSettingValueAttribute("186, 127, 40")]
         public global::System.Drawing.Color HashColorLandRoad {
             get {
                 return ((global::System.Drawing.Color)(this["HashColorLandRoad"]));
@@ -416,6 +416,51 @@ namespace MobiusEditor.Properties {
         public global::System.Drawing.Color HashColorLandRough {
             get {
                 return ((global::System.Drawing.Color)(this["HashColorLandRough"]));
+            }
+        }
+        
+        [global::System.Configuration.ApplicationScopedSettingAttribute()]
+        [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
+        [global::System.Configuration.DefaultSettingValueAttribute("255, 192, 64")]
+        public global::System.Drawing.Color OutlineColorCrateWood {
+            get {
+                return ((global::System.Drawing.Color)(this["OutlineColorCrateWood"]));
+            }
+        }
+        
+        [global::System.Configuration.ApplicationScopedSettingAttribute()]
+        [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
+        [global::System.Configuration.DefaultSettingValueAttribute("255, 255, 255")]
+        public global::System.Drawing.Color OutlineColorCrateSteel {
+            get {
+                return ((global::System.Drawing.Color)(this["OutlineColorCrateSteel"]));
+            }
+        }
+        
+        [global::System.Configuration.ApplicationScopedSettingAttribute()]
+        [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
+        [global::System.Configuration.DefaultSettingValueAttribute("192, 0, 192")]
+        public global::System.Drawing.Color OutlineColorWall {
+            get {
+                return ((global::System.Drawing.Color)(this["OutlineColorWall"]));
+            }
+        }
+        
+        [global::System.Configuration.ApplicationScopedSettingAttribute()]
+        [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
+        [global::System.Configuration.DefaultSettingValueAttribute("192, 192, 192")]
+        public global::System.Drawing.Color OutlineColorSolidOverlay {
+            get {
+                return ((global::System.Drawing.Color)(this["OutlineColorSolidOverlay"]));
+            }
+        }
+        
+        [global::System.Configuration.ApplicationScopedSettingAttribute()]
+        [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
+        [global::System.Configuration.DefaultSettingValueAttribute("0, 192, 0")]
+        public global::System.Drawing.Color OutlineColorTerrain {
+            get {
+                return ((global::System.Drawing.Color)(this["OutlineColorTerrain"]));
             }
         }
         

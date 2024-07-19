@@ -661,3 +661,6 @@ Unreleased.
 * Fixed overlapping multiplayer starting point flags not working in combination with Sole Survivor football areas.
 * Rebalanced House-specific indicator colors (used for range indicators and overlap outlines) to be more similar in the remastered and classic view.
 * Fixed the "FAKE" label on fake buildings not being shown as more transparent on placement previews.
+* Optimised all indicator drawing by caching the generated images and overlap outlines.
+* Fixed an issue in the redo of drag-moving infantry, that created a ghost duplicate of the dragged infantry unit that could cause crashes.
+* Fixed an issue with the main editor window becoming hard to select if it was minimised during a load or save operation, because it would select the tool window instead of restoring the main window. To fix this, the tool window is now never shown if the main window is minimised.

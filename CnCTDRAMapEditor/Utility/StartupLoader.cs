@@ -228,6 +228,7 @@ namespace MobiusEditor.Utility
             // Initialize tileset, team color, and game text managers
             TilesetManager tsm = new TilesetManager(mfm, Globals.TilesetsXMLPath, Globals.TexturesPath);
             Globals.TheTilesetManager = tsm;
+            Globals.TheShapeCacheManager = new ShapeCacheManager();
             foreach (GameInfo gic in gameTypeInfo)
             {
                 foreach (TheaterType theater in gic.AllTheaters)
@@ -365,6 +366,7 @@ namespace MobiusEditor.Utility
             Globals.TheArchiveManager = mfm;
             // Initialize texture, tileset, team color, and game text managers
             Globals.TheTilesetManager = new TilesetManagerClassic(mfm);
+            Globals.TheShapeCacheManager = new ShapeCacheManager();
             Globals.TheTeamColorManager = new TeamRemapManager(mfm);
             Dictionary<GameType, String> gameStringsFiles = new Dictionary<GameType, string>();
             foreach (GameType gi in gameTypes)
