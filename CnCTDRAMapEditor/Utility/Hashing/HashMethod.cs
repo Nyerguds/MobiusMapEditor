@@ -18,7 +18,8 @@ namespace MobiusEditor.Utility.Hashing
 {
     public abstract class HashMethod
     {
-        private static HashMethod[] registeredMethods = {
+        private static HashMethod[] registeredMethods =
+            {
                 new HashRol1(),        // TD/RA
                 new HashCrc32(),       // TS/RA2
                 new HashRol3(),        // TS/RA2 setup

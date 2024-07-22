@@ -38,11 +38,21 @@ namespace MobiusEditor.Utility
         }
 
         private const string parseError = "Error parsing ini: section {0} not found.";
+        // Main games header. This is the only hardcoded header in the system.
         private const string gamesHeader = "Games";
+        // ini keys per game definition.
+        private const string gameKeyContentInis = "ContentInis";
+        private const string gameKeyFileTypes = "FileTypes";
+        private const string gameKeyFilesSections = "FilesSections";
+        private const string gameKeyTheaters = "Theaters";
+        private const string gameKeyModTheaters = "ModTheaters";
+        private const string gameKeyHasher = "Hasher";
+        private const string gameKeyNewMixFormat = "NewMixFormat";
+        private const string gameKeyHasMixNesting = "HasMixNesting";
+        private const string infoSuffix = "Info";
 
         private static readonly Dictionary<string, HashMethod> hashMethods = HashMethod.GetRegisteredMethods().ToDictionary(m => m.SimpleName, StringComparer.OrdinalIgnoreCase);
         private static readonly HashMethod defaultHashMethod = HashMethod.GetRegisteredMethods().FirstOrDefault();
-
 
         /// <summary>input-order version of the keys in <see cref="gameInfo"/>.</summary>
         private List<string> games = new List<string>();
@@ -145,14 +155,14 @@ namespace MobiusEditor.Utility
                     continue;
                 }
                 // Read game info
-                string[] externalFiles = (gameSection.TryGetValue("ContentInis") ?? String.Empty).Split(',', true);
-                string[] typesSections = (gameSection.TryGetValue("FileTypes") ?? String.Empty).Split(',', true);
-                string[] filesSections = (gameSection.TryGetValue("FilesSections") ?? String.Empty).Split(',', true);
-                string[][] theaterInfos = GetTheaterInfo(gameSection, "Theaters", true);
-                string[][] modTheaterInfos = GetTheaterInfo(gameSection, "ModTheaters", false);
-                string hasher = gameSection.TryGetValue("Hasher");
-                bool newMixFormat = YesNoBooleanTypeConverter.Parse(gameSection.TryGetValue("NewMixFormat"));
-                bool hasMixNesting = YesNoBooleanTypeConverter.Parse(gameSection.TryGetValue("HasMixNesting"));
+                string[] externalFiles = (gameSection.TryGetValue(gameKeyContentInis) ?? String.Empty).Split(',', true);
+                string[] typesSections = (gameSection.TryGetValue(gameKeyFileTypes) ?? String.Empty).Split(',', true);
+                string[] filesSections = (gameSection.TryGetValue(gameKeyFilesSections) ?? String.Empty).Split(',', true);
+                string[][] theaterInfos = GetTheaterInfo(gameSection, gameKeyTheaters, true);
+                string[][] modTheaterInfos = GetTheaterInfo(gameSection, gameKeyModTheaters, false);
+                string hasher = gameSection.TryGetValue(gameKeyHasher);
+                bool newMixFormat = YesNoBooleanTypeConverter.Parse(gameSection.TryGetValue(gameKeyNewMixFormat));
+                bool hasMixNesting = YesNoBooleanTypeConverter.Parse(gameSection.TryGetValue(gameKeyHasMixNesting));
                 hashMethods.TryGetValue(hasher, out HashMethod hashMethod);
                 // no files sections specified
                 if (filesSections.All(fs => String.IsNullOrEmpty(fs)))
@@ -286,9 +296,9 @@ namespace MobiusEditor.Utility
                     List<FileNameGeneratorEntry> generators = new List<FileNameGeneratorEntry>();
                     while (!string.IsNullOrEmpty(nameVal = typeSection.TryGetValue(nameIndex.ToString())))
                     {
-                        string info = typeSection.TryGetValue(nameIndex.ToString() + "Info");
-                        nameIndex++;
+                        string info = typeSection.TryGetValue(nameIndex.ToString() + infoSuffix);
                         generators.Add(new FileNameGeneratorEntry(nameVal, info));
+                        nameIndex++;
                     }
                     if (generators.Count > 0)
                     {
@@ -304,7 +314,7 @@ namespace MobiusEditor.Utility
             string theaters = gameSection.TryGetValue(keyName);
             if (string.IsNullOrEmpty(theaters))
             {
-                return !generateDummy ? null : new string[][] { new[] { string.Empty } };
+                return generateDummy ? new string[][] { new[] { String.Empty } } : null;
             }
             string[] theatersList = theaters.Split(',', StringSplitOptions.RemoveEmptyEntries, true);
             string[][] theaterInfos = new string[theatersList.Length][];
@@ -919,15 +929,15 @@ namespace MobiusEditor.Utility
             /// <param name="chunkLength">The length of the full key, to know when to end.</param>
             /// <param name="indexOfLastChunk">The length of the full key minus one, to know when to end.</param>
             /// <returns>The list of all names with their corresponding descriptions.</returns>
-            private IEnumerable<(string, string)> CreateNames(string baseName, string extraInfo, string[][] theaterInfo, int currentChunkPosition, int[] chunkEntries, Int32 chunkLength, Int32 indexOfLastChunk)
+            private IEnumerable<(string, string)> CreateNames(string baseName, string extraInfo, string[][] theaterInfo, int currentChunkPosition, int[] chunkEntries, int chunkLength, Int32 indexOfLastChunk)
             {
                 int nextCharPosition = currentChunkPosition + 1;
                 int entriesLength = iterations[currentChunkPosition].Length;
                 // We are looping through the full length of our entries-to-test array
                 for (int i = 0; i < entriesLength; i++)
                 {
-                    // The character at the currentCharPosition will be replaced by a new character
-                    // from the charactersToTest array => a new key combination will be created
+                    // The string at the currentChunkPosition will be replaced by a new string.
+                    // from the chunkEntries array, a new combination will be created using the "iterations" data.
                     chunkEntries[currentChunkPosition] = i;
 
                     // The method calls itself recursively until all positions of the key char array have been replaced
