@@ -791,8 +791,12 @@ namespace MobiusEditor.Utility
                             {
                                 continue;
                             }
-                            string fileInfo = info;
-                            if (!String.IsNullOrEmpty(generator.ExtraInfo))
+                            string fileInfo;
+                            if (String.IsNullOrEmpty(generator.ExtraInfo))
+                            {
+                                fileInfo = info;
+                            }
+                            else
                             {
                                 string extraInfo = generator.ExtraInfo;
                                 bool hasArg0 = EnhFormatString.HasArg(extraInfo, 0);
