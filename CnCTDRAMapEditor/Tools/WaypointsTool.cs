@@ -517,7 +517,7 @@ namespace MobiusEditor.Tools
                 previewMap.Waypoints[selectedIndex] = new Waypoint(orig.Name, orig.ShortName, orig.Flag, orig.Metrics);
             }
             previewMap.Waypoints[selectedIndex].Cell = cell;
-            previewMap.Waypoints[selectedIndex].Tint = Color.FromArgb(128, Color.White);
+            previewMap.Waypoints[selectedIndex].IsPreview = true;
         }
 
         protected override void PostRenderMap(Graphics graphics, Rectangle visibleCells)
@@ -534,8 +534,8 @@ namespace MobiusEditor.Tools
             Waypoint[] selectedRange = selected != null ? new [] { selected } : new Waypoint[] { };
             if (Layers.HasFlag(MapLayerFlag.FootballArea) && gameInfo.SupportsMapLayer(MapLayerFlag.FootballArea))
             {
-                MapRenderer.RenderAllFootballAreas(graphics, map, visibleCells, Globals.MapTileSize, Globals.MapTileScale, gameInfo);
-                MapRenderer.RenderFootballAreaFlags(graphics, gameInfo, map, visibleCells, Globals.MapTileSize);
+                MapRenderer.RenderAllFootballAreas(graphics, previewMap, visibleCells, Globals.MapTileSize, Globals.MapTileScale, gameInfo);
+                MapRenderer.RenderWaypointFlags(graphics, gameInfo, previewMap, visibleCells, Globals.MapTileSize);
             }
             // If the selected waypoint is not a flag, re-render it as opaque.
             if (selected != null && (plugin.Map.BasicSection.SoloMission || (selected.Flag & WaypointFlag.PlayerStart) != WaypointFlag.PlayerStart))

@@ -388,7 +388,7 @@ namespace MobiusEditor.Tools
                     Type = overlayType,
                     Icon = 0
                 };
-                (Rectangle, Action<Graphics>) render = MapRenderer.RenderOverlay(plugin.GameInfo, new Point(0,0), Globals.PreviewTileSize, Globals.PreviewTileScale, mockOverlay);
+                (Rectangle, Action<Graphics>) render = MapRenderer.RenderOverlay(plugin.GameInfo, new Point(0,0), null, Globals.PreviewTileSize, Globals.PreviewTileScale, mockOverlay, false);
                 if (!render.Item1.IsEmpty)
                 {
                     using (Graphics g = Graphics.FromImage(overlayPreview))
@@ -454,7 +454,7 @@ namespace MobiusEditor.Tools
                 navigationWidget.MouseoverSize = new Size(1, 1);
             }
             Overlay onCell = previewMap.Overlay[cell];
-            Overlay overlay = new Overlay { Type = selected, Icon = 0, Tint = Color.FromArgb(128, selected.Tint) };
+            Overlay overlay = new Overlay { Type = selected, Icon = 0, IsPreview = true };
             if (onCell == null || Map.IsIgnorableOverlay(onCell))
             {
                 if (selected.IsSolid && (!previewMap.Technos.CanAdd(cell, overlay) || (!previewMap.Buildings.CanAdd(cell, overlay))))

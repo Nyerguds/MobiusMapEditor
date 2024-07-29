@@ -107,7 +107,8 @@ namespace MobiusEditor.Model
     public class Map : ICloneable
     {
         /// <summary>
-        /// Enum specifying how filled a cell of concrete is.
+        /// Enum specifying how filled a cell of concrete is. A full cell consist of a full triangle pointing to the side,
+        /// with a half-triangle at the top and a half-triangle at the bottom filling the remaining space.
         /// </summary>
         [Flags]
         private enum ConcFill
@@ -120,6 +121,7 @@ namespace MobiusEditor.Model
 
         /// <summary>
         /// Enum for adjacent positions around a concrete cell to refresh, representing the positions as bits.
+        /// Note that this uses "side", and not left or right, in order to unify the logic for even and odd cells.
         /// </summary>
         [Flags]
         private enum ConcAdj
@@ -138,7 +140,7 @@ namespace MobiusEditor.Model
         static Map()
         {
             randomSeed = Guid.NewGuid().GetHashCode();
-            concreteStateToIcon = iconFillStates.Select((value, index) => new { value, index })
+            concreteStateToIcon = IconFillStates.Select((value, index) => new { value, index })
                       .ToDictionary(pair => pair.value, pair => pair.index);
             // Add default, since it does not appear in the cellStates.
             concreteStateToIcon.Add(ConcFill.None, 0);
@@ -175,19 +177,19 @@ namespace MobiusEditor.Model
             "Jam / gap radiuses",
         };
 
-        private static int[] tiberiumStages = new int[] { 0, 1, 3, 4, 6, 7, 8, 10, 11 };
-        private static int[] gemStages = new int[] { 0, 0, 0, 1, 1, 1, 2, 2, 2 };
+        private static readonly int[] TiberiumStages = new int[] { 0, 1, 3, 4, 6, 7, 8, 10, 11 };
+        private static readonly int[] GemStages = new int[] { 0, 0, 0, 1, 1, 1, 2, 2, 2 };
         /// <summary>Facings to check for adjacent cells around even-cell concrete. The order in this array matches the bits order in the ConcAdj enum.</summary>
-        private static FacingType[] concreteCheckEven = { FacingType.North, FacingType.NorthWest, FacingType.West, FacingType.SouthWest, FacingType.South };
+        private static readonly FacingType[] ConcreteCheckEven = { FacingType.North, FacingType.NorthWest, FacingType.West, FacingType.SouthWest, FacingType.South };
         /// <summary>Facings to check for adjacent cells around odd-cell concrete. The order in this array matches the bits order in the ConcAdj enum.</summary>
-        private static FacingType[] concreteCheckOdd = { FacingType.North, FacingType.NorthEast, FacingType.East, FacingType.SouthEast, FacingType.South };
+        private static readonly FacingType[] ConcreteCheckOdd = { FacingType.North, FacingType.NorthEast, FacingType.East, FacingType.SouthEast, FacingType.South };
 
         /// <summary>
         /// Represents the order of the different fill states inside the CONC sprite file.
         /// Each state has two icons; one for odd and one for even cells. Note that for some
         /// reason, the first state has these switched on the sprite; it has the even graphics first.
         /// </summary>
-        private static ConcFill[] iconFillStates = {
+        private static readonly ConcFill[] IconFillStates = {
             /* 0 */ ConcFill.Center,
             /* 1 */ ConcFill.Center | ConcFill.Bottom | ConcFill.Top,
             /* 2 */ ConcFill.Top,
@@ -197,7 +199,7 @@ namespace MobiusEditor.Model
             /* 6 */ ConcFill.Bottom | ConcFill.Top,
         };
 
-        private static Regex tileInfoSplitRegex = new Regex("^([^:]+):(\\d+)$", RegexOptions.Compiled);
+        private static readonly Regex TileInfoSplitRegex = new Regex("^([^:]+):(\\d+)$", RegexOptions.Compiled);
 
         private int updateCount = 0;
         private bool updating = false;
@@ -743,7 +745,7 @@ namespace MobiusEditor.Model
                         adj++;
                     }
                 }
-                int thickness = value.Type.IsGem ? gemStages[adj] : tiberiumStages[adj];
+                int thickness = value.Type.IsGem ? GemStages[adj] : TiberiumStages[adj];
                 // Harvesting has a bug where the final stage returns a value of 0 since it uses the 0-based icon index.
                 // Harvesting one gem stage fills one bail, plus 3 extra bails. Last stage is 0 (due to that bug), but still gets the extra bails.
                 if (Globals.ApplyHarvestBug)
@@ -763,7 +765,7 @@ namespace MobiusEditor.Model
         /// Update resource overlay to the desired density and randomised type.
         /// </summary>
         /// <param name="locations">Set of Locations on which changes occurred.</param>
-        /// <param name="reduceOutOfBounds">True if resources out of bounds are reduced to minimum size and marked to be tinted red.</param>
+        /// <param name="reduceOutOfBounds">True if resources out of bounds are reduced to minimum size to indicate they are not valid.</param>
         /// <remarks> This function is separate from GetTotalResources because it only updates the specified areas.</remarks>
         public void UpdateResourceOverlays(ISet<Point> locations, bool reduceOutOfBounds)
         {
@@ -775,8 +777,7 @@ namespace MobiusEditor.Model
             foreach ((Point location, Overlay overlay) in this.Overlay.IntersectsWithPoints(locations).Where(o => o.Value.Type.IsResource))
             {
                 int count = 0;
-                bool inBounds = checkBounds.Contains(location);
-                if (inBounds)
+                if (checkBounds.Contains(location))
                 {
                     foreach (FacingType facing in CellMetrics.AdjacentFacings)
                     {
@@ -799,8 +800,7 @@ namespace MobiusEditor.Model
                 {
                     overlay.Type = tiberiumOrGoldTypes[new Random(randomSeed ^ location.GetHashCode()).Next(tiberiumOrGoldTypes.Length)];
                 }
-                overlay.Tint = inBounds ? Color.White : Color.FromArgb(0x80, 0xFF, 0x80, 0x80);
-                overlay.Icon = overlay.Type.IsGem ? gemStages[count] : tiberiumStages[count];
+                overlay.Icon = overlay.Type.IsGem ? GemStages[count] : TiberiumStages[count];
             }
         }
 
@@ -851,7 +851,6 @@ namespace MobiusEditor.Model
             else
             {
                 UpdateConcreteOverlaysGame(locations);
-                //UpdateConcreteOverlays_ORIG(locations);
             }
         }
 
@@ -879,7 +878,7 @@ namespace MobiusEditor.Model
                     {
                         continue;
                     }
-                    FacingType[] adjCells = pt.X % 2 == 1 ? concreteCheckOdd : concreteCheckEven;
+                    FacingType[] adjCells = pt.X % 2 == 1 ? ConcreteCheckOdd : ConcreteCheckEven;
                     for (int i = 0; i < adjCells.Length; i++)
                     {
                         if (!this.Metrics.Adjacent(pt, adjCells[i], out Point adjacent))
@@ -914,7 +913,7 @@ namespace MobiusEditor.Model
                 }
                 // Cells to check around the current cell. In order: top, top-aside, aside, bottom-aside, bottom
                 bool isodd = cell % 2 == 1;
-                FacingType[] adjCells = isodd ? concreteCheckOdd : concreteCheckEven;
+                FacingType[] adjCells = isodd ? ConcreteCheckOdd : ConcreteCheckEven;
                 ConcAdj mask = ConcAdj.None;
                 int[] cells = new int[adjCells.Length];
                 for (int i = 0; i < adjCells.Length; i++)
@@ -932,45 +931,13 @@ namespace MobiusEditor.Model
                     }
                 }
                 // Unified logic so the operation becomes identical for the even and odd cells.
-                // This still isn't a 100% match with the game, but that's because the version in-game is a buggy mess.
                 bool top = mask.HasFlag(ConcAdj.Top);
                 bool topSide = mask.HasFlag(ConcAdj.TopSide);
                 bool side = mask.HasFlag(ConcAdj.Side);
                 bool bottomSide = mask.HasFlag(ConcAdj.BottomSide);
                 bool bottom = mask.HasFlag(ConcAdj.Bottom);
-
                 // Logic to fill the main cell. Standard for a placed cell is to fill the center.
                 ConcFill fillState = ConcFill.Center;
-#if false
-                // OLD LOGIC: Does not fill triangles between two vertical cells
-                // If two out of three of top, side and top-side are filled, fill the top.
-                if ((side && (topSide || top)) || (topSide && (side || top)))
-                    fillState |= ConcFill.Top;
-                // If two out of three of bottom, side and bottom-side are filled, fill the bottom.
-                if ((side && (bottomSide || bottom)) || (bottomSide && (side || bottom)))
-                    fillState |= ConcFill.Bottom;
-
-                // Logic to fill in edge cells. See what the currently evaluated cell will add to it.
-                int cellTop = cells[0];
-                int cellSide = cells[2];
-                int cellBottom = cells[4];
-                // If top cell is clear, and current cell has its top filled, then side and top-side are added, so add bottom connection piece in top cell.
-                ConcFill fillStateTop = ConcFill.None;
-                if (!top && (fillState & ConcFill.Top) != 0)
-                    fillStateTop |= ConcFill.Bottom;
-                // If bottom cell is clear, and current cell has its bottom filled, then side and bottom-side are added, so add top connection piece in bottom cell.
-                ConcFill fillStateBottom = ConcFill.None;
-                if (!bottom && (fillState & ConcFill.Bottom) != 0)
-                    fillStateBottom |= ConcFill.Top;
-                // join side aside-top
-                // If side cell is clear, and current cell has its top filled, then top and top-side are added, so add top connection piece in side cell.
-                ConcFill fillStateSide = ConcFill.None;
-                if (!side && (fillState & ConcFill.Top) != 0)
-                    fillStateSide |= ConcFill.Top;
-                // If side cell is clear, and current cell has its bottom filled, then bottom and bottom-side are added, so add bottom connection piece in side cell.
-                if (!side && (fillState & ConcFill.Bottom) != 0)
-                    fillStateSide |= ConcFill.Bottom;
-#else
                 // NEW LOGIC: Fills triangle between two vertical cells
                 // If cell at top, connect. If not, still connect if the two in front are filled.
                 if (top || (topSide && side))
@@ -1004,7 +971,6 @@ namespace MobiusEditor.Model
                     if (bottomSide && bottom)
                         fillStateSide |= ConcFill.Bottom;
                 }
-#endif
                 // Only update if this is not for side cells.
                 if (!forExtraCells)
                 {
@@ -1082,7 +1048,7 @@ namespace MobiusEditor.Model
             {
                 bool isodd = (cell & 1) == 1;
                 // Cells to check around the current cell. In order: top, top side, side, bottom side, bottom
-                FacingType[] adjCells = isodd ? concreteCheckOdd : concreteCheckEven;
+                FacingType[] adjCells = isodd ? ConcreteCheckOdd : ConcreteCheckEven;
                 ConcAdj mask = 0;
                 for (int i = 0; i < adjCells.Length; i++)
                 {
@@ -1172,11 +1138,11 @@ namespace MobiusEditor.Model
                 return ConcFill.None;
             }
             int val = conc.Icon / 2;
-            if (val < 0 || val > iconFillStates.Length)
+            if (val < 0 || val > IconFillStates.Length)
             {
                 return ConcFill.None;
             }
-            return iconFillStates[val];
+            return IconFillStates[val];
         }
 
         private static int GetConcIcon(ConcFill fillState, bool isOdd)
@@ -1186,140 +1152,6 @@ namespace MobiusEditor.Model
             // For some reason the odd and even icons for state 0 are swapped compared to all the others, so
             // an extra check has to be added for that. Otherwise just "(state * 2) + 1 - odd" would suffice.
             return val == 0 ? odd : (val * 2) + 1 - odd;
-        }
-
-        private enum ConcreteEnum
-        {
-            C_NONE         /**/ = -1,
-            C_LEFT         /**/ = 0,
-            C_RIGHT        /**/ = 1,
-            C_RIGHT_UPDOWN /**/ = 2,
-            C_LEFT_UPDOWN  /**/ = 3,
-            C_UP_RIGHT     /**/ = 4,
-            C_UP_LEFT      /**/ = 5,
-            C_DOWN_RIGHT   /**/ = 6,
-            C_DOWN_LEFT    /**/ = 7,
-            C_RIGHT_DOWN   /**/ = 8,
-            C_LEFT_DOWN    /**/ = 9,
-            C_RIGHT_UP     /**/ = 10,
-            C_LEFT_UP      /**/ = 11,
-            C_UPDOWN_RIGHT /**/ = 12,
-            C_UPDOWN_LEFT  /**/ = 13
-        }
-
-        private void UpdateConcreteOverlays_ORIG(ISet<Point> locations)
-        {
-            foreach ((Int32 cell, Overlay overlay) in this.Overlay.IntersectsWithCells(locations).Where(o => o.Value.Type.IsConcrete))
-            {
-                // Original logic as it is in the game code. Still doesn't match reality, probably due to bugs in the logic to add side cells.
-                FacingType[] odd = { FacingType.North, FacingType.NorthEast, FacingType.East, FacingType.SouthEast, FacingType.South };
-                FacingType[] even = { FacingType.North, FacingType.South, FacingType.SouthWest, FacingType.West, FacingType.NorthWest };
-                int isodd = cell & 1;
-                FacingType[] cells = isodd != 0 ? odd : even;
-                int index = 0;
-                for (int i = 0; i < cells.Length; i++)
-                {
-                    Overlay neighbor = this.Overlay.Adjacent(cell, cells[i]);
-                    if (neighbor != null && neighbor.Type == overlay.Type)
-                    {
-                        int ic = overlay.Icon;
-                        if (ic < 4 || (ic > 7 && ic < 12))
-                        {
-                            index |= (1 << i);
-                        }
-                    }
-                }
-                const int OF_N = 0x01;
-                const int OF_NE = 0x02;
-                const int OF_E = 0x04;
-                const int OF_SE = 0x08;
-                const int OF_S = 0x10;
-                const int EF_N = 0x01;
-                const int EF_NW = 0x10;
-                const int EF_W = 0x08;
-                const int EF_SW = 0x04;
-                const int EF_S = 0x02;
-                ConcreteEnum icon = 0;
-                if (isodd != 0)
-                {
-                    switch (index)
-                    {
-                        case OF_NE:
-                        case OF_N | OF_NE:
-                        case OF_E | OF_N:
-                        case OF_E | OF_NE:
-                        case OF_N | OF_NE | OF_E:
-                        case OF_S | OF_N | OF_NE:
-                            icon = ConcreteEnum.C_RIGHT_UP;      // right - up
-                            break;
-                        case OF_SE:
-                        case OF_E | OF_SE:
-                        case OF_S | OF_SE:
-                        case OF_S | OF_E:
-                        case OF_S | OF_SE | OF_E:
-                        case OF_S | OF_SE | OF_N:
-                            icon = ConcreteEnum.C_RIGHT_DOWN;        // right - down
-                            break;
-                        case OF_SE | OF_NE:
-                        case OF_SE | OF_NE | OF_N:
-                        case OF_SE | OF_NE | OF_S:
-                        case OF_SE | OF_NE | OF_S | OF_N:
-                        case OF_SE | OF_E | OF_N:
-                        case OF_SE | OF_E | OF_NE | OF_N:
-                        case OF_S | OF_E | OF_N:
-                        case OF_S | OF_E | OF_NE:
-                        case OF_S | OF_E | OF_NE | OF_N:
-                        case OF_S | OF_SE | OF_E | OF_N:
-                        case OF_S | OF_SE | OF_E | OF_NE | OF_N:
-                        case OF_S | OF_SE | OF_E | OF_NE:
-                            icon = ConcreteEnum.C_RIGHT_UPDOWN;      // right - up - down
-                            break;
-                        default:
-                            icon = ConcreteEnum.C_RIGHT;     // right
-                            break;
-                    }
-                }
-                else
-                {
-                    switch (index)
-                    {
-                        case EF_NW:
-                        case EF_NW | EF_N:
-                        case EF_W | EF_N:
-                        case EF_NW | EF_W | EF_N:
-                        case EF_NW | EF_W:
-                        case EF_NW | EF_S | EF_N:
-                            icon = ConcreteEnum.C_LEFT_UP;       // left - up
-                            break;
-                        case EF_SW:
-                        case EF_SW | EF_S:
-                        case EF_W | EF_S:
-                        case EF_W | EF_SW | EF_S:
-                        case EF_W | EF_SW:
-                        case EF_SW | EF_S | EF_N:
-                            icon = ConcreteEnum.C_LEFT_DOWN;     // left - down
-                            break;
-                        case EF_NW | EF_SW:
-                        case EF_NW | EF_SW | EF_N:
-                        case EF_NW | EF_SW | EF_S:
-                        case EF_NW | EF_SW | EF_S | EF_N:
-                        case EF_W | EF_S | EF_N:
-                        case EF_W | EF_SW | EF_N:
-                        case EF_W | EF_SW | EF_S | EF_N:
-                        case EF_NW | EF_W | EF_S:
-                        case EF_NW | EF_W | EF_S | EF_N:
-                        case EF_NW | EF_W | EF_SW | EF_S | EF_N:
-                        case EF_NW | EF_W | EF_SW | EF_N:
-                        case EF_NW | EF_W | EF_SW | EF_S:
-                            icon = ConcreteEnum.C_LEFT_UPDOWN;       // left - up - down
-                            break;
-                        default:
-                            icon = ConcreteEnum.C_LEFT;      // left
-                            break;
-                    }
-                }
-                overlay.Icon = (int)icon;
-            }
         }
 
         public void SetMapTemplatesRaw(byte[] data, int width, int height, Dictionary<int, string> types, string fillType)
@@ -1404,7 +1236,7 @@ namespace MobiusEditor.Model
             {
                 return;
             }
-            Match m = tileInfoSplitRegex.Match(tileType);
+            Match m = TileInfoSplitRegex.Match(tileType);
             if (m.Success)
             {
                 tileType = m.Groups[1].Value;

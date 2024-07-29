@@ -148,10 +148,12 @@ namespace MobiusEditor
             }
             catch (Exception ex)
             {
-                // todo: get the romfis constructor to fill in errors in a strings list instead of erroring out.
                 MessageBox.Show(String.Format("Error parsing mix file identification data: {0}\n\nNo mix contents will be identified.", ex.Message),"Error");
             }
-
+            if (romfis.ProcessErrors.Count > 0)
+            {
+                // todo: log this somehow.
+            }
             if (!Globals.UseClassicFiles && runPath != null)
             {
                 loadOk = StartupLoader.LoadEditorRemastered(runPath, modPaths, romfis);

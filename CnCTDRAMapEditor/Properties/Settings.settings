@@ -101,11 +101,11 @@
     <Setting Name="MinimumClampSize" Type="System.Drawing.Size" Scope="Application">
       <Value Profile="(Default)">30, 30</Value>
     </Setting>
-    <Setting Name="MapGridColor" Type="System.Drawing.Color" Scope="Application">
-      <Value Profile="(Default)">40, 0, 0, 255</Value>
-    </Setting>
     <Setting Name="MapBackColor" Type="System.Drawing.Color" Scope="Application">
       <Value Profile="(Default)">32, 32, 32</Value>
+    </Setting>
+    <Setting Name="MapGridColor" Type="System.Drawing.Color" Scope="Application">
+      <Value Profile="(Default)">40, 0, 0, 255</Value>
     </Setting>
     <Setting Name="HashColorTechnoPart" Type="System.Drawing.Color" Scope="Application">
       <Value Profile="(Default)">0, 170, 0</Value>
@@ -123,7 +123,7 @@
       <Value Profile="(Default)">170, 0, 0</Value>
     </Setting>
     <Setting Name="HashColorLandRoad" Type="System.Drawing.Color" Scope="Application">
-      <Value Profile="(Default)">186, 127, 40</Value>
+      <Value Profile="(Default)">186, 128, 40</Value>
     </Setting>
     <Setting Name="HashColorLandWater" Type="System.Drawing.Color" Scope="Application">
       <Value Profile="(Default)">186, 186, 255</Value>
@@ -140,14 +140,20 @@
     <Setting Name="OutlineColorCrateSteel" Type="System.Drawing.Color" Scope="Application">
       <Value Profile="(Default)">255, 255, 255</Value>
     </Setting>
-    <Setting Name="OutlineColorWall" Type="System.Drawing.Color" Scope="Application">
-      <Value Profile="(Default)">192, 0, 192</Value>
+    <Setting Name="OutlineColorTerrain" Type="System.Drawing.Color" Scope="Application">
+      <Value Profile="(Default)">0, 192, 0</Value>
     </Setting>
     <Setting Name="OutlineColorSolidOverlay" Type="System.Drawing.Color" Scope="Application">
       <Value Profile="(Default)">192, 192, 192</Value>
     </Setting>
-    <Setting Name="OutlineColorTerrain" Type="System.Drawing.Color" Scope="Application">
-      <Value Profile="(Default)">0, 192, 0</Value>
+    <Setting Name="OutlineColorWall" Type="System.Drawing.Color" Scope="Application">
+      <Value Profile="(Default)">0, 192, 0, 192</Value>
+    </Setting>
+    <Setting Name="PreviewAlpha" Type="System.Single" Scope="Application">
+      <Value Profile="(Default)">0.5</Value>
+    </Setting>
+    <Setting Name="UnbuiltAlpha" Type="System.Single" Scope="Application">
+      <Value Profile="(Default)">0.6</Value>
     </Setting>
     <Setting Name="ReportMissionDetection" Type="System.Boolean" Scope="Application">
       <Value Profile="(Default)">True</Value>

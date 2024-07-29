@@ -247,7 +247,7 @@ namespace MobiusEditor.Model
                 using (Graphics g = Graphics.FromImage(bigThumbnail))
                 {
                     MapRenderer.SetRenderSettings(g, Globals.PreviewSmoothScale);
-                    RenderInfo render = MapRenderer.RenderUnit(gameInfo, new Point(1, 1), Globals.PreviewTileSize, mockUnit);
+                    RenderInfo render = MapRenderer.RenderUnit(gameInfo, new Point(1, 1), Globals.PreviewTileSize, mockUnit, false);
                     if (render.RenderedObject != null)
                     {
                         render.RenderAction(g);

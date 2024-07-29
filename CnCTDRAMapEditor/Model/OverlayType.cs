@@ -73,7 +73,6 @@ namespace MobiusEditor.Model
         public bool IsCrate => (this.Flag & OverlayTypeFlag.Crate) != OverlayTypeFlag.None;
         public bool IsFlag => (this.Flag & OverlayTypeFlag.FlagPlace) != OverlayTypeFlag.None;
         public bool IsGross => (this.Flag & OverlayTypeFlag.Gross) != OverlayTypeFlag.None;
-        public Color Tint { get; set; } = Color.White;
         private string nameId;
 
         /// <summary>
@@ -81,7 +80,7 @@ namespace MobiusEditor.Model
         /// </summary>
         public bool IsOverlay => (this.Flag & (OverlayTypeFlag.Wall | OverlayTypeFlag.TiberiumOrGold | OverlayTypeFlag.Gems)) == OverlayTypeFlag.None;
 
-        public OverlayType(int id, string name, string textId, OverlayTypeFlag flag, String graphicsSource, int forceTileNr, Color tint)
+        public OverlayType(int id, string name, string textId, OverlayTypeFlag flag, String graphicsSource, int forceTileNr)
         {
             this.ID = id;
             this.Name = name;
@@ -89,26 +88,20 @@ namespace MobiusEditor.Model
             this.ForceTileNr = forceTileNr;
             this.nameId = textId;
             this.Flag = flag;
-            this.Tint = tint;
-        }
-
-        public OverlayType(int id, string name, string textId, OverlayTypeFlag flag, String graphicsSource, int forceTileNr)
-            : this(id, name, textId, flag, graphicsSource, forceTileNr, Color.White)
-        {
         }
 
         public OverlayType(int id, string name, string textId, OverlayTypeFlag flag, int forceTileNr)
-            : this(id, name, textId, flag, null, forceTileNr, Color.White)
+            : this(id, name, textId, flag, null, forceTileNr)
         {
         }
 
         public OverlayType(int id, string name, string textId, OverlayTypeFlag flag)
-            : this(id, name, textId, flag, null, -1, Color.White)
+            : this(id, name, textId, flag, null, -1)
         {
         }
 
         public OverlayType(int id, string name, string textId, int forceTileNr)
-            : this(id, name, textId, OverlayTypeFlag.None, null, forceTileNr, Color.White)
+            : this(id, name, textId, OverlayTypeFlag.None, null, forceTileNr)
         {
         }
 
@@ -174,7 +167,7 @@ namespace MobiusEditor.Model
                     Icon = tilenr,
                 };
                 MapRenderer.SetRenderSettings(g, Globals.PreviewSmoothScale);
-                MapRenderer.RenderOverlay(gameInfo, Point.Empty, Globals.PreviewTileSize, Globals.PreviewTileScale, mockOverlay).Item2(g);
+                MapRenderer.RenderOverlay(gameInfo, Point.Empty, null, Globals.PreviewTileSize, Globals.PreviewTileScale, mockOverlay, false).Item2(g);
             }
             this.Thumbnail = th;
             if (oldImage != null)

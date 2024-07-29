@@ -107,7 +107,7 @@ namespace MobiusEditor
             this.viewExtraIndicatorsToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.viewExtraIndicatorsMapSymmetryMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.viewExtraIndicatorsMapGridMenuItem = new System.Windows.Forms.ToolStripMenuItem();
-            this.viewExtraIndicatorsTerrainTypesMenuItem = new System.Windows.Forms.ToolStripMenuItem();
+            this.viewExtraIndicatorsLandTypesMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.viewExtraIndicatorsPlacedObjectsMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.viewExtraIndicatorsWaypointRevealRadiusMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.viewExtraIndicatorsEffectAreaRadiusMenuItem = new System.Windows.Forms.ToolStripMenuItem();
@@ -702,7 +702,7 @@ namespace MobiusEditor
             this.viewExtraIndicatorsToolStripMenuItem.DropDownItems.AddRange(new System.Windows.Forms.ToolStripItem[] {
             this.viewExtraIndicatorsMapSymmetryMenuItem,
             this.viewExtraIndicatorsMapGridMenuItem,
-            this.viewExtraIndicatorsTerrainTypesMenuItem,
+            this.viewExtraIndicatorsLandTypesMenuItem,
             this.viewExtraIndicatorsPlacedObjectsMenuItem,
             this.viewExtraIndicatorsWaypointRevealRadiusMenuItem,
             this.viewExtraIndicatorsEffectAreaRadiusMenuItem});
@@ -728,14 +728,14 @@ namespace MobiusEditor
             this.viewExtraIndicatorsMapGridMenuItem.Text = "Map &grid";
             this.viewExtraIndicatorsMapGridMenuItem.CheckedChanged += new System.EventHandler(this.ViewMenuItem_CheckedChanged);
             // 
-            // viewExtraIndicatorsTerrainTypesMenuItem
+            // viewExtraIndicatorsLandTypesMenuItem
             // 
-            this.viewExtraIndicatorsTerrainTypesMenuItem.CheckOnClick = true;
-            this.viewExtraIndicatorsTerrainTypesMenuItem.Name = "viewExtraIndicatorsTerrainTypesMenuItem";
-            this.viewExtraIndicatorsTerrainTypesMenuItem.ShortcutKeys = System.Windows.Forms.Keys.F3;
-            this.viewExtraIndicatorsTerrainTypesMenuItem.Size = new System.Drawing.Size(224, 22);
-            this.viewExtraIndicatorsTerrainTypesMenuItem.Text = "Map terrain &types";
-            this.viewExtraIndicatorsTerrainTypesMenuItem.CheckedChanged += new System.EventHandler(this.ViewMenuItem_CheckedChanged);
+            this.viewExtraIndicatorsLandTypesMenuItem.CheckOnClick = true;
+            this.viewExtraIndicatorsLandTypesMenuItem.Name = "viewExtraIndicatorsLandTypesMenuItem";
+            this.viewExtraIndicatorsLandTypesMenuItem.ShortcutKeys = System.Windows.Forms.Keys.F3;
+            this.viewExtraIndicatorsLandTypesMenuItem.Size = new System.Drawing.Size(224, 22);
+            this.viewExtraIndicatorsLandTypesMenuItem.Text = "Map land &types";
+            this.viewExtraIndicatorsLandTypesMenuItem.CheckedChanged += new System.EventHandler(this.ViewMenuItem_CheckedChanged);
             // 
             // viewExtraIndicatorsPlacedObjectsMenuItem
             // 
@@ -1214,7 +1214,7 @@ namespace MobiusEditor
         private System.Windows.Forms.ToolStripMenuItem viewIndicatorsMapBoundariesMenuItem;
         private System.Windows.Forms.ToolStripMenuItem viewIndicatorsOutlinesMenuItem;
         private System.Windows.Forms.ToolStripMenuItem toolsOptionsOutlineAllCratesMenuItem;
-        private System.Windows.Forms.ToolStripMenuItem viewExtraIndicatorsTerrainTypesMenuItem;
+        private System.Windows.Forms.ToolStripMenuItem viewExtraIndicatorsLandTypesMenuItem;
         private System.Windows.Forms.ToolStripMenuItem viewZoomToolStripMenuItem;
         private System.Windows.Forms.ToolStripMenuItem viewZoomInMenuItem;
         private System.Windows.Forms.ToolStripMenuItem viewZoomOutMenuItem;

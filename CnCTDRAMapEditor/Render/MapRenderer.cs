@@ -335,7 +335,7 @@ namespace MobiusEditor.Render
                     bool paintAsOverlay = overlay.Type.IsOverlay && (layers & MapLayerFlag.Overlay) != MapLayerFlag.None;
                     if (paintAsWall || paintAsResource || paintAsOverlay)
                     {
-                        RenderOverlay(gameInfo, location, tileSize, tileScale, overlay).Item2(graphics);
+                        RenderOverlay(gameInfo, location, map.Bounds, tileSize, tileScale, overlay, false).Item2(graphics);
                     }
                 }
             }
@@ -347,7 +347,7 @@ namespace MobiusEditor.Render
                     {
                         continue;
                     }
-                    overlappingRenderList.Add(RenderBuilding(gameInfo, map, topLeft, tileSize, tileScale, building));
+                    overlappingRenderList.Add(RenderBuilding(gameInfo, map, topLeft, tileSize, tileScale, building, false));
                 }
             }
             if ((layers & MapLayerFlag.Infantry) != MapLayerFlag.None)
@@ -365,7 +365,7 @@ namespace MobiusEditor.Render
                         {
                             continue;
                         }
-                        overlappingRenderList.Add(RenderInfantry(topLeft, tileSize, infantry, ist));
+                        overlappingRenderList.Add(RenderInfantry(topLeft, tileSize, infantry, ist, false));
                     }
                 }
             }
@@ -377,7 +377,7 @@ namespace MobiusEditor.Render
                     {
                         continue;
                     }
-                    overlappingRenderList.Add(RenderUnit(gameInfo, topLeft, tileSize, unit));
+                    overlappingRenderList.Add(RenderUnit(gameInfo, topLeft, tileSize, unit, false));
                 }
             }
             if ((layers & MapLayerFlag.Terrain) != MapLayerFlag.None)
@@ -388,7 +388,7 @@ namespace MobiusEditor.Render
                     {
                         continue;
                     }
-                    overlappingRenderList.Add(RenderTerrain(topLeft, tileSize, tileScale, terrain));
+                    overlappingRenderList.Add(RenderTerrain(topLeft, tileSize, tileScale, terrain, false));
                 }
             }
             // Paint all the rest
@@ -410,7 +410,7 @@ namespace MobiusEditor.Render
                     {
                         continue;
                     }
-                    RenderOverlay(gameInfo, topLeft, tileSize, tileScale, overlay).Item2(graphics);
+                    RenderOverlay(gameInfo, topLeft, map.Bounds, tileSize, tileScale, overlay, false).Item2(graphics);
                 }
             }
 
@@ -422,36 +422,50 @@ namespace MobiusEditor.Render
                 ITeamColor[] flagColors = map.FlagColors;
                 bool isSp = map.BasicSection.SoloMission;
                 int offset = 0;
-                foreach (Waypoint waypoint in map.Waypoints)
+                bool previewIsFlag = map.Waypoints.Where(w => w.IsPreview && Waypoint.GetMpIdFromFlag(w.Flag) != -1).Any();
+                int firstFlag = -1;
+                int lastFlag = 0;
+                for (int i = 0; i < map.Waypoints.Length; i++)
                 {
-                    if (!waypoint.Point.HasValue || (locations != null && !locations.Contains(waypoint.Point.Value)) || !map.Metrics.GetCell(waypoint.Point.Value, out int cell))
+                    Waypoint waypoint = map.Waypoints[i];
+                    if (waypoint.IsPreview)
                     {
                         continue;
                     }
-                    float alpha = 0.5f;
-                    if (!isSp && Waypoint.GetMpIdFromFlag(waypoint.Flag) != -1)
+                    int mpId = Waypoint.GetMpIdFromFlag(map.Waypoints[i].Flag);
+                    if (mpId != -1)
                     {
-                        // Flags are always opaque
-                        alpha = 1.0f;
-                        if (!flagOverlapPoints.TryGetValue(cell, out int amount))
+                        if (firstFlag == -1)
                         {
-                            flagOverlapPoints.Add(cell, 1);
+                            firstFlag = i;
                         }
-                        else
-                        {
-                            flagOverlapPoints[cell] = amount + 1;
-                        }
-                        offset = amount * 2;
+                        lastFlag = i;
                     }
-                    else
+                }
+                // This logic is kind of dirty; it relies on all flag points being in consecutive order. But without that, the preview logic doesn't work.
+                float wpAlpha = 0.5f;
+                for (int i = 0; i < firstFlag; i++)
+                {
+                    Waypoint waypoint = map.Waypoints[i];
+                    if (!waypoint.Point.HasValue || (locations != null && !locations.Contains(waypoint.Point.Value))
+                        || !map.Metrics.GetCell(waypoint.Point.Value, out int cell) || handledPoints.Contains(cell))
                     {
-                        if (handledPoints.Contains(cell))
-                        {
-                            continue;
-                        }
-                        handledPoints.Add(cell);
+                        continue;
                     }
-                    RenderWaypoint(gameInfo, isSp, tileSize, flagColors, waypoint, alpha, offset).Item2(graphics);
+                    handledPoints.Add(cell);
+                    RenderWaypoint(gameInfo, isSp, tileSize, flagColors, waypoint, wpAlpha, offset).Item2(graphics);
+                }
+                RenderWaypointFlags(graphics, gameInfo, map, map.Metrics.Bounds, tileSize);
+                for (int i = lastFlag + 1; i < map.Waypoints.Length; i++)
+                {
+                    Waypoint waypoint = map.Waypoints[i];
+                    if (!waypoint.Point.HasValue || (locations != null && !locations.Contains(waypoint.Point.Value))
+                        || !map.Metrics.GetCell(waypoint.Point.Value, out int cell) || handledPoints.Contains(cell))
+                    {
+                        continue;
+                    }
+                    handledPoints.Add(cell);
+                    RenderWaypoint(gameInfo, isSp, tileSize, flagColors, waypoint, wpAlpha, offset).Item2(graphics);
                 }
             }
             if (disposeCacheManager)
@@ -465,15 +479,32 @@ namespace MobiusEditor.Render
             Render(gameInfo, map, graphics, locations, layers, Globals.MapTileScale, Globals.TheShapeCacheManager);
         }
 
-        public static (Rectangle, Action<Graphics>) RenderSmudge(Point topLeft, Size tileSize, double tileScale, Smudge smudge, bool isSmooth, ShapeCacheManager cacheManager)
+        public static (Rectangle, Action<Graphics>) RenderSmudge(Point topLeft, Size tileSize, double tileScale, Smudge smudge, bool isSmoothRendering, ShapeCacheManager cacheManager)
         {
             if (Globals.FilterTheaterObjects && !smudge.Type.ExistsInTheater)
             {
                 Debug.Print(string.Format("Smudge {0} ({1}) not available in this theater.", smudge.Type.Name, smudge.Icon));
                 return (Rectangle.Empty, (g) => { });
             }
-            Color tint = smudge.Tint;
-            string tileName = "smudge_" + smudge.Type.Name + "_" + smudge.Icon.ToString("D4") + "_" + tileSize.Width + "x" + tileSize.Height + (isSmooth ? "_smooth" : String.Empty);
+            float alphaFactor = 1.0f;
+            Building bld = smudge.AttachedTo;
+            if (bld != null)
+            {
+                if (bld.IsPreview)
+                {
+                    alphaFactor = Globals.PreviewAlphaFloat;
+                }
+                if (!bld.IsPrebuilt)
+                {
+                    alphaFactor *= Globals.UnbuiltAlphaFloat;
+                }
+            }
+            else if (smudge.IsPreview)
+            {
+                alphaFactor = Globals.PreviewAlphaFloat;
+            }
+            alphaFactor = alphaFactor.Restrict(0, 1);
+            string tileName = "smudge_" + smudge.Type.Name + "_" + smudge.Icon.ToString("D4") + "_" + tileSize.Width + "x" + tileSize.Height + (isSmoothRendering ? "_smooth" : String.Empty);
             Bitmap tileImg = cacheManager.GetImage(tileName);
             if (tileImg == null)
             {
@@ -482,7 +513,7 @@ namespace MobiusEditor.Render
                 {
                     Bitmap tileImage = tile.Image;
                     // Check if high-quality tile resizing is useful.
-                    if (!isSmooth || (tileSize.Width == tileImage.Width && tileSize.Height == tileImage.Height))
+                    if (!isSmoothRendering || (tileSize.Width == tileImage.Width && tileSize.Height == tileImage.Height))
                     {
                         tileImg = new Bitmap(tileSize.Width, tileSize.Height);
                         Rectangle smudgeBounds = RenderBounds(tile.Image.Size, new Size(1, 1), tileScale);
@@ -512,10 +543,7 @@ namespace MobiusEditor.Render
                 {
                     using (ImageAttributes imageAttributes = new ImageAttributes())
                     {
-                        if (tint != Color.White)
-                        {
-                            imageAttributes.SetColorMatrix(GetColorMatrix(tint, 1.0f, 1.0f));
-                        }
+                        imageAttributes.SetColorMatrix(GetColorMatrix(Color.White, 1.0f, alphaFactor));
                         g.DrawImage(tileImg, smudgeBounds, 0, 0, tileImg.Width, tileImg.Height, GraphicsUnit.Pixel, imageAttributes);
                     }
                 }
@@ -528,7 +556,7 @@ namespace MobiusEditor.Render
             }
         }
 
-        public static (Rectangle, Action<Graphics>) RenderOverlay(GameInfo gameInfo, Point topLeft, Size tileSize, double tileScale, Overlay overlay)
+        public static (Rectangle, Action<Graphics>) RenderOverlay(GameInfo gameInfo, Point topLeft, Rectangle? mapBounds, Size tileSize, double tileScale, Overlay overlay, bool fullOpaque)
         {
             OverlayType ovtype = overlay.Type;
             string name = ovtype.GraphicsSource;
@@ -542,15 +570,27 @@ namespace MobiusEditor.Render
                 Rectangle overlayBounds = RenderBounds(tile.Image.Size, new Size(1, 1), tileScale);
                 overlayBounds.X += actualTopLeftX;
                 overlayBounds.Y += actualTopLeftY;
-                Color tint = overlay.Tint;
+                float alphaFactor = 1.0f;
+                if (!fullOpaque && overlay.IsPreview)
+                {
+                    alphaFactor = Globals.PreviewAlphaFloat;
+                }
+                Color tint = Color.White;
+                if (overlay.Type.IsResource && mapBounds.HasValue && !mapBounds.Value.Contains(topLeft))
+                {
+                    tint = Color.FromArgb(0xFF, 0x80, 0x80);
+                    // Technically the multiplication isn't needed; resources have no preview state in the editor.
+                    if (!fullOpaque)
+                    {
+                        alphaFactor *= 0.7f;
+                    }
+                }
+                alphaFactor = alphaFactor.Restrict(0, 1);
                 void render(Graphics g)
                 {
                     using (ImageAttributes imageAttributes = new ImageAttributes())
                     {
-                        if (tint != Color.White)
-                        {
-                            imageAttributes.SetColorMatrix(GetColorMatrix(tint, 1.0f, 1.0f));
-                        }
+                        imageAttributes.SetColorMatrix(GetColorMatrix(tint, 1.0f, alphaFactor));
                         g.DrawImage(tile.Image, overlayBounds, 0, 0, tile.Image.Width, tile.Image.Height, GraphicsUnit.Pixel, imageAttributes);
                         if (isTeleport)
                         {
@@ -579,7 +619,7 @@ namespace MobiusEditor.Render
             }
         }
 
-        public static RenderInfo RenderTerrain(Point topLeft, Size tileSize, double tileScale, Terrain terrain)
+        public static RenderInfo RenderTerrain(Point topLeft, Size tileSize, double tileScale, Terrain terrain, bool fullOpaque)
         {
             TerrainType type = terrain.Type;
             string tileName = type.GraphicsSource;
@@ -588,8 +628,15 @@ namespace MobiusEditor.Render
             {
                 succeeded = Globals.TheTilesetManager.GetTileData(type.Name, type.DisplayIcon, out tile, true, false);
             }
-            Color tint = terrain.Tint;
-
+            float alphaFactor = 1.0f;
+            if (!fullOpaque)
+            {
+                if (terrain.IsPreview)
+                {
+                    alphaFactor *= Globals.PreviewAlphaFloat;
+                }
+                alphaFactor = alphaFactor.Restrict(0, 1);
+            }
             Size terrTSize = type.Size;
             Size tileISize = tile.Image.Size;
             Point location = new Point(topLeft.X * tileSize.Width, topLeft.Y * tileSize.Height);
@@ -610,10 +657,7 @@ namespace MobiusEditor.Render
             {
                 using (ImageAttributes imageAttributes = new ImageAttributes())
                 {
-                    if (tint != Color.White)
-                    {
-                        imageAttributes.SetColorMatrix(GetColorMatrix(tint, 1.0f, 1.0f));
-                    }
+                    imageAttributes.SetColorMatrix(GetColorMatrix(Color.White, 1.0f, alphaFactor));
                     g.DrawImage(tile.Image, paintBounds, 0, 0, tile.Image.Width, tile.Image.Height, GraphicsUnit.Pixel, imageAttributes);
                 }
             }
@@ -622,9 +666,21 @@ namespace MobiusEditor.Render
             return new RenderInfo(usedCenter, render, terrain);
         }
 
-        public static RenderInfo RenderBuilding(GameInfo gameInfo, Map map, Point topLeft, Size tileSize, double tileScale, Building building)
+        public static RenderInfo RenderBuilding(GameInfo gameInfo, Map map, Point topLeft, Size tileSize, double tileScale, Building building, bool fullOpaque)
         {
-            Color tint = building.Tint;
+            float alphaFactor = 1.0f;
+            if (!fullOpaque)
+            {
+                if (building.IsPreview)
+                {
+                    alphaFactor *= Globals.PreviewAlphaFloat;
+                }
+                if (!building.IsPrebuilt)
+                {
+                    alphaFactor *= Globals.UnbuiltAlphaFloat;
+                }
+                alphaFactor = alphaFactor.Restrict(0, 1);
+            }
             int icon = building.Type.FrameOffset;
             int maxIcon = 0;
             int damageIconOffs = 0;
@@ -698,10 +754,7 @@ namespace MobiusEditor.Render
             {
                 using (ImageAttributes imageAttributes = new ImageAttributes())
                 {
-                    if (tint != Color.White)
-                    {
-                        imageAttributes.SetColorMatrix(GetColorMatrix(tint, 1.0f, 1.0f));
-                    }
+                    imageAttributes.SetColorMatrix(GetColorMatrix(Color.White, 1.0f, alphaFactor));
                     if (factoryOverlayTile != null)
                     {
                         // Avoid factory overlay showing as semitransparent.
@@ -778,7 +831,7 @@ namespace MobiusEditor.Render
             return icon;
         }
 
-        public static RenderInfo RenderInfantry(Point topLeft, Size tileSize, Infantry infantry, InfantryStoppingType infantryStoppingType)
+        public static RenderInfo RenderInfantry(Point topLeft, Size tileSize, Infantry infantry, InfantryStoppingType infantryStoppingType, bool fullOpaque)
         {
             int icon = HumanShape[Facing32[infantry.Direction.ID]];
             ITeamColor teamColor = infantry.Type.CanRemap ? Globals.TheTeamColorManager[infantry.House?.UnitTeamColor] : null;
@@ -815,15 +868,20 @@ namespace MobiusEditor.Render
                 renderSize.Height /= 2;
             }
             Rectangle renderBounds = new Rectangle(renderLocation - new Size(renderSize.Width / 2, renderSize.Height / 2), renderSize);
-            Color tint = infantry.Tint;
+            float alphaFactor = 1.0f;
+            if (!fullOpaque)
+            {
+                if (infantry.IsPreview)
+                {
+                    alphaFactor *= Globals.PreviewAlphaFloat;
+                }
+                alphaFactor = alphaFactor.Restrict(0, 1);
+            }
             void render(Graphics g)
             {
                 using (ImageAttributes imageAttributes = new ImageAttributes())
                 {
-                    if (tint != Color.White)
-                    {
-                        imageAttributes.SetColorMatrix(GetColorMatrix(tint, 1.0f, 1.0f));
-                    }
+                    imageAttributes.SetColorMatrix(GetColorMatrix(Color.White, 1.0f, alphaFactor));
                     g.DrawImage(tile.Image, renderBounds, 0, 0, tile.Image.Width, tile.Image.Height, GraphicsUnit.Pixel, imageAttributes);
                     // Test code to visualise original 5-point die face location (green), and corrected infantry base point (feet) location (red).
                     /*/
@@ -845,7 +903,7 @@ namespace MobiusEditor.Render
             return new RenderInfo(new Point(topLeft.X * Globals.PixelWidth + offset.X, topLeft.Y * Globals.PixelHeight + offset.Y), render, infantry);
         }
 
-        public static RenderInfo RenderUnit(GameInfo gameInfo, Point topLeft, Size tileSize, Unit unit)
+        public static RenderInfo RenderUnit(GameInfo gameInfo, Point topLeft, Size tileSize, Unit unit, bool fullOpaque)
         {
             int icon = 0;
             int bodyFrames = 0;
@@ -1024,15 +1082,20 @@ namespace MobiusEditor.Render
                 turretAdjust.Y += unit.Type.TurretY;
                 turret2Adjust.Y += unit.Type.TurretY;
             }
-            Color tint = unit.Tint;
+            float alphaFactor = 1.0f;
+            if (!fullOpaque)
+            {
+                if (unit.IsPreview)
+                {
+                    alphaFactor *= Globals.PreviewAlphaFloat;
+                }
+                alphaFactor = alphaFactor.Restrict(0, 1);
+            }
             void render(Graphics g)
             {
                 using (ImageAttributes imageAttributes = new ImageAttributes())
                 {
-                    if (tint != Color.White)
-                    {
-                        imageAttributes.SetColorMatrix(GetColorMatrix(tint, 1.0f, 1.0f));
-                    }
+                    imageAttributes.SetColorMatrix(GetColorMatrix(Color.White, 1.0f, alphaFactor));
                     // Combine body and turret to one image, then paint it. This is done because it might be semitransparent.
                     using (Bitmap unitBm = new Bitmap(renderBounds.Width, renderBounds.Height))
                     {
@@ -1079,7 +1142,7 @@ namespace MobiusEditor.Render
             return new RenderInfo(usedCenter, render, unit);
         }
 
-        public static (Rectangle, Action<Graphics>) RenderWaypoint(GameInfo gameInfo, bool soloMission, Size tileSize, ITeamColor[] flagColors, Waypoint waypoint, float transparencyModifier, int offset)
+        public static (Rectangle, Action<Graphics>) RenderWaypoint(GameInfo gameInfo, bool soloMission, Size tileSize, ITeamColor[] flagColors, Waypoint waypoint, float alphaFactor, int offset)
         {
             if (!waypoint.Point.HasValue)
             {
@@ -1091,7 +1154,11 @@ namespace MobiusEditor.Render
             int icon = 0;
             ITeamColor teamColor = null;
             double sizeMultiplier = 1;
-            Color tint = waypoint.Tint;
+            if (waypoint.IsPreview)
+            {
+                alphaFactor *= Globals.PreviewAlphaFloat;
+            }
+            alphaFactor = alphaFactor.Restrict(0, 1);
             int mpId = Waypoint.GetMpIdFromFlag(waypoint.Flag);
             bool gotTile = false;
             Tile tile;
@@ -1111,8 +1178,6 @@ namespace MobiusEditor.Render
                 tileGraphics = "scrate";
                 icon = 0;
                 sizeMultiplier = 2;
-                //tint = Color.FromArgb(waypoint.Tint.A, Color.Green);
-                //brightness = 1.5f;
                 gotTile = Globals.TheTilesetManager.GetTileData(tileGraphics, icon, out tile);
             }
             else
@@ -1179,11 +1244,7 @@ namespace MobiusEditor.Render
             {
                 using (ImageAttributes imageAttributes = new ImageAttributes())
                 {
-                    // Waypoints get drawn as semitransparent, so always execute this.
-                    if (tint != Color.White || transparencyModifier != 1.0)
-                    {
-                        imageAttributes.SetColorMatrix(GetColorMatrix(tint, 1.0f, transparencyModifier));
-                    }
+                    imageAttributes.SetColorMatrix(GetColorMatrix(Color.White, 1.0f, alphaFactor));
                     if (renderBounds.Width > 0 && renderBounds.Height > 0 && imgBounds.Width > 0 && imgBounds.Height > 0)
                     {
                         g.DrawImage(tile.Image, renderBounds, imgBounds.X, imgBounds.Y, imgBounds.Width, imgBounds.Height, GraphicsUnit.Pixel, imageAttributes);
@@ -1431,22 +1492,11 @@ namespace MobiusEditor.Render
                 RegionData paintAreaRel = Globals.TheShapeCacheManager.GetShape(ovlId);
                 if (paintAreaRel == null)
                 {
-                    // Clone with full opacity
-                    Overlay toRender = overlay;
-                    if (overlay.Tint.A != 255)
-                    {
-                        toRender = new Overlay()
-                        {
-                            Type = overlay.Type,
-                            Icon = overlay.Icon,
-                            Tint = Color.FromArgb(255, overlay.Tint),
-                        };
-                    }
                     using (Bitmap bm = new Bitmap(tileSize.Width * 3, tileSize.Height * 3, PixelFormat.Format32bppArgb))
                     {
                         using (Graphics ig = Graphics.FromImage(bm))
                         {
-                            RenderOverlay(gameInfo, new Point(1, 1), tileSize, tileScale, toRender).Item2(ig);
+                            RenderOverlay(gameInfo, new Point(1, 1), null, tileSize, tileScale, overlay, true).Item2(ig);
                         }
                         paintAreaRel = ImageUtils.GetOutline(tileSize, bm, outlineThickness, alphaThreshold, Globals.UseClassicFiles);
                         // Wall connecting: if any side cells should be excluded so they connect to neighbouring cells,
@@ -1521,17 +1571,11 @@ namespace MobiusEditor.Render
                     RegionData paintAreaRel = Globals.TheShapeCacheManager.GetShape(infId);
                     if (paintAreaRel == null)
                     {
-                        // Clone with full opacity
-                        if (infantry.Tint.A != 255)
-                        {
-                            infantry = infantry.Clone();
-                            infantry.Tint = Color.FromArgb(255, infantry.Tint);
-                        }
                         using (Bitmap bm = new Bitmap(tileSize.Width * 3, tileSize.Height * 3, PixelFormat.Format32bppArgb))
                         {
                             using (Graphics ig = Graphics.FromImage(bm))
                             {
-                                RenderInfantry(new Point(1, 1), tileSize, infantry, (InfantryStoppingType)ist).RenderAction(ig);
+                                RenderInfantry(new Point(1, 1), tileSize, infantry, ist, true).RenderAction(ig);
                             }
                             paintAreaRel = ImageUtils.GetOutline(tileSize, bm, outlineThickness, alphaThreshold, Globals.UseClassicFiles);
                             Globals.TheShapeCacheManager.AddShape(infId, paintAreaRel);
@@ -1556,19 +1600,19 @@ namespace MobiusEditor.Render
         public static void RenderAllUnitOutlines(Graphics g, GameInfo gameInfo, Map map, Rectangle visibleCells, Size tileSize, bool onlyIfBehindObjects)
         {
             RenderAllObjectOutlines(g, gameInfo, map, map.Technos.OfType<Unit>(), visibleCells, tileSize, true,
-                (h) => h.UnitTeamColor, (gr, p, unt) => RenderUnit(gameInfo, new Point(1, 1), tileSize, unt).RenderAction(gr), Color.Black);
+                (h) => h.UnitTeamColor, (gr, p, unt) => RenderUnit(gameInfo, new Point(1, 1), tileSize, unt, true).RenderAction(gr), Color.Black);
         }
 
         public static void RenderAllBuildingOutlines(Graphics g, GameInfo gameInfo, Map map, Rectangle visibleCells, Size tileSize, double tileScale, bool onlyIfBehindObjects)
         {
             RenderAllObjectOutlines(g, gameInfo, map, map.Buildings.OfType<Building>(), visibleCells, tileSize, true,
-                (h) => h.BuildingTeamColor, (gr, p, bld) => RenderBuilding(gameInfo, null, p, tileSize, tileScale, bld).RenderAction(gr), Color.Black);
+                (h) => h.BuildingTeamColor, (gr, p, bld) => RenderBuilding(gameInfo, null, p, tileSize, tileScale, bld, true).RenderAction(gr), Color.Black);
         }
 
         public static void RenderAllTerrainOutlines(Graphics g, GameInfo gameInfo, Map map, Rectangle visibleCells, Size tileSize, double tileScale, bool onlyIfBehindObjects)
         {
             RenderAllObjectOutlines(g, gameInfo, map, map.Technos.OfType<Terrain>(), visibleCells, tileSize, true,
-                null, (gr, p, trn) => RenderTerrain(p, tileSize, tileScale, trn).RenderAction(gr), Globals.OutlineColorTerrain);
+                null, (gr, p, trn) => RenderTerrain(p, tileSize, tileScale, trn, true).RenderAction(gr), Globals.OutlineColorTerrain);
         }
 
         /// <summary>
@@ -1586,7 +1630,7 @@ namespace MobiusEditor.Render
         /// <param name="RenderAction">Action to render an object of the handled type at a specific point on a graphics object.</param>
         /// <param name="fallbackColor">Fallback colour in case no House or <paramref name="colorPick"/> function are available.</param>
         private static void RenderAllObjectOutlines<T>(Graphics g, GameInfo gameInfo, Map map, IEnumerable<(Point Location, T Occupier)> occupiers,
-            Rectangle visibleCells, Size tileSize, bool onlyIfBehindObjects, Func<HouseType, string> colorPick ,Action<Graphics, Point, T> RenderAction, Color fallbackColor)
+            Rectangle visibleCells, Size tileSize, bool onlyIfBehindObjects, Func<HouseType, string> colorPick, Action<Graphics, Point, T> RenderAction, Color fallbackColor)
             where T: ITechno, ICellOverlapper, ICellOccupier, ICloneable
         {
             float outlineThickness = 0.05f;
@@ -1634,12 +1678,17 @@ namespace MobiusEditor.Render
                 RegionData paintAreaRel = Globals.TheShapeCacheManager.GetShape(id);
                 if (paintAreaRel == null)
                 {
-                    // Clone with full opacity
+                    // Clone without preview flag.
                     T toRender = placedObj;
-                    if (placedObj.Tint.A != 255)
+                    if (placedObj.IsPreview)
                     {
                         toRender = (T)placedObj.Clone();
-                        placedObj.Tint = Color.FromArgb(255, placedObj.Tint);
+                        placedObj.IsPreview = false;
+                        if (placedObj is Building bld)
+                        {
+                            bld.BasePriority = 0;
+                            bld.IsPrebuilt = true;
+                        }
                     }
                     using (Bitmap bm = new Bitmap(tileSize.Width * cellSize.Width, tileSize.Height * cellSize.Width, PixelFormat.Format32bppArgb))
                     {
@@ -1781,28 +1830,41 @@ namespace MobiusEditor.Render
                 Overlay footballTerrain = new Overlay()
                 {
                     Type = SoleSurvivor.OverlayTypes.Road,
-                    Tint = Color.FromArgb(128, Color.White)
+                    IsPreview = true,
                 };
-                RenderOverlay(gameInfo, p, tileSize, tileScale, footballTerrain).Item2(graphics);
+                RenderOverlay(gameInfo, p, null, tileSize, tileScale, footballTerrain, false).Item2(graphics);
             }
         }
 
-        public static void RenderFootballAreaFlags(Graphics graphics, GameInfo gameInfo, Map map, Rectangle visibleCells, Size tileSize)
+        public static void RenderWaypointFlags(Graphics graphics, GameInfo gameInfo, Map map, Rectangle visibleCells, Size tileSize)
         {
-            if (!gameInfo.SupportsMapLayer(MapLayerFlag.FootballArea))
-            {
-                return;
-            }
             // Re-render flags on top of football areas.
-            List<Waypoint> footballWayPoints = new List<Waypoint>();
-            Dictionary<int, int> flagOverlapPoints = new Dictionary<int, int>();
+            List<Waypoint> flagWayPoints = new List<Waypoint>();
+            Dictionary<int, int> flagOverlapMpCheck = new Dictionary<int, int>();
             Dictionary<Waypoint, int> flagOffsets = new Dictionary<Waypoint, int>();
+            // Get all waypoints. Ignore the preview if it is on the same cell as the same actual waypoint.
+            // Preview waypoint is always only one, and added at the end, so a sequential run always works.
             foreach (Waypoint waypoint in map.Waypoints)
             {
-                if (waypoint.Point.HasValue && Waypoint.GetMpIdFromFlag(waypoint.Flag) >= 0 && visibleCells.Contains(waypoint.Point.Value)
+                int mpId = Waypoint.GetMpIdFromFlag(waypoint.Flag);
+                if (waypoint.Point.HasValue && mpId >= 0 && visibleCells.Contains(waypoint.Point.Value)
                     && map.Metrics.GetCell(waypoint.Point.Value, out int cell))
                 {
-                    footballWayPoints.Add(waypoint);
+                    bool alreadyExists = flagOverlapMpCheck.TryGetValue(mpId, out int mpCell) && cell == mpCell;
+                    if (!alreadyExists)
+                    {
+                        flagWayPoints.Add(waypoint);
+                        flagOverlapMpCheck[mpId] = cell;
+                    }
+                }
+            }
+            // Create offsets if multiple flags are on the same cell.
+            flagWayPoints = flagWayPoints.OrderBy(w => Waypoint.GetMpIdFromFlag(w.Flag)).ToList();
+            Dictionary<int, int> flagOverlapPoints = new Dictionary<int, int>();
+            foreach (Waypoint waypoint in flagWayPoints)
+            {
+                if (map.Metrics.GetCell(waypoint.Point.Value, out int cell))
+                {
                     if (!flagOverlapPoints.TryGetValue(cell, out int amount))
                     {
                         flagOverlapPoints.Add(cell, 1);
@@ -1814,11 +1876,12 @@ namespace MobiusEditor.Render
                     flagOffsets[waypoint] = amount * 2;
                 }
             }
+            // Paint the flags.
             ITeamColor[] flagColors = map.FlagColors;
-            foreach (Waypoint wp in footballWayPoints)
+            foreach (Waypoint wp in flagWayPoints)
             {
                 flagOffsets.TryGetValue(wp, out int offset);
-                RenderWaypoint(gameInfo, false, tileSize, flagColors, wp, 1.0f, offset).Item2(graphics);
+                RenderWaypoint(gameInfo, false, tileSize, flagColors, wp, wp.IsPreview ? Globals.PreviewAlphaFloat : 1.0f, offset).Item2(graphics);
             }
         }
 
@@ -1869,7 +1932,7 @@ namespace MobiusEditor.Render
                     );
                     if (classicFont == null)
                     {
-                        using (SolidBrush fakeTextBrush = new SolidBrush(Color.FromArgb(forPreview ? building.Tint.A : 255, textColor)))
+                        using (SolidBrush fakeTextBrush = new SolidBrush(Color.FromArgb(forPreview ? Globals.PreviewAlphaInt : 255, textColor)))
                         {
                             using (Font font = graphics.GetAdjustedFont(fakeText, SystemFonts.DefaultFont, buildingBounds.Width, buildingBounds.Height,
                                 Math.Max(1, (int)Math.Round(12 * tileScaleHor)), Math.Max(1, (int)Math.Round(24 * tileScaleHor)), stringFormat, true))
@@ -2005,7 +2068,17 @@ namespace MobiusEditor.Render
 
         public static void RenderAllTechnoTriggers(Graphics graphics, GameInfo gameInfo, OccupierSet<ICellOccupier> mapTechnos, Rectangle visibleCells, Size tileSize, MapLayerFlag layersToRender, Color color, string toPick, bool excludePick)
         {
-            // TODO use gameInfo to get techno triggers font and render them in classic mode.
+            string classicFont = null;
+            bool cropClassicFont = false;
+            string classicFontInf = null;
+            bool cropClassicFontInf = false;
+            TeamRemap remapClassicFont = null;
+            TeamRemap remapClassicFontInf = null;
+            if (Globals.TheTilesetManager is TilesetManagerClassic tsmc && Globals.TheTeamColorManager is TeamRemapManager trm)
+            {
+                classicFont = gameInfo.GetClassicFontInfo(ClassicFont.TechnoTriggers, tsmc, trm, color, out cropClassicFont, out remapClassicFont);
+                classicFontInf = gameInfo.GetClassicFontInfo(ClassicFont.InfantryTriggers, tsmc, trm, color, out cropClassicFontInf, out remapClassicFontInf);
+            }
             double tileScaleHor = tileSize.Width / 128.0;
             float borderSize = Math.Max(0.5f, tileSize.Width / 60.0f);
             foreach ((Point topLeft, ICellOccupier techno) in mapTechnos)
@@ -2019,7 +2092,7 @@ namespace MobiusEditor.Render
                         if (visibleCells.IntersectsWith(new Rectangle(topLeft, terrain.Type.Size)))
                         {
                             Size size = new Size(terrain.Type.Size.Width * tileSize.Width, terrain.Type.Size.Height * tileSize.Height);
-                            triggers = new (string, Rectangle, int)[] { (terrain.Trigger, new Rectangle(location, size), terrain.Tint.A) };
+                            triggers = new (string, Rectangle, int)[] { (terrain.Trigger, new Rectangle(location, size), terrain.IsPreview ? Globals.PreviewAlphaInt : 255) };
                         }
                     }
                 }
@@ -2030,7 +2103,7 @@ namespace MobiusEditor.Render
                         if (visibleCells.IntersectsWith(new Rectangle(topLeft, building.Type.Size)))
                         {
                             Size size = new Size(building.Type.Size.Width * tileSize.Width, building.Type.Size.Height * tileSize.Height);
-                            triggers = new (string, Rectangle, int)[] { (building.Trigger, new Rectangle(location, size), building.Tint.A) };
+                            triggers = new (string, Rectangle, int)[] { (building.Trigger, new Rectangle(location, size), building.IsPreview ? Globals.PreviewAlphaInt : 255) };
                         }
                     }
                 }
@@ -2040,7 +2113,7 @@ namespace MobiusEditor.Render
                     {
                         if (visibleCells.Contains(topLeft))
                         {
-                            triggers = new (string, Rectangle, int)[] { (unit.Trigger, new Rectangle(location, tileSize), unit.Tint.A) };
+                            triggers = new (string, Rectangle, int)[] { (unit.Trigger, new Rectangle(location, tileSize), unit.IsPreview ? Globals.PreviewAlphaInt : 255) };
                         }
                     }
                 }
@@ -2082,7 +2155,7 @@ namespace MobiusEditor.Render
                                     break;
                             }
                             Rectangle bounds = new Rectangle(location + offset, size);
-                            infantryTriggers.Add((infantry.Trigger, bounds, infantry.Tint.A));
+                            infantryTriggers.Add((infantry.Trigger, bounds, infantry.IsPreview ? Globals.PreviewAlphaInt : 255));
                         }
                         triggers = infantryTriggers.ToArray();
                     }
@@ -2232,7 +2305,17 @@ namespace MobiusEditor.Render
             Rectangle circleBounds = GeneralUtils.GetBoxFromCenterCell(topLeft, maskX, maskY, effectRadius, effectRadius, tileSize, out Point center);
             if (visibleCells.IntersectsWith(circleCellBounds))
             {
-                Color alphacorr = Color.FromArgb(selected == building ? 255 : (building.Tint.A * 128 / 256), circleColor);
+                float alphaFactor = 1.0f;
+                if (building.IsPreview)
+                {
+                    alphaFactor *= Globals.PreviewAlphaFloat;
+                }
+                if (!building.IsPrebuilt)
+                {
+                    alphaFactor *= Globals.UnbuiltAlphaFloat;
+                }
+                int alphaFactorInt = (int)Math.Round(alphaFactor * 256).Restrict(0, 255);
+                Color alphacorr = Color.FromArgb(alphaFactorInt, circleColor);
                 RenderCircleDiagonals(graphics, tileSize, alphacorr, effectRadius, effectRadius, center);
                 DrawDashesCircle(graphics, circleBounds, tileSize, alphacorr, true, -1.25f, 2.5f);
             }
@@ -2257,7 +2340,13 @@ namespace MobiusEditor.Render
             }
             ITeamColor tc = Globals.TheTeamColorManager[unit.House?.BuildingTeamColor];
             Color circleColor = Globals.TheTeamColorManager.GetBaseColor(tc?.Name);
-            Color alphacorr = Color.FromArgb(unit == selected ? 255 : (unit.Tint.A * 128 / 256), circleColor);
+            float alphaFactor = 1.0f;
+            if (unit.IsPreview)
+            {
+                alphaFactor *= Globals.PreviewAlphaFloat;
+            }
+            int alphaFactorInt = (int)Math.Round(alphaFactor * 256).Restrict(0, 255);
+            Color alphacorr = Color.FromArgb(alphaFactorInt, circleColor);
             if (isJammer)
             {
                 // uses map's Gap Generator range.
@@ -2435,7 +2524,7 @@ namespace MobiusEditor.Render
                     continue;
                 }
                 // Allow better alpha control by detecting previews but not using that alpha.
-                bool isPreview = cellTrigger.Tint.A != 255;
+                bool isPreview = cellTrigger.IsPreview;
                 Point p = new Point(x, y);
                 if (visibleCells.Contains(x, y))
                 {
@@ -2572,7 +2661,7 @@ namespace MobiusEditor.Render
 
             foreach ((Point p, CellTrigger cellTrigger) in toRender)
             {
-                bool isPreview = cellTrigger.Tint.A != 255;
+                bool isPreview = cellTrigger.IsPreview;
                 string requestName = cellTrigger.Trigger + "=" + (isPreview ? 'P' : 'N');
                 if (backRenders.TryGetValue(requestName, out Bitmap fillCtBm))
                 {
@@ -2587,14 +2676,14 @@ namespace MobiusEditor.Render
             {
                 foreach ((Point p, CellTrigger cellTrigger) in boundsToDraw)
                 {
-                    bool isPreview = cellTrigger.Tint.A != 255;
+                    bool isPreview = cellTrigger.IsPreview;
                     Rectangle bounds = new Rectangle(new Point(p.X * tileSize.Width, p.Y * tileSize.Height), tileSize);
                     graphics.DrawRectangle(isPreview ? prevBorderPen : borderPen, bounds);
                 }
             }
             foreach ((Point p, CellTrigger cellTrigger) in toRender)
             {
-                bool isPreview = cellTrigger.Tint.A != 255;
+                bool isPreview = cellTrigger.IsPreview;
                 string requestName = cellTrigger.Trigger + "=" + (isPreview ? 'P' : 'N');
                 if (renders.TryGetValue(requestName, out Bitmap ctBm))
                 {

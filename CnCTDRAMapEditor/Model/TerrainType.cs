@@ -199,7 +199,7 @@ namespace MobiusEditor.Model
             {
                 Type = this,
             };
-            RenderInfo render = MapRenderer.RenderTerrain(Point.Empty, Globals.PreviewTileSize, Globals.PreviewTileScale, mockTerrain);
+            RenderInfo render = MapRenderer.RenderTerrain(Point.Empty, Globals.PreviewTileSize, Globals.PreviewTileScale, mockTerrain, false);
             if (render.RenderedObject != null)
             {
                 Bitmap th = new Bitmap(this.Size.Width * Globals.PreviewTileSize.Width, this.Size.Height * Globals.PreviewTileSize.Height);

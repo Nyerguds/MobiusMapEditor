@@ -28,12 +28,7 @@ namespace MobiusEditor.Model
         public bool[,] OccupyMask => Type.OccupyMask;
         public bool[,] BaseOccupyMask => Type.OccupyMask;
 
-        private Color? tint;
-        public Color Tint
-        {
-            get { return tint ?? Type.Tint; }
-            set { tint = value; }
-        }
+        public bool IsPreview { get; set; }
 
         public override string ToString()
         {

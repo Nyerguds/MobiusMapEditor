@@ -956,7 +956,7 @@ namespace MobiusEditor.Tools
                         bibRender.Add(bibCellRender);
                     }
                 }
-                RenderInfo render = MapRenderer.RenderBuilding(plugin.GameInfo, null, new Point(0, 0), Globals.PreviewTileSize, Globals.PreviewTileScale, mockBuilding);
+                RenderInfo render = MapRenderer.RenderBuilding(plugin.GameInfo, null, new Point(0, 0), Globals.PreviewTileSize, Globals.PreviewTileScale, mockBuilding, false);
                 Size previewSize = mockBuilding.OccupyMask.GetDimensions();
                 Bitmap buildingPreview = new Bitmap(previewSize.Width * Globals.PreviewTileWidth, previewSize.Height * Globals.PreviewTileHeight);
                 buildingPreview.SetResolution(96, 96);
@@ -1040,7 +1040,6 @@ namespace MobiusEditor.Tools
             }
             Point location = navigationWidget.MouseCell;
             Building building = mockBuilding.Clone();
-            building.Tint = Color.FromArgb(128, Color.White);
             building.IsPreview = true;
             if (previewMap.Technos.CanAdd(location, building, building.Type.BaseOccupyMask) && previewMap.Buildings.Add(location, building))
             {

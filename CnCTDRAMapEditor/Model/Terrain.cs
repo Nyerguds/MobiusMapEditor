@@ -50,7 +50,6 @@ namespace MobiusEditor.Model
         private int strength = 256;
         public int Strength { get => strength; set => SetField(ref strength, value); }
 
-        public Color Tint { get; set; } = Color.White;
         public bool IsPreview { get; set; }
 
         public override string ToString()

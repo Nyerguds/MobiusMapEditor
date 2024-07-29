@@ -588,7 +588,7 @@ namespace MobiusEditor.Tools
                 using (var g = Graphics.FromImage(unitPreview))
                 {
                     MapRenderer.SetRenderSettings(g, Globals.PreviewSmoothScale);
-                    RenderInfo render = MapRenderer.RenderUnit(plugin.GameInfo, new Point(1, 1), Globals.PreviewTileSize, mockUnit);
+                    RenderInfo render = MapRenderer.RenderUnit(plugin.GameInfo, new Point(1, 1), Globals.PreviewTileSize, mockUnit, false);
                     if (render.RenderedObject != null)
                     {
                         render.RenderAction(g);
@@ -645,7 +645,6 @@ namespace MobiusEditor.Tools
             }
             var location = navigationWidget.MouseCell;
             var unit = mockUnit.Clone();
-            unit.Tint = Color.FromArgb(128, Color.White);
             unit.IsPreview = true;
             bool placeable = previewMap.Technos.Add(location, unit);
             if (!placeable)

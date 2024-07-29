@@ -424,7 +424,7 @@ namespace MobiusEditor.Tools
                 navigationWidget.MouseoverSize = new Size(1, 1);
             }
             Overlay onCell = previewMap.Overlay[cell];
-            Overlay overlay = new Overlay { Type = selected, Icon = 0, Tint = Color.FromArgb(128, Color.FromArgb(128, selected.Tint)) };
+            Overlay overlay = new Overlay { Type = selected, Icon = 0, IsPreview = true };
             if (previewMap.Technos.CanAdd(cell, overlay) && previewMap.Buildings.CanAdd(cell, overlay))
             {
                 previewMap.Overlay[cell] = overlay;

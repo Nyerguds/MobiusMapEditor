@@ -73,6 +73,16 @@ namespace MobiusEditor.Utility
             return Math.Max(minValue, Math.Min(value, maxValue));
         }
 
+        public static float Restrict(this float value, float minValue, float maxValue)
+        {
+            return Math.Max(minValue, Math.Min(value, maxValue));
+        }
+
+        public static double Restrict(this double value, double minValue, double maxValue)
+        {
+            return Math.Max(minValue, Math.Min(value, maxValue));
+        }
+
         /// <summary>
         /// Alternative to <see cref="Enum.HasFlag(Enum)"/> that returns <see langword="true"/> even on a partial match of the bits.
         /// </summary>

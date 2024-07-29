@@ -766,7 +766,7 @@ namespace MobiusEditor.Tools
                 using (var g = Graphics.FromImage(infantryPreview))
                 {
                     MapRenderer.SetRenderSettings(g, Globals.PreviewSmoothScale);
-                    RenderInfo render = MapRenderer.RenderInfantry(Point.Empty, Globals.PreviewTileSize, mockInfantry, InfantryStoppingType.Center);
+                    RenderInfo render = MapRenderer.RenderInfantry(Point.Empty, Globals.PreviewTileSize, mockInfantry, InfantryStoppingType.Center, false);
                     if (render.RenderedObject != null)
                     {
                         render.RenderAction(g);
@@ -850,7 +850,6 @@ namespace MobiusEditor.Tools
                     if (infantryGroup.Infantry[i] == null)
                     {
                         var infantry = mockInfantry.Clone();
-                        infantry.Tint = Color.FromArgb(128, Color.White);
                         infantry.IsPreview = true;
                         infantryGroup.Infantry[i] = infantry;
                         placeable = true;

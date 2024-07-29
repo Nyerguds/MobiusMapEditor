@@ -31,10 +31,12 @@ namespace MobiusEditor.Model
         private int icon;
         public int Icon { get => icon; set => SetField(ref icon, value); }
 
-        public Color Tint { get; set; } = Color.White;
+        public Building AttachedTo { get; set; }
 
         public Rectangle OverlapBounds => new Rectangle(Point.Empty, Type.Size);
         public bool[,] OpaqueMask => new bool[1, 1] { { true } };
+
+        public bool IsPreview { get; set; }
 
         protected bool SetField<T>(ref T field, T value, [CallerMemberName] string propertyName = null)
         {
@@ -74,23 +76,23 @@ namespace MobiusEditor.Model
             this.icon = icon;
         }
 
-        public Smudge(SmudgeType type, int icon, Color tint)
+        public Smudge(SmudgeType type, int icon, Building attachedTo)
         {
             this.type = type;
             this.icon = icon;
-            this.Tint = tint;
+            this.AttachedTo = attachedTo;
         }
 
         public Smudge Clone()
         {
-            return new Smudge(this.Type, this.Icon, this.Tint);
+            return new Smudge(this.Type, this.Icon, this.AttachedTo);
         }
 
         public void CloneDataFrom(Smudge other)
         {
             Type = other.Type;
             Icon = other.Icon;
-            Tint = other.Tint;
+            AttachedTo = other.AttachedTo;
         }
 
         public Boolean Equals(Smudge other)

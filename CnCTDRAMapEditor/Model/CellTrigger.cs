@@ -20,7 +20,7 @@ namespace MobiusEditor.Model
     {
         public string Trigger { get; set; } = Model.Trigger.None;
 
-        public Color Tint { get; set; } = Color.White;
+        public bool IsPreview { get; set; }
 
         public CellTrigger(string trigger)
         {

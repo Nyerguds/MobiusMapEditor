@@ -563,8 +563,7 @@ namespace MobiusEditor.Tools
             if (celltr == null)
             {
                 previewMap.CellTriggers[location] = new CellTrigger(selected);
-                // Tint is not actually used; a lower alpha just indicates that it is a preview item.
-                previewMap.CellTriggers[location].Tint = Color.FromArgb(128, Color.White);
+                previewMap.CellTriggers[location].IsPreview = true;
                 navigationWidget.PenColor = Color.Yellow;
             }
             else if (celltr.Trigger != selected)

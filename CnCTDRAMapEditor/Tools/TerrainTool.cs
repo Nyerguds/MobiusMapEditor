@@ -538,7 +538,7 @@ namespace MobiusEditor.Tools
                 using (var g = Graphics.FromImage(terrainPreview))
                 {
                     MapRenderer.SetRenderSettings(g, Globals.PreviewSmoothScale);
-                    RenderInfo render = MapRenderer.RenderTerrain(new Point(0, 0), Globals.PreviewTileSize, Globals.PreviewTileScale, mockTerrain);
+                    RenderInfo render = MapRenderer.RenderTerrain(new Point(0, 0), Globals.PreviewTileSize, Globals.PreviewTileScale, mockTerrain, false);
                     if (render.RenderedObject != null)
                     {
                         render.RenderAction(g);
@@ -604,7 +604,6 @@ namespace MobiusEditor.Tools
             if (previewMap.Metrics.Contains(location))
             {
                 var terrain = mockTerrain.Clone();
-                terrain.Tint = Color.FromArgb(128, Color.White);
                 terrain.IsPreview = true;
                 //previewMap.Technos.Add(location, terrain);
                 if (previewMap.Technos.CanAdd(location, terrain, terrain.Type.OccupyMask) && previewMap.Technos.Add(location, terrain))

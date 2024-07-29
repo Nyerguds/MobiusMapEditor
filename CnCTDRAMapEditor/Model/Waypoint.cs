@@ -83,7 +83,7 @@ namespace MobiusEditor.Model
         public int? Cell { get; set; }
         public Point? Point => !Cell.HasValue || Cell == -1 || Metrics == null ? null : (Point?)new Point(Cell.Value % Metrics.Width, Cell.Value / Metrics.Width);
 
-        public Color Tint { get; set; } = Color.White;
+        public bool IsPreview { get; set; }
 
         public Waypoint(string name, string shortName, WaypointFlag flag, CellMetrics metrics, int? cell)
         {

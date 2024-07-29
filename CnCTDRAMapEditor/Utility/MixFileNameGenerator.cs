@@ -37,19 +37,19 @@ namespace MobiusEditor.Utility
             SideInis /**/ = 1 << 2,
         }
 
-        private const string parseError = "Error parsing ini: section {0} not found.";
+        private const string ParseError = "Error parsing ini: section {0} not found.";
         // Main games header. This is the only hardcoded header in the system.
-        private const string gamesHeader = "Games";
+        private const string GamesHeader = "Games";
         // ini keys per game definition.
-        private const string gameKeyContentInis = "ContentInis";
-        private const string gameKeyFileTypes = "FileTypes";
-        private const string gameKeyFilesSections = "FilesSections";
-        private const string gameKeyTheaters = "Theaters";
-        private const string gameKeyModTheaters = "ModTheaters";
-        private const string gameKeyHasher = "Hasher";
-        private const string gameKeyNewMixFormat = "NewMixFormat";
-        private const string gameKeyHasMixNesting = "HasMixNesting";
-        private const string infoSuffix = "Info";
+        private const string GameKeyContentInis = "ContentInis";
+        private const string GameKeyFileTypes = "FileTypes";
+        private const string GameKeyFilesSections = "FilesSections";
+        private const string GameKeyTheaters = "Theaters";
+        private const string GameKeyModTheaters = "ModTheaters";
+        private const string GameKeyHasher = "Hasher";
+        private const string GameKeyNewMixFormat = "NewMixFormat";
+        private const string GameKeyHasMixNesting = "HasMixNesting";
+        private const string InfoSuffix = "Info";
 
         private static readonly Dictionary<string, HashMethod> hashMethods = HashMethod.GetRegisteredMethods().ToDictionary(m => m.SimpleName, StringComparer.OrdinalIgnoreCase);
         private static readonly HashMethod defaultHashMethod = HashMethod.GetRegisteredMethods().FirstOrDefault();
@@ -58,7 +58,13 @@ namespace MobiusEditor.Utility
         private List<string> games = new List<string>();
         private Dictionary<string, GameDefinition> gameInfo = new Dictionary<string, GameDefinition>();
 
+        /// <summary>
+        /// List of games that were read from the hashing information.
+        /// </summary>
         public List<string> Games => games.ToList();
+
+        private List<string> errors = new List<string>();
+        public List<string> ProcessErrors => errors.ToList();
 
         /// <summary>
         /// Creates a new MixFileNameGenerator from a given ini file path.
@@ -138,10 +144,10 @@ namespace MobiusEditor.Utility
             {
                 throw new ArgumentNullException("iniFile");
             }
-            INISection gamesSection = iniFile.Sections[gamesHeader];
+            INISection gamesSection = iniFile.Sections[GamesHeader];
             if (gamesSection == null)
             {
-                throw new ArgumentException(String.Format(parseError, gamesHeader), "iniFile");
+                throw new ArgumentException(String.Format(ParseError, GamesHeader), "iniFile");
             }
             // Iterate over games
             int gameIndex = 0;
@@ -152,21 +158,32 @@ namespace MobiusEditor.Utility
                 INISection gameSection = iniFile.Sections[gameString];
                 if (gameSection == null)
                 {
+                    errors.Add("No ini section found for game \"" + gameString + "\"; skipping game.");
                     continue;
                 }
                 // Read game info
-                string[] externalFiles = (gameSection.TryGetValue(gameKeyContentInis) ?? String.Empty).Split(',', true);
-                string[] typesSections = (gameSection.TryGetValue(gameKeyFileTypes) ?? String.Empty).Split(',', true);
-                string[] filesSections = (gameSection.TryGetValue(gameKeyFilesSections) ?? String.Empty).Split(',', true);
-                string[][] theaterInfos = GetTheaterInfo(gameSection, gameKeyTheaters, true);
-                string[][] modTheaterInfos = GetTheaterInfo(gameSection, gameKeyModTheaters, false);
-                string hasher = gameSection.TryGetValue(gameKeyHasher);
-                bool newMixFormat = YesNoBooleanTypeConverter.Parse(gameSection.TryGetValue(gameKeyNewMixFormat));
-                bool hasMixNesting = YesNoBooleanTypeConverter.Parse(gameSection.TryGetValue(gameKeyHasMixNesting));
-                hashMethods.TryGetValue(hasher, out HashMethod hashMethod);
-                // no files sections specified
+                string[] externalFiles = (gameSection.TryGetValue(GameKeyContentInis) ?? String.Empty).Split(',', true);
+                string[] typesSections = (gameSection.TryGetValue(GameKeyFileTypes) ?? String.Empty).Split(',', true);
+                string[] filesSections = (gameSection.TryGetValue(GameKeyFilesSections) ?? String.Empty).Split(',', true);
+                string[][] theaterInfos = GetTheaterInfo(gameSection, GameKeyTheaters, true);
+                string[][] modTheaterInfos = GetTheaterInfo(gameSection, GameKeyModTheaters, false);
+                string hasher = gameSection.TryGetValue(GameKeyHasher);
+                if (hasher == null)
+                {
+                    errors.Add("No hash method defined for game definition \"" + gameString + "\"; skipping game.");
+                    continue;
+                }
+                bool newMixFormat = YesNoBooleanTypeConverter.Parse(gameSection.TryGetValue(GameKeyNewMixFormat));
+                bool hasMixNesting = YesNoBooleanTypeConverter.Parse(gameSection.TryGetValue(GameKeyHasMixNesting));
+
+                if (!hashMethods.TryGetValue(hasher, out HashMethod hashMethod))
+                {
+                    errors.Add("Coukd not found a hash method for identifier \"" + hasher + "\" for game definition \"" + gameString + "\"; skipping game.");
+                    continue;
+                }
                 if (filesSections.All(fs => String.IsNullOrEmpty(fs)))
                 {
+                    errors.Add("No files sections defined for game definition \"" + gameString + "\"; skipping game.");
                     continue;
                 }
                 // Read game inis
@@ -181,12 +198,12 @@ namespace MobiusEditor.Utility
                     }
                     if (validFolder)
                     {
-                        string filesListPath = Path.Combine(Path.GetDirectoryName(iniPath), ini);
-                        if (File.Exists(filesListPath))
+                        try
                         {
-                            extraIni = new INI();
-                            try
+                            string filesListPath = Path.Combine(Path.GetDirectoryName(iniPath), ini);
+                            if (File.Exists(filesListPath))
                             {
+                                extraIni = new INI();
                                 using (TextReader reader = new StreamReader(filesListPath, Encoding.GetEncoding(437)))
                                 {
                                     extraIni.Parse(reader);
@@ -194,7 +211,10 @@ namespace MobiusEditor.Utility
                                 // If anything fails in this, the ini is not added.
                                 gameIniFiles.Add(extraIni);
                             }
-                            catch { /* ignore */ }
+                        }
+                        catch (Exception ex)
+                        {
+                            errors.Add("Error reading \"" + ini + "\": " + ex.Message);
                         }
                     }
                 }
@@ -207,6 +227,7 @@ namespace MobiusEditor.Utility
                 List<string> gameFiles = new List<string>();
                 foreach (string filesList in filesSections)
                 {
+                    bool found = false;
                     foreach (INI ini in gameIniFiles)
                     {
                         INISection gameFilesSection = ini.Sections[filesList];
@@ -214,6 +235,7 @@ namespace MobiusEditor.Utility
                         {
                             continue;
                         }
+                        found = true;
                         foreach (KeyValuePair<string, string> iniEntry in gameFilesSection)
                         {
                             if (!gameDescriptions.ContainsKey(iniEntry.Key))
@@ -224,10 +246,15 @@ namespace MobiusEditor.Utility
                         }
                         break;
                     }
+                    if (!found)
+                    {
+                        errors.Add("Files section \"" + filesList + "\" for game definition \"" + gameString + "\" not found.");
+                    }
                 }
                 // don't add games with zero files.
                 if (gameFiles.Count == 0)
                 {
+                    errors.Add("No filenames found for game definition \"" + gameString + "\"; skipping.");
                     continue;
                 }
                 // Fill data into the GameDefinition object.
@@ -244,7 +271,7 @@ namespace MobiusEditor.Utility
                     gd.ModTheaterInfo = modTheaterInfos;
                 }
                 // All necessary info is inserted. Tell the GameDefinition object to generate the name ids.
-                gd.GenerateNameIds();
+                gd.GenerateNameIds(errors);
                 gameInfo.Add(gameString, gd);
                 games.Add(gameString);
             }
@@ -296,8 +323,8 @@ namespace MobiusEditor.Utility
                     List<FileNameGeneratorEntry> generators = new List<FileNameGeneratorEntry>();
                     while (!string.IsNullOrEmpty(nameVal = typeSection.TryGetValue(nameIndex.ToString())))
                     {
-                        string info = typeSection.TryGetValue(nameIndex.ToString() + infoSuffix);
-                        generators.Add(new FileNameGeneratorEntry(nameVal, info));
+                        string info = typeSection.TryGetValue(nameIndex.ToString() + InfoSuffix);
+                        generators.Add(new FileNameGeneratorEntry(nameVal, info, nameIndex, typeString, errors));
                         nameIndex++;
                     }
                     if (generators.Count > 0)
@@ -703,12 +730,16 @@ namespace MobiusEditor.Utility
                 this.Name = name;
             }
 
-            public void GenerateNameIds()
+            /// <summary>
+            /// Generates the full list of name IDs for this game definition.
+            /// </summary>
+            /// <param name="errors">If given, errors are added in this list.</param>
+            public void GenerateNameIds(List<string> errors)
             {
                 HashSet<uint> added = new HashSet<uint>();
                 List<MixEntry> finalEntries = new List<MixEntry>();
                 // Skip any duplicates when storing them.
-                foreach (MixEntry entry in GetNameIds())
+                foreach (MixEntry entry in GetNameIds(errors))
                 {
                     uint id = entry.Id;
                     if (added.Contains(id))
@@ -725,7 +756,7 @@ namespace MobiusEditor.Utility
                 this.FileInfo = finalEntries;
             }
 
-            private IEnumerable<MixEntry> GetNameIds()
+            private IEnumerable<MixEntry> GetNameIds(List<string> errors)
             {
                 string[][] theaterInfo = this.TheaterInfo ?? new string[][] { new[] { string.Empty } };
                 string[][] theaterInfomod = this.ModTheaterInfo;
@@ -733,13 +764,13 @@ namespace MobiusEditor.Utility
                 {
                     yield break;
                 }
-                foreach (MixEntry fileInfo in GetHashInfo(this.FileInfoRaw, this.FileDescriptions, this.TypeDefinitions, theaterInfo, this.Hasher, false))
+                foreach (MixEntry fileInfo in GetHashInfo(this.FileInfoRaw, this.FileDescriptions, this.TypeDefinitions, theaterInfo, this.Hasher, false, errors))
                 {
                     yield return fileInfo;
                 }
                 if (theaterInfomod != null && theaterInfomod.Length > 0)
                 {
-                    foreach (MixEntry fileInfo in GetHashInfo(this.FileInfoRaw, this.FileDescriptions, this.TypeDefinitions, theaterInfomod, this.Hasher, true))
+                    foreach (MixEntry fileInfo in GetHashInfo(this.FileInfoRaw, this.FileDescriptions, this.TypeDefinitions, theaterInfomod, this.Hasher, true, errors))
                     {
                         yield return fileInfo;
                     }
@@ -747,7 +778,7 @@ namespace MobiusEditor.Utility
             }
 
             private IEnumerable<MixEntry> GetHashInfo(IEnumerable<string> filenames, Dictionary<string, string> filenameInfo, Dictionary<string, FileNameGeneratorEntry[]> typeDefinitions,
-                string[][] theaterInfo, HashMethod hashMethod, bool ignoreNonTheaterFiles)
+                string[][] theaterInfo, HashMethod hashMethod, bool ignoreNonTheaterFiles, List<string> errors)
             {
                 foreach (string filename in filenames)
                 {
@@ -778,10 +809,14 @@ namespace MobiusEditor.Utility
                     }
                     else
                     {
-                        FileNameGeneratorEntry[] generators = null;
-                        if (!typeDefinitions.TryGetValue(type, out generators))
+                        // Fetch all filename generators for this type definition
+                        if (!typeDefinitions.TryGetValue(type, out FileNameGeneratorEntry[] generators))
                         {
-                            throw new Exception("Error in filename data: no definition found for type \"" + type + "\"");
+                            if (errors != null)
+                            {
+                                errors.Add("Error in filename data: no definition found for type \"" + type + "\"");
+                            }
+                            continue;
                         }
                         // Generate all normal filenames.
                         foreach (FileNameGeneratorEntry generator in generators)
@@ -835,20 +870,23 @@ namespace MobiusEditor.Utility
             // Group 3: first number in numeric part
             // Group 4: second number in numeric part
             // Group 5: non-numeric block: group containing all chunks to iterate over (not actually used; just for testing)
-            // Group 6: Repeating group of the chunks to iterate over; each one is either a block surrounded with ( ), or a single character.
+            // Group 6: Repeating group of the chunks to iterate over; each one is either a block surrounded with ( ), or a single character. Empty () blocks are allowed.
             //                                                         12   3     4     56~
-            private static readonly Regex IterateRegex = new Regex("\\[(((\\d+)-(\\d+))|(((?:\\([^\\[\\]\\(\\))]+\\))|(?:[^\\[\\]]))+))\\]", RegexOptions.Compiled);
+            private static readonly Regex IterateRegex = new Regex("\\[(((\\d+)-(\\d+))|(((?:\\([^\\[\\]\\(\\))]*\\))|(?:[^\\[\\]]))+))\\]", RegexOptions.Compiled);
             public bool IsTheaterDependent { get; private set; }
             public int HighestArg { get; private set; }
             public string ExtraInfo { get; set; }
             private readonly string[][] iterations;
 
-            public FileNameGeneratorEntry(string format)
-                : this(format, null)
-            {
-            }
-
-            public FileNameGeneratorEntry(string format, string extraInfo)
+            /// <summary>
+            /// Parses a definition string to generate filenames from.
+            /// </summary>
+            /// <param name="format">Format string</param>
+            /// <param name="extraInfo">Info string</param>
+            /// <param name="defName">Definition name</param>
+            /// <param name="defIndex">Index of the current entry in this definition</param>
+            /// <param name="parseErrors">Errors to fill</param>
+            public FileNameGeneratorEntry(string format, string extraInfo, int defIndex, string defName, List<string> parseErrors)
             {
                 ExtraInfo = extraInfo;
                 int highestArgFormat = EnhFormatString.GetHighestArg(format);
@@ -893,15 +931,24 @@ namespace MobiusEditor.Utility
                     }
                     else
                     {
+                        HashSet<string> iterationSet = new HashSet<string>();
                         foreach (Capture capture in iteratorMatch.Groups[6].Captures)
                         {
                             string val = capture.Value;
-                            if (val.Length > 2)
+                            if (val.Length > 1)
                             {
                                 // chop off the surrounding brackets
                                 val = val.Substring(1, val.Length - 2);
                             }
-                            iterationChunks.Add(val);
+                            if (!iterationSet.Contains(val))
+                            {
+                                iterationSet.Add(val);
+                                iterationChunks.Add(val);
+                            }
+                            else if (parseErrors != null)
+                            {
+                                parseErrors.Add(String.Format("Warning: Duplicate iteration chunk \"{0}\" in entry #{1} of definition \"{2}\"", capture.Value, defIndex, defName));
+                            }
                         }
                     }
                     iterationBlocks.Add(iterationChunks.ToArray());

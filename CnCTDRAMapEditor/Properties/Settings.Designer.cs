@@ -322,19 +322,19 @@ namespace MobiusEditor.Properties {
         
         [global::System.Configuration.ApplicationScopedSettingAttribute()]
         [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
-        [global::System.Configuration.DefaultSettingValueAttribute("40, 0, 0, 255")]
-        public global::System.Drawing.Color MapGridColor {
+        [global::System.Configuration.DefaultSettingValueAttribute("32, 32, 32")]
+        public global::System.Drawing.Color MapBackColor {
             get {
-                return ((global::System.Drawing.Color)(this["MapGridColor"]));
+                return ((global::System.Drawing.Color)(this["MapBackColor"]));
             }
         }
         
         [global::System.Configuration.ApplicationScopedSettingAttribute()]
         [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
-        [global::System.Configuration.DefaultSettingValueAttribute("32, 32, 32")]
-        public global::System.Drawing.Color MapBackColor {
+        [global::System.Configuration.DefaultSettingValueAttribute("40, 0, 0, 255")]
+        public global::System.Drawing.Color MapGridColor {
             get {
-                return ((global::System.Drawing.Color)(this["MapBackColor"]));
+                return ((global::System.Drawing.Color)(this["MapGridColor"]));
             }
         }
         
@@ -385,7 +385,7 @@ namespace MobiusEditor.Properties {
         
         [global::System.Configuration.ApplicationScopedSettingAttribute()]
         [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
-        [global::System.Configuration.DefaultSettingValueAttribute("186, 127, 40")]
+        [global::System.Configuration.DefaultSettingValueAttribute("186, 128, 40")]
         public global::System.Drawing.Color HashColorLandRoad {
             get {
                 return ((global::System.Drawing.Color)(this["HashColorLandRoad"]));
@@ -439,10 +439,10 @@ namespace MobiusEditor.Properties {
         
         [global::System.Configuration.ApplicationScopedSettingAttribute()]
         [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
-        [global::System.Configuration.DefaultSettingValueAttribute("192, 0, 192")]
-        public global::System.Drawing.Color OutlineColorWall {
+        [global::System.Configuration.DefaultSettingValueAttribute("0, 192, 0")]
+        public global::System.Drawing.Color OutlineColorTerrain {
             get {
-                return ((global::System.Drawing.Color)(this["OutlineColorWall"]));
+                return ((global::System.Drawing.Color)(this["OutlineColorTerrain"]));
             }
         }
         
@@ -457,10 +457,28 @@ namespace MobiusEditor.Properties {
         
         [global::System.Configuration.ApplicationScopedSettingAttribute()]
         [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
-        [global::System.Configuration.DefaultSettingValueAttribute("0, 192, 0")]
-        public global::System.Drawing.Color OutlineColorTerrain {
+        [global::System.Configuration.DefaultSettingValueAttribute("0, 192, 0, 192")]
+        public global::System.Drawing.Color OutlineColorWall {
             get {
-                return ((global::System.Drawing.Color)(this["OutlineColorTerrain"]));
+                return ((global::System.Drawing.Color)(this["OutlineColorWall"]));
+            }
+        }
+        
+        [global::System.Configuration.ApplicationScopedSettingAttribute()]
+        [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
+        [global::System.Configuration.DefaultSettingValueAttribute("0.5")]
+        public float PreviewAlpha {
+            get {
+                return ((float)(this["PreviewAlpha"]));
+            }
+        }
+        
+        [global::System.Configuration.ApplicationScopedSettingAttribute()]
+        [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
+        [global::System.Configuration.DefaultSettingValueAttribute("0.6")]
+        public float UnbuiltAlpha {
+            get {
+                return ((float)(this["UnbuiltAlpha"]));
             }
         }
         

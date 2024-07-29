@@ -692,14 +692,14 @@ namespace MobiusEditor.Tools
             Size size = selected.Size;
             bool multiCell = selected.IsMultiCell;
             Point placeLocation = location;
-            var basicSmudge = mockSmudge.Clone();
+            Smudge basicSmudge = mockSmudge.Clone();
             for (int y = 0; y < size.Height; ++y)
             {
                 for (int x = 0; x < size.Width; ++x)
                 {
                     placeLocation.X = location.X + x;
                     var mock = basicSmudge.Clone();
-                    mock.Tint = Color.FromArgb(128, Color.White);
+                    mock.IsPreview = true;
                     if (multiCell)
                     {
                         mock.Icon = icon++;

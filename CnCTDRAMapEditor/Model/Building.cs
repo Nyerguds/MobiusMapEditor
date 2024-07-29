@@ -62,12 +62,6 @@ namespace MobiusEditor.Model
 
         public ISet<int> BibCells { get; private set; } = new HashSet<int>();
 
-        private Color tint = Color.White;
-        public Color Tint
-        {
-            get => IsPrebuilt ? tint : Color.FromArgb((int)(tint.A * 0.60f), tint.R, tint.G, tint.B);
-            set => tint = value;
-        }
         public bool IsPreview { get; set; }
 
         public override string ToString()
@@ -93,8 +87,6 @@ namespace MobiusEditor.Model
             IsPrebuilt = other.IsPrebuilt;
             Sellable = other.Sellable;
             Rebuild = other.Rebuild;
-            // Copy internal value, not alpha-adjusted one.
-            Tint = other.tint;
         }
 
         public Dictionary<Point, Smudge> GetBib(Point location, List<SmudgeType> smudgeTypes)
@@ -116,7 +108,7 @@ namespace MobiusEditor.Model
                 for (var x = 0; x < bibType.Size.Width; ++x, ++icon)
                 {
                     Point loc = new Point(location.X + x, location.Y + Type.Size.Height + y - 1);
-                    Smudge bibCell = new Smudge(bibType, icon, this.Tint);
+                    Smudge bibCell = new Smudge(bibType, icon, this);
                     bibCells[loc] = bibCell;
                 }
             }

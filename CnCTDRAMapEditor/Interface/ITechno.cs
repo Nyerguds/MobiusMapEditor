@@ -33,7 +33,5 @@ namespace MobiusEditor.Interface
         string Trigger { get; set; }
         /// <summary>Direction that the object is facing.</summary>
         DirectionType Direction { get; set; }
-        /// <summary>Color modifier for drawing this object on the map. Generally used to tweak the alpha.</summary>
-        Color Tint { get; set; }
     }
 }

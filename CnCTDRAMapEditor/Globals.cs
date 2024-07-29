@@ -41,8 +41,9 @@ namespace MobiusEditor
             // Fine tuning
             ZoomToBoundsOnLoad = Properties.Settings.Default.ZoomToBoundsOnLoad;
             RememberToolData = Properties.Settings.Default.RememberToolData;
-            MapGridColor = Properties.Settings.Default.MapGridColor;
+
             MapBackColor = Color.FromArgb(255, Properties.Settings.Default.MapBackColor);
+            MapGridColor = Properties.Settings.Default.MapGridColor;
 
             HashColorTechnoPart = Properties.Settings.Default.HashColorTechnoPart;
             HashColorTechnoFull = Properties.Settings.Default.HashColorTechnoFull;
@@ -57,8 +58,10 @@ namespace MobiusEditor
             OutlineColorCrateWood = Properties.Settings.Default.OutlineColorCrateWood;
             OutlineColorCrateSteel = Properties.Settings.Default.OutlineColorCrateSteel;
             OutlineColorTerrain = Properties.Settings.Default.OutlineColorTerrain;
-            OutlineColorWall = Properties.Settings.Default.OutlineColorWall;
             OutlineColorSolidOverlay = Properties.Settings.Default.OutlineColorSolidOverlay;
+            OutlineColorWall = Properties.Settings.Default.OutlineColorWall;
+            PreviewAlphaFloat = Properties.Settings.Default.PreviewAlpha;
+            UnbuiltAlphaFloat = Properties.Settings.Default.UnbuiltAlpha;
 
             UndoRedoStackSize = Properties.Settings.Default.UndoRedoStackSize;
             MinimumClampSize = Properties.Settings.Default.MinimumClampSize;
@@ -129,8 +132,8 @@ namespace MobiusEditor
 
         public static bool ZoomToBoundsOnLoad { get; private set; }
         public static bool RememberToolData { get; private set; }
-        public static Color MapGridColor { get; private set; }
         public static Color MapBackColor { get; private set; }
+        public static Color MapGridColor { get; private set; }
 
         public static Color HashColorTechnoPart { get; private set; }
         public static Color HashColorTechnoFull { get; private set; }
@@ -145,8 +148,13 @@ namespace MobiusEditor
         public static Color OutlineColorCrateWood { get; private set; }
         public static Color OutlineColorCrateSteel { get; private set; }
         public static Color OutlineColorTerrain { get; private set; }
-        public static Color OutlineColorWall { get; private set; }
         public static Color OutlineColorSolidOverlay { get; private set; }
+        public static Color OutlineColorWall { get; private set; }
+
+        public static float PreviewAlphaFloat { get; private set; }
+        public static int PreviewAlphaInt => ((int)(PreviewAlphaFloat * 256)).Restrict(0, 255);
+        public static float UnbuiltAlphaFloat { get; private set; }
+        public static int UnbuiltAlphaInt => ((int)(UnbuiltAlphaFloat * 256)).Restrict(0, 255);
 
         private static double GetMinScale(){ return 1.0 / Math.Min(OriginalTileWidth, OriginalTileHeight); }
         public static double MapTileScale => Math.Max(GetMinScale(), Math.Abs(UseClassicFiles ? Properties.Settings.Default.MapScaleClassic : Properties.Settings.Default.MapScale));

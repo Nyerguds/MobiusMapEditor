@@ -2772,7 +2772,7 @@ namespace MobiusEditor
             // Extra indicators
             RemoveLayerIfUnchecked(ref layers, viewExtraIndicatorsMapSymmetryMenuItem.Checked, MapLayerFlag.MapSymmetry);
             RemoveLayerIfUnchecked(ref layers, viewExtraIndicatorsMapGridMenuItem.Checked, MapLayerFlag.MapGrid);
-            RemoveLayerIfUnchecked(ref layers, viewExtraIndicatorsTerrainTypesMenuItem.Checked, MapLayerFlag.LandTypes);
+            RemoveLayerIfUnchecked(ref layers, viewExtraIndicatorsLandTypesMenuItem.Checked, MapLayerFlag.LandTypes);
             RemoveLayerIfUnchecked(ref layers, viewExtraIndicatorsPlacedObjectsMenuItem.Checked, MapLayerFlag.TechnoOccupancy);
             RemoveLayerIfUnchecked(ref layers, viewExtraIndicatorsWaypointRevealRadiusMenuItem.Checked, MapLayerFlag.WaypointRadius);
             RemoveLayerIfUnchecked(ref layers, viewExtraIndicatorsEffectAreaRadiusMenuItem.Checked, MapLayerFlag.EffectRadius);
