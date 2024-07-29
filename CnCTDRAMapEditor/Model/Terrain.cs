@@ -34,6 +34,8 @@ namespace MobiusEditor.Model
 
         public bool[,] OccupyMask => Type.OccupyMask;
         public bool[,] BaseOccupyMask => Type.OccupyMask;
+        public int ZOrder => Type.ZOrder;
+        public int DrawOrderCache { get; set; }
 
         private string trigger = Model.Trigger.None;
         public string Trigger { get => trigger; set => SetField(ref trigger, value); }
@@ -69,6 +71,7 @@ namespace MobiusEditor.Model
             Type = other.Type;
             Strength = other.Strength;
             Trigger = other.Trigger;
+            DrawOrderCache = other.DrawOrderCache;
         }
 
         protected bool SetField<T>(ref T field, T value, [CallerMemberName] string propertyName = null)

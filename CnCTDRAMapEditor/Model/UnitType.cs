@@ -161,6 +161,7 @@ namespace MobiusEditor.Model
         public bool[,] OpaqueMask => new bool[1, 1] { { true } };
         public bool[,] OccupyMask => new bool[1, 1] { { true } };
         public bool[,] BaseOccupyMask => new bool[1, 1] { { true } };
+        public int ZOrder => Globals.ZOrderDefault;
         public string OwnerHouse { get; private set; }
         public abstract bool IsGroundUnit { get; }
         public abstract bool IsAircraft { get; }

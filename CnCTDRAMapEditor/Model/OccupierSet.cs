@@ -102,7 +102,7 @@ namespace MobiusEditor.Model
                 return false;
             }
 
-            var occupyPoints = OccupierSet.GetOccupyPoints(location, occupyMask).ToArray();
+            Point[] occupyPoints = OccupierSet.GetOccupyPoints(location, occupyMask).ToArray();
             return !occupyPoints.Any(p => !Contains(p) || (this[p] != null));
         }
 

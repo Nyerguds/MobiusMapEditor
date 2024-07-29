@@ -32,6 +32,7 @@ namespace MobiusEditor.Model
         public bool[,] OccupyMask { get; private set; }
         public Size Size => this.OccupyMask.GetDimensions();
         public bool[,] BaseOccupyMask => OccupyMask;
+        public int ZOrder => Globals.ZOrderDefault;
         public bool ExistsInTheater { get; private set; }
         public int DisplayIcon { get; private set; }
         public LandType PlacementLand { get; private set; }

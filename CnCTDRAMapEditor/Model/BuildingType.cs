@@ -121,9 +121,6 @@ namespace MobiusEditor.Model
         /// </summary>
         public int ZOrder { get; private set; }
         private string nameId;
-        public static Int32 ZOrderDefault = 10;
-        public static Int32 ZOrderPaved = 5;
-        public static Int32 ZOrderFlat = 0;
 
         public BuildingType(int id, string name, string textId, int powerProd, int powerUse, int storage, int width, int height, string occupyMask, string ownerHouse, string factoryOverlay, int frameOffset, String graphicsSource, BuildingTypeFlag flag, int zOrder)
         {
@@ -145,7 +142,7 @@ namespace MobiusEditor.Model
         }
 
         public BuildingType(int id, string name, string textId, int powerProd, int powerUse, int storage, int width, int height, string occupyMask, string ownerHouse, string factoryOverlay, int frameOffset, String graphicsSource, BuildingTypeFlag flag)
-            : this(id, name, textId, powerProd, powerUse, storage, width, height, occupyMask, ownerHouse, factoryOverlay, frameOffset, graphicsSource, flag, ZOrderDefault)
+            : this(id, name, textId, powerProd, powerUse, storage, width, height, occupyMask, ownerHouse, factoryOverlay, frameOffset, graphicsSource, flag, Globals.ZOrderDefault)
         {
         }
 

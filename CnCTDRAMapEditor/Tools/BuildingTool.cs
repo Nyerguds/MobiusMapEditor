@@ -550,7 +550,7 @@ namespace MobiusEditor.Tools
                 {
                     SmudgeTool.RestoreNearbySmudge(map, allBibPoints, refreshList);
                 }
-                if (map.Technos.CanAdd(newLocation, toMove, toMove.Type.BaseOccupyMask) && map.Buildings.Add(newLocation, toMove))
+                if (map.Buildings.Add(newLocation, toMove)) // && map.Technos.CanAdd(newLocation, toMove, toMove.Type.BaseOccupyMask))
                 {
                     InvalidateBuildingArea(mapPanel, map, toMove);
                 }
@@ -583,7 +583,7 @@ namespace MobiusEditor.Tools
             selectedBuildingPivot = Point.Empty;
             startedDragging = false;
             Building building = mockBuilding.Clone();
-            if (!map.Technos.CanAdd(location, building, building.Type.BaseOccupyMask))
+            if (!map.Buildings.CanAdd(location, building)) // if (!map.Technos.CanAdd(location, building, building.Type.BaseOccupyMask))
             {
                 return;
             }
@@ -1041,7 +1041,7 @@ namespace MobiusEditor.Tools
             Point location = navigationWidget.MouseCell;
             Building building = mockBuilding.Clone();
             building.IsPreview = true;
-            if (previewMap.Technos.CanAdd(location, building, building.Type.BaseOccupyMask) && previewMap.Buildings.Add(location, building))
+            if (previewMap.Buildings.Add(location, building)) // && previewMap.Technos.CanAdd(location, building, building.Type.BaseOccupyMask)
             {
                 if (building.Type.IsWall)
                 {
@@ -1073,12 +1073,12 @@ namespace MobiusEditor.Tools
             if (placementMode && selectedType != null)
             {
                 List<Point> occupyPoints = OccupierSet.GetOccupyPoints(location, selectedType.BaseOccupyMask).ToList();
-                Boolean isCurrent = map.Technos.OfType<Building>().Any(lo => lo.Location == location && lo.Occupier.Type == selectedType);
+                Boolean isCurrent = map.Buildings.OfType<Building>().Any(lo => lo.Location == location && lo.Occupier.Type == selectedType);
                 // If there is already a building of this exact type placed on the current location, don't render anything extra.
                 if (!isCurrent)
                 {
                     // List overlapped points to indicate obstructions.
-                    highlightPoints = occupyPoints.Where(p => map.Technos[p] != null || (Globals.BlockingBibs && (map.Smudge[p]?.Type.IsAutoBib ?? false)));
+                    highlightPoints = occupyPoints.Where(p => map.Buildings[p] != null || (Globals.BlockingBibs && (map.Smudge[p]?.Type.IsAutoBib ?? false)));
                     // Store info on where to render backup preview outline.
                     place = (location, mockBuilding).Yield();
                 }
@@ -1089,7 +1089,7 @@ namespace MobiusEditor.Tools
                 MapRenderer.RenderAllOccupierBoundsGreen(graphics, boundRenderCells, Globals.MapTileSize, place);
             }
             // Render thin red obstructed cells of all other buildings.
-            MapRenderer.RenderAllOccupierCellsRed(graphics, boundRenderCells, Globals.MapTileSize, map.Technos.OfType<Building>());
+            MapRenderer.RenderAllOccupierCellsRed(graphics, boundRenderCells, Globals.MapTileSize, map.Buildings.OfType<Building>());
             // Render thin blue obstructed cells of preview building.
             if (place != null)
             {
@@ -1109,7 +1109,7 @@ namespace MobiusEditor.Tools
             }
             else if (placementMode)
             {
-                (Point p, Building b) = previewMap.Technos.OfType<Building>().Where(t => t.Occupier.IsPreview).FirstOrDefault();
+                (Point p, Building b) = previewMap.Buildings.OfType<Building>().Where(t => t.Occupier.IsPreview).FirstOrDefault();
                 if (b != null)
                 {
                     selected = b;

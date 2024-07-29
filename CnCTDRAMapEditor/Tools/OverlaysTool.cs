@@ -222,7 +222,7 @@ namespace MobiusEditor.Tools
             }
             Overlay overlay = new Overlay { Type = selected, Icon = 0 };
             Overlay cur = map.Overlay[location];
-            if (selected.IsSolid && (!map.Technos.CanAdd(cell, overlay) || !map.Buildings.CanAdd(cell, overlay)))
+            if (selected.IsSolid && !map.Buildings.CanAdd(cell, overlay)) // && (... || !map.Technos.CanAdd(cell, overlay)))
             {
                 return;
             }
@@ -457,7 +457,7 @@ namespace MobiusEditor.Tools
             Overlay overlay = new Overlay { Type = selected, Icon = 0, IsPreview = true };
             if (onCell == null || Map.IsIgnorableOverlay(onCell))
             {
-                if (selected.IsSolid && (!previewMap.Technos.CanAdd(cell, overlay) || (!previewMap.Buildings.CanAdd(cell, overlay))))
+                if (selected.IsSolid && !previewMap.Buildings.CanAdd(cell, overlay)) // && (... || !previewMap.Technos.CanAdd(cell, overlay))))
                 {
                     navigationWidget.MouseoverSize = new Size(1, 1);
                     return;

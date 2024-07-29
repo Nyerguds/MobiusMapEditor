@@ -705,6 +705,13 @@ namespace MobiusEditor.Model
                         this.Overlappers.Add(location, techno as ICellOverlapper);
                     }
                 }
+                foreach ((Point location, ICellOccupier bld) in this.Buildings)
+                {
+                    if (bld is ICellOverlapper)
+                    {
+                        this.Overlappers.Add(location, bld as ICellOverlapper);
+                    }
+                }
             }
             this.invalidateLayers.Clear();
             this.invalidateOverlappers = false;
@@ -2028,9 +2035,21 @@ namespace MobiusEditor.Model
 
         private void Buildings_OccupierAdded(object sender, OccupierAddedEventArgs<ICellOccupier> e)
         {
+            if (e.Occupier is ICellOverlapper overlapper)
+            {
+                //Debug.WriteLine("update count is " + this.updateCount + "; " + (this.updateCount > 0 ? "not " : string.Empty) + "adding building " + overlapper.ToString() + " to " + (this.ForPreview ? "preview " : string.Empty) + "map.");
+                if (this.updateCount == 0)
+                {
+                    this.Overlappers.Add(e.Location, overlapper);
+                }
+                else
+                {
+                    this.invalidateOverlappers = true;
+                }
+            }
             if (e.Occupier is Building building)
             {
-                this.Technos.Add(e.Location, e.Occupier, building.Type.BaseOccupyMask);
+                //this.Technos.Add(e.Location, e.Occupier, building.Type.BaseOccupyMask);
                 this.AddBibs(e.Location, building);
                 if (building.Type.IsWall)
                 {
@@ -2041,7 +2060,7 @@ namespace MobiusEditor.Model
             }
             else
             {
-                this.Technos.Add(e.Location, e.Occupier);
+                //this.Technos.Add(e.Location, e.Occupier);
             }
         }
 
@@ -2057,7 +2076,18 @@ namespace MobiusEditor.Model
                     this.UpdateWallOverlays(toRefresh.Points().ToHashSet());
                 }
             }
-            this.Technos.Remove(e.Occupier);
+            //this.Technos.Remove(e.Occupier);
+            if (e.Occupier is ICellOverlapper overlapper)
+            {
+                if (this.updateCount == 0)
+                {
+                    this.Overlappers.Remove(overlapper);
+                }
+                else
+                {
+                    this.invalidateOverlappers = true;
+                }
+            }
         }
 
         public void UpdateWaypoints()

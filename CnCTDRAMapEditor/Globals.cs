@@ -98,6 +98,10 @@ namespace MobiusEditor
         public const int PixelWidth = 24;
         public const int PixelHeight = 24;
 
+        public static int ZOrderDefault = 10;
+        public static int ZOrderPaved = 5;
+        public static int ZOrderFlat = 1;
+        public static int ZOrderFloor = 0;
 
         public static bool UseClassicFiles { get; set; }
         public static string EditorLanguage { get; set; }

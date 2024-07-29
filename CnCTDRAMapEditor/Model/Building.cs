@@ -34,6 +34,8 @@ namespace MobiusEditor.Model
         public bool[,] OpaqueMask => Type.OpaqueMask;
         public bool[,] OccupyMask => Type.OccupyMask;
         public bool[,] BaseOccupyMask => Type.BaseOccupyMask;
+        public int ZOrder => Type.ZOrder;
+        public int DrawOrderCache { get; set; }
         public Size Size => type.Size;
 
         private HouseType house;
@@ -87,6 +89,7 @@ namespace MobiusEditor.Model
             IsPrebuilt = other.IsPrebuilt;
             Sellable = other.Sellable;
             Rebuild = other.Rebuild;
+            DrawOrderCache = other.DrawOrderCache;
         }
 
         public Dictionary<Point, Smudge> GetBib(Point location, List<SmudgeType> smudgeTypes)

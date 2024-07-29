@@ -39,7 +39,7 @@ namespace MobiusEditor.TiberianDawn
         public static readonly BuildingType Barracks = new BuildingType(15, "pyle", "TEXT_STRUCTURE_TITLE_GDI_BARRACKS", 0, 20, 2, 2, "11 00", "Goodguy", BuildingTypeFlag.Bib);
         // Added additional string ID for string "Oil Tanker"; was missing entirely.
         public static readonly BuildingType Tanker = new BuildingType(16, "arco", "TEXT_STRUCTURE_TITLE_OIL_TANKER", 0, 0, 2, 1, null, "Neutral");
-        public static readonly BuildingType Repair = new BuildingType(17, "fix", "TEXT_STRUCTURE_TITLE_GDI_REPAIR_FACILITY", 0, 30, 3, 3, "010 111 010", "Goodguy", BuildingTypeFlag.Bib, BuildingType.ZOrderPaved);
+        public static readonly BuildingType Repair = new BuildingType(17, "fix", "TEXT_STRUCTURE_TITLE_GDI_REPAIR_FACILITY", 0, 30, 3, 3, "010 111 010", "Goodguy", BuildingTypeFlag.Bib, Globals.ZOrderPaved);
         public static readonly BuildingType BioLab = new BuildingType(18, "bio", "TEXT_UNIT_TITLE_BIO", 0, 40, 100, 2, 2, null, "Badguy", BuildingTypeFlag.Bib);
         public static readonly BuildingType Hand = new BuildingType(19, "hand", "TEXT_STRUCTURE_TITLE_NOD_HAND_OF_NOD", 0, 20, 2, 3, "00 11 01", "Badguy", BuildingTypeFlag.Bib);
         public static readonly BuildingType Temple = new BuildingType(20, "tmpl", "TEXT_STRUCTURE_TITLE_NOD_TEMPLE_OF_NOD", 0, 150, 3, 3, "000 111 111", "Badguy", BuildingTypeFlag.Bib);
@@ -85,7 +85,7 @@ namespace MobiusEditor.TiberianDawn
         public static readonly BuildingType V34 = new BuildingType(56, "v34", "TEXT_STRUCTURE_TITLE_CIV31", 0, 0, 1, 1, null, "Neutral", BuildingTypeFlag.TheaterDependent);
         public static readonly BuildingType V35 = new BuildingType(57, "v35", "TEXT_STRUCTURE_TITLE_CIV32", 0, 0, 1, 1, null, "Neutral", BuildingTypeFlag.TheaterDependent);
         public static readonly BuildingType V36 = new BuildingType(58, "v36", "TEXT_STRUCTURE_TITLE_CIV33", 0, 0, 1, 1, null, "Neutral", BuildingTypeFlag.TheaterDependent);
-        public static readonly BuildingType V37 = new BuildingType(59, "v37", "TEXT_STRUCTURE_TITLE_CIV34", 0, 0, 4, 2, "0111 0111", "Neutral", BuildingTypeFlag.TheaterDependent, BuildingType.ZOrderFlat);
+        public static readonly BuildingType V37 = new BuildingType(59, "v37", "TEXT_STRUCTURE_TITLE_CIV34", 0, 0, 4, 2, "0111 0111", "Neutral", BuildingTypeFlag.TheaterDependent, Globals.ZOrderFlat);
 
         public static readonly BuildingType Sandbag = new BuildingType(60, "sbag", "TEXT_STRUCTURE_TITLE_GDI_SANDBAGS", 0, 0, 1, 1, null, "Goodguy", BuildingTypeFlag.Wall | BuildingTypeFlag.NoRemap);
         public static readonly BuildingType Cyclone = new BuildingType(61, "cycl", "TEXT_STRUCTURE_TITLE_GDI_CHAIN_LINK", 0, 0, 1, 1, null, "Goodguy", BuildingTypeFlag.Wall | BuildingTypeFlag.NoRemap);

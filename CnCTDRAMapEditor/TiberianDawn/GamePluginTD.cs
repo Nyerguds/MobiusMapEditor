@@ -1806,7 +1806,7 @@ namespace MobiusEditor.TiberianDawn
                     modified = true;
                     newBld.House = defHouse;
                 }
-                if (!Map.Buildings.CanAdd(cell, newBld) || !Map.Technos.CanAdd(cell, newBld, newBld.Type.BaseOccupyMask))
+                if (!Map.Buildings.CanAdd(cell, newBld)) // || !Map.Technos.CanAdd(cell, newBld, newBld.Type.BaseOccupyMask))
                 {
                     Map.CheckBuildingBlockingCell(cell, buildingType, errors, ref modified);
                     continue;
@@ -1934,7 +1934,7 @@ namespace MobiusEditor.TiberianDawn
                     BasePriority = curPriorityVal++,
                     IsPrebuilt = false
                 };
-                if (!Map.Buildings.CanAdd(location, toRebuild) || !Map.Technos.CanAdd(location, toRebuild, toRebuild.Type.BaseOccupyMask))
+                if (!Map.Buildings.CanAdd(location, toRebuild)) // || !Map.Technos.CanAdd(location, toRebuild, toRebuild.Type.BaseOccupyMask))
                 {
                     Map.CheckBuildingBlockingCell(cell, buildingType, errors, ref modified, key);
                     continue;

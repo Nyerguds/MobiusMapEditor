@@ -13,16 +13,6 @@
 // GNU General Public License along with permitted additional restrictions
 // with this program. If not, see https://github.com/electronicarts/CnC_Remastered_Collection
 
-// The Y-sorting in the actual game engine is occasionally quite odd and unintuitive, and has edge
-// cases in tree and building overlap which I couldn't get right. The "Better Y-Rendering" code
-// sorts units and buildings by the center-point of their occupied cells, and renders objects from
-// right to left, so right-side shadows on trees overlap stuff to the right of them as expected.
-#define BetterYRendering
-
-// Enabling this will make it ignore the tree positions from the game source code, and instead
-// apply the same "center-point of occupied cells" logic used by the "Better Y-Rendering" code.
-//#define IgnoreTreePositions
-
 using MobiusEditor.Interface;
 using MobiusEditor.Model;
 using MobiusEditor.Utility;
@@ -59,7 +49,7 @@ namespace MobiusEditor.Render
         }
 
         public RenderInfo(Point renderPosition, Action<Graphics> paintAction, ITechno paintedObject)
-            :this(renderPosition, paintAction, 10, paintedObject)
+            :this(renderPosition, paintAction, Globals.ZOrderDefault, paintedObject)
         {
         }
     }
@@ -393,13 +383,11 @@ namespace MobiusEditor.Render
             }
             // Paint all the rest
             List<RenderInfo> validRenders = overlappingRenderList.Where(obj => obj.RenderedObject != null).ToList();
-#if BetterYRendering
+            int paintOrder = 0;
             foreach (RenderInfo info in validRenders.OrderBy(obj => obj.ZOrder).ThenBy(obj => obj.RenderBasePoint.Y).ThenByDescending(obj => obj.RenderBasePoint.X))
-#else
-            foreach (RenderInfo info in validRenders.OrderBy(obj => obj.ZOrder).ThenBy(obj => obj.RenderBasePoint.Y).ThenBy(obj => obj.RenderBasePoint.X))
-#endif
             {
                 info.RenderAction(graphics);
+                info.RenderedObject.DrawOrderCache = paintOrder++;
             }
             if (Globals.CratesOnTop && (layers & MapLayerFlag.Overlay) != MapLayerFlag.None)
             {
@@ -420,42 +408,44 @@ namespace MobiusEditor.Render
                 Dictionary<int, int> flagOverlapPoints = new Dictionary<int, int>();
                 HashSet<int> handledPoints = new HashSet<int>();
                 ITeamColor[] flagColors = map.FlagColors;
-                bool isSp = map.BasicSection.SoloMission;
-                int offset = 0;
+                bool soloMission = map.BasicSection.SoloMission;
                 bool previewIsFlag = map.Waypoints.Where(w => w.IsPreview && Waypoint.GetMpIdFromFlag(w.Flag) != -1).Any();
-                int firstFlag = -1;
-                int lastFlag = 0;
-                for (int i = 0; i < map.Waypoints.Length; i++)
-                {
-                    Waypoint waypoint = map.Waypoints[i];
-                    if (waypoint.IsPreview)
-                    {
-                        continue;
-                    }
-                    int mpId = Waypoint.GetMpIdFromFlag(map.Waypoints[i].Flag);
-                    if (mpId != -1)
-                    {
-                        if (firstFlag == -1)
-                        {
-                            firstFlag = i;
-                        }
-                        lastFlag = i;
-                    }
-                }
-                // This logic is kind of dirty; it relies on all flag points being in consecutive order. But without that, the preview logic doesn't work.
+                int lastFlag = -1;
                 float wpAlpha = 0.5f;
-                for (int i = 0; i < firstFlag; i++)
+                if (!soloMission)
                 {
-                    Waypoint waypoint = map.Waypoints[i];
-                    if (!waypoint.Point.HasValue || (locations != null && !locations.Contains(waypoint.Point.Value))
-                        || !map.Metrics.GetCell(waypoint.Point.Value, out int cell) || handledPoints.Contains(cell))
+                    int firstFlag = -1;
+                    for (int i = 0; i < map.Waypoints.Length; i++)
                     {
-                        continue;
+                        Waypoint waypoint = map.Waypoints[i];
+                        if (waypoint.IsPreview)
+                        {
+                            continue;
+                        }
+                        int mpId = Waypoint.GetMpIdFromFlag(map.Waypoints[i].Flag);
+                        if (mpId != -1)
+                        {
+                            if (firstFlag == -1)
+                            {
+                                firstFlag = i;
+                            }
+                            lastFlag = i;
+                        }
                     }
-                    handledPoints.Add(cell);
-                    RenderWaypoint(gameInfo, isSp, tileSize, flagColors, waypoint, wpAlpha, offset).Item2(graphics);
+                    // This logic is kind of dirty; it relies on all flag points being in consecutive order. But without that, the preview logic doesn't work.
+                    for (int i = 0; i < firstFlag; i++)
+                    {
+                        Waypoint waypoint = map.Waypoints[i];
+                        if (!waypoint.Point.HasValue || (locations != null && !locations.Contains(waypoint.Point.Value))
+                            || !map.Metrics.GetCell(waypoint.Point.Value, out int cell) || handledPoints.Contains(cell))
+                        {
+                            continue;
+                        }
+                        handledPoints.Add(cell);
+                        RenderWaypoint(gameInfo, soloMission, tileSize, flagColors, waypoint, wpAlpha, 0).Item2(graphics);
+                    }
+                    RenderWaypointFlags(graphics, gameInfo, map, map.Metrics.Bounds, tileSize);
                 }
-                RenderWaypointFlags(graphics, gameInfo, map, map.Metrics.Bounds, tileSize);
                 for (int i = lastFlag + 1; i < map.Waypoints.Length; i++)
                 {
                     Waypoint waypoint = map.Waypoints[i];
@@ -465,7 +455,7 @@ namespace MobiusEditor.Render
                         continue;
                     }
                     handledPoints.Add(cell);
-                    RenderWaypoint(gameInfo, isSp, tileSize, flagColors, waypoint, wpAlpha, offset).Item2(graphics);
+                    RenderWaypoint(gameInfo, soloMission, tileSize, flagColors, waypoint, wpAlpha, 0).Item2(graphics);
                 }
             }
             if (disposeCacheManager)
@@ -1276,11 +1266,7 @@ namespace MobiusEditor.Render
 
         private static Point GetVehicleRenderPoint()
         {
-#if BetterYRendering
             return new Point(Globals.PixelWidth / 2, Globals.PixelHeight / 2);
-#else
-            return new Point(Globals.PixelWidth / 2, Globals.PixelHeight - 1);
-#endif
         }
 
         private static Point GetInfantryRenderPoint(InfantryStoppingType ist)
@@ -1290,23 +1276,13 @@ namespace MobiusEditor.Render
 
         private static Point GetTerrainRenderPoint(Terrain terrain)
         {
-#if IgnoreTreePositions
-            return GeneralUtils.GetOccupiedCenter(terrain.Type.OccupyMask, new Size(Globals.PixelWidth, Globals.PixelHeight));
-#else
             return terrain.Type.CenterPoint;
-#endif
         }
 
         private static Point GetBuildingRenderPoint(Building building)
         {
-#if BetterYRendering
             return GeneralUtils.GetOccupiedCenter(building.Type.BaseOccupyMask, new Size(Globals.PixelWidth, Globals.PixelHeight));
-#else
-            return new Point(building.Type.BaseOccupyBounds.Width * Globals.PixelWidth / 2,
-                             (building.Type.BaseOccupyBounds.Height - 1) / 2 * Globals.PixelHeight + Globals.PixelHeight - 1);
-#endif
         }
-
 
         public static void RenderAllBoundsFromCell<T>(Graphics graphics, Rectangle visibleCells, Size tileSize, IEnumerable<(int, T)> renderList, CellMetrics metrics)
         {
@@ -1463,8 +1439,8 @@ namespace MobiusEditor.Render
                     continue;
                 }
                 // Solid overlay should never exist on cells with units.
-                bool ignoreUnits = overlay.Type.IsSolid || overlay.Type.IsWall;
-                if (!visibleCells.Contains(location) || (onlyIfBehindObjects && !IsOverlapped(map, location, ignoreUnits, false, null, null)))
+                bool unitsAlwaysOverlap = !overlay.Type.IsSolid && !overlay.Type.IsWall;
+                if (!visibleCells.Contains(location) || (onlyIfBehindObjects && !IsOverlapped(map, location, unitsAlwaysOverlap, null, null, location, -1)))
                 {
                     continue;
                 }
@@ -1561,7 +1537,7 @@ namespace MobiusEditor.Render
                     }
                     if (onlyIfBehindObjects)
                     {
-                        if (!IsOverlapped(map, location, true, true, ist, infantryGroup))
+                        if (!IsOverlapped(map, location, false, ist, infantryGroup, location, infantryGroup.DrawOrderCache))
                         {
                             continue;
                         }
@@ -1642,6 +1618,7 @@ namespace MobiusEditor.Render
                 // This is a visibility check; check cells that are deemed "visible".
                 bool[,] opaqueMask = placedObj.OpaqueMask;
                 bool[,] occupyMask = placedObj.OccupyMask;
+                int paintOrder = placedObj.DrawOrderCache;
                 int maskY = opaqueMask == null ? 0 : opaqueMask.GetLength(0);
                 int maskX = opaqueMask == null ? 0 : opaqueMask.GetLength(1);
                 // If not in currently viewed area, ignore.
@@ -1653,17 +1630,18 @@ namespace MobiusEditor.Render
                 if (onlyIfBehindObjects)
                 {
                     // Select actual map points for all visible points in opaqueMask
-                    int opaqueNr = 0;
+                    bool allOpaque = true;
                     Point[] opaquePoints = Enumerable.Range(0, maskY).SelectMany(nrY => Enumerable.Range(0, maskX).Select(nrX => new Point(nrX, nrY)))
                         .Where(pt => opaqueMask[pt.Y, pt.X]).Select(pt => new Point(objLocation.X + pt.X, objLocation.Y + pt.Y)).ToArray();
                     foreach (Point opaquePoint in opaquePoints)
                     {
-                        if (IsOverlapped(map, opaquePoint, true, true, null, placedObj))
+                        if (!IsOverlapped(map, opaquePoint, false, null, placedObj, objLocation, paintOrder))
                         {
-                            opaqueNr++;
+                            allOpaque = false;
+                            break;
                         }
                     }
-                    if (opaqueNr < opaquePoints.Length)
+                    if (!allOpaque)
                     {
                         continue;
                     }
@@ -1714,51 +1692,35 @@ namespace MobiusEditor.Render
             }
         }
 
-        private static bool IsOverlapped(Map map, Point location, bool ignoreUnits, bool ignoreBelowRenderY, InfantryStoppingType? ist, ICellOverlapper objectToCheck)
-        {
-#if BetterYRendering
-            return IsObjectOverlapped(map, location, ignoreUnits, ignoreBelowRenderY, ist, objectToCheck);
-#else
-            return IsObjectOverlapped(map, location, ignoreUnits, false, null, objectToCheck);
-#endif
-        }
-
         /// <summary>
         /// Check if an object is considered overlapped by something on the map.
         /// </summary>
-        /// <param name="map">Map to check on</param>
-        /// <param name="location">Location to check</param>
-        /// <param name="ignoreUnits">True to ignore unit placement.</param>
-        /// <param name="ignoreBelowRenderY">Only return true if the overlapper's Y-offset is lower than that of the overlapped object.</param>
+        /// <param name="map">Map to check on.</param>
+        /// <param name="location">Location to check for overlap.</param>
+        /// <param name="unitsAlwaysOverlap">True to immediately return true if the cell is occupied by units.</param>
         /// <param name="ist">When filled in, the overlapper is treated as infantry on that location.</param>
         /// <param name="objectToCheck">Object for which overlap is being checked. This object is automatically ignored in the objects it loops over to check for overlaps.</param>
+        /// <param name="objectLocation">Object location on the map.</param>
         /// <returns>true if the cell is considered filled enough to overlap things.</returns>
-        private static bool IsObjectOverlapped(Map map, Point location, bool ignoreUnits, bool ignoreBelowRenderY, InfantryStoppingType? ist, ICellOverlapper objectToCheck)
+        private static bool IsOverlapped(Map map, Point location, bool unitsAlwaysOverlap, InfantryStoppingType? ist,
+            ICellOverlapper objectToCheck, Point objectLocation, int objectPaintOrder)
         {
             ICellOccupier techno = map.Technos[location];
             // Single-cell occupier. Always pass.
-            if (!ignoreUnits && (techno is Unit || techno is InfantryGroup))
+            if (unitsAlwaysOverlap && (techno is Unit || techno is InfantryGroup) && techno != objectToCheck)
             {
                 return true;
             }
-            Point centerPoint = GetVehicleRenderPoint();
-            if (ignoreBelowRenderY && objectToCheck != null)
-            {
-                centerPoint = GetRenderPoint(objectToCheck, ist);
-            }
+            Point centerPoint = GetRenderPoint(objectToCheck, ist);
             // Logic for multi-cell occupiers; buildings and terrain.
             // Return true if either an occupied cell, or overlayed by graphics deemed opaque.
-            ISet<ICellOverlapper> technos = map.Overlappers.OverlappersAt(location);
-            if (technos.Count == 0)
+            ICellOverlapper[] technos = map.Overlappers.OverlappersAt(location).Where(ov => !ReferenceEquals(ov,objectToCheck)).ToArray();
+            if (technos.Length == 0)
             {
                 return false;
             }
             foreach (ICellOverlapper ovl in technos)
             {
-                if (ovl == objectToCheck)
-                {
-                    continue;
-                }
                 ICellOccupier occ = ovl as ICellOccupier;
                 if (occ == null)
                 {
@@ -1767,20 +1729,16 @@ namespace MobiusEditor.Render
                 bool[,] opaqueMask = ovl.OpaqueMask;
                 int maskY = opaqueMask == null ? 0 : opaqueMask.GetLength(0);
                 int maskX = opaqueMask == null ? 0 : opaqueMask.GetLength(1);
-                Point? pt = map.Technos[occ];
+                Point? pt = map.Technos[occ] ?? map.Buildings[occ];
                 if (!pt.HasValue)
                 {
                     continue;
                 }
-                if (ignoreBelowRenderY)
+                // Object we're comparing with was drawn before the current one, so it can't possible overlap it.
+                // This caching allows extremely easy checks on overlap without much processing.
+                if (ovl is ITechno paintedObj && paintedObj.DrawOrderCache < objectPaintOrder)
                 {
-                    int technoYOnOverlapper = (location.Y - pt.Value.Y) * Globals.PixelHeight + centerPoint.Y;
-                    int overlapperYValue = GetRenderPoint(ovl, null).Y;
-                    // Techno's Y is further down than overlapper's Y, so techno is drawn over overlapper.
-                    if (technoYOnOverlapper > overlapperYValue)
-                    {
-                        continue;
-                    }
+                    continue;
                 }
                 // Get list of points, find current point in the list.
                 Rectangle boundsRect = new Rectangle(pt.Value, new Size(maskX, maskY));
@@ -1790,14 +1748,11 @@ namespace MobiusEditor.Render
                 {
                     continue;
                 }
-                // For buildings, need to specifically take the mask without bib attached.
-                bool[,] occupyMask = occ.BaseOccupyMask;
                 // Trick to convert 2-dimensional arrays to linear format.
-                bool[] occupyArr = occupyMask.Cast<bool>().ToArray();
                 bool[] opaqueArr = opaqueMask.Cast<bool>().ToArray();
-                if (occupyArr[index] || opaqueArr[index])
+                if (opaqueArr[index])
                 {
-                    // If either part of the occupied cells, or obscured from view by graphics, return true.
+                    // If obscured from view by graphics, return true.
                     return true;
                 }
             }

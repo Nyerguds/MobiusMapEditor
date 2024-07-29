@@ -2185,7 +2185,7 @@ namespace MobiusEditor.RedAlert
                     modified = true;
                     newBld.House = defHouse;
                 }
-                if (!Map.Buildings.CanAdd(cell, newBld) || !Map.Technos.CanAdd(cell, newBld, newBld.Type.BaseOccupyMask))
+                if (!Map.Buildings.CanAdd(cell, newBld)) // || !Map.Technos.CanAdd(cell, newBld, newBld.Type.BaseOccupyMask))
                 {
                     Map.CheckBuildingBlockingCell(cell, buildingType, errors, ref modified);
                     continue;

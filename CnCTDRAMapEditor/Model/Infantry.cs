@@ -58,6 +58,7 @@ namespace MobiusEditor.Model
         public string Trigger { get => trigger; set => SetField(ref trigger, value); }
 
         public bool IsPreview { get; set; }
+        public int DrawOrderCache { get; set; }
 
         public Infantry(InfantryGroup infantryGroup)
         {
@@ -84,6 +85,7 @@ namespace MobiusEditor.Model
             Direction = other.Direction;
             Trigger = other.Trigger;
             Mission = other.Mission;
+            DrawOrderCache = other.DrawOrderCache;
         }
 
         protected bool SetField<T>(ref T field, T value, [CallerMemberName] string propertyName = null)
@@ -120,9 +122,13 @@ namespace MobiusEditor.Model
         private static readonly Point[] stoppingLocations = new Point[Globals.NumInfantryStops];
 
         public Rectangle OverlapBounds => new Rectangle(-1, -1, 3, 3);
-        public bool[,] OpaqueMask => new bool[1, 1] { { true } };
+        // Infantry groups never cover enough to be seen as obstructing view of what is under them.
+        // Note that crates are a special case; they always see cells occupied by units as a reason to show an outline.
+        public bool[,] OpaqueMask => new bool[1, 1] { { false } };
         public bool[,] OccupyMask => new bool[1, 1] { { true } };
         public bool[,] BaseOccupyMask => new bool[1, 1] { { true } };
+        public int ZOrder => Globals.ZOrderDefault;
+        public int DrawOrderCache { get; set; }
 
         public readonly Infantry[] Infantry = new Infantry[Globals.NumInfantryStops];
 
