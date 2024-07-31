@@ -137,7 +137,7 @@ namespace MobiusEditor.Model
             using (Graphics g = Graphics.FromImage(th))
             {
                 bool isSmooth = Globals.PreviewSmoothScale;
-                MapRenderer.SetRenderSettings(g, false);
+                MapRenderer.SetRenderSettings(g, isSmooth);
                 for (int y = 0; y < this.Size.Height; y++)
                 {
                     for (int x = 0; x < this.Size.Width; x++)

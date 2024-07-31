@@ -328,6 +328,7 @@
       <DependentUpon>GameInstallationPathForm.cs</DependentUpon>
     </Compile>
     <Compile Include="Globals.cs" />
+    <Compile Include="Model\BuildingSection.cs" />
     <Compile Include="Model\GameInfo.cs" />
     <Compile Include="Model\GameTypeFactory.cs" />
     <Compile Include="Interface\IBrowsableType.cs" />

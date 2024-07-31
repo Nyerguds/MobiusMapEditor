@@ -664,3 +664,5 @@ Unreleased.
 * Optimised all indicator drawing by caching the generated images and overlap outlines.
 * Fixed an issue in the redo of drag-moving infantry, that created a ghost duplicate of the dragged infantry unit that could cause crashes.
 * Fixed an issue with the main editor window becoming hard to select if it was minimised during a load or save operation, because it would select the tool window instead of restoring the main window. To fix this, the tool window is now never shown if the main window is minimised.
+* Added indicator to building info to indicate whether a building is capturable.
+* Added support for C&C95 v1.06 bib disabling and capturability rule tweaks.

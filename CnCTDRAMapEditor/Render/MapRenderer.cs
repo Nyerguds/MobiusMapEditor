@@ -509,6 +509,7 @@ namespace MobiusEditor.Render
                         Rectangle smudgeBounds = RenderBounds(tile.Image.Size, new Size(1, 1), tileScale);
                         using (Graphics g = Graphics.FromImage(tileImg))
                         {
+                            SetRenderSettings(g, isSmoothRendering);
                             g.DrawImage(tileImage, smudgeBounds, new Rectangle(0, 0, tileImage.Width, tileImage.Height), GraphicsUnit.Pixel);
                         }
                     }

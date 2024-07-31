@@ -141,5 +141,6 @@ namespace MobiusEditor.Interface
         bool IsLandUnitPassable(LandType landType);
         bool IsBoatPassable(LandType landType);
         bool IsBuildable(LandType landType);
+        bool IsBuildingCapturable(Building building, out string info);
     }
 }

@@ -119,7 +119,15 @@ namespace MobiusEditor.TiberianDawn
             // Remaster: Chronosphere cursor from TEXTURES_SRGB.MEG
             // Alt: @"DATA\ART\TEXTURES\SRGB\ICON_IONCANNON_15.DDS
             // Classic: Ion Cannon cursor
-            return GetTexture(@"DATA\ART\TEXTURES\SRGB\ICON_SELECT_GREEN_04.DDS", "mouse", 118);
+            return GetTexture(@"DATA\ART\TEXTURES\SRGB\ICON_SELECT_GREEN_04.DDS", "mouse", 118, true);
+        }
+
+        public override Bitmap GetCaptureIcon()
+        {
+            // Remaster: Chronosphere cursor from TEXTURES_SRGB.MEG
+            // Alt: @"DATA\ART\TEXTURES\SRGB\ICON_IONCANNON_15.DDS
+            // Classic: Chronosphere cursor
+            return GetTexture(@"DATA\ART\TEXTURES\SRGB\ICON_MOUNT_UNIT_X2_02.DDS", "mouse", 121, true);
         }
 
         public override string EvaluateBriefing(string briefing)

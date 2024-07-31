@@ -75,6 +75,7 @@ namespace MobiusEditor.Model
         public int PowerUsage { get; set; }
         public int PowerProduction { get; set; }
         public int Storage { get; set; }
+        public bool Capturable { get; set; }
         public Rectangle OverlapBounds => new Rectangle(Point.Empty, OccupyMask.GetDimensions());
         public bool[,] OpaqueMask { get; private set; }
         public bool[,] OccupyMask { get; private set; }
@@ -122,7 +123,7 @@ namespace MobiusEditor.Model
         public int ZOrder { get; private set; }
         private string nameId;
 
-        public BuildingType(int id, string name, string textId, int powerProd, int powerUse, int storage, int width, int height, string occupyMask, string ownerHouse, string factoryOverlay, int frameOffset, String graphicsSource, BuildingTypeFlag flag, int zOrder)
+        public BuildingType(int id, string name, string textId, int powerProd, int powerUse, int storage, bool capturable, int width, int height, string occupyMask, string ownerHouse, string factoryOverlay, int frameOffset, String graphicsSource, BuildingTypeFlag flag, int zOrder)
         {
             this.ID = id;
             this.Flag = flag;
@@ -133,6 +134,7 @@ namespace MobiusEditor.Model
             this.PowerProduction = powerProd;
             this.PowerUsage = powerUse;
             this.Storage = storage;
+            this.Capturable = capturable;
             this.BaseOccupyMask = GeneralUtils.GetMaskFromString(width, height, occupyMask, '0', ' ');
             this.OwnerHouse = ownerHouse;
             this.FactoryOverlay = factoryOverlay;
@@ -141,53 +143,53 @@ namespace MobiusEditor.Model
             this.HasBib = this.HasBib;
         }
 
-        public BuildingType(int id, string name, string textId, int powerProd, int powerUse, int storage, int width, int height, string occupyMask, string ownerHouse, string factoryOverlay, int frameOffset, String graphicsSource, BuildingTypeFlag flag)
-            : this(id, name, textId, powerProd, powerUse, storage, width, height, occupyMask, ownerHouse, factoryOverlay, frameOffset, graphicsSource, flag, Globals.ZOrderDefault)
+        public BuildingType(int id, string name, string textId, int powerProd, int powerUse, int storage, bool capturable, int width, int height, string occupyMask, string ownerHouse, string factoryOverlay, int frameOffset, String graphicsSource, BuildingTypeFlag flag)
+            : this(id, name, textId, powerProd, powerUse, storage, capturable, width, height, occupyMask, ownerHouse, factoryOverlay, frameOffset, graphicsSource, flag, Globals.ZOrderDefault)
         {
         }
 
-        public BuildingType(int id, string name, string textId, int powerProd, int powerUse, int width, int height, string occupyMask, string ownerHouse, String graphicsSource, BuildingTypeFlag flag)
-            : this(id, name, textId, powerProd, powerUse, 0, width, height, occupyMask, ownerHouse, null, 0, graphicsSource, flag)
+        public BuildingType(int id, string name, string textId, int powerProd, int powerUse, bool capturable, int width, int height, string occupyMask, string ownerHouse, String graphicsSource, BuildingTypeFlag flag)
+            : this(id, name, textId, powerProd, powerUse, 0, capturable, width, height, occupyMask, ownerHouse, null, 0, graphicsSource, flag)
         {
         }
 
-        public BuildingType(int id, string name, string textId, int powerProd, int powerUse, int width, int height, string occupyMask, string ownerHouse, int zOrder)
-            : this(id, name, textId, powerProd, powerUse, 0, width, height, occupyMask, ownerHouse, null, 0, null, BuildingTypeFlag.None, zOrder)
+        public BuildingType(int id, string name, string textId, int powerProd, int powerUse, bool capturable, int width, int height, string occupyMask, string ownerHouse, int zOrder)
+            : this(id, name, textId, powerProd, powerUse, 0, capturable, width, height, occupyMask, ownerHouse, null, 0, null, BuildingTypeFlag.None, zOrder)
         {
         }
 
-        public BuildingType(int id, string name, string textId, int powerProd, int powerUse, int width, int height, string occupyMask, string ownerHouse, BuildingTypeFlag flag, int zOrder)
-            : this(id, name, textId, powerProd, powerUse, 0, width, height, occupyMask, ownerHouse, null, 0, null, flag, zOrder)
+        public BuildingType(int id, string name, string textId, int powerProd, int powerUse, bool capturable, int width, int height, string occupyMask, string ownerHouse, BuildingTypeFlag flag, int zOrder)
+            : this(id, name, textId, powerProd, powerUse, 0, capturable, width, height, occupyMask, ownerHouse, null, 0, null, flag, zOrder)
         {
         }
 
-        public BuildingType(int id, string name, string textId, int powerProd, int powerUse, int width, int height, string occupyMask, string ownerHouse, BuildingTypeFlag flag)
-            : this(id, name, textId, powerProd, powerUse, 0, width, height, occupyMask, ownerHouse, null, 0, null, flag)
+        public BuildingType(int id, string name, string textId, int powerProd, int powerUse, bool capturable, int width, int height, string occupyMask, string ownerHouse, BuildingTypeFlag flag)
+            : this(id, name, textId, powerProd, powerUse, 0, capturable, width, height, occupyMask, ownerHouse, null, 0, null, flag)
         {
         }
 
-        public BuildingType(int id, string name, string textId, int powerProd, int powerUse, int storage, int width, int height, string occupyMask, string ownerHouse)
-            : this(id, name, textId, powerProd, powerUse, storage, width, height, occupyMask, ownerHouse, null, 0, null, BuildingTypeFlag.None)
+        public BuildingType(int id, string name, string textId, int powerProd, int powerUse, int storage, bool capturable, int width, int height, string occupyMask, string ownerHouse)
+            : this(id, name, textId, powerProd, powerUse, storage, capturable, width, height, occupyMask, ownerHouse, null, 0, null, BuildingTypeFlag.None)
         {
         }
 
-        public BuildingType(int id, string name, string textId, int powerProd, int powerUse, int width, int height, string occupyMask, string ownerHouse)
-            : this(id, name, textId, powerProd, powerUse, 0, width, height, occupyMask, ownerHouse, null, 0, null, BuildingTypeFlag.None)
+        public BuildingType(int id, string name, string textId, int powerProd, int powerUse, bool capturable, int width, int height, string occupyMask, string ownerHouse)
+            : this(id, name, textId, powerProd, powerUse, 0, capturable, width, height, occupyMask, ownerHouse, null, 0, null, BuildingTypeFlag.None)
         {
         }
 
-        public BuildingType(int id, string name, string textId, int powerProd, int powerUse, int width, int height, string occupyMask, string ownerHouse, int frameOffset, BuildingTypeFlag flag)
-            : this(id, name, textId, powerProd, powerUse, 0, width, height, occupyMask, ownerHouse, null, frameOffset, null, flag)
+        public BuildingType(int id, string name, string textId, int powerProd, int powerUse, bool capturable, int width, int height, string occupyMask, string ownerHouse, int frameOffset, BuildingTypeFlag flag)
+            : this(id, name, textId, powerProd, powerUse, 0, capturable, width, height, occupyMask, ownerHouse, null, frameOffset, null, flag)
         {
         }
 
-        public BuildingType(int id, string name, string textId, int powerProd, int powerUse, int width, int height, string occupyMask, string ownerHouse, string factoryOverlay, string graphicsSource, BuildingTypeFlag flag)
-            : this(id, name, textId, powerProd, powerUse, 0, width, height, occupyMask, ownerHouse, factoryOverlay, 0, graphicsSource, flag)
+        public BuildingType(int id, string name, string textId, int powerProd, int powerUse, bool capturable, int width, int height, string occupyMask, string ownerHouse, string factoryOverlay, string graphicsSource, BuildingTypeFlag flag)
+            : this(id, name, textId, powerProd, powerUse, 0, capturable, width, height, occupyMask, ownerHouse, factoryOverlay, 0, graphicsSource, flag)
         {
         }
 
-        public BuildingType(int id, string name, string textId, int powerProd, int powerUse, int storage, int width, int height, string occupyMask, string ownerHouse, BuildingTypeFlag flag)
-            : this(id, name, textId, powerProd, powerUse, storage, width, height, occupyMask, ownerHouse, null, 0, null, flag)
+        public BuildingType(int id, string name, string textId, int powerProd, int powerUse, int storage, bool capturable, int width, int height, string occupyMask, string ownerHouse, BuildingTypeFlag flag)
+            : this(id, name, textId, powerProd, powerUse, storage, capturable, width, height, occupyMask, ownerHouse, null, 0, null, flag)
         {
         }
 
@@ -226,7 +228,7 @@ namespace MobiusEditor.Model
             int baseMaskY = this.BaseOccupyMask.GetLength(0);
             int baseMaskX = this.BaseOccupyMask.GetLength(1);
             string occupyMask = GeneralUtils.GetStringFromMask(this.BaseOccupyMask, '1', '0', ' ');
-            BuildingType newBld = new BuildingType(this.ID, this.Name, this.nameId, this.PowerProduction, this.PowerUsage, this.Storage, baseMaskX, baseMaskY, occupyMask, this.OwnerHouse, this.FactoryOverlay, this.FrameOffset, this.GraphicsSource, this.Flag, this.ZOrder);
+            BuildingType newBld = new BuildingType(this.ID, this.Name, this.nameId, this.PowerProduction, this.PowerUsage, this.Storage, this.Capturable, baseMaskX, baseMaskY, occupyMask, this.OwnerHouse, this.FactoryOverlay, this.FrameOffset, this.GraphicsSource, this.Flag, this.ZOrder);
             return newBld;
         }
 
@@ -252,7 +254,6 @@ namespace MobiusEditor.Model
             {
                 return string.Equals(this.Name, obj as string, StringComparison.OrdinalIgnoreCase);
             }
-
             return base.Equals(obj);
         }
 

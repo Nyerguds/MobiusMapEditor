@@ -28,7 +28,11 @@ namespace MobiusEditor.Controls
 {
     public partial class ObjectProperties : UserControl
     {
-        private Bitmap infoImage;
+        private Bitmap triggerInfoImage;
+        private string triggerInfoToolTip;
+        private Bitmap captureImage;
+        private Bitmap captureDisabledImage;
+        private string captureToolTip;
         private bool isMockObject;
         private HouseType originalHouse;
         private String originalTrigger;
@@ -38,7 +42,6 @@ namespace MobiusEditor.Controls
 
         public IGamePlugin Plugin { get; private set; }
 
-        private string triggerToolTip;
 
         private INotifyPropertyChanged obj;
         public INotifyPropertyChanged Object
@@ -60,6 +63,7 @@ namespace MobiusEditor.Controls
                         if (obj is Building bld)
                         {
                             AdjustToStructurePrebuiltStatus(bld, GetHouseComboBox());
+                            CheckBuildingCapturable(bld);
                         }
                         obj.PropertyChanged += Obj_PropertyChanged;
                     }
@@ -71,13 +75,13 @@ namespace MobiusEditor.Controls
         public ObjectProperties()
         {
             InitializeComponent();
-            infoImage = new Bitmap(27, 27);
-            infoImage.SetResolution(96, 96);
-            using (Graphics g = Graphics.FromImage(infoImage))
+            triggerInfoImage = new Bitmap(27, 27);
+            triggerInfoImage.SetResolution(96, 96);
+            using (Graphics g = Graphics.FromImage(triggerInfoImage))
             {
-                g.DrawIcon(SystemIcons.Information, new Rectangle(0, 0, infoImage.Width, infoImage.Height));
+                g.DrawIcon(SystemIcons.Information, new Rectangle(0, 0, triggerInfoImage.Width, triggerInfoImage.Height));
             }
-            lblTriggerTypesInfo.Image = infoImage;
+            lblTriggerTypesInfo.Image = triggerInfoImage;
             lblTriggerTypesInfo.ImageAlign = ContentAlignment.MiddleCenter;
         }
 
@@ -103,6 +107,35 @@ namespace MobiusEditor.Controls
             Plugin = plugin;
             plugin.Map.TriggersUpdated -= Triggers_CollectionChanged;
             plugin.Map.TriggersUpdated += Triggers_CollectionChanged;
+            lblCapturable.Image = null;
+            if (captureImage != null)
+            {
+                try
+                {
+                    captureImage.Dispose();
+                }
+                catch { /*ignore*/}
+                captureImage = null;
+            }
+            captureImage = new Bitmap(27, 27);
+            captureImage.SetResolution(96, 96);
+            using (Graphics g = Graphics.FromImage(captureImage))
+            using (Bitmap capIcon = plugin.GameInfo.GetCaptureIcon())
+            {
+                // Cut out center square.
+                int min = Math.Min(capIcon.Width, capIcon.Height);
+                int xOffs = (capIcon.Width - min) / 2;
+                int yOffs = (capIcon.Height - min) / 2;
+                g.DrawImage(capIcon, new Rectangle(0, 0, captureImage.Width, captureImage.Height), new Rectangle(xOffs, yOffs, min, min), GraphicsUnit.Pixel);
+            }
+            captureDisabledImage = new Bitmap(captureImage);
+            captureDisabledImage.SetResolution(96, 96);
+            using (Graphics g = Graphics.FromImage(captureDisabledImage))
+            using (Brush redBrush = new SolidBrush(Color.Red))
+            using (Pen crossPen = new Pen(redBrush, 3))
+            {
+                g.DrawLine(crossPen, new Point(-1, captureDisabledImage.Height), new Point(captureDisabledImage.Width, -1));
+            }
             houseComboBox.DataSource = plugin.Map.Houses.Select(t => new TypeItem<HouseType>(t.Type.Name, t.Type)).ToArray();
             missionComboBox.DataSource = plugin.Map.MissionTypes;
             UpdateDataSource();
@@ -153,7 +186,7 @@ namespace MobiusEditor.Controls
             int selectIndex = selected == null ? 0 : Enumerable.Range(0, items.Length).FirstOrDefault(x => String.Equals(items[x], selected, StringComparison.OrdinalIgnoreCase));
             triggerComboBox.DataSource = items;
             triggerComboBox.Enabled = !isAircraft && isOnMap;
-            triggerToolTip = Map.MakeAllowedTriggersToolTip(filteredEvents, filteredActions);
+            triggerInfoToolTip = Map.MakeAllowedTriggersToolTip(filteredEvents, filteredActions);
             if (obj != null)
             {
                 triggerComboBox.DataBindings.Add("SelectedItem", obj, "Trigger");
@@ -165,20 +198,32 @@ namespace MobiusEditor.Controls
 
         private void TriggerComboBox_SelectedIndexChanged(Object sender, EventArgs e)
         {
-            if (filteredEvents == null || filteredActions == null)
+            if (obj is Building building)
             {
-                return;
+                // In TD, this can be trigger-dependent.
+                bool isCapturable = CheckBuildingCapturable(building);
+                Point pt = MousePosition;
+                Point lblPos = lblCapturable.PointToScreen(Point.Empty);
+                Rectangle lblRect = new Rectangle(lblPos, lblCapturable.Size);
+                if (lblRect.Contains(pt))
+                {
+                    this.toolTip1.Hide(lblCapturable);
+                    lblCapturable_MouseEnter(lblCapturable, e);
+                }
             }
-            string selected = triggerComboBox.SelectedItem as string;
-            Trigger trig = this.Plugin.Map.Triggers.FirstOrDefault(t => String.Equals(t.Name, selected, StringComparison.OrdinalIgnoreCase));
-            triggerToolTip = Map.MakeAllowedTriggersToolTip(filteredEvents, filteredActions, trig);
-            Point pt = MousePosition;
-            Point lblPos = lblTriggerTypesInfo.PointToScreen(Point.Empty);
-            Rectangle lblRect = new Rectangle(lblPos, lblTriggerTypesInfo.Size);
-            if (lblRect.Contains(pt))
+            if (filteredEvents != null || filteredActions != null)
             {
-                this.toolTip1.Hide(lblTriggerTypesInfo);
-                LblTriggerTypesInfo_MouseEnter(lblTriggerTypesInfo, e);
+                string selected = triggerComboBox.SelectedItem as string;
+                Trigger trig = this.Plugin.Map.Triggers.FirstOrDefault(t => String.Equals(t.Name, selected, StringComparison.OrdinalIgnoreCase));
+                triggerInfoToolTip = Map.MakeAllowedTriggersToolTip(filteredEvents, filteredActions, trig);
+                Point pt = MousePosition;
+                Point lblPos = lblTriggerTypesInfo.PointToScreen(Point.Empty);
+                Rectangle lblRect = new Rectangle(lblPos, lblTriggerTypesInfo.Size);
+                if (lblRect.Contains(pt))
+                {
+                    this.toolTip1.Hide(lblTriggerTypesInfo);
+                    LblTriggerTypesInfo_MouseEnter(lblTriggerTypesInfo, e);
+                }
             }
         }
 
@@ -231,6 +276,7 @@ namespace MobiusEditor.Controls
                         directionLabel.Visible = directionVisible;
                         directionComboBox.Visible = directionVisible;
                         missionLabel.Visible = missionComboBox.Visible = false;
+                        CheckBuildingCapturable(building);
                         switch (Plugin.GameInfo.GameType)
                         {
                             case GameType.TiberianDawn:
@@ -388,6 +434,23 @@ namespace MobiusEditor.Controls
             }
         }
 
+        private bool CheckBuildingCapturable(Building building)
+        {
+            if (building == null)
+            {
+                lblCapturable.Image = null;
+            }
+            bool isCapturable = Plugin.IsBuildingCapturable(building, out string info);
+            string tooltip = String.Format("This building is {0}capturable.", isCapturable ? String.Empty : "not ");
+            if (info != null)
+            {
+                tooltip += "\n" + info;
+            }
+            captureToolTip = tooltip;
+            lblCapturable.Image = isCapturable ? captureImage : captureDisabledImage;
+            return isCapturable;
+        }
+
         private void comboBox_SelectedValueChanged(object sender, EventArgs e)
         {
             foreach (Binding binding in (sender as ComboBox).DataBindings)
@@ -426,9 +489,25 @@ namespace MobiusEditor.Controls
             }
             else
             {
-                tooltip = triggerToolTip;
+                tooltip = triggerInfoToolTip;
             }
             ShowToolTip(target, tooltip);
+        }
+
+        private void lblCapturable_MouseEnter(Object sender, EventArgs e)
+        {
+            Control target = sender as Control;
+            string tooltip;
+            if (Object is Building bld)
+            {
+                bool capturable = Plugin.IsBuildingCapturable(bld, out string info);
+                tooltip = String.Format("This building is {0}capturable.", capturable ? String.Empty : "not ");
+                if (info != null)
+                {
+                    tooltip += "\n" + info;
+                }
+                ShowToolTip(target, tooltip);
+            }            
         }
 
         private void ShowToolTip(Control target, string message)
@@ -446,7 +525,7 @@ namespace MobiusEditor.Controls
             //this.toolTip1.Show(triggerToolTip, target, target.Width, 0, 10000);
         }
 
-        private void LblTriggerInfo_MouseLeave(Object sender, EventArgs e)
+        private void HideToolTip(Object sender, EventArgs e)
         {
             Control target = sender as Control;
             this.toolTip1.Hide(target);
@@ -463,14 +542,24 @@ namespace MobiusEditor.Controls
                 try
                 {
                     lblTriggerTypesInfo.Image = null;
+                    lblCapturable.Image = null;
                 }
                 catch { /*ignore*/}
                 try
                 {
-                    infoImage.Dispose();
+                    triggerInfoImage.Dispose();
                 }
                 catch { /*ignore*/}
-                infoImage = null;
+                triggerInfoImage = null;
+                if (captureImage != null)
+                {
+                    try
+                    {
+                        captureImage.Dispose();
+                    }
+                    catch { /*ignore*/}
+                    captureImage = null;
+                }
                 components.Dispose();
             }
             base.Dispose(disposing);

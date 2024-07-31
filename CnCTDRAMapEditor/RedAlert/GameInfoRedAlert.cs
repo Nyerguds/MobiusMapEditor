@@ -17,7 +17,6 @@ using System.Drawing;
 using System.IO;
 using System.Linq;
 using System.Text;
-using System.Xml.Linq;
 using MobiusEditor.Interface;
 using MobiusEditor.Model;
 using MobiusEditor.Utility;
@@ -142,7 +141,15 @@ namespace MobiusEditor.RedAlert
             // Remaster: Chronosphere cursor from TEXTURES_SRGB.MEG
             // Alt: @"DATA\ART\TEXTURES\SRGB\ICON_IONCANNON_15.DDS
             // Classic: Chronosphere cursor
-            return GetTexture(@"DATA\ART\TEXTURES\SRGB\ICON_SELECT_GREEN_04.DDS", "mouse", 101);
+            return GetTexture(@"DATA\ART\TEXTURES\SRGB\ICON_SELECT_GREEN_04.DDS", "mouse", 101, true);
+        }
+
+        public override Bitmap GetCaptureIcon()
+        {
+            // Remaster: Chronosphere cursor from TEXTURES_SRGB.MEG
+            // Alt: @"DATA\ART\TEXTURES\SRGB\ICON_IONCANNON_15.DDS
+            // Classic: Chronosphere cursor
+            return GetTexture(@"DATA\ART\TEXTURES\SRGB\ICON_MOUNT_UNIT_X2_02.DDS", "mouse", 115, true);
         }
 
         public override string EvaluateBriefing(string briefing)

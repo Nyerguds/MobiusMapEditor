@@ -4,7 +4,6 @@ using System;
 using System.Collections.Generic;
 using System.Drawing;
 using System.Linq;
-// Special. Technically color "JP" exists for this, but it's wrong. Clone Spain instead.
 
 namespace MobiusEditor.Model
 {
@@ -106,8 +105,8 @@ namespace MobiusEditor.Model
         /// </summary>
         /// <param name="mfm">MixfileManager to load the archives into.</param>
         /// <param name="loadErrors">List of load errors. </param>
-        /// <param name="fileLoadErrors"></param>
-        /// <param name="forRemaster"></param>
+        /// <param name="fileLoadErrors">A list to collect errors into.</param>
+        /// <param name="forRemaster">Indicates if this init is for remastered mode.</param>
         public abstract void InitClassicFiles(MixfileManager mfm, List<string> loadErrors, List<string> fileLoadErrors, bool forRemaster);
         /// <summary>Retrieves the typical opposing player for the given House name, e.g. for TD, GoodGuy will give BadGuy.</summary>
         /// <param name="player">The player to get the opposing player for.</param>
@@ -118,14 +117,17 @@ namespace MobiusEditor.Model
         /// <returns>True if the given layer is used for this game.</returns>
         public abstract bool SupportsMapLayer(MapLayerFlag mlf);
         /// <summary>Fetches the Waypoints-mode icon for the UI. This returns a new image that needs to be disposed afterwards.</summary>
-        /// <returns>The waypoints UI icon</returns>
+        /// <returns>The waypoints UI icon.</returns>
         public abstract Bitmap GetWaypointIcon();
         /// <summary>Fetches the Celltriggers-mode icon for the UI. This returns a new image that needs to be disposed afterwards.</summary>
-        /// <returns>The celltriggers UI icon</returns>
+        /// <returns>The celltriggers UI icon.</returns>
         public abstract Bitmap GetCellTriggerIcon();
         /// <summary>Fetches the Select-mode icon for the UI. This returns a new image that needs to be disposed afterwards.</summary>
-        /// <returns>The select mode UI icon</returns>
+        /// <returns>The select mode UI icon.</returns>
         public abstract Bitmap GetSelectIcon();
+        /// <summary>Fetches the Capture icon for the building properties UI. This returns a new image that needs to be disposed afterwards.</summary>
+        /// <returns>An icon indicating this object is capturable.</returns>
+        public abstract Bitmap GetCaptureIcon();
         /// <summary>Checks whether the briefing has any kind of issues concerning length or supported characters.</summary>
         /// <param name="briefing">The briefing to check</param>
         /// <returns>Null if everything is okay, otherwise any issues to show on the user interface.</returns>
@@ -162,10 +164,11 @@ namespace MobiusEditor.Model
         /// <param name="remasterTexturePath">Path of th texture in the remastered tilesets.</param>
         /// <param name="classicSprite">Classic sprite to load.</param>
         /// <param name="classicicon">Frame to use from the classic sprite.</param>
+        /// <param name="ignoreClassicShadow">In classic graphics, don't apply shadow filter.</param>
         /// <returns>
         /// The requested image. This is a clone of the image in the internal texture manager, and should be disposed after use.
         /// </returns>
-        protected Bitmap GetTexture(string remasterTexturePath, string classicSprite, int classicicon)
+        protected Bitmap GetTexture(string remasterTexturePath, string classicSprite, int classicicon, bool ignoreClassicShadow)
         {
             if (!Globals.UseClassicFiles && Globals.TheTilesetManager is TilesetManager tsm)
             {
@@ -173,7 +176,7 @@ namespace MobiusEditor.Model
                 // and is responsible for their cleanup, but if we use the Texture manager directly, it needs to be disposed.
                 return tsm.TextureManager.GetTexture(remasterTexturePath, null, false).Item1;
             }
-            else if (Globals.UseClassicFiles && Globals.TheTilesetManager.GetTileData(classicSprite, classicicon, out Tile tile)
+            else if (Globals.UseClassicFiles && Globals.TheTilesetManager.GetTeamColorTileData(classicSprite, classicicon, null, ignoreClassicShadow, out Tile tile)
                 && tile != null && tile.Image != null)
             {
                 // Clone this, so it's equivalent to the remaster one and can be used in a Using block.

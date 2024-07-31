@@ -2026,7 +2026,7 @@ namespace MobiusEditor
             Globals.TheTilesetManager.Reset(gameType, theaterType);
             Globals.TheShapeCacheManager.Reset();
             Globals.TheTeamColorManager.Reset(gameType, theaterType);
-            // Load game-specific data
+            // Load game-specific data. TODO make this return init errors.
             plugin.Initialize();
             // Needs to be done after the whole init, so colors reading is properly initialised.
             plugin.Map.FlagColors = plugin.GetFlagColors();
