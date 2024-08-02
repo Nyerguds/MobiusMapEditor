@@ -2415,7 +2415,7 @@ namespace MobiusEditor.TiberianDawn
         /// <param name="forFootprintTest">Don't apply changes, just test the result for <paramref name="footPrintsChanged"/></param>
         /// <param name="footPrintsChanged">Returns true if any building footprints were changed as a result of the ini rule changes.</param>
         /// <returns>Any errors in parsing the <paramref name="extraIniText"/> contents.</returns>
-        private List<string> ResetMissionRules(INI extraIniText, bool forFootprintTest, out bool footPrintsChanged)
+        protected virtual List<string> ResetMissionRules(INI extraIniText, bool forFootprintTest, out bool footPrintsChanged)
         {
             List<string> errors = new List<string>();
             Dictionary<string, bool> bibBackups = Map.BuildingTypes.ToDictionary(b => b.Name, b => b.HasBib, StringComparer.OrdinalIgnoreCase);
@@ -2439,6 +2439,7 @@ namespace MobiusEditor.TiberianDawn
 
         private static IEnumerable<string> UpdateBuildingRules(INI ini, Map map, bool forFootPrintTest)
         {
+            const string CapturableKey= "Capturable";
             bool disableAllBibs = false;
             INISection basicSection = ini.Sections["Basic"];
             if (basicSection != null)
@@ -2480,7 +2481,7 @@ namespace MobiusEditor.TiberianDawn
                     try
                     {
                         List<(string, string)> parseErrors = INI.ParseSection(new MapContext(map, false), bldSettings, bld, true);
-                        foreach ((string iniKey, string error) in parseErrors.Where(b => "Capturable".Equals(b.Item1, StringComparison.InvariantCulture)))
+                        foreach ((string iniKey, string error) in parseErrors.Where(b => CapturableKey.Equals(b.Item1, StringComparison.InvariantCulture)))
                         {
                             errors.Add("Custom rules error on [" + bType.Name + "]: " + error.TrimEnd('.') + ". Value for \"" + iniKey + "\" is ignored.");
                         }
@@ -2491,7 +2492,7 @@ namespace MobiusEditor.TiberianDawn
                         errors.Add("Custom rules error on [" + bType.Name + "]: " + e.Message.TrimEnd('.') + ". Rule updates for [" + bType.Name + "] are ignored.");
                         continue;
                     }
-                    if (bldSettings.Keys.Contains("Capturable"))
+                    if (bldSettings.Keys.Contains(CapturableKey))
                     {
                         bType.Capturable = bld.Capturable;
                     }
@@ -3825,13 +3826,14 @@ namespace MobiusEditor.TiberianDawn
             return errors;
         }
 
-        public string TriggerSummary(Trigger trigger, bool withLineBreaks)
+        public string TriggerSummary(Trigger trigger, bool withLineBreaks, bool includeTriggerName)
         {
-            string trigFormat = "{0}: {1}, {2}, {3} → {4}";
-            if (withLineBreaks)
+            if (trigger == null)
             {
-                trigFormat = "{0}: {1}, {2},\n{3} → {4}";
+                return null;
             }
+            string trigFormat = (includeTriggerName ? "{4}: " : String.Empty)
+                + (!withLineBreaks ? "{0}, {1}, {2} → {3}" : "{0}, {1},\n{2} → {3}");
             string evt = trigger.Event1.EventType ?? TriggerEvent.None;
             bool isDataEvent = evt == EventTypes.EVENT_CREDITS
                             || evt == EventTypes.EVENT_TIME
@@ -3858,7 +3860,7 @@ namespace MobiusEditor.TiberianDawn
                 act = String.Format(GameInfo.TRIG_ARG_FORMAT, act, trigger.Action1.Team ?? TeamType.None);
             }
             string persistence = GameInfo.PERSISTENCE_NAMES[(int)trigger.PersistentType];
-            return String.Format(trigFormat, trigger.Name, trigger.House, persistence, evt, act);
+            return String.Format(trigFormat, trigger.House, persistence, evt, act, trigger.Name);
         }
 
         public virtual ITeamColor[] GetFlagColors()
@@ -3931,30 +3933,42 @@ namespace MobiusEditor.TiberianDawn
             return false;
         }
 
-        public bool IsBuildingCapturable(Building building, out string info)
+        public bool? IsBuildingCapturable(Building building, out string info)
         {
-            bool capturable = building.Type.Capturable;
+            bool? capturable = building.Type.Capturable;
             // TODO add checks on triggers and 1.06 rule tweaks.
+            BuildingType bt = BuildingTypes.GetTypes().FirstOrDefault(b => String.Equals(building.Type.Name, b.Name, StringComparison.OrdinalIgnoreCase));
             List<string> infoList = new List<string>();
             info = null;
-            if (!Trigger.IsEmpty(building.Trigger) && !building.Type.Capturable)
+            bool capturableClassic = building.Type.Capturable;
+            bool capturableRemaster = bt.Capturable;
+            bool capturabilitySetClassic = building.Type.Capturable != bt.Capturable;
+            bool capturabilitySetRemaster = false;
+            if (!Trigger.IsEmpty(building.Trigger) && (!bt.Capturable || !building.Type.Capturable))
             {
                 Trigger trig = this.Map.Triggers.FirstOrDefault(t => String.Equals(t.Name, building.Trigger, StringComparison.OrdinalIgnoreCase));
                 if (trig != null && trig.Action1.ActionType == ActionTypes.ACTION_WINLOSE)
                 {
                     capturable = true;
-                    infoList.Add("Made capturable by trigger with action " + ActionTypes.ACTION_WINLOSE + " (Remaster only)");
+                    capturableRemaster = true;
+                    capturabilitySetRemaster = true;
+                    infoList.Add("• This building is made capturable by trigger with\n" +
+                                 "   action \"" + ActionTypes.ACTION_WINLOSE + "\" (Remaster only)");
                 }
             }
-            BuildingType bt = BuildingTypes.GetTypes().FirstOrDefault(b => String.Equals(building.Type.Name, b.Name, StringComparison.OrdinalIgnoreCase));
             if (building.Type.Capturable != bt.Capturable)
             {
                 // Check if it's due to ini tweaks by checking if base object is capturable.
-                infoList.Add(String.Format("Made {0}capturable due to rules tweak (C&C95 v1.06 only)", building.Type.Capturable ? String.Empty : "un"));
+                infoList.Add(String.Format("• This building type is made {0}capturable due to\n" +
+                                           "   rules tweak in the map file (C&C95 v1.06 only)", building.Type.Capturable ? String.Empty : "un"));
             }
             if (infoList.Count > 0)
             {
                 info = String.Join("\n", infoList.ToArray());
+            }
+            if ((capturabilitySetClassic && capturabilitySetRemaster) && capturableClassic != capturableRemaster)
+            {
+                capturable = null;
             }
             return capturable;
         }

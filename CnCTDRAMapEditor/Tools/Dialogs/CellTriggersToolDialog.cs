@@ -36,6 +36,7 @@ namespace MobiusEditor.Tools.Dialogs
 #endif
     {
         private Bitmap infoImage;
+        private Control tooltipShownOn;
 
         public CellTriggersToolDialog(Form parentForm)
 #if !EDITMODE
@@ -56,44 +57,82 @@ namespace MobiusEditor.Tools.Dialogs
         protected override void InitializeInternal(MapPanel mapPanel, MapLayerFlag activeLayers, ToolStripStatusLabel toolStatusLabel, ToolTip mouseToolTip,
             IGamePlugin plugin, UndoRedoList<UndoRedoEventArgs, ToolType> undoRedoList)
         {
-            Tool = new CellTriggersTool(mapPanel, activeLayers, toolStatusLabel, triggerComboBox, btnJumpTo, plugin, undoRedoList);
-            Tool.OnTriggerToolTipChanged += this.Tool_OnTriggerToolTipChanged;
+            Tool = new CellTriggersTool(mapPanel, activeLayers, toolStatusLabel, cmbTrigger, btnJumpTo, plugin, undoRedoList);
+            Tool.OnTriggerChanged += this.Tool_OnTriggerChanged;
         }
 #endif
-        private void Tool_OnTriggerToolTipChanged(Object sender, EventArgs e)
+        private void Tool_OnTriggerChanged(Object sender, EventArgs e)
         {
             Point pt = MousePosition;
             Point lblPos = lblTriggerTypesInfo.PointToScreen(Point.Empty);
-            Rectangle lblRect = new Rectangle(lblPos, lblTriggerTypesInfo.Size);
-            if (lblRect.Contains(pt))
+            Point cmbPos = cmbTrigger.PointToScreen(Point.Empty);
+            Rectangle lblInfoRect = new Rectangle(lblPos, lblTriggerTypesInfo.Size);
+            Rectangle cmbTrigRect = new Rectangle(cmbPos, cmbTrigger.Size);
+            if (lblInfoRect.Contains(pt))
             {
                 this.toolTip1.Hide(lblTriggerTypesInfo);
                 LblTriggerTypesInfo_MouseEnter(lblTriggerTypesInfo, e);
+            }
+            else if(cmbTrigRect.Contains(pt))
+            {
+                this.toolTip1.Hide(cmbTrigger);
+                CmbTrigger_MouseEnter(cmbTrigger, e);
             }
         }
 
         private void LblTriggerTypesInfo_MouseEnter(Object sender, EventArgs e)
         {
-#if !EDITMODE
             Control target = sender as Control;
-            if (target == null || Tool == null || Tool.TriggerToolTip == null)
+            ShowToolTip(target, Tool.TriggerInfoToolTip);
+        }
+
+        private void LblTriggerTypesInfo_MouseMove(object sender, MouseEventArgs e)
+        {
+            if (tooltipShownOn != sender)
             {
-                this.toolTip1.Hide(target);
+                LblTriggerTypesInfo_MouseEnter(sender, e);
+            }
+        }
+
+        private void CmbTrigger_MouseEnter(object sender, EventArgs e)
+        {
+            Control target = sender as Control;
+            ShowToolTip(target, Tool.TriggerToolTip);
+        }
+
+        private void CmbTrigger_MouseMove(object sender, MouseEventArgs e)
+        {
+            if (tooltipShownOn != sender)
+            {
+                CmbTrigger_MouseEnter(sender, e);
+            }
+        }
+
+        private void ShowToolTip(Control target, string message)
+        {
+            if (target == null || message == null)
+            {
+                this.HideToolTip(target, null);
                 return;
             }
             Point resPoint = target.PointToScreen(new Point(0, target.Height));
             MethodInfo m = toolTip1.GetType().GetMethod("SetTool",
                        BindingFlags.Instance | BindingFlags.NonPublic);
-            // private void SetTool(IWin32Window win, string text, TipInfo.Type type, Point position)
-            m.Invoke(toolTip1, new object[] { target, Tool.TriggerToolTip, 2, resPoint });
-            //this.toolTip1.Show(triggerToolTip, target, target.Width, 0, 10000);
-#endif
+            m.Invoke(toolTip1, new object[] { target, message, 2, resPoint });
+            this.tooltipShownOn = target;
         }
 
-        private void LblTriggerInfo_MouseLeave(Object sender, EventArgs e)
+        private void HideToolTip(object sender, EventArgs e)
         {
-            Control target = sender as Control;
-            this.toolTip1.Hide(target);
+            if (this.tooltipShownOn != null)
+            {
+                this.toolTip1.Hide(this.tooltipShownOn);
+            }
+            if (sender is Control target)
+            {
+                this.toolTip1.Hide(target);
+            }
+            tooltipShownOn = null;
         }
 
         /// <summary>

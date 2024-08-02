@@ -993,7 +993,7 @@ namespace MobiusEditor.Tools
                         CellMetrics tm = new CellMetrics(mockBuilding.Type.OverlapBounds.Size);
                         OccupierSet<ICellOccupier> technoSet = new OccupierSet<ICellOccupier>(tm);
                         technoSet.Add(0, mockBuilding);
-                        MapRenderer.RenderAllTechnoTriggers(g, gameInfo, technoSet, tm.Bounds, Globals.PreviewTileSize, Layers, Color.LimeGreen, null, false);
+                        MapRenderer.RenderAllTechnoTriggers(g, gameInfo, null, technoSet, tm.Bounds, Globals.PreviewTileSize, Layers, Color.LimeGreen, null, false);
                     }
                 }
                 buildingTypeMapPanel.MapImage = buildingPreview;

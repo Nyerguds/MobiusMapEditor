@@ -686,6 +686,10 @@ namespace MobiusEditor.Dialogs
             this.cmbTrigger.Name = "cmbTrigger";
             this.cmbTrigger.Size = new System.Drawing.Size(90, 21);
             this.cmbTrigger.TabIndex = 23;
+            this.cmbTrigger.SelectedIndexChanged += CmbTrigger_SelectedIndexChanged;
+            this.cmbTrigger.MouseEnter += new System.EventHandler(this.CmbTrigger_MouseEnter);
+            this.cmbTrigger.MouseLeave += new System.EventHandler(this.HideToolTip);
+            this.cmbTrigger.MouseMove += new System.Windows.Forms.MouseEventHandler(CmbTrigger_MouseMove);
             // 
             // lblPriority
             // 
@@ -729,7 +733,8 @@ namespace MobiusEditor.Dialogs
             this.lblTriggerInfo.Size = new System.Drawing.Size(31, 27);
             this.lblTriggerInfo.TabIndex = 24;
             this.lblTriggerInfo.MouseEnter += new System.EventHandler(this.LblTriggerInfo_MouseEnter);
-            this.lblTriggerInfo.MouseLeave += new System.EventHandler(this.LblTriggerInfo_MouseLeave);
+            this.lblTriggerInfo.MouseLeave += new System.EventHandler(this.HideToolTip);
+            this.lblTriggerInfo.MouseMove += new System.Windows.Forms.MouseEventHandler(LblTriggerInfo_MouseMove);
             // 
             // teamTypesListView
             // 

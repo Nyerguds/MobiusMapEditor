@@ -79,7 +79,8 @@ namespace MobiusEditor.Tools
             get { return placementMode; }
         }
 
-        public event EventHandler OnTriggerToolTipChanged;
+        public event EventHandler OnTriggerChanged;
+        public string TriggerInfoToolTip { get; set; }
         public string TriggerToolTip { get; set; }
 
         public CellTriggersTool(MapPanel mapPanel, MapLayerFlag layers, ToolStripStatusLabel statusLbl, ComboBox triggerCombo, Button jumpToButton,
@@ -131,8 +132,9 @@ namespace MobiusEditor.Tools
             jumpToButton.Enabled = hasItems && selected != null && cellTrigBlobCenters.TryGetValue(selected, out Rectangle[] locations) && locations != null && locations.Length > 0;
             currentObj = hasItems ? selected : null;
             Trigger trig = map.Triggers.FirstOrDefault(t => String.Equals(t.Name, selected, StringComparison.OrdinalIgnoreCase));
-            TriggerToolTip = Map.MakeAllowedTriggersToolTip(filteredEvents, filteredActions, trig);
-            OnTriggerToolTipChanged?.Invoke(this, new EventArgs());
+            TriggerInfoToolTip = Map.MakeAllowedTriggersToolTip(filteredEvents, filteredActions, trig);
+            TriggerToolTip = plugin.TriggerSummary(trig, true, false);
+            OnTriggerChanged?.Invoke(this, new EventArgs());
         }
 
         private String[] GetItems(out bool hasItems)
@@ -505,8 +507,9 @@ namespace MobiusEditor.Tools
             }
             mapPanel.Invalidate();
             Trigger trig = map.Triggers.FirstOrDefault(t => String.Equals(t.Name, selected, StringComparison.OrdinalIgnoreCase));
-            TriggerToolTip = Map.MakeAllowedTriggersToolTip(filteredEvents, filteredActions, trig);
-            OnTriggerToolTipChanged?.Invoke(this, new EventArgs());
+            TriggerInfoToolTip = Map.MakeAllowedTriggersToolTip(filteredEvents, filteredActions, trig);
+            TriggerToolTip = plugin.TriggerSummary(trig, true, false);
+            OnTriggerChanged?.Invoke(this, new EventArgs());
         }
 
         private void JumpToButton_Click(Object sender, EventArgs e)
@@ -580,14 +583,14 @@ namespace MobiusEditor.Tools
                 selected = null;
             string[] selectedRange = selected != null ? new[] { selected } : new string[] { };
             // Normal techno triggers: under cell
-            MapRenderer.RenderAllTechnoTriggers(graphics, plugin.GameInfo, map.Technos, visibleCells, Globals.MapTileSize, Layers, Color.LimeGreen, selected, true);
-            MapRenderer.RenderCellTriggersHard(graphics, plugin.GameInfo, map, visibleCells, Globals.MapTileSize, selectedRange);
+            MapRenderer.RenderAllTechnoTriggers(graphics, plugin.GameInfo, previewMap.Technos, previewMap.Buildings, visibleCells, Globals.MapTileSize, Layers, Color.LimeGreen, selected, true);
+            MapRenderer.RenderCellTriggersHard(graphics, plugin.GameInfo, previewMap, visibleCells, Globals.MapTileSize, selectedRange);
             if (selected != null)
             {
                 // Only use preview map if in placement mode.
-                MapRenderer.RenderCellTriggersSelected(graphics, plugin.GameInfo, placementMode ? previewMap : map, visibleCells, Globals.MapTileSize, selectedRange);
+                MapRenderer.RenderCellTriggersSelected(graphics, plugin.GameInfo, placementMode ? previewMap : previewMap, visibleCells, Globals.MapTileSize, selectedRange);
                 // Selected technos: on top of cell
-                MapRenderer.RenderAllTechnoTriggers(graphics, plugin.GameInfo, map.Technos, visibleCells, Globals.MapTileSize, Layers, Color.Yellow, selected, false);
+                MapRenderer.RenderAllTechnoTriggers(graphics, plugin.GameInfo, previewMap.Technos, previewMap.Buildings, visibleCells, Globals.MapTileSize, Layers, Color.Yellow, selected, false);
             }
         }
 

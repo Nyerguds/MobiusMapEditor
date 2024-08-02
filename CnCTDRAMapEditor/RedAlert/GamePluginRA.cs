@@ -264,7 +264,7 @@ namespace MobiusEditor.RedAlert
         public static IEnumerable<string> Movies => movieTypesRa;
         public static IEnumerable<string> MoviesClassic => movieTypesRa.Where(mv => !movieTypesRemarksNew.Contains(mv));
         public static IEnumerable<string> Themes => themeTypes;
-
+        private Dictionary<string, BuildingType> bareRuleBuildings;
         private static readonly IEnumerable<ITechnoType> fullTechnoTypes;
 
         public GameInfo GameInfo => gameTypeInfo;
@@ -403,6 +403,8 @@ namespace MobiusEditor.RedAlert
                     UpdateRules(aftermathMpRulesIni, IniAftrMulti, this.Map, forFootprintTest);
                 }
             }
+            // save the buildings as they are without the map's own rule tweaks.
+            bareRuleBuildings = this.Map.BuildingTypes.Select(b => b.Clone()).ToDictionary(b => b.Name, StringComparer.OrdinalIgnoreCase);
             List<string> errors = null;
             if (extraIniText != null)
             {
@@ -509,6 +511,8 @@ namespace MobiusEditor.RedAlert
             {
                 errors.AddRange(UpdateRules(aftermathMpRulesIni, IniAftrMulti, this.Map, false));
             }
+            // save the buildings as they are without the map's own rule tweaks.
+            bareRuleBuildings = this.Map.BuildingTypes.Select(b => b.Clone()).ToDictionary(b => b.Name, StringComparer.OrdinalIgnoreCase);
             // Only one will be found.
             Globals.TheTeamColorManager.Load(@"DATA\XML\CNCRATEAMCOLORS.XML");
             Globals.TheTeamColorManager.Load("palette.cps");
@@ -4913,8 +4917,12 @@ namespace MobiusEditor.RedAlert
             }
         }
 
-        public string TriggerSummary(Trigger trigger, bool withLineBreaks)
+        public string TriggerSummary(Trigger trigger, bool withLineBreaks, bool includeTriggerName)
         {
+            if (trigger == null)
+            {
+                return null;
+            }
             string[][] eventControlStrings =
             {
                     new[] { "{0} → {2}" ,"{0}\n  → {2}" },
@@ -4923,7 +4931,8 @@ namespace MobiusEditor.RedAlert
                     new[] { "{0} → {2}; {1} → {3}",  "{0} → {2};\n{1} → {3}" },
             };
             // name, house, repeat status, event control
-            string trigFormat = !withLineBreaks ? "{0}: {1}, {2}, {3}" : "{0}: {1}, {2},\n{3}";
+            string trigFormat = (includeTriggerName ? "{3}: " : String.Empty)
+                + (!withLineBreaks ? "{0}, {1}, {2}" : "{0}, {1},\n{2}");
             string evtControlFormat = eventControlStrings[(int)trigger.EventControl][!withLineBreaks ? 0 : 1];
             string persistence = GameInfo.PERSISTENCE_NAMES[(int)trigger.PersistentType];
             string evt1 = GetEventString(trigger.Event1);
@@ -4933,10 +4942,10 @@ namespace MobiusEditor.RedAlert
             if (trigger.EventControl != TriggerMultiStyleType.Linked
                 && !TriggerAction.None.Equals(act2, StringComparison.OrdinalIgnoreCase))
             {
-                act1 = act1 + " + " + act2;
+                act1 = withLineBreaks ? (act1 + "\n  → " + act2) : (act1 + " + " + act2);
             }
             string evtControl = String.Format(evtControlFormat, evt1, evt2, act1, act2);
-            return String.Format(trigFormat, trigger.Name, trigger.House, persistence, evtControl);
+            return String.Format(trigFormat, trigger.House, persistence, evtControl, trigger.Name);
         }
 
         private string GetEventString(TriggerEvent evt)
@@ -5012,7 +5021,8 @@ namespace MobiusEditor.RedAlert
                     break;
                 case ActionTypes.TACTION_FORCE_TRIGGER:
                 case ActionTypes.TACTION_DESTROY_TRIGGER:
-                    return String.Format(GameInfo.TRIG_ARG_FORMAT, act, act.Trigger ?? Trigger.None);
+                    actionArg = act.Trigger ?? Trigger.None;
+                    break;
                 case ActionTypes.TACTION_DZ:
                 case ActionTypes.TACTION_REVEAL_SOME:
                 case ActionTypes.TACTION_REVEAL_ZONE:
@@ -5121,10 +5131,17 @@ namespace MobiusEditor.RedAlert
             return landInfo != null && landInfo.Buildable;
         }
 
-        public bool IsBuildingCapturable(Building building, out string info)
+        public bool? IsBuildingCapturable(Building building, out string info)
         {
-            bool capturable = building.Type.Capturable;
             info = null;
+            bool capturable = building.Type.Capturable;
+            if (bareRuleBuildings.TryGetValue(building.Type.Name, out BuildingType bt) && bt.Capturable != capturable)
+            {
+                info = String.Format("• This building type is made {0}capturable\n" +
+                                     "   due to a rules tweak in the map file.",
+                                     building.Type.Capturable ? String.Empty : "un");
+            }
+            
             return capturable;
         }
 

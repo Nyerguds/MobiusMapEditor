@@ -598,7 +598,7 @@ namespace MobiusEditor.Tools
                         CellMetrics tm = new CellMetrics(3, 3);
                         OccupierSet<ICellOccupier> technoSet = new OccupierSet<ICellOccupier>(tm);
                         technoSet.Add(4, mockUnit);
-                        MapRenderer.RenderAllTechnoTriggers(g, plugin.GameInfo, technoSet, tm.Bounds, Globals.PreviewTileSize, Layers, Color.LimeGreen, null, false);
+                        MapRenderer.RenderAllTechnoTriggers(g, plugin.GameInfo, technoSet, null, tm.Bounds, Globals.PreviewTileSize, Layers, Color.LimeGreen, null, false);
                     }
                 }
                 unitTypeMapPanel.MapImage = unitPreview;

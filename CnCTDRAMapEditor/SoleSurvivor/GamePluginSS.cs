@@ -260,6 +260,12 @@ namespace MobiusEditor.SoleSurvivor
             return Validate(forWarnings, true);
         }
 
+        protected override List<string> ResetMissionRules(INI extraIniText, bool forFootprintTest, out bool footPrintsChanged)
+        {
+            footPrintsChanged = false;
+            return new List<string>();
+        }
+
         public override HashSet<string> GetHousesWithProduction()
         {
             // Not applicable. Return empty set.

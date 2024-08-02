@@ -103,8 +103,9 @@ namespace MobiusEditor.Controls
             this.lblCapturable.Size = new System.Drawing.Size(30, 27);
             this.lblCapturable.TabIndex = 17;
             this.lblCapturable.TextAlign = System.Drawing.ContentAlignment.MiddleCenter;
-            this.lblCapturable.MouseEnter += new System.EventHandler(this.lblCapturable_MouseEnter);
+            this.lblCapturable.MouseEnter += new System.EventHandler(this.LblCapturable_MouseEnter);
             this.lblCapturable.MouseLeave += new System.EventHandler(this.HideToolTip);
+            this.lblCapturable.MouseMove += new System.Windows.Forms.MouseEventHandler(this.LblCapturable_MouseMove);
             // 
             // label1
             // 
@@ -235,6 +236,9 @@ namespace MobiusEditor.Controls
             this.triggerComboBox.Size = new System.Drawing.Size(114, 21);
             this.triggerComboBox.TabIndex = 9;
             this.triggerComboBox.SelectedIndexChanged += new System.EventHandler(this.comboBox_SelectedValueChanged);
+            this.triggerComboBox.MouseEnter += new System.EventHandler(this.TriggerComboBox_MouseEnter);
+            this.triggerComboBox.MouseLeave += new System.EventHandler(this.HideToolTip);
+            this.triggerComboBox.MouseMove += new System.Windows.Forms.MouseEventHandler(this.TriggerComboBox_MouseMove);
             // 
             // basePriorityNud
             // 
@@ -313,6 +317,7 @@ namespace MobiusEditor.Controls
             this.lblTriggerTypesInfo.TextAlign = System.Drawing.ContentAlignment.MiddleCenter;
             this.lblTriggerTypesInfo.MouseEnter += new System.EventHandler(this.LblTriggerTypesInfo_MouseEnter);
             this.lblTriggerTypesInfo.MouseLeave += new System.EventHandler(this.HideToolTip);
+            this.lblTriggerTypesInfo.MouseMove += new System.Windows.Forms.MouseEventHandler(this.LblTriggerTypesInfo_MouseMove);
             // 
             // ObjectProperties
             // 

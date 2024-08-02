@@ -29,7 +29,11 @@ namespace MobiusEditor.Dialogs
     public partial class TeamTypesDialog : Form, ListedControlController<TeamTypeClass>, ListedControlController<TeamTypeMission>
     {
         private Bitmap infoImage;
+        private Control tooltipShownOn;
+        private string triggerInfoToolTip;
         private string triggerToolTip;
+        private string[] filteredEvents;
+        private string[] filteredActions;
 
         private const int maxLength = 8;
         private readonly IGamePlugin plugin;
@@ -114,9 +118,9 @@ namespace MobiusEditor.Dialogs
             cmbWaypoint.DisplayMember = "Label";
 
             string[] items = plugin.Map.FilterUnitTriggers().Select(t => t.Name).Distinct().ToArray();
-            string[] filteredEvents = plugin.Map.EventTypes.Where(ev => plugin.Map.UnitEventTypes.Contains(ev)).Distinct().ToArray();
-            string[] filteredActions = plugin.Map.ActionTypes.Where(ac => plugin.Map.UnitActionTypes.Contains(ac)).Distinct().ToArray();
-            triggerToolTip = Map.MakeAllowedTriggersToolTip(filteredEvents, filteredActions);
+            this.filteredEvents = plugin.Map.EventTypes.Where(ev => plugin.Map.UnitEventTypes.Contains(ev)).Distinct().ToArray();
+            this.filteredActions = plugin.Map.ActionTypes.Where(ac => plugin.Map.UnitActionTypes.Contains(ac)).Distinct().ToArray();
+            triggerInfoToolTip = Map.MakeAllowedTriggersToolTip(filteredEvents, filteredActions);
             HashSet<string> allowedTriggers = new HashSet<string>(items);
             items = Trigger.None.Yield().Concat(plugin.Map.Triggers.Select(t => t.Name).Where(t => allowedTriggers.Contains(t)).Distinct()).ToArray();
             cmbTrigger.DataSource = items;
@@ -141,32 +145,82 @@ namespace MobiusEditor.Dialogs
             return image;
         }
 
-        private void LblTriggerInfo_MouseEnter(Object sender, EventArgs e)
+        private void CmbTrigger_SelectedIndexChanged(object sender, EventArgs e)
+        {
+            string selected = cmbTrigger.SelectedItem as string;
+            Trigger trig = plugin.Map.Triggers.FirstOrDefault(t => String.Equals(t.Name, selected, StringComparison.OrdinalIgnoreCase));
+            triggerInfoToolTip = Map.MakeAllowedTriggersToolTip(filteredEvents, filteredActions, trig);
+            triggerToolTip = plugin.TriggerSummary(trig, true, false);
+            Point pt = MousePosition;
+            Point lblPos = lblTriggerInfo.PointToScreen(Point.Empty);
+            Point cmbPos = cmbTrigger.PointToScreen(Point.Empty);
+            Rectangle lblInfoRect = new Rectangle(lblPos, lblTriggerInfo.Size);
+            Rectangle cmbTrigRect = new Rectangle(cmbPos, cmbTrigger.Size);
+            if (lblInfoRect.Contains(pt))
+            {
+                this.toolTip1.Hide(lblTriggerInfo);
+                LblTriggerInfo_MouseEnter(lblTriggerInfo, e);
+            }
+            else if (cmbTrigRect.Contains(pt))
+            {
+                this.toolTip1.Hide(cmbTrigger);
+                CmbTrigger_MouseEnter(cmbTrigger, e);
+            }
+        }
+
+        private void CmbTrigger_MouseEnter(Object sender, EventArgs e)
         {
             Control target = sender as Control;
             ShowToolTip(target, triggerToolTip);
         }
 
+        private void CmbTrigger_MouseMove(object sender, MouseEventArgs e)
+        {
+            if (tooltipShownOn != sender)
+            {
+                CmbTrigger_MouseEnter(sender, e);
+            }
+        }
+
+        private void LblTriggerInfo_MouseEnter(Object sender, EventArgs e)
+        {
+            Control target = sender as Control;
+            ShowToolTip(target, triggerInfoToolTip);
+        }
+
+        private void LblTriggerInfo_MouseMove(object sender, MouseEventArgs e)
+        {
+            if (tooltipShownOn != sender)
+            {
+                LblTriggerInfo_MouseEnter(sender, e);
+            }
+        }
+
         private void ShowToolTip(Control target, string message)
         {
-
             if (target == null || message == null)
             {
-                this.toolTip1.Hide(target);
+                this.HideToolTip(target, null);
                 return;
             }
             Point resPoint = target.PointToScreen(new Point(0, target.Height));
             MethodInfo m = toolTip1.GetType().GetMethod("SetTool",
                        BindingFlags.Instance | BindingFlags.NonPublic);
-            // private void SetTool(IWin32Window win, string text, TipInfo.Type type, Point position)
             m.Invoke(toolTip1, new object[] { target, message, 2, resPoint });
-            //this.toolTip1.Show(triggerToolTip, target, target.Width, 0, 10000);
+            this.tooltipShownOn = target;
         }
 
-        private void LblTriggerInfo_MouseLeave(Object sender, EventArgs e)
+        private void HideToolTip(object sender, EventArgs e)
         {
-            Control target = sender as Control;
-            this.toolTip1.Hide(target);
+            if (this.tooltipShownOn != null)
+            {
+                this.toolTip1.Hide(this.tooltipShownOn);
+            }
+            if (sender is Control target)
+            {
+                this.toolTip1.Hide(target);
+            }
+            tooltipShownOn = null;
         }
 
         private void TeamTypesListView_SelectedIndexChanged(object sender, EventArgs e)

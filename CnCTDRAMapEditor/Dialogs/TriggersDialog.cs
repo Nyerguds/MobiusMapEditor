@@ -752,7 +752,7 @@ namespace MobiusEditor.Dialogs
                 }
                 else
                 {
-                    return plugin.TriggerSummary(toDestr, true);
+                    return plugin.TriggerSummary(toDestr, true, true);
                 }
             }
             else if (isFlare)
@@ -1404,7 +1404,7 @@ namespace MobiusEditor.Dialogs
         private string RefreshTriggerLabel(String triggerName)
         {
             Trigger trigger = triggers.FirstOrDefault(t => t.Name.Equals(triggerName, StringComparison.OrdinalIgnoreCase));
-            return trigger == null ? null : plugin.TriggerSummary(trigger, true);
+            return trigger == null ? null : plugin.TriggerSummary(trigger, true, false);
         }
 
         private void ShowToolTip(Control target, string message)
@@ -1417,10 +1417,8 @@ namespace MobiusEditor.Dialogs
             Point resPoint = target.PointToScreen(new Point(0, target.Height));
             MethodInfo m = toolTip1.GetType().GetMethod("SetTool",
                        BindingFlags.Instance | BindingFlags.NonPublic);
-            // private void SetTool(IWin32Window win, string text, TipInfo.Type type, Point position)
             m.Invoke(toolTip1, new object[] { target, message, 2, resPoint });
             this.tooltipShownOn = target;
-            //this.toolTip1.Show(triggerToolTip, target, target.Width, 0, 10000);
         }
 
         private void HideToolTip(Control target)

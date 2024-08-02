@@ -131,8 +131,9 @@ namespace MobiusEditor.Interface
         /// <summary>Gives a readable string that shows the contents of a trigger.</summary>
         /// <param name="trigger">The trigger to summarise</param>
         /// <param name="withLineBreaks">True to format the trigger info with line breaks.</param>
+        /// <param name="includeTriggerName">True to include the trigger name in the info.</param>
         /// <returns>The summarisation of the trigger</returns>
-        string TriggerSummary(Trigger trigger, bool withLineBreaks);
+        string TriggerSummary(Trigger trigger, bool withLineBreaks, bool includeTriggerName);
 
         /// <summary>Re-initialises the flag colors for this game.</summary>
         /// <returns>The team colors</returns>
@@ -141,6 +142,6 @@ namespace MobiusEditor.Interface
         bool IsLandUnitPassable(LandType landType);
         bool IsBoatPassable(LandType landType);
         bool IsBuildable(LandType landType);
-        bool IsBuildingCapturable(Building building, out string info);
+        bool? IsBuildingCapturable(Building building, out string info);
     }
 }

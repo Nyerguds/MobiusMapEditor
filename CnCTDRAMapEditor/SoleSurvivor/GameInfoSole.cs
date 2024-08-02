@@ -11,13 +11,11 @@
 //    TERMS AND CONDITIONS FOR COPYING, DISTRIBUTION AND MODIFICATION
 //
 //   0. You just DO WHAT THE FUCK YOU WANT TO.
-using System.Collections.Generic;
 using System.Drawing;
 using System.Linq;
 using MobiusEditor.Interface;
 using MobiusEditor.Model;
 using MobiusEditor.TiberianDawn;
-using MobiusEditor.Utility;
 
 namespace MobiusEditor.SoleSurvivor
 {
