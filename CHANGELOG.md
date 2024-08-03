@@ -632,13 +632,15 @@ Unreleased.
 * Dropping a file into the editor that causes a dialog to be opened (like mix files and images) will no longer freeze the source you dragged the file from while the dialog in the editor is open.
 * Removed theater restrictions on Terrain objects; if the object is found in the theater, it will be shown.
 * Fixed bug that prevented the Red Alert civilian "C3" from loading, and that prevented the Einstein color fix from working.
-* Added tooltips to Triggers editor that give a summary of teamtypes and triggers used as trigger arguments. This includes a tooltip on the trigger action on Tiberian Dawn's "Destroy Trigger" and "DZ at 'Z'" actions, respectively showing info on the corresponding trigger and the flare waypoint.
+* In the trigger editor, when hovering over the trigger action dropdown when it has one of the Tiberian Dawn "Dstry Trig '????'" actions selected, a tooltip is shown that shows the contents of the linked trigger to destroy.
+* In the trigger editor, when hovering over the trigger action dropdown when it has the Tiberian Dawn "DZ at 'Z'" action selected, a tooltip is shown that shows the currently set location of the Flare waypoint.
+* Added a tooltip to all places that show a triggers dropdown, to show the contents of the currently selected trigger.
 * Added mission load checks and warnings on teamtype arguments, and on the limits of units/orders list lengths.
 * Added system to avoid loading the same mod from both the workshop items and from the local mods under the Documents folder. If given by name, local mods are given priority.
 * The \[Enter\] shortcut for the "Jump To" function is now indicated in the status bar in Waypoints and Celltriggers mode.
 * Added a specific "PreviewScaleClassic" setting.
 * Fixed Red Alert map load not giving feedback on the removal of Aircraft.
-* Added an indicator on the Autocreate option on Teams if the Max Allowed setting is set to 0.
+* Added a warning indicator on the Autocreate option in the Teams editor if the "Max Allowed" setting is set to 0.
 * Enabling map terrain type indicators will now show a different color for each terrain type, editable per type in the settings file.
 * The placement previews for map templates will now always show the terrain types. This indication will be less pronounced when the map terrain type indicators option is disabled.
 * Added extra indicators (shortcut: F4) for cells occupied by objects on the map.
@@ -665,6 +667,4 @@ Unreleased.
 * Fixed an issue in the redo of drag-moving infantry, that created a ghost duplicate of the dragged infantry unit that could cause crashes.
 * Fixed an issue with the main editor window becoming hard to select if it was minimised during a load or save operation, because it would select the tool window instead of restoring the main window. To fix this, the tool window is now never shown if the main window is minimised.
 * Added an indicator to the building tool to indicate whether a building is capturable.
-* Added support for C&C95 v1.06 bib disabling and capturability rule tweaks.
-* Added trigger content tooltips to all places that show a triggers dropdown.
-* Fixed trigger content tooltip info for Red Alert's trigger actions "Force trigger" and "Destroy trigger".
+* Added support for C&C95 v1.06c's bib disabling and capturability rule tweaks.
