@@ -16,11 +16,13 @@ using MobiusEditor.Interface;
 using System;
 using System.Collections.Generic;
 using System.ComponentModel;
+using System.Diagnostics;
 using System.Drawing;
 using System.Runtime.CompilerServices;
 
 namespace MobiusEditor.Model
 {
+    [DebuggerDisplay("{Type}: {Trigger}")]
     public class Unit : ITechno, ICellOverlapper, ICellOccupier, INotifyPropertyChanged, ICloneable
     {
         public event PropertyChangedEventHandler PropertyChanged;

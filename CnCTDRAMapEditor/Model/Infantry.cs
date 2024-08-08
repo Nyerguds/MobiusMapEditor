@@ -16,6 +16,7 @@ using MobiusEditor.Interface;
 using System;
 using System.Collections.Generic;
 using System.ComponentModel;
+using System.Diagnostics;
 using System.Drawing;
 using System.Linq;
 using System.Numerics;
@@ -32,6 +33,7 @@ namespace MobiusEditor.Model
         LowerRight /**/ = 4
     }
 
+    [DebuggerDisplay("{Type}: {Trigger}")]
     public class Infantry : ITechno, INotifyPropertyChanged, ICloneable
     {
         public event PropertyChangedEventHandler PropertyChanged;

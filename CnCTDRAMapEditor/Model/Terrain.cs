@@ -15,12 +15,14 @@
 using System;
 using System.Collections.Generic;
 using System.ComponentModel;
+using System.Diagnostics;
 using System.Drawing;
 using System.Runtime.CompilerServices;
 using MobiusEditor.Interface;
 
 namespace MobiusEditor.Model
 {
+    [DebuggerDisplay("{Type}: {Trigger}")]
     public class Terrain : ITechno, ICellOverlapper, ICellOccupier, INotifyPropertyChanged, ICloneable, IEquatable<Terrain>
     {
         public event PropertyChangedEventHandler PropertyChanged;

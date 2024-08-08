@@ -1089,7 +1089,7 @@ namespace MobiusEditor.Tools
                     g.DrawImage(selected.Thumbnail, new Rectangle(Point.Empty, selected.Thumbnail.Size), 0, 0, templatePreview.Width, templatePreview.Height, GraphicsUnit.Pixel);
                     if (templates != null)
                     {
-                        MapRenderer.RenderHashAreas(g, plugin, templates, null, Globals.PreviewTileSize, templateTypeMetrics.Bounds, ignoredPoints, true, false);
+                        MapRenderer.RenderHashAreas(g, plugin, templates, null, null, Globals.PreviewTileSize, templateTypeMetrics.Bounds, ignoredPoints, true, false);
                     }
                 }
                 // paint selected.Thumbnail;
@@ -1945,15 +1945,17 @@ namespace MobiusEditor.Tools
             }
             if (Layers.HasAnyFlags(MapLayerFlag.LandTypes | MapLayerFlag.TechnoOccupancy))
             {
-                OccupierSet<ICellOccupier> technos = Layers.HasFlag(MapLayerFlag.TechnoOccupancy) ? previewMap.Technos : null;
+                bool renderTechnos = Layers.HasFlag(MapLayerFlag.TechnoOccupancy);
+                OccupierSet<ICellOccupier> technos = renderTechnos ? previewMap.Technos : null;
+                OccupierSet<ICellOccupier> buildings = renderTechnos ? previewMap.Buildings : null;
                 CellGrid<Template> templates = Layers.HasFlag(MapLayerFlag.LandTypes) ? previewMap.Templates : null;
-                MapRenderer.RenderHashAreas(graphics, plugin, templates, technos, Globals.MapTileSize, visibleCells, placementArea, false, false);
+                MapRenderer.RenderHashAreas(graphics, plugin, templates, technos, buildings, Globals.MapTileSize, visibleCells, placementArea, false, false);
             }
             if (placementMode || fillMode)
             {
                 CellGrid<Template> templates = previewMap.Templates;
                 bool isExtra = !Layers.HasFlag(MapLayerFlag.LandTypes);
-                MapRenderer.RenderHashAreas(graphics, plugin, templates, null, Globals.MapTileSize, placementRect, placementAreaClear, true, isExtra);
+                MapRenderer.RenderHashAreas(graphics, plugin, templates, null, null, Globals.MapTileSize, placementRect, placementAreaClear, true, isExtra);
             }
             if (boundsMode)
             {

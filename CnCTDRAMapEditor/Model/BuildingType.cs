@@ -18,11 +18,9 @@ using MobiusEditor.Utility;
 using System;
 using System.Diagnostics;
 using System.Drawing;
-using System.Linq;
 
 namespace MobiusEditor.Model
 {
-
     [Flags]
     public enum BuildingTypeFlag
     {

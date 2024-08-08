@@ -2767,12 +2767,13 @@ namespace MobiusEditor.Render
         /// <param name="plugin">Game plugin</param>
         /// <param name="templates">The map data itself</param>
         /// <param name="technos">If given, draws a green grid on the locations of the technos in the given set.</param>
+        /// <param name="buildings">If given, draws a green grid on the locations of the buildings in the given set.</param>
         /// <param name="tileSize">Tile size</param>
         /// <param name="visibleCells">If given, only cells in the given area are marked.</param>
         /// <param name="ignoreCells">Cells to completely ignore during the drawing operation.</param>
         /// <param name="forPreview">Indicates this is painted for placement preview purposes, meaning colours with their alpha set to 0 are restored and also handled.</param>
         /// <param name="soft">True to paint the hashing with only 25% alpha instead of the usual 50%.</param>
-        public static void RenderHashAreas(Graphics graphics, IGamePlugin plugin, CellGrid<Template> templates, OccupierSet<ICellOccupier> technos, Size tileSize, Rectangle visibleCells, HashSet<Point> ignoreCells, bool forPreview, bool soft)
+        public static void RenderHashAreas(Graphics graphics, IGamePlugin plugin, CellGrid<Template> templates, OccupierSet<ICellOccupier> technos, OccupierSet<ICellOccupier> buildings, Size tileSize, Rectangle visibleCells, HashSet<Point> ignoreCells, bool forPreview, bool soft)
         {
             // Check which cells need to be marked.
             LandType clearLand = LandType.Clear;
@@ -2785,11 +2786,15 @@ namespace MobiusEditor.Render
             {
                 technos = null;
             }
+            if (buildings != null && buildings.Count() == 0)
+            {
+                buildings = null;
+            }
             if (templates != null && templates.Length == 0)
             {
                 templates = null;
             }
-            if (technos == null && templates == null)
+            if (technos == null && buildings != null && templates == null)
             {
                 return;
             }
@@ -2811,7 +2816,7 @@ namespace MobiusEditor.Render
                 LandType landType = LandType.None;
                 Color curCol;
                 // Techno indication hijacks LandType.None just because it's in this loop.
-                bool forTechnos = i <= 0 && technos != null;
+                bool forTechnos = i <= 0 && (technos != null || buildings != null);
                 bool forTechnosPart = forTechnos && i < 0;
                 bool forTechnosFull = forTechnos && i == 0;
                 if (forTechnosPart)
@@ -2858,20 +2863,38 @@ namespace MobiusEditor.Render
                             {
                                 continue;
                             }
-                            bool renderTerrainType = true;
-                            if (technos != null)
+                            bool renderTerrainType = templates != null;
+                            if (technos != null || buildings != null)
                             {
-                                ICellOccupier techno = technos[y, x];
+                                ICellOccupier techno = technos?[y, x];
+                                ICellOccupier building = buildings?[y, x];
+                                bool isBuilding;
+                                if (building is Building bld)
+                                {
+                                    // Point fetch will always succeed, since the building comes from that list.
+                                    Point pt = buildings[bld].Value;
+                                    // Offset relative to building orgin point
+                                    int bldCellX = x - pt.X;
+                                    int bldCellY = y - pt.Y;
+                                    Size size = bld.Size;
+                                    // Check if inside BaseOccupyMask. If not, it's just bib or extra refresh area, so ignore.
+                                    isBuilding = bldCellX < size.Width && bldCellY < size.Height && bld.BaseOccupyMask[bldCellY, bldCellX];
+                                }
+                                else
+                                {
+                                    isBuilding = building != null;
+                                }
+                                bool isTechno = techno != null || isBuilding;
                                 // Skip if it's the techno-loop and there's no techno,
                                 // or if it's not the techno-loop and there is a techno (to avoid overlap).
-                                if ((techno != null && !forTechnos) || (techno == null && forTechnos))
+                                if ((isTechno && !forTechnos) || (!isTechno && forTechnos))
                                 {
                                     continue;
                                 }
-                                if (forTechnos && techno != null)
+                                if (forTechnos && isTechno)
                                 {
                                     renderTerrainType = false;
-                                    bool incomplete = techno is InfantryGroup ifg && ifg.Infantry.Any(inf => inf == null);
+                                    bool incomplete = !isBuilding && techno is InfantryGroup ifg && ifg.Infantry.Any(inf => inf == null);
                                     if (incomplete && forTechnosFull || !incomplete && forTechnosPart)
                                     {
                                         continue;

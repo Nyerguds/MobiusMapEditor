@@ -286,11 +286,12 @@ namespace MobiusEditor.Tools
             {
                 CellGrid<Template> templates = layersToRender.HasFlag(MapLayerFlag.LandTypes)
                     && !manuallyHandledLayers.HasFlag(MapLayerFlag.LandTypes) ? map.Templates : null;
-                OccupierSet<ICellOccupier> technos = layersToRender.HasFlag(MapLayerFlag.TechnoOccupancy)
-                    && !manuallyHandledLayers.HasFlag(MapLayerFlag.TechnoOccupancy) ? map.Technos : null;
+                bool renderTechnos = layersToRender.HasFlag(MapLayerFlag.TechnoOccupancy) && !manuallyHandledLayers.HasFlag(MapLayerFlag.TechnoOccupancy);
+                OccupierSet<ICellOccupier> technos = renderTechnos ? map.Technos : null;
+                OccupierSet<ICellOccupier> buildings = renderTechnos ? map.Buildings : null;
                 if (templates != null || technos != null)
                 {
-                    MapRenderer.RenderHashAreas(graphics, plugin, templates, technos, Globals.MapTileSize, visibleCells, null, false, false);
+                    MapRenderer.RenderHashAreas(graphics, plugin, templates, technos, buildings, Globals.MapTileSize, visibleCells, null, false, false);
                 }
             }
             if ((Globals.ShowPlacementGrid && inPlacementMode) ||

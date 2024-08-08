@@ -17,6 +17,7 @@ using MobiusEditor.Render;
 using MobiusEditor.Utility;
 using System;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.Drawing;
 using System.IO;
 using System.Linq;
@@ -66,6 +67,7 @@ namespace MobiusEditor.Model
         River,      // Rocky riverbed.
     }
 
+    [DebuggerDisplay("{Name}")]
     public class TemplateType : IBrowsableType
     {
         public ushort ID { get; private set; }

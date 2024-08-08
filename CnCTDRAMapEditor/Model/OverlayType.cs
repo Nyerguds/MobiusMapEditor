@@ -15,6 +15,7 @@
 using MobiusEditor.Interface;
 using MobiusEditor.Render;
 using System;
+using System.Diagnostics;
 using System.Drawing;
 
 namespace MobiusEditor.Model
@@ -49,10 +50,9 @@ namespace MobiusEditor.Model
         /// <summary>Is a crate.</summary>
         Crate           /**/ = WoodCrate | SteelCrate,
     }
-
+    [DebuggerDisplay("{Name}")]
     public class OverlayType : ICellOccupier, IBrowsableType
     {
-
         public int ID { get; private set; }
         public string Name { get; private set; }
         public string DisplayName { get; private set; }

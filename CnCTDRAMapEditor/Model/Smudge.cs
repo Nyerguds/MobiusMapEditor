@@ -16,12 +16,13 @@ using MobiusEditor.Interface;
 using System;
 using System.Collections.Generic;
 using System.ComponentModel;
+using System.Diagnostics;
 using System.Drawing;
 using System.Runtime.CompilerServices;
 
 namespace MobiusEditor.Model
 {
-    [System.Diagnostics.DebuggerDisplay("{Type.Name}")]
+    [DebuggerDisplay("{Type}: {Icon}")]
     public class Smudge: ICellOverlapper, INotifyPropertyChanged, ICloneable, IEquatable<Smudge>
     {
         public event PropertyChangedEventHandler PropertyChanged;
