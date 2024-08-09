@@ -418,7 +418,6 @@
     <Compile Include="RedAlert\TheaterTypes.cs" />
     <Compile Include="RedAlert\UnitTypes.cs" />
     <Compile Include="Render\MapRenderer.cs" />
-    <Compile Include="Settings.cs" />
     <Compile Include="SoleSurvivor\GamePluginSS.cs" />
     <Compile Include="SoleSurvivor\GameInfoSole.cs" />
     <Compile Include="SoleSurvivor\OverlayTypes.cs" />
@@ -819,6 +818,9 @@
     </None>
     <None Include="Resources\UI_CustomMissionPreviewDefault.png" />
     <Content Include="License.txt">
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+    </Content>
+    <Content Include="Licenses\Rampastring.txt">
       <CopyToOutputDirectory>Always</CopyToOutputDirectory>
     </Content>
     <Content Include="Licenses\Newtonsoft.Json.txt">

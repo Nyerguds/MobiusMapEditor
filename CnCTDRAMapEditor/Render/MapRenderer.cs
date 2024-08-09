@@ -1707,7 +1707,7 @@ namespace MobiusEditor.Render
             ICellOverlapper objectToCheck, Point objectLocation, int objectPaintOrder)
         {
             ICellOccupier techno = map.Technos[location];
-            // Single-cell occupier. Always pass.
+            // Single-cell occupier. Always pass. Since this is only used for single-cell objects, only map.Technos needs to be checked.
             if (unitsAlwaysOverlap && (techno is Unit || techno is InfantryGroup) && techno != objectToCheck)
             {
                 return true;
@@ -1720,6 +1720,7 @@ namespace MobiusEditor.Render
             {
                 return false;
             }
+            // Overlappers list contains both buildings and other technos.
             foreach (ICellOverlapper ovl in technos)
             {
                 ICellOccupier occ = ovl as ICellOccupier;

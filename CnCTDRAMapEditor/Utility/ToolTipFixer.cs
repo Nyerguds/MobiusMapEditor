@@ -21,11 +21,11 @@ namespace MobiusEditor.Utility
     public class ToolTipFixer: IDisposable
     {
         private ToolTip tooltip;
-        private Dictionary<Type, Int32> extraWidths;
+        private Dictionary<Type, int> extraWidths;
         private int showDuration;
         private List<Control> attachedControls;
 
-        public ToolTipFixer(Form form, ToolTip tooltip, int showDuration, Dictionary<Type, Int32> extraWidths)
+        public ToolTipFixer(Form form, ToolTip tooltip, int showDuration, Dictionary<Type, int> extraWidths)
         {
             this.tooltip = tooltip;
             this.showDuration = showDuration;
@@ -36,7 +36,7 @@ namespace MobiusEditor.Utility
         private void FixToolTips(Control control, List<Control> tooltipOwners)
         {
             // Allows tooltips that remain open for longer than 5 seconds.
-            Boolean mainCall = tooltipOwners == null;
+            bool mainCall = tooltipOwners == null;
             if (mainCall)
                 tooltipOwners = new List<Control>();
             foreach (Control c in control.Controls)
@@ -70,8 +70,8 @@ namespace MobiusEditor.Utility
         private void ShowToolTip(object sender, EventArgs e)
         {
             Control target = sender as Control;
-            String tooltipText;
-            if (target == null || (tooltipText = target.Tag as String) == null)
+            string tooltipText;
+            if (target == null || (tooltipText = target.Tag as string) == null)
                 return;
             int offset = target.Width;
             // Add width of the next column.
@@ -81,7 +81,7 @@ namespace MobiusEditor.Utility
             this.tooltip.Show(tooltipText, target, offset, 0, showDuration);
         }
 
-        private void HideToolTip(Object sender, EventArgs e)
+        private void HideToolTip(object sender, EventArgs e)
         {
             Control target = sender as Control;
             if (target != null)
@@ -126,7 +126,7 @@ namespace MobiusEditor.Utility
             //Point formMousePosition = lbSender.FindForm().MousePosition;
             Point listBoxClientAreaPosition = lbSender.PointToClient(formMousePosition);
             int hoveredIndex = lbSender.IndexFromPoint(listBoxClientAreaPosition);
-            string hoveredItem = hoveredIndex == -1 ? null : lbSender.Items[hoveredIndex] as String;
+            string hoveredItem = hoveredIndex == -1 ? null : lbSender.Items[hoveredIndex] as string;
             if (hoveredItem == null)
             {
                 tooltip.Active = false;
@@ -135,7 +135,7 @@ namespace MobiusEditor.Utility
             }
             else
             {
-                if (tooltip.Tag as String == hoveredItem)
+                if (tooltip.Tag as string == hoveredItem)
                     return;
                 string toolTipText = itemDescriptions.TryGetValue(hoveredItem, out toolTipText) ? toolTipText : defaultVal;
                 tooltip.Active = false;
