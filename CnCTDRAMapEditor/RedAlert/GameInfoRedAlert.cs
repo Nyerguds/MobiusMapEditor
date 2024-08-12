@@ -252,7 +252,7 @@ namespace MobiusEditor.RedAlert
                     break;
                 case ClassicFont.WaypointsLong:
                     crop = true;
-                    fontName = "6point.fnt";
+                    fontName = "editfnt.fnt";
                     remap = GetClassicFontRemapSimple(fontName, tsmc, trm, textColor, 2, 3);
                     break;
                 case ClassicFont.CellTriggers:
@@ -266,14 +266,18 @@ namespace MobiusEditor.RedAlert
                     remap = GetClassicFontRemapSimple(fontName, tsmc, trm, textColor);
                     break;
                 case ClassicFont.TechnoTriggers:
-                case ClassicFont.InfantryTriggers:
+                    crop = true;
+                    fontName = "editfnt.fnt";
+                    remap = GetClassicFontRemapSimple(fontName, tsmc, trm, textColor, 2, 3);
+                    break;
+                case ClassicFont.TechnoTriggersSmall:
                     crop = true;
                     fontName = "3point.fnt";
                     remap = GetClassicFontRemapSimple(fontName, tsmc, trm, textColor);
                     break;
                 case ClassicFont.FakeLabels:
                     crop = true;
-                    fontName = "6point.fnt";
+                    fontName = "editfnt.fnt";
                     remap = GetClassicFontRemapSimple(fontName, tsmc, trm, textColor, 2, 3);
                     break;
             }

@@ -2117,7 +2117,7 @@ namespace MobiusEditor.TiberianDawn
                     modified = true;
                     continue;
                 }
-                if ((overlayType.IsWall || overlayType.IsSolid) && Map.Technos.ObjectAt(cell, out ICellOccupier techno))
+                if ((overlayType.IsWall || overlayType.IsSolid) && Map.Buildings.ObjectAt(cell, out ICellOccupier techno))
                 {
                     string desc = overlayType.IsWall ? "Wall" : "Solid overlay";
                     if (techno is Building building)
@@ -2125,19 +2125,9 @@ namespace MobiusEditor.TiberianDawn
                         errors.Add(string.Format("{0} '{1}' overlaps structure '{2}' at cell {3}; skipping.", desc, overlayType.Name, building.Type.Name, cell));
                         modified = true;
                     }
-                    else if (techno is Terrain terrain)
+                    else if (techno is Overlay ovl)
                     {
-                        errors.Add(string.Format("{0} '{1}' overlaps terrain '{2}' at cell {3}; skipping.", desc, overlayType.Name, terrain.Type.Name, cell));
-                        modified = true;
-                    }
-                    else if (techno is Unit unit)
-                    {
-                        errors.Add(string.Format("{0} '{1}' overlaps unit '{2}' at cell {3}; skipping.", desc, overlayType.Name, unit.Type.Name, cell));
-                        modified = true;
-                    }
-                    else if (techno is InfantryGroup)
-                    {
-                        errors.Add(string.Format("{0} '{1}' overlaps infantry at cell {2}; skipping.", desc, overlayType.Name, cell));
+                        errors.Add(string.Format("{0} '{1}' overlaps overlay '{2}' at cell {3}; skipping.", desc, overlayType.Name, ovl.Type.Name, cell));
                         modified = true;
                     }
                     else

@@ -179,7 +179,11 @@ namespace MobiusEditor.TiberianDawn
                     remap = GetClassicFontRemapSimple(fontName, tsmc, trm, textColor);
                     break;
                 case ClassicFont.TechnoTriggers:
-                case ClassicFont.InfantryTriggers:
+                    crop = true;
+                    fontName = "scorefnt.fnt";
+                    remap = GetClassicFontRemapSimple(fontName, tsmc, trm, textColor);
+                    break;
+                case ClassicFont.TechnoTriggersSmall:
                     crop = true;
                     fontName = "3point.fnt";
                     remap = GetClassicFontRemapSimple(fontName, tsmc, trm, textColor);

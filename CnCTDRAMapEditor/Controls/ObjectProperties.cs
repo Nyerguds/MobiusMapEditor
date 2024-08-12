@@ -151,7 +151,6 @@ namespace MobiusEditor.Controls
             captureUnknownImage = ToolStripRenderer.CreateDisabledImage(captureImage);
             houseComboBox.DataSource = plugin.Map.Houses.Select(t => new TypeItem<HouseType>(t.Type.Name, t.Type)).ToArray();
             missionComboBox.DataSource = plugin.Map.MissionTypes;
-            UpdateDataSource();
             Disposed += (sender, e) =>
             {
                 Object = null;
@@ -166,14 +165,22 @@ namespace MobiusEditor.Controls
 
         private void UpdateDataSource()
         {
+            if (obj == null)
+            {
+                return;
+            }
             string selected = triggerComboBox.SelectedItem as string;
             triggerComboBox.DataBindings.Clear();
             triggerComboBox.SelectedIndexChanged -= this.TriggerComboBox_SelectedIndexChanged;
             triggerComboBox.DataSource = null;
             triggerComboBox.Items.Clear();
             string[] items;
-            Boolean isAircraft = obj is Unit un && un.Type.IsAircraft;
-            Boolean isOnMap = true;
+            bool isAircraft = obj is Unit un && un.Type.IsAircraft;
+            bool isOnMap = true;
+            if (selected == null && obj is ITechno tch)
+            {
+                selected = tch.Trigger;
+            }
             switch (obj)
             {
                 case Infantry infantry:
@@ -206,7 +213,6 @@ namespace MobiusEditor.Controls
             int sel = triggerComboBox.SelectedIndex;
             triggerComboBox.SelectedIndexChanged += this.TriggerComboBox_SelectedIndexChanged;
             triggerComboBox.SelectedItem = items[selectIndex];
-            TriggerComboBox_SelectedIndexChanged(triggerComboBox, new EventArgs());
             if (sel == selectIndex)
             {
                 TriggerComboBox_SelectedIndexChanged(triggerComboBox, new EventArgs());

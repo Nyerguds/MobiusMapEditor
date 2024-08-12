@@ -2025,16 +2025,16 @@ namespace MobiusEditor.Render
 
         public static void RenderAllTechnoTriggers(Graphics graphics, GameInfo gameInfo, OccupierSet<ICellOccupier> mapTechnos, OccupierSet<ICellOccupier> mapBuildings, Rectangle visibleCells, Size tileSize, MapLayerFlag layersToRender, Color color, string toPick, bool excludePick)
         {
-            string classicFont = null;
-            bool cropClassicFont = false;
-            string classicFontInf = null;
-            bool cropClassicFontInf = false;
-            TeamRemap remapClassicFont = null;
-            TeamRemap remapClassicFontInf = null;
+            string classicFontLarge = null;
+            bool cropClassicFontLarge = false;
+            string classicFontSmall = null;
+            bool cropClassicFontSmall = false;
+            TeamRemap remapClassicFontLarge = null;
+            TeamRemap remapClassicFontSmall = null;
             if (Globals.TheTilesetManager is TilesetManagerClassic tsmc && Globals.TheTeamColorManager is TeamRemapManager trm)
             {
-                classicFont = gameInfo.GetClassicFontInfo(ClassicFont.TechnoTriggers, tsmc, trm, color, out cropClassicFont, out remapClassicFont);
-                classicFontInf = gameInfo.GetClassicFontInfo(ClassicFont.InfantryTriggers, tsmc, trm, color, out cropClassicFontInf, out remapClassicFontInf);
+                classicFontLarge = gameInfo.GetClassicFontInfo(ClassicFont.TechnoTriggers, tsmc, trm, color, out cropClassicFontLarge, out remapClassicFontLarge);
+                classicFontSmall = gameInfo.GetClassicFontInfo(ClassicFont.TechnoTriggersSmall, tsmc, trm, color, out cropClassicFontSmall, out remapClassicFontSmall);
             }
             double tileScaleHor = tileSize.Width / 128.0;
             float borderSize = Math.Max(0.5f, tileSize.Width / 60.0f);
@@ -2051,8 +2051,9 @@ namespace MobiusEditor.Render
                         {
                             if (visibleCells.IntersectsWith(new Rectangle(topLeft, terrain.Type.Size)))
                             {
-                                Size size = new Size(terrain.Type.Size.Width * tileSize.Width, terrain.Type.Size.Height * tileSize.Height);
-                                triggers = new (string, Rectangle, int)[] { (terrain.Trigger, new Rectangle(location, size), terrain.IsPreview ? Globals.PreviewAlphaInt : 255) };
+                                Size size = new Size(terrain.Type.Size.Width * Globals.OriginalTileWidth, terrain.Type.Size.Height * Globals.OriginalTileHeight);
+                                triggers = new (string, Rectangle, int)[] { (terrain.Trigger, new Rectangle(location, size),
+                                    terrain.IsPreview ? Globals.PreviewAlphaInt : 256) };
                             }
                         }
                     }
@@ -2062,7 +2063,8 @@ namespace MobiusEditor.Render
                         {
                             if (visibleCells.Contains(topLeft))
                             {
-                                triggers = new (string, Rectangle, int)[] { (unit.Trigger, new Rectangle(location, tileSize), unit.IsPreview ? Globals.PreviewAlphaInt : 255) };
+                                triggers = new (string, Rectangle, int)[] { (unit.Trigger, new Rectangle(location, Globals.OriginalTileSize),
+                                    unit.IsPreview ? Globals.PreviewAlphaInt : 256) };
                             }
                         }
                     }
@@ -2082,7 +2084,7 @@ namespace MobiusEditor.Render
                                 {
                                     continue;
                                 }
-                                Size size = tileSize;
+                                Size size = Globals.OriginalTileSize;
                                 Size offset = Size.Empty;
                                 switch ((InfantryStoppingType)i)
                                 {
@@ -2104,7 +2106,7 @@ namespace MobiusEditor.Render
                                         break;
                                 }
                                 Rectangle bounds = new Rectangle(location + offset, size);
-                                infantryTriggers.Add((infantry.Trigger, bounds, infantry.IsPreview ? Globals.PreviewAlphaInt : 255));
+                                infantryTriggers.Add((infantry.Trigger, bounds, infantry.IsPreview ? Globals.PreviewAlphaInt : 256));
                             }
                             triggers = infantryTriggers.ToArray();
                         }
@@ -2126,8 +2128,9 @@ namespace MobiusEditor.Render
                         {
                             if (visibleCells.IntersectsWith(new Rectangle(topLeft, building.Type.Size)))
                             {
-                                Size size = new Size(building.Type.Size.Width * tileSize.Width, building.Type.Size.Height * tileSize.Height);
-                                allTriggers.Add((building.Trigger, new Rectangle(location, size), building.IsPreview ? Globals.PreviewAlphaInt : 255));
+                                Size size = new Size(building.Type.Size.Width * Globals.OriginalTileWidth, building.Type.Size.Height * Globals.OriginalTileHeight);
+                                allTriggers.Add((building.Trigger, new Rectangle(location, size),
+                                    building.IsPreview ? Globals.PreviewAlphaInt : 256));
                             }
                         }
                     }
@@ -2142,19 +2145,56 @@ namespace MobiusEditor.Render
             || (excludePick && !x.trigger.Equals(toPick, StringComparison.OrdinalIgnoreCase))
                 || (!excludePick && x.trigger.Equals(toPick, StringComparison.OrdinalIgnoreCase))))
             {
-                Color alphaColor = Color.FromArgb(alpha, color);
-                using (SolidBrush technoTriggerBackgroundBrush = new SolidBrush(Color.FromArgb(96 * alpha / 256, Color.Black)))
-                using (SolidBrush technoTriggerBrush = new SolidBrush(alphaColor))
-                using (Pen technoTriggerPen = new Pen(alphaColor, borderSize))
-                using (Font font = graphics.GetAdjustedFont(trigger, SystemFonts.DefaultFont, bounds.Width, bounds.Height,
-                    Math.Max(1, (int)Math.Round(12 * tileScaleHor)), Math.Max(1, (int)Math.Round(24 * tileScaleHor)), stringFormat, true))
+                // Larger than a single cell.
+                bool isLarge = bounds.Width > Globals.OriginalTileWidth;
+                string classicFont = isLarge ? classicFontLarge : classicFontSmall;
+                bool cropClassicFont = isLarge ? cropClassicFontLarge : cropClassicFontSmall;
+                TeamRemap remapClassicFont = isLarge ? remapClassicFontLarge : remapClassicFontSmall;
+                Color alphaColor = Color.FromArgb(alpha.Restrict(0,255), color);
+                if (classicFont == null)
                 {
-                    SizeF textBounds = graphics.MeasureString(trigger, font, bounds.Width, stringFormat);
-                    RectangleF backgroundBounds = new RectangleF(bounds.Location, textBounds);
-                    backgroundBounds.Offset((bounds.Width - textBounds.Width) / 2.0f, (bounds.Height - textBounds.Height) / 2.0f);
-                    graphics.FillRectangle(technoTriggerBackgroundBrush, backgroundBounds);
-                    graphics.DrawRectangle(technoTriggerPen, Rectangle.Round(backgroundBounds));
-                    graphics.DrawString(trigger, font, technoTriggerBrush, bounds, stringFormat);
+                    int width = bounds.Width * tileSize.Width / Globals.OriginalTileWidth;
+                    int height = bounds.Height * tileSize.Height / Globals.OriginalTileHeight;
+                    Rectangle realBounds = new Rectangle(bounds.Location, new Size(width, height));
+                    using (SolidBrush technoTriggerBackgroundBrush = new SolidBrush(Color.FromArgb((96 * alpha / 256).Restrict(0, 255), Color.Black)))
+                    using (SolidBrush technoTriggerBrush = new SolidBrush(alphaColor))
+                    using (Pen technoTriggerPen = new Pen(alphaColor, borderSize))
+                    using (Font font = graphics.GetAdjustedFont(trigger, SystemFonts.DefaultFont, width, height,
+                        Math.Max(1, (int)Math.Round(12 * tileScaleHor)), Math.Max(1, (int)Math.Round(24 * tileScaleHor)), stringFormat, true))
+                    {
+                        SizeF textBounds = graphics.MeasureString(trigger, font, width, stringFormat);
+                        RectangleF backgroundBounds = new RectangleF(bounds.Location, textBounds);
+                        backgroundBounds.Offset((width - textBounds.Width) / 2.0f, (height - textBounds.Height) / 2.0f);
+                        graphics.FillRectangle(technoTriggerBackgroundBrush, backgroundBounds);
+                        graphics.DrawRectangle(technoTriggerPen, Rectangle.Round(backgroundBounds));
+                        graphics.DrawString(trigger, font, technoTriggerBrush, realBounds, stringFormat);
+                    }
+                }
+                else
+                {
+                    int[] indices = Encoding.ASCII.GetBytes(trigger).Select(x => (int)x).ToArray();
+                    using (SolidBrush technoTriggerBackgroundBrush = new SolidBrush(Color.FromArgb(96, Color.Black)))
+                    using (Pen technoTriggerPen = new Pen(color, 1))
+                    using (Bitmap txt = RenderTextFromSprite(classicFont, remapClassicFont, Size.Empty, indices, false, cropClassicFont))
+                    using (Bitmap txt2 = new Bitmap(txt.Width + 4, txt.Height + 4))
+                    using (ImageAttributes imageAttributes = new ImageAttributes())
+                    {
+                        txt2.SetResolution(96, 96);
+                        using (Graphics txt2g = Graphics.FromImage(txt2))
+                        {
+                            txt2g.FillRectangle(technoTriggerBackgroundBrush, new Rectangle(1, 1, txt2.Width - 2, txt2.Height - 2));
+                            txt2g.DrawRectangle(technoTriggerPen, new Rectangle(0, 0, txt2.Width - 1, txt2.Height - 1));
+                            txt2g.DrawImage(txt, new Rectangle(2, 2, txt.Width, txt.Height));
+                        }
+                        imageAttributes.SetColorMatrix(GetColorMatrix(Color.White, 1.0f, alpha / 256.0f));
+                        int paintOffsX = (bounds.Width - txt2.Width) / 2 * tileSize.Width / Globals.OriginalTileWidth;
+                        int paintOffsY = (bounds.Height - txt2.Height) / 2 * tileSize.Width / Globals.OriginalTileWidth;
+                        int textWidth = txt2.Width * tileSize.Width / Globals.OriginalTileWidth;
+                        int textHeight = txt2.Height * tileSize.Width / Globals.OriginalTileWidth;
+                        Rectangle paintBounds = new Rectangle(bounds.Location, new Size(textWidth, textHeight));
+                        paintBounds.Offset(new Point(paintOffsX, paintOffsY));
+                        graphics.DrawImage(txt2, paintBounds, 0, 0, txt2.Width, txt2.Height, GraphicsUnit.Pixel, imageAttributes);
+                    }
                 }
             }
         }
@@ -2244,7 +2284,6 @@ namespace MobiusEditor.Render
                         Globals.TheShapeCacheManager.AddImage(wpId, wpBm);
                         Rectangle paintRect = new Rectangle(paintBounds.Location.X, paintBounds.Location.Y, wpBm.Width, wpBm.Height);
                         graphics.DrawImage(wpBm, paintRect, 0, 0, wpBm.Width, wpBm.Height, GraphicsUnit.Pixel, imageAttributes);
-                        
                     }
                 }
             }
@@ -2883,12 +2922,13 @@ namespace MobiusEditor.Render
                                 }
                                 else
                                 {
+                                    // Solid overlays in the buildings list.
                                     isBuilding = building != null;
                                 }
                                 bool isTechno = techno != null || isBuilding;
-                                // Skip if it's the techno-loop and there's no techno,
-                                // or if it's not the techno-loop and there is a techno (to avoid overlap).
-                                if ((isTechno && !forTechnos) || (!isTechno && forTechnos))
+                                // Skip if it's a techno-loop and there's no techno,
+                                // or if it's not a techno-loop and there is a techno (to avoid overlap).
+                                if ((forTechnos && !isTechno) || (!forTechnos && isTechno))
                                 {
                                     continue;
                                 }
@@ -3165,9 +3205,12 @@ namespace MobiusEditor.Render
             int curWidth = 0;
             if (lineLength == 0 || maxHeight - minTop == 0)
             {
-                return new Bitmap(2, 2);
+                Bitmap bm = new Bitmap(2, 2);
+                bm.SetResolution(96, 96);
+                return bm;
             }
             Bitmap bitmap = new Bitmap(lineLength, maxHeight - minTop, PixelFormat.Format32bppArgb);
+            bitmap.SetResolution(96, 96);
             using (Graphics g = Graphics.FromImage(bitmap))
             {
                 for (int i = 0; i < nrOfChars; ++i)

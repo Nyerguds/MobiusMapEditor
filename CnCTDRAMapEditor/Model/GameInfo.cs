@@ -260,16 +260,16 @@ namespace MobiusEditor.Model
 
     public enum ClassicFont
     {
-        /// <summary>Font used for Waypoints</summary>
+        /// <summary>Font used for Waypoints.</summary>
         Waypoints,
         /// <summary>Font used for waypoints with longer names. Separate because it needs a smaller font to fit inside one cell.</summary>
         WaypointsLong,
-        /// <summary>Font used for cell triggers</summary>
+        /// <summary>Font used for cell triggers.</summary>
         CellTriggers,
-        /// <summary>Font used for techno triggers, except infantry</summary>
+        /// <summary>Font used for techno triggers on multi-cell objects.</summary>
         TechnoTriggers,
-        /// <summary>Font used for infantry techno triggers. Separate because it might need to be smaller.</summary>
-        InfantryTriggers,
+        /// <summary>Font used for one-cell techno triggers. Separate because it might need to be smaller.</summary>
+        TechnoTriggersSmall,
         /// <summary>Font used for rebuild priority numbers on buildings.</summary>
         RebuildPriority,
         /// <summary>Font used for "FAKE" labels on buildings.</summary>
