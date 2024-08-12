@@ -156,6 +156,7 @@ namespace MobiusEditor.TiberianDawn
             crop = false;
             remap = null;
             string fontName = null;
+            int[] indices;
             switch (font)
             {
                 case ClassicFont.Waypoints:
@@ -165,8 +166,14 @@ namespace MobiusEditor.TiberianDawn
                     break;
                 case ClassicFont.WaypointsLong: // The DOS 6point.fnt would be ideal for this, but they replaced it with a much larger one in C&C95.
                     crop = true;
-                    fontName = "scorefnt.fnt";
-                    remap = GetClassicFontRemapSimple(fontName, tsmc, trm, textColor);
+                    fontName = "6ptdos.fnt";
+                    indices = new int[] { 2, 3 };
+                    if (!tsmc.TileExists(fontName))
+                    {
+                        fontName = "scorefnt.fnt";
+                        indices = new int[0];
+                    }
+                    remap = GetClassicFontRemapSimple(fontName, tsmc, trm, textColor, indices);
                     break;
                 case ClassicFont.CellTriggers:
                     crop = true;
@@ -180,16 +187,30 @@ namespace MobiusEditor.TiberianDawn
                     break;
                 case ClassicFont.TechnoTriggers:
                     crop = true;
-                    fontName = "scorefnt.fnt";
-                    remap = GetClassicFontRemapSimple(fontName, tsmc, trm, textColor);
+                    fontName = "6ptdos.fnt";
+                    indices = new int[] { 2, 3 };
+                    if (!tsmc.TileExists(fontName))
+                    {
+                        fontName = "scorefnt.fnt";
+                        indices = new int[0];
+                    }
+                    remap = GetClassicFontRemapSimple(fontName, tsmc, trm, textColor, indices);
                     break;
                 case ClassicFont.TechnoTriggersSmall:
                     crop = true;
-                    fontName = "3point.fnt";
+                    fontName = "4point.fnt";
+                    if (!tsmc.TileExists(fontName))
+                    {
+                        fontName = "3point.fnt";
+                    }
                     remap = GetClassicFontRemapSimple(fontName, tsmc, trm, textColor);
                     break;
                 case ClassicFont.FakeLabels:
                     break;
+            }
+            if (!tsmc.TileExists(fontName))
+            {
+                fontName = null;
             }
             return fontName;
         }

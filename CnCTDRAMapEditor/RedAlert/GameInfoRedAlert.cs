@@ -272,7 +272,11 @@ namespace MobiusEditor.RedAlert
                     break;
                 case ClassicFont.TechnoTriggersSmall:
                     crop = true;
-                    fontName = "3point.fnt";
+                    fontName = "4point.fnt";
+                    if (!tsmc.TileExists(fontName))
+                    {
+                        fontName = "3point.fnt";
+                    }
                     remap = GetClassicFontRemapSimple(fontName, tsmc, trm, textColor);
                     break;
                 case ClassicFont.FakeLabels:
@@ -280,6 +284,10 @@ namespace MobiusEditor.RedAlert
                     fontName = "editfnt.fnt";
                     remap = GetClassicFontRemapSimple(fontName, tsmc, trm, textColor, 2, 3);
                     break;
+            }
+            if (!tsmc.TileExists(fontName))
+            {
+                fontName = null;
             }
             return fontName;
         }

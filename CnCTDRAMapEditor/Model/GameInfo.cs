@@ -213,7 +213,7 @@ namespace MobiusEditor.Model
             {
                 return null;
             }
-            List<int> indicesFiltered = clearIndices.Where(x => x > 0 && x < 16).ToList();
+            List<int> indicesFiltered = (clearIndices ?? new int[0]).Where(x => x > 0 && x < 16).ToList();
             indicesFiltered.Sort();
             string cleared = String.Join("-", indicesFiltered.Select(i => i.ToString("X")));
             string remapName = fontName + "_" + textColor.ToArgb().ToString("X4") + (cleared.Length > 0 ? "_" : string.Empty) + cleared;

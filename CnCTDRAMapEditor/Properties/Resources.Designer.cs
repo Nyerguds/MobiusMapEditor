@@ -133,13 +133,13 @@ namespace MobiusEditor.Properties {
         ///   Looks up a localized string similar to ; Filetype formats for Tiberian Dawn
         ///[TypesTd]
         ///0=MissionTdBase ; All TD mission formats.
-        ///1=MissionTdExp  ; Extra TD mission formats (v1.06)
-        ///2=ThemeVar      ; Themes that have .var remix variants.
-        ///3=AudioJuv      ; Audio files that have .juv juvenile variants.
-        ///4=AudioVarTd    ; Audio varying for units (v00/v01 etc)
-        ///5=BuildableTd   ; TD buildable object without special logic or extra files: vehicles, walls.
-        ///6=BuildingTd    ; TD building, potentially theater sensitive, with build-up.
-        ///7=InfantryTd    ; [rest of string was truncated]&quot;;.
+        ///1=MissionTdJCps ; Japanese briefing CPS images.
+        ///2=MissionTdExp  ; Extra TD mission formats (v1.06)
+        ///3=ThemeVar      ; Themes that have .var remix variants.
+        ///4=AudioJuv      ; Audio files that have .juv juvenile variants.
+        ///5=AudioVarTd    ; Audio varying for units (v00/v01 etc)
+        ///6=BuildableTd   ; TD buildable object without special logic or extra files: vehicles, walls.
+        ///7=BuildingTd    ; TD building, potentially the [rest of string was truncated]&quot;;.
         /// </summary>
         internal static string mixcontent_td {
             get {

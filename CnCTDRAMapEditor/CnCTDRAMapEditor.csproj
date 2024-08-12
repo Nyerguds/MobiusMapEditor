@@ -792,6 +792,12 @@
     <EmbeddedResource Include="Tools\Dialogs\WaypointsToolDialog.resx">
       <DependentUpon>WaypointsToolDialog.cs</DependentUpon>
     </EmbeddedResource>
+    <None Include="4point.fnt">
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+    </None>
+    <None Include="6ptdos.fnt">
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+    </None>
     <None Include="Properties\Settings.settings">
       <Generator>SettingsSingleFileGenerator</Generator>
       <LastGenOutput>Settings.Designer.cs</LastGenOutput>
