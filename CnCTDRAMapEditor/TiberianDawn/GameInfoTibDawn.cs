@@ -198,7 +198,7 @@ namespace MobiusEditor.TiberianDawn
                     break;
                 case ClassicFont.TechnoTriggersSmall:
                     crop = true;
-                    fontName = "4point.fnt";
+                    fontName = "5pntthin.fnt";
                     if (!tsmc.TileExists(fontName))
                     {
                         fontName = "3point.fnt";

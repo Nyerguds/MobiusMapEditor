@@ -193,6 +193,7 @@ namespace MobiusEditor.Tools
                             selectedObjectProperties = null;
                             navigationWidget.Refresh();
                             AddPropertiesUndoRedo(infantry, preEdit);
+                            infantry.PropertyChanged -= SelectedInfantry_PropertyChanged;
                         };
                         infantry.PropertyChanged += SelectedInfantry_PropertyChanged;
                         selectedObjectProperties.Show(mapPanel, mapPanel.PointToClient(Control.MousePosition));

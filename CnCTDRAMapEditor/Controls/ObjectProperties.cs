@@ -158,6 +158,38 @@ namespace MobiusEditor.Controls
             };
         }
 
+        public void CleanUp()
+        {
+            Object = null;
+            HideToolTip(this, new EventArgs());
+            lblTriggerTypesInfo.Image = null;
+            lblCapturable.Image = null;
+            if (triggerInfoImage != null)
+            {
+                try { triggerInfoImage.Dispose(); }
+                catch { /*ignore*/}
+                triggerInfoImage = null;
+            }
+            if (captureImage != null)
+            {
+                try { captureImage.Dispose(); }
+                catch { /*ignore*/}
+                captureImage = null;
+            }
+            if (captureDisabledImage != null)
+            {
+                try { captureDisabledImage.Dispose(); }
+                catch { /*ignore*/}
+                captureDisabledImage = null;
+            }
+            if (captureUnknownImage != null)
+            {
+                try { captureUnknownImage.Dispose(); }
+                catch { /*ignore*/}
+                captureUnknownImage = null;
+            }
+        }
+
         private void Triggers_CollectionChanged(object sender, EventArgs e)
         {
             UpdateDataSource();
@@ -259,8 +291,12 @@ namespace MobiusEditor.Controls
             houseComboBox.DataBindings.Clear();
             strengthNud.DataBindings.Clear();
             directionComboBox.DataBindings.Clear();
+            directionComboBox.DataSource = null;
+            directionComboBox.Items.Clear();
             missionComboBox.DataBindings.Clear();
             triggerComboBox.DataBindings.Clear();
+            triggerComboBox.DataSource = null;
+            triggerComboBox.Items.Clear();
             basePriorityNud.DataBindings.Clear();
             prebuiltCheckBox.DataBindings.Clear();
             sellableCheckBox.DataBindings.Clear();
@@ -583,7 +619,7 @@ namespace MobiusEditor.Controls
             this.tooltipShownOn = target;
         }
 
-        private void HideToolTip(object sender, EventArgs e)
+        public void HideToolTip(object sender, EventArgs e)
         {
             if (this.tooltipShownOn != null)
             {
@@ -602,43 +638,20 @@ namespace MobiusEditor.Controls
         /// <param name="disposing">true if managed resources should be disposed; otherwise, false.</param>
         protected override void Dispose(bool disposing)
         {
-            if (disposing && (components != null))
+            // Remove all bindings to this control
+            Object = null;
+            if (disposing && components != null)
             {
-                lblTriggerTypesInfo.Image = null;
-                lblCapturable.Image = null;
-                if (triggerInfoImage != null)
-                {
-                    try { triggerInfoImage.Dispose(); }
-                    catch { /*ignore*/}
-                    triggerInfoImage = null;
-                }
-                if (captureImage != null)
-                {
-                    try { captureImage.Dispose(); }
-                    catch { /*ignore*/}
-                    captureImage = null;
-                }
-                if (captureDisabledImage != null)
-                {
-                    try { captureDisabledImage.Dispose(); }
-                    catch { /*ignore*/}
-                    captureDisabledImage = null;
-                }
-                if (captureUnknownImage != null)
-                {
-                    try { captureUnknownImage.Dispose(); }
-                    catch { /*ignore*/}
-                    captureUnknownImage = null;
-                }
                 components.Dispose();
             }
+            CleanUp();
             base.Dispose(disposing);
         }
     }
 
     public class ObjectPropertiesPopup : ToolStripDropDown
     {
-        private readonly ToolStripControlHost host;
+        private ToolStripControlHost host;
         public ObjectProperties ObjectProperties { get; private set; }
 
         public ObjectPropertiesPopup(IGamePlugin plugin, INotifyPropertyChanged obj)
@@ -657,18 +670,16 @@ namespace MobiusEditor.Controls
             Items.Add(host);
             ObjectProperties.Size = ObjectProperties.PreferredSize;
             Size = ObjectProperties.Size;
-            ObjectProperties.Disposed += (sender, e) =>
-            {
-                ObjectProperties = null;
-                Dispose(true);
-            };
         }
 
         protected override void OnClosed(ToolStripDropDownClosedEventArgs e)
         {
+            // Since dispose doesn't seem to auto-trigger, dispose and remove all this manually.
+            ObjectProperties = null;
+            Items.Remove(host);
+            host.Dispose();
+            host = null;
             base.OnClosed(e);
-
-            ObjectProperties.Object = null;
         }
     }
 }

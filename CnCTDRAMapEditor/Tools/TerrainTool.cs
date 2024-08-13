@@ -154,16 +154,19 @@ namespace MobiusEditor.Tools
                     startedDragging = false;
                     mapPanel.Invalidate();
                     selectedTerrainProperties?.Close();
-                    // only TD supports triggers ("Attacked" type) on terrain types.
+                    // Only open if current plugin supports any triggers on terrain types.
                     if (plugin.Map.TerrainActionTypes.Count > 0 || plugin.Map.TerrainEventTypes.Count > 0)
                     {
                         Terrain preEdit = terrain.Clone();
                         selectedTerrainProperties = new TerrainPropertiesPopup(terrainProperties.Plugin, terrain);
                         selectedTerrainProperties.Closed += (cs, ce) =>
                         {
+                            selectedTerrainProperties = null;
                             navigationWidget.Refresh();
                             AddPropertiesUndoRedo(terrain, preEdit);
+                            terrain.PropertyChanged -= SelectedTerrain_PropertyChanged;
                         };
+                        terrain.PropertyChanged += SelectedTerrain_PropertyChanged;
                         selectedTerrainProperties.Show(mapPanel, mapPanel.PointToClient(Control.MousePosition));
                     }
                     UpdateStatus();
@@ -216,6 +219,11 @@ namespace MobiusEditor.Tools
         private void MockTerrain_PropertyChanged(object sender, PropertyChangedEventArgs e)
         {
             RefreshPreviewPanel();
+        }
+
+        private void SelectedTerrain_PropertyChanged(object sender, PropertyChangedEventArgs e)
+        {
+            mapPanel.Invalidate(map, sender as Terrain);
         }
 
         private void TerrainTypeListBox_SelectedIndexChanged(object sender, EventArgs e)

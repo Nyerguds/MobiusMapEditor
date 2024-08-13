@@ -38,6 +38,7 @@ namespace MobiusEditor.Model
         public bool[,] BaseOccupyMask => Type.OccupyMask;
         public int ZOrder => Type.ZOrder;
         public int DrawOrderCache { get; set; }
+        public int DrawFrameCache { get; set; }
 
         private HouseType house;
         public HouseType House { get => house; set => SetField(ref house, value); }

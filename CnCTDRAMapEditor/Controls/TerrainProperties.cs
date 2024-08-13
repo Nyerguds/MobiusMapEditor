@@ -238,7 +238,7 @@ namespace MobiusEditor.Controls
 
     public class TerrainPropertiesPopup : ToolStripDropDown
     {
-        private readonly ToolStripControlHost host;
+        private ToolStripControlHost host;
 
         public TerrainProperties TerrainProperties { get; private set; }
 
@@ -256,18 +256,17 @@ namespace MobiusEditor.Controls
             TerrainProperties.MaximumSize = TerrainProperties.Size;
             Size = TerrainProperties.Size;
             Items.Add(host);
-            TerrainProperties.Disposed += (sender, e) =>
-            {
-                TerrainProperties = null;
-                Dispose(true);
-            };
         }
 
         protected override void OnClosed(ToolStripDropDownClosedEventArgs e)
         {
-            base.OnClosed(e);
-
+            // Since dispose doesn't seem to auto-trigger, dispose and remove all this manually.
             TerrainProperties.Terrain = null;
+            TerrainProperties = null;
+            Items.Remove(host);
+            host.Dispose();
+            host = null;
+            base.OnClosed(e);
         }
     }
 }

@@ -615,6 +615,7 @@ namespace MobiusEditor.Render
             TerrainType type = terrain.Type;
             string tileName = type.GraphicsSource;
             bool succeeded = Globals.TheTilesetManager.GetTileData(tileName, type.DisplayIcon, out Tile tile, true, false);
+            terrain.DrawFrameCache = type.DisplayIcon;
             if (!succeeded && !string.Equals(type.GraphicsSource, type.Name, StringComparison.InvariantCultureIgnoreCase))
             {
                 succeeded = Globals.TheTilesetManager.GetTileData(type.Name, type.DisplayIcon, out tile, true, false);
@@ -713,6 +714,7 @@ namespace MobiusEditor.Render
             }
             ITeamColor teamColor = building.Type.CanRemap ? Globals.TheTeamColorManager[building.House?.BuildingTeamColor] : null;
             bool succeeded = Globals.TheTilesetManager.GetTeamColorTileData(building.Type.GraphicsSource, icon, teamColor, out Tile tile, true, false);
+            building.DrawFrameCache = icon;
             Point location = new Point(topLeft.X * tileSize.Width, topLeft.Y * tileSize.Height);
             Size maxSize = new Size(building.Type.Size.Width * tileSize.Width, building.Type.Size.Height * tileSize.Height);
 
@@ -972,6 +974,7 @@ namespace MobiusEditor.Render
             }
             // Get body frame
             Globals.TheTilesetManager.GetTeamColorTileData(unit.Type.Name, icon, teamColor, out Tile tile, true, false);
+            unit.DrawFrameCache = icon;
             if (tile == null || tile.Image == null)
             {
                 Debug.Print(string.Format("Unit {0} ({1}) not found", unit.Type.Name, icon));
@@ -1653,7 +1656,7 @@ namespace MobiusEditor.Render
                 {
                     houseCol = Color.FromArgb(0x80, Globals.TheTeamColorManager.GetBaseColor(colorPick(placedObj.House)));
                 }
-                string id = "outline_" + typeof(T).Name + "_" + placedObj.TechnoType.Name + '_' + (placedObj.Direction == null ? 0 : placedObj.Direction.ID).ToString() + "_" + tileSize.Width + "x" + tileSize.Height;
+                string id = "outline_" + typeof(T).Name + "_" + placedObj.TechnoType.Name + "_fr" + placedObj.DrawFrameCache + "_" + tileSize.Width + "x" + tileSize.Height;
                 RegionData paintAreaRel = Globals.TheShapeCacheManager.GetShape(id);
                 if (paintAreaRel == null)
                 {
@@ -2076,6 +2079,8 @@ namespace MobiusEditor.Render
                             {
                                 continue;
                             }
+                            Size size = tileSize;
+                            Size boundSize = Globals.OriginalTileSize;
                             List<(string, Rectangle, int)> infantryTriggers = new List<(string, Rectangle, int)>();
                             for (int i = 0; i < infantryGroup.Infantry.Length; ++i)
                             {
@@ -2084,7 +2089,6 @@ namespace MobiusEditor.Render
                                 {
                                     continue;
                                 }
-                                Size size = Globals.OriginalTileSize;
                                 Size offset = Size.Empty;
                                 switch ((InfantryStoppingType)i)
                                 {
@@ -2105,7 +2109,7 @@ namespace MobiusEditor.Render
                                         offset.Height = size.Height / 4;
                                         break;
                                 }
-                                Rectangle bounds = new Rectangle(location + offset, size);
+                                Rectangle bounds = new Rectangle(location + offset, boundSize);
                                 infantryTriggers.Add((infantry.Trigger, bounds, infantry.IsPreview ? Globals.PreviewAlphaInt : 256));
                             }
                             triggers = infantryTriggers.ToArray();

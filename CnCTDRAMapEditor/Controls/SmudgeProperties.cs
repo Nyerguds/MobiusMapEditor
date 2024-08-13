@@ -52,15 +52,8 @@ namespace MobiusEditor.Controls
         public void Initialize(IGamePlugin plugin, bool isMockObject)
         {
             this.isMockObject = isMockObject;
-
             Plugin = plugin;
-
             UpdateDataSource();
-
-            Disposed += (sender, e) =>
-            {
-                Smudge = null;
-            };
         }
 
         private void UpdateDataSource()
@@ -76,7 +69,8 @@ namespace MobiusEditor.Controls
         private void Rebind()
         {
             stateComboBox.DataBindings.Clear();
-
+            stateComboBox.DataSource = null;
+            stateComboBox.Items.Clear();
             if (smudge == null)
             {
                 return;
@@ -109,11 +103,25 @@ namespace MobiusEditor.Controls
                 binding.WriteValue();
             }
         }
+
+        /// <summary>
+        /// Clean up any resources being used.
+        /// </summary>
+        /// <param name="disposing">true if managed resources should be disposed; otherwise, false.</param>
+        protected override void Dispose(bool disposing)
+        {
+            Smudge = null;
+            if (disposing && components != null)
+            {
+                components.Dispose();
+            }
+            base.Dispose(disposing);
+        }
     }
 
     public class SmudgePropertiesPopup : ToolStripDropDown
     {
-        private readonly ToolStripControlHost host;
+        private ToolStripControlHost host;
 
         public SmudgeProperties SmudgeProperties { get; private set; }
 
@@ -131,18 +139,17 @@ namespace MobiusEditor.Controls
             SmudgeProperties.MaximumSize = SmudgeProperties.Size;
             Size = SmudgeProperties.Size;
             Items.Add(host);
-            SmudgeProperties.Disposed += (sender, e) =>
-            {
-                SmudgeProperties = null;
-                Dispose(true);
-            };
         }
 
         protected override void OnClosed(ToolStripDropDownClosedEventArgs e)
         {
-            base.OnClosed(e);
-
+            // Since dispose doesn't seem to auto-trigger, dispose and remove all this manually.
             SmudgeProperties.Smudge = null;
+            SmudgeProperties = null;
+            Items.Remove(host);
+            host.Dispose();
+            host = null;
+            base.OnClosed(e);
         }
     }
 }

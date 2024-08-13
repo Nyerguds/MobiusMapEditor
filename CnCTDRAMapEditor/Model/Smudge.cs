@@ -32,6 +32,7 @@ namespace MobiusEditor.Model
         private int icon;
         public int Icon { get => icon; set => SetField(ref icon, value); }
 
+        public bool IsAutoBib => this.AttachedTo != null; // TODO start using this and remove extra "autobib" smudge types.
         public Building AttachedTo { get; set; }
 
         public Rectangle OverlapBounds => new Rectangle(Point.Empty, Type.Size);

@@ -601,9 +601,7 @@ Released on 31 Jan 2023 at 20:50 GMT
 * The Digest section will now also be removed from TD / SS maps.
 * Upgraded the logic to detect missing rules for ant-related objects on RA maps, so it includes the Mandible weapon, and checks in triggers too. The check now also goes through the rules files, so when using a rules mod that does define these things, no warnings will be shown.
 * Added config option for the behaviour to recolor the classic DOS Einstein to RA95/remastered colors.
-* Added code to filter out special houses (e.g. "None") by HouseTypeFlag rather than using hardcoded exceptions.
 * Fixed the alliances list in the house settings scrolling past the first selected alliance.
-* The Alliances list now uses a specific list for alliance-houses, which is filtered and sorted to potentially include special houses.
 * Red Alert now allows the special grouping Houses "Allies" and "Soviet" in their alliances list.
 * Houses now always automatically add their own house name in their alliances list if it is missing.
 * Sole Survivor maps with all multi-Houses enabled will now have all those beyond Multi4 disabled on map load, to avoid needlessly expanding the ini.
@@ -622,7 +620,7 @@ Released on 31 Jan 2023 at 20:50 GMT
 * Added an option to control the behaviour of allowing walls as structures, with an owner. Since this is a behavior tweaks option, and those are all enabled by default, it is called "DontAllowWallsAsBuildings".
 
 
-### v1.5.1.0:
+### v1.6.0.0:
 
 Unreleased.
 
@@ -669,3 +667,4 @@ Unreleased.
 * Fixed an issue with the main editor window becoming hard to select if it was minimised during a load or save operation, because it would select the tool window instead of restoring the main window. To fix this, the tool window is now never shown if the main window is minimised.
 * Added an indicator to the building tool to indicate whether a building is capturable.
 * Added support for C&C95 v1.06c's bib disabling and capturability rule tweaks.
+* Fixed trigger changes on Terrain objects not immediately refreshing the map.
