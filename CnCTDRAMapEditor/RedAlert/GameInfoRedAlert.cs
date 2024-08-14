@@ -128,12 +128,12 @@ namespace MobiusEditor.RedAlert
 
         public override Bitmap GetWaypointIcon()
         {
-            return GetTile("beacon", 0, "mouse", 15);
+            return Globals.TheTilesetManager.GetTile("beacon", 0, "mouse", 15, null);
         }
 
         public override Bitmap GetCellTriggerIcon()
         {
-            return GetTile("mine", 3, "mine.shp", 3);
+            return Globals.TheTilesetManager.GetTile("mine", 3, "mine.shp", 3, null);
         }
 
         public override Bitmap GetSelectIcon()
@@ -141,7 +141,7 @@ namespace MobiusEditor.RedAlert
             // Remaster: Chronosphere cursor from TEXTURES_SRGB.MEG
             // Alt: @"DATA\ART\TEXTURES\SRGB\ICON_IONCANNON_15.DDS
             // Classic: Chronosphere cursor
-            return GetTexture(@"DATA\ART\TEXTURES\SRGB\ICON_SELECT_GREEN_04.DDS", "mouse", 101, true);
+            return Globals.TheTilesetManager.GetTexture(@"DATA\ART\TEXTURES\SRGB\ICON_SELECT_GREEN_04.DDS", "mouse", 101, true);
         }
 
         public override Bitmap GetCaptureIcon()
@@ -149,7 +149,7 @@ namespace MobiusEditor.RedAlert
             // Remaster: Chronosphere cursor from TEXTURES_SRGB.MEG
             // Alt: @"DATA\ART\TEXTURES\SRGB\ICON_IONCANNON_15.DDS
             // Classic: Chronosphere cursor
-            return GetTexture(@"DATA\ART\TEXTURES\SRGB\ICON_MOUNT_UNIT_X2_02.DDS", "mouse", 115, true);
+            return Globals.TheTilesetManager.GetTexture(@"DATA\ART\TEXTURES\SRGB\ICON_MOUNT_UNIT_X2_02.DDS", "mouse", 115, true);
         }
 
         public override string EvaluateBriefing(string briefing)

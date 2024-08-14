@@ -371,7 +371,7 @@ namespace MobiusEditor.Utility
             Rectangle resized = GeneralUtils.GetBoundingBoxCenter(cutout.Width, cutout.Height, maxWidth, maxHeight);
             using (Graphics g = Graphics.FromImage(newImg))
             {
-                g.CompositingMode = System.Drawing.Drawing2D.CompositingMode.SourceCopy;
+                g.CompositingMode = CompositingMode.SourceCopy;
                 if (clearColor.ToArgb() != Color.Transparent.ToArgb())
                 {
                     g.Clear(clearColor);

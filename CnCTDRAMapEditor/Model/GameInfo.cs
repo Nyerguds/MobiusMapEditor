@@ -154,49 +154,6 @@ namespace MobiusEditor.Model
         #endregion
 
         #region protected functions
-        protected Bitmap GetTile(string remasterSprite, int remastericon, string classicSprite, int classicicon)
-        {
-            Tile tile;
-            if (!Globals.UseClassicFiles)
-            {
-                if (Globals.TheTilesetManager.GetTileData(remasterSprite, remastericon, out tile) && tile != null && tile.Image != null)
-                    return new Bitmap(tile.Image);
-            }
-            else
-            {
-                if (Globals.TheTilesetManager.GetTileData(classicSprite, classicicon, out tile) && tile != null && tile.Image != null)
-                    return new Bitmap(tile.Image);
-            }
-            return null;
-        }
-
-        /// <summary>
-        /// Retrieves a bitmap from the tileset manager. Depending on whether classic or remastered graphics
-        /// are used, the first or last two args will be used.
-        /// </summary>
-        /// <param name="remasterTexturePath">Path of th texture in the remastered tilesets.</param>
-        /// <param name="classicSprite">Classic sprite to load.</param>
-        /// <param name="classicicon">Frame to use from the classic sprite.</param>
-        /// <param name="ignoreClassicShadow">In classic graphics, don't apply shadow filter.</param>
-        /// <returns>
-        /// The requested image. This is a clone of the image in the internal texture manager, and should be disposed after use.
-        /// </returns>
-        protected Bitmap GetTexture(string remasterTexturePath, string classicSprite, int classicicon, bool ignoreClassicShadow)
-        {
-            if (!Globals.UseClassicFiles && Globals.TheTilesetManager is TilesetManager tsm)
-            {
-                // The Texture manager returns a clone of its own cached image. The Tileset manager caches those clones again,
-                // and is responsible for their cleanup, but if we use the Texture manager directly, it needs to be disposed.
-                return tsm.TextureManager.GetTexture(remasterTexturePath, null, false).Item1;
-            }
-            else if (Globals.UseClassicFiles && Globals.TheTilesetManager.GetTeamColorTileData(classicSprite, classicicon, null, ignoreClassicShadow, out Tile tile)
-                && tile != null && tile.Image != null)
-            {
-                // Clone this, so it's equivalent to the remaster one and can be used in a Using block.
-                return new Bitmap(tile.Image);
-            }
-            return null;
-        }
 
         /// <summary>
         /// Creates a remap object for a specific font, by remapping all indices to the closest color on te palette.
@@ -206,7 +163,8 @@ namespace MobiusEditor.Model
         /// <param name="tsmc">Classic tileset manager, to get the color info from.</param>
         /// <param name="textColor">Requested color for the text. Probably won't match exactly since it is looked up in the palette.</param>
         /// <param name="clearIndices">Indices on the graphics that need to be cleared to transparent (index 0).</param>
-        /// <returns></returns>
+        /// <returns>A TeamRemap object for the given color.</returns>
+        /// <remarks>The generated remap is cached in the TeamRemapManager.</remarks>
         protected TeamRemap GetClassicFontRemapSimple(string fontName, TilesetManagerClassic tsmc, TeamRemapManager trm, Color textColor, params int[] clearIndices)
         {
             if (fontName == null)
@@ -216,7 +174,7 @@ namespace MobiusEditor.Model
             List<int> indicesFiltered = (clearIndices ?? new int[0]).Where(x => x > 0 && x < 16).ToList();
             indicesFiltered.Sort();
             string cleared = String.Join("-", indicesFiltered.Select(i => i.ToString("X")));
-            string remapName = fontName + "_" + textColor.ToArgb().ToString("X4") + (cleared.Length > 0 ? "_" : string.Empty) + cleared;
+            string remapName = "FontRemap_" + fontName + "_" + textColor.ToArgb().ToString("X4") + (cleared.Length > 0 ? "_" : string.Empty) + cleared;
             TeamRemap fontRemap = trm.GetItem(remapName);
             if (fontRemap != null)
             {

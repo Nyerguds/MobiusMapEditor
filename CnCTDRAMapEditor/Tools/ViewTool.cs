@@ -354,7 +354,7 @@ namespace MobiusEditor.Tools
                 && !manuallyHandledLayers.HasFlag(MapLayerFlag.WaypointsIndic) && gameInfo.SupportsMapLayer(MapLayerFlag.FootballArea))
             {
                 MapRenderer.RenderAllFootballAreas(graphics, map, visibleCells, tileSize, tileScale, gameInfo);
-                MapRenderer.RenderWaypointFlags(graphics, gameInfo, map, visibleCells, tileSize);
+                MapRenderer.RenderWaypointFlags(graphics, gameInfo, map, visibleCells, tileSize, Globals.TheShapeCacheManager);
             }
             if (layersToRender.HasFlag(MapLayerFlag.Buildings | MapLayerFlag.EffectRadius)
                 && !manuallyHandledLayers.HasFlag(MapLayerFlag.EffectRadius) && gameInfo.SupportsMapLayer(MapLayerFlag.EffectRadius))

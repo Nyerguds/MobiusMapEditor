@@ -581,14 +581,14 @@ namespace MobiusEditor.Utility
             try
             {
                 PixelFormat dataFormat = bitmap.PixelFormat;
-                if (!dataFormat.HasFlag(PixelFormat.Indexed) && dataFormat != PixelFormat.Format24bppRgb || dataFormat != PixelFormat.Format32bppRgb)
+                bool isIndexed = dataFormat.HasFlag(PixelFormat.Indexed);
+                if (dataFormat == PixelFormat.Format24bppRgb || dataFormat == PixelFormat.Format32bppRgb)
                 {
                     return new Rectangle(0, 0, bitmap.Width, bitmap.Height);
                 }
                 List<int> transColors = null;
-                if ((dataFormat & PixelFormat.Indexed) == PixelFormat.Indexed)
+                if (isIndexed)
                 {
-                    dataFormat = PixelFormat.Format8bppIndexed;
                     Color[] entries = bitmap.Palette.Entries;
                     transColors = new List<int>();
                     for (int i = 0; i < entries.Length; i++)
@@ -597,12 +597,12 @@ namespace MobiusEditor.Utility
                             transColors.Add(i);
                     }
                 }
-                data = bitmap.LockBits(new Rectangle(0, 0, bitmap.Width, bitmap.Height), ImageLockMode.ReadWrite, dataFormat);
+                data = bitmap.LockBits(new Rectangle(0, 0, bitmap.Width, bitmap.Height), ImageLockMode.ReadOnly, dataFormat);
                 int stride = data.Stride;
                 byte[] bytes = new byte[stride * data.Height];
                 Marshal.Copy(data.Scan0, bytes, 0, bytes.Length);
                 int pfs = Image.GetPixelFormatSize(bitmap.PixelFormat);
-                if (dataFormat.HasFlag(PixelFormat.Indexed))
+                if (isIndexed)
                 {
                     if (dataFormat != PixelFormat.Format8bppIndexed)
                     {
@@ -612,7 +612,7 @@ namespace MobiusEditor.Utility
                 }
                 else
                 {
-                    return CalculateOpaqueBoundsHiCol(bytes, data.Width, data.Height, pfs / 8, data.Stride);
+                    return CalculateOpaqueBoundsHiCol(bytes, data.Width, data.Height, pfs / 8, stride);
                 }
             }
             finally

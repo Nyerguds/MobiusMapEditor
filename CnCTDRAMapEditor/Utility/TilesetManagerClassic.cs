@@ -266,6 +266,18 @@ namespace MobiusEditor.Utility
             return GetTileDataLength(name) > 0;
         }
 
+        public Bitmap GetTile(string remasterSprite, int remastericon, string classicSprite, int classicicon, ITeamColor teamColor)
+        {
+            bool found = GetTeamColorTileData(classicSprite, classicicon, teamColor, out Tile tile);
+            return found && tile != null && tile.Image != null ? new Bitmap(tile.Image) : null;
+        }
+
+        public Bitmap GetTexture(string remasterTexturePath, string classicSprite, int classicicon, bool ignoreClassicShadow)
+        {
+            bool found = GetTeamColorTileData(classicSprite, classicicon, null, ignoreClassicShadow, out Tile tile);
+            return found && tile != null && tile.Image != null ? new Bitmap(tile.Image) : null;
+        }
+
         private Dictionary<int, ShapeFrameData> GetShapeFile(string name)
         {
             bool isShpExt = false;

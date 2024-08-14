@@ -106,28 +106,25 @@ namespace MobiusEditor.TiberianDawn
 
         public override Bitmap GetWaypointIcon()
         {
-            return GetTile("beacon", 0, "mouse", 12);
+            return Globals.TheTilesetManager.GetTexture(@"DATA\ART\TEXTURES\SRGB\ICON_SELECT_FRIENDLY_X2_00.DDS", "mouse", 12, true);
         }
 
         public override Bitmap GetCellTriggerIcon()
         {
-            return GetTile("mine", 3, "mine.shp", 3);
+            return Globals.TheTilesetManager.GetTile("mine", 3, "mine.shp", 3, null);
         }
 
         public override Bitmap GetSelectIcon()
         {
             // Remaster: Chronosphere cursor from TEXTURES_SRGB.MEG
-            // Alt: @"DATA\ART\TEXTURES\SRGB\ICON_IONCANNON_15.DDS
+            // Alt: @"DATA\ART\TEXTURES\SRGB\ICON_IONCANNON_15.DDS"
             // Classic: Ion Cannon cursor
-            return GetTexture(@"DATA\ART\TEXTURES\SRGB\ICON_SELECT_GREEN_04.DDS", "mouse", 118, true);
+            return Globals.TheTilesetManager.GetTexture(@"DATA\ART\TEXTURES\SRGB\ICON_SELECT_GREEN_04.DDS", "mouse", 118, true);
         }
 
         public override Bitmap GetCaptureIcon()
         {
-            // Remaster: Chronosphere cursor from TEXTURES_SRGB.MEG
-            // Alt: @"DATA\ART\TEXTURES\SRGB\ICON_IONCANNON_15.DDS
-            // Classic: Chronosphere cursor
-            return GetTexture(@"DATA\ART\TEXTURES\SRGB\ICON_MOUNT_UNIT_X2_02.DDS", "mouse", 121, true);
+            return Globals.TheTilesetManager.GetTexture(@"DATA\ART\TEXTURES\SRGB\ICON_MOUNT_UNIT_X2_02.DDS", "mouse", 121, true);
         }
 
         public override string EvaluateBriefing(string briefing)
@@ -156,7 +153,7 @@ namespace MobiusEditor.TiberianDawn
             crop = false;
             remap = null;
             string fontName = null;
-            int[] indices;
+            int[] toClear;
             switch (font)
             {
                 case ClassicFont.Waypoints:
@@ -167,13 +164,13 @@ namespace MobiusEditor.TiberianDawn
                 case ClassicFont.WaypointsLong: // The DOS 6point.fnt would be ideal for this, but they replaced it with a much larger one in C&C95.
                     crop = true;
                     fontName = "6ptdos.fnt";
-                    indices = new int[] { 2, 3 };
+                    toClear = new int[] { 2, 3 };
                     if (!tsmc.TileExists(fontName))
                     {
                         fontName = "scorefnt.fnt";
-                        indices = new int[0];
+                        toClear = new int[0];
                     }
-                    remap = GetClassicFontRemapSimple(fontName, tsmc, trm, textColor, indices);
+                    remap = GetClassicFontRemapSimple(fontName, tsmc, trm, textColor, toClear);
                     break;
                 case ClassicFont.CellTriggers:
                     crop = true;
@@ -188,13 +185,13 @@ namespace MobiusEditor.TiberianDawn
                 case ClassicFont.TechnoTriggers:
                     crop = true;
                     fontName = "6ptdos.fnt";
-                    indices = new int[] { 2, 3 };
+                    toClear = new int[] { 2, 3 };
                     if (!tsmc.TileExists(fontName))
                     {
                         fontName = "scorefnt.fnt";
-                        indices = new int[0];
+                        toClear = new int[0];
                     }
-                    remap = GetClassicFontRemapSimple(fontName, tsmc, trm, textColor, indices);
+                    remap = GetClassicFontRemapSimple(fontName, tsmc, trm, textColor, toClear);
                     break;
                 case ClassicFont.TechnoTriggersSmall:
                     crop = true;

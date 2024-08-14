@@ -56,12 +56,12 @@ namespace MobiusEditor.SoleSurvivor
 
         public override Bitmap GetWaypointIcon()
         {
-            return GetTile("beacon", 0, "mouse", 12);
+            return Globals.TheTilesetManager.GetTile("beacon", 0, "mouse", 12, null);
         }
 
         public override Bitmap GetCellTriggerIcon()
         {
-            return GetTile("mine", 3, "mine.shp", 3);
+            return Globals.TheTilesetManager.GetTile("mine", 3, "mine.shp", 3, null);
         }
 
         public override string EvaluateBriefing(string briefing)

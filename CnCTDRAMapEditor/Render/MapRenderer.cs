@@ -442,9 +442,9 @@ namespace MobiusEditor.Render
                             continue;
                         }
                         handledPoints.Add(cell);
-                        RenderWaypoint(gameInfo, soloMission, tileSize, flagColors, waypoint, wpAlpha, 0).Item2(graphics);
+                        RenderWaypoint(gameInfo, soloMission, tileSize, flagColors, waypoint, wpAlpha, 0, cacheManager).Item2(graphics);
                     }
-                    RenderWaypointFlags(graphics, gameInfo, map, map.Metrics.Bounds, tileSize);
+                    RenderWaypointFlags(graphics, gameInfo, map, map.Metrics.Bounds, tileSize, cacheManager);
                 }
                 for (int i = lastFlag + 1; i < map.Waypoints.Length; i++)
                 {
@@ -455,7 +455,7 @@ namespace MobiusEditor.Render
                         continue;
                     }
                     handledPoints.Add(cell);
-                    RenderWaypoint(gameInfo, soloMission, tileSize, flagColors, waypoint, wpAlpha, 0).Item2(graphics);
+                    RenderWaypoint(gameInfo, soloMission, tileSize, flagColors, waypoint, wpAlpha, 0, cacheManager).Item2(graphics);
                 }
             }
             if (disposeCacheManager)
@@ -1136,7 +1136,8 @@ namespace MobiusEditor.Render
             return new RenderInfo(usedCenter, render, unit);
         }
 
-        public static (Rectangle, Action<Graphics>) RenderWaypoint(GameInfo gameInfo, bool soloMission, Size tileSize, ITeamColor[] flagColors, Waypoint waypoint, float alphaFactor, int offset)
+        public static (Rectangle, Action<Graphics>) RenderWaypoint(GameInfo gameInfo, bool soloMission, Size tileSize, ITeamColor[] flagColors, Waypoint waypoint,
+            float alphaFactor, int offset, ShapeCacheManager cacheManager)
         {
             if (!waypoint.Point.HasValue)
             {
@@ -1144,8 +1145,8 @@ namespace MobiusEditor.Render
             }
             Point point = waypoint.Point.Value;
             bool isDefaultIcon = true;
-            string tileGraphics = "beacon";
-            int icon = 0;
+            string tileGraphics = "trans.icn";
+            int icon = 3;
             ITeamColor teamColor = null;
             double sizeMultiplier = 1;
             if (waypoint.IsPreview)
@@ -1153,10 +1154,16 @@ namespace MobiusEditor.Render
                 alphaFactor *= Globals.PreviewAlphaFloat;
             }
             alphaFactor = alphaFactor.Restrict(0, 1);
-            int mpId = Waypoint.GetMpIdFromFlag(waypoint.Flag);
-            bool gotTile = false;
-            Tile tile;
-            if (!soloMission && mpId >= 0 && mpId < flagColors.Length)
+            int mpId = soloMission ? -1 : Waypoint.GetMpIdFromFlag(waypoint.Flag);
+            Bitmap image = null;
+            if (waypoint.Flag.HasFlag(WaypointFlag.CrateSpawn))
+            {
+                isDefaultIcon = false;
+                tileGraphics = "scrate";
+                icon = 0;
+                sizeMultiplier = 2;
+            }
+            else if (mpId >= 0 && mpId < flagColors.Length)
             {
                 isDefaultIcon = false;
                 tileGraphics = "flagfly";
@@ -1164,38 +1171,40 @@ namespace MobiusEditor.Render
                 teamColor = flagColors[mpId];
                 // Always paint flags as opaque.
                 //transparencyModifier = 1.0f;
-                gotTile = Globals.TheTilesetManager.GetTeamColorTileData(tileGraphics, icon, teamColor, out tile);
             }
-            else if (gameInfo.GameType == GameType.SoleSurvivor && waypoint.Flag.HasFlag(WaypointFlag.CrateSpawn))
+            string id = "waypoint_" + tileGraphics + "_icn" + icon + "_x" + sizeMultiplier + "_mpid" + mpId;
+            image = cacheManager.GetImage(id);
+            if (image == null)
             {
-                isDefaultIcon = false;
-                tileGraphics = "scrate";
-                icon = 0;
-                sizeMultiplier = 2;
-                gotTile = Globals.TheTilesetManager.GetTileData(tileGraphics, icon, out tile);
+                bool gotTile = Globals.TheTilesetManager.GetTeamColorTileData(tileGraphics, icon, teamColor, out Tile tile);
+                if (gotTile)
+                {
+                    image = new Bitmap(tile.Image);
+                }
+                else if (isDefaultIcon)
+                {
+                    using (Bitmap selectCursor = Globals.TheTilesetManager.GetTexture(@"DATA\ART\TEXTURES\SRGB\ICON_SELECT_FRIENDLY_X2_00.DDS", tileGraphics, icon, true))
+                    {
+                        Rectangle opaqueBounds = ImageUtils.CalculateOpaqueBounds(selectCursor);
+                        image = selectCursor.FitToBoundingBox(opaqueBounds, Globals.OriginalTileHeight, Globals.OriginalTileHeight, Color.Transparent);
+                    }
+                }
+                if (image != null)
+                {
+                    cacheManager.AddImage(id, image);
+                }
             }
-            else
-            {
-                gotTile = Globals.TheTilesetManager.GetTileData(tileGraphics, icon, out tile);
-            }
-            if (!gotTile && isDefaultIcon)
-            {
-                // Beacon only exists in remastered graphics. Get fallback.
-                tileGraphics = "trans.icn";
-                icon = 3;
-                gotTile = Globals.TheTilesetManager.GetTileData(tileGraphics, icon, out tile);
-            }
-            if (!gotTile)
+            if (image == null)
             {
                 Debug.Print(string.Format("Waypoint graphics {0} ({1}) not found", tileGraphics, icon));
                 return (Rectangle.Empty, (g) => { });
             }
             Point location = new Point(point.X * tileSize.Width, point.Y * tileSize.Height);
-            Size renderSize = new Size(tile.Image.Width * tileSize.Width / Globals.OriginalTileWidth, tile.Image.Height * tileSize.Height / Globals.OriginalTileHeight);
+            Size renderSize = new Size(image.Width * tileSize.Width / Globals.OriginalTileWidth, image.Height * tileSize.Height / Globals.OriginalTileHeight);
             renderSize.Width = (int)Math.Round(renderSize.Width * sizeMultiplier);
             renderSize.Height = (int)Math.Round(renderSize.Height * sizeMultiplier);
             Rectangle renderBounds = new Rectangle(location, renderSize);
-            Rectangle imgBounds = new Rectangle(Point.Empty, tile.Image.Size);
+            Rectangle imgBounds = new Rectangle(Point.Empty, image.Size);
             bool isClipping = renderSize.Width > tileSize.Width || renderSize.Height > tileSize.Height;
             if (tileSize.Width > renderSize.Width)
             {
@@ -1207,7 +1216,7 @@ namespace MobiusEditor.Render
                 // Crop
                 renderBounds.Width = tileSize.Width;
                 imgBounds.Width = (int)Math.Round(tileSize.Width / sizeMultiplier);
-                imgBounds.X = (tile.Image.Width - imgBounds.Width) / 2;
+                imgBounds.X = (image.Width - imgBounds.Width) / 2;
             }
             if (tileSize.Height > renderSize.Height)
             {
@@ -1219,7 +1228,7 @@ namespace MobiusEditor.Render
                 // Crop
                 renderBounds.Height = tileSize.Height;
                 imgBounds.Height = (int)Math.Round(tileSize.Height / sizeMultiplier);
-                imgBounds.Y = (tile.Image.Height - imgBounds.Height) / 2;
+                imgBounds.Y = (image.Height - imgBounds.Height) / 2;
             }
             // Apply offset
             int actualOffsetX = offset * tileSize.Width / Globals.PixelWidth;
@@ -1228,12 +1237,6 @@ namespace MobiusEditor.Render
             renderBounds.Y += actualOffsetY;
             renderBounds.Width = Math.Max(0, renderBounds.Width - actualOffsetX);
             renderBounds.Height = Math.Max(0, renderBounds.Height - actualOffsetY);
-            // Optional: crop the image. If not, it scales, which also looks okay
-            //int imageOffsetX = (int)(tile.Image.Width * sizeMultiplier * offset / Globals.PixelWidth);
-            //int imageOffsetY = (int)(tile.Image.Height * sizeMultiplier * offset / Globals.PixelWidth);
-            //imgBounds.Width = Math.Max(0, imgBounds.Width - imageOffsetX);
-            //imgBounds.Height = Math.Max(0, imgBounds.Height - imageOffsetY);
-
             void render(Graphics g)
             {
                 using (ImageAttributes imageAttributes = new ImageAttributes())
@@ -1241,7 +1244,7 @@ namespace MobiusEditor.Render
                     imageAttributes.SetColorMatrix(GetColorMatrix(Color.White, 1.0f, alphaFactor));
                     if (renderBounds.Width > 0 && renderBounds.Height > 0 && imgBounds.Width > 0 && imgBounds.Height > 0)
                     {
-                        g.DrawImage(tile.Image, renderBounds, imgBounds.X, imgBounds.Y, imgBounds.Width, imgBounds.Height, GraphicsUnit.Pixel, imageAttributes);
+                        g.DrawImage(image, renderBounds, imgBounds.X, imgBounds.Y, imgBounds.Width, imgBounds.Height, GraphicsUnit.Pixel, imageAttributes);
                     }
                 }
             }
@@ -1796,7 +1799,7 @@ namespace MobiusEditor.Render
             }
         }
 
-        public static void RenderWaypointFlags(Graphics graphics, GameInfo gameInfo, Map map, Rectangle visibleCells, Size tileSize)
+        public static void RenderWaypointFlags(Graphics graphics, GameInfo gameInfo, Map map, Rectangle visibleCells, Size tileSize, ShapeCacheManager cacheManager)
         {
             // Re-render flags on top of football areas.
             List<Waypoint> flagWayPoints = new List<Waypoint>();
@@ -1841,7 +1844,7 @@ namespace MobiusEditor.Render
             foreach (Waypoint wp in flagWayPoints)
             {
                 flagOffsets.TryGetValue(wp, out int offset);
-                RenderWaypoint(gameInfo, false, tileSize, flagColors, wp, wp.IsPreview ? Globals.PreviewAlphaFloat : 1.0f, offset).Item2(graphics);
+                RenderWaypoint(gameInfo, false, tileSize, flagColors, wp, wp.IsPreview ? Globals.PreviewAlphaFloat : 1.0f, offset, cacheManager).Item2(graphics);
             }
         }
 
