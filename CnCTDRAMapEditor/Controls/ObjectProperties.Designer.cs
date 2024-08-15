@@ -164,7 +164,6 @@ namespace MobiusEditor.Controls
             // 
             // houseComboBox
             // 
-            this.houseComboBox.DisplayMember = "Name";
             this.houseComboBox.Dock = System.Windows.Forms.DockStyle.Fill;
             this.houseComboBox.DropDownStyle = System.Windows.Forms.ComboBoxStyle.DropDownList;
             this.houseComboBox.FormattingEnabled = true;
@@ -172,7 +171,7 @@ namespace MobiusEditor.Controls
             this.houseComboBox.Name = "houseComboBox";
             this.houseComboBox.Size = new System.Drawing.Size(114, 21);
             this.houseComboBox.TabIndex = 5;
-            this.houseComboBox.ValueMember = "Type";
+            this.houseComboBox.ValueMember = "Value";
             this.houseComboBox.SelectedIndexChanged += new System.EventHandler(this.comboBox_SelectedValueChanged);
             // 
             // strengthNud
@@ -202,7 +201,6 @@ namespace MobiusEditor.Controls
             // 
             // directionComboBox
             // 
-            this.directionComboBox.DisplayMember = "Name";
             this.directionComboBox.Dock = System.Windows.Forms.DockStyle.Fill;
             this.directionComboBox.DropDownStyle = System.Windows.Forms.ComboBoxStyle.DropDownList;
             this.directionComboBox.FormattingEnabled = true;
@@ -210,12 +208,11 @@ namespace MobiusEditor.Controls
             this.directionComboBox.Name = "directionComboBox";
             this.directionComboBox.Size = new System.Drawing.Size(114, 21);
             this.directionComboBox.TabIndex = 7;
-            this.directionComboBox.ValueMember = "Type";
+            this.directionComboBox.ValueMember = "Value";
             this.directionComboBox.SelectedIndexChanged += new System.EventHandler(this.comboBox_SelectedValueChanged);
             // 
             // missionComboBox
             // 
-            this.missionComboBox.DisplayMember = "Name";
             this.missionComboBox.Dock = System.Windows.Forms.DockStyle.Fill;
             this.missionComboBox.DropDownStyle = System.Windows.Forms.ComboBoxStyle.DropDownList;
             this.missionComboBox.FormattingEnabled = true;
@@ -223,7 +220,6 @@ namespace MobiusEditor.Controls
             this.missionComboBox.Name = "missionComboBox";
             this.missionComboBox.Size = new System.Drawing.Size(114, 21);
             this.missionComboBox.TabIndex = 8;
-            this.missionComboBox.ValueMember = "Type";
             this.missionComboBox.SelectedIndexChanged += new System.EventHandler(this.comboBox_SelectedValueChanged);
             // 
             // triggerComboBox

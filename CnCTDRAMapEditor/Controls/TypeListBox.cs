@@ -15,6 +15,7 @@
 // along with this program.  If not, see <https://www.gnu.org/licenses/>.
 using MobiusEditor.Interface;
 using MobiusEditor.Model;
+using MobiusEditor.Utility;
 using System;
 using System.Collections.Generic;
 using System.ComponentModel;
@@ -33,10 +34,10 @@ namespace MobiusEditor.Controls
 
         public IEnumerable<IBrowsableType> Types
         {
-            get => Items.Cast<TypeItem<IBrowsableType>>().Select(t => t.Type);
+            get => Items.Cast<ListItem<IBrowsableType>>().Select(t => t.Value);
             set
             {
-                DataSource = value.Select(t => new TypeItem<IBrowsableType>(t.DisplayName, t)).ToArray();
+                DataSource = value.Select(t => new ListItem<IBrowsableType>(t, t.DisplayName)).ToArray();
                 ItemHeight = Math.Min(255,Math.Max(ItemHeight, value.Max(t => (t.Thumbnail?.Height ?? MissingThumbnail.Height))));
                 Invalidate();
             }
@@ -53,14 +54,14 @@ namespace MobiusEditor.Controls
         protected override void OnMeasureItem(MeasureItemEventArgs e)
         {
             base.OnMeasureItem(e);
-            if (e.Index >= 0 && e.Index < Items.Count && Items[e.Index] is TypeItem<IBrowsableType> typeItem && typeItem.Type != null)
+            if (e.Index >= 0 && e.Index < Items.Count && Items[e.Index] is ListItem<IBrowsableType> listItem && listItem.Value != null)
             {
                 StringFormat stringFormat = new StringFormat
                 {
                     LineAlignment = StringAlignment.Center
                 };
-                var textSize = e.Graphics.MeasureString(typeItem.Name, Font, e.ItemWidth, stringFormat);
-                e.ItemHeight = Math.Max((int)textSize.Height, Math.Min((int)Math.Round((typeItem.Type.Thumbnail?.Height ?? MissingThumbnail.Height) *
+                var textSize = e.Graphics.MeasureString(listItem.Label, Font, e.ItemWidth, stringFormat);
+                e.ItemHeight = Math.Max((int)textSize.Height, Math.Min((int)Math.Round((listItem.Value.Thumbnail?.Height ?? MissingThumbnail.Height) *
                     Properties.Settings.Default.ObjectToolItemSizeMultiplier), MaxListBoxItemHeight));
             }
         }
@@ -71,20 +72,20 @@ namespace MobiusEditor.Controls
 
             e.DrawBackground();
 
-            if (e.Index >= 0 && e.Index < Items.Count && Items[e.Index] is TypeItem<IBrowsableType> typeItem && typeItem.Type != null)
+            if (e.Index >= 0 && e.Index < Items.Count && Items[e.Index] is ListItem<IBrowsableType> listItem && listItem.Value != null)
             {
                 StringFormat stringFormat = new StringFormat
                 {
                     LineAlignment = StringAlignment.Center
                 };
                 Brush textColor = e.State.HasFlag(DrawItemState.Selected) ? SystemBrushes.HighlightText : SystemBrushes.WindowText;
-                SizeF textSize = e.Graphics.MeasureString(typeItem.Name, Font, e.Bounds.Width, stringFormat);
+                SizeF textSize = e.Graphics.MeasureString(listItem.Label, Font, e.Bounds.Width, stringFormat);
                 // To int, with leniency for rounding errors.
                 int textSizeInt = (int)textSize.Width + (textSize.Width % 1 < 0.01 ? 0 : 1);
-                e.Graphics.DrawString(typeItem.Name, Font, textColor, e.Bounds, stringFormat);
+                e.Graphics.DrawString(listItem.Label, Font, textColor, e.Bounds, stringFormat);
                 if (!e.State.HasFlag(DrawItemState.ComboBoxEdit))
                 {
-                    Image thumbnail = typeItem.Type.Thumbnail ?? MissingThumbnail;
+                    Image thumbnail = listItem.Value.Thumbnail ?? MissingThumbnail;
                     int thumbnailWidth = Math.Min(e.Bounds.Width - textSizeInt, thumbnail.Width);
                     int thumbnailHeight = Math.Min(e.Bounds.Height, thumbnail.Height);
                     double widthRatio = (e.Bounds.Width - textSizeInt) / (double)thumbnail.Width;

@@ -1,4 +1,4 @@
-<?xml version="1.0" encoding="utf-8"?>
+﻿<?xml version="1.0" encoding="utf-8"?>
 <Project xmlns="http://schemas.microsoft.com/developer/msbuild/2003" ToolsVersion="15.0">
   <Import Condition="Exists('$(MSBuildExtensionsPath)\$(MSBuildToolsVersion)\Microsoft.Common.props')" Project="$(MSBuildExtensionsPath)\$(MSBuildToolsVersion)\Microsoft.Common.props" />
   <PropertyGroup>
@@ -385,7 +385,7 @@
     <Compile Include="Model\Trigger.cs" />
     <Compile Include="Model\InfantryType.cs" />
     <Compile Include="Model\TriggerFilter.cs" />
-    <Compile Include="Model\TypeItem.cs" />
+    <Compile Include="Model\ListItem.cs" />
     <Compile Include="Model\Unit.cs" />
     <Compile Include="Model\UnitType.cs" />
     <Compile Include="Model\Waypoint.cs" />
@@ -636,7 +636,6 @@
     <Compile Include="Utility\INI.cs" />
     <Compile Include="Utility\INITools.cs" />
     <Compile Include="Utility\Keyboard.cs" />
-    <Compile Include="Utility\ListItem.cs" />
     <Compile Include="Utility\Megafile.cs" />
     <Compile Include="Utility\MegafileBuilder.cs" />
     <Compile Include="Utility\MegafileManager.cs" />

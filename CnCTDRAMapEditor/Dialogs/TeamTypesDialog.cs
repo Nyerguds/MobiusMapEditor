@@ -112,7 +112,7 @@ namespace MobiusEditor.Dialogs
             }
             teamTypesListView.EndUpdate();
 
-            cmbHouse.DataSource = plugin.Map.Houses.Select(t => new TypeItem<HouseType>(t.Type.Name, t.Type)).ToArray();
+            cmbHouse.DataSource = plugin.Map.Houses.Select(t => new ListItem<HouseType>(t.Type, t.Type.Name)).ToArray();
             cmbWaypoint.DataSource = new ListItem<int>(-1, Waypoint.None).Yield().Concat(wayPoints).ToArray();
             cmbWaypoint.ValueMember = "Value";
             cmbWaypoint.DisplayMember = "Label";
@@ -756,14 +756,14 @@ namespace MobiusEditor.Dialogs
 
         private void cmbHouse_SelectedValueChanged(Object sender, EventArgs e)
         {
-            if (teamTypesListView.SelectedItems.Count == 0 || !(cmbHouse.SelectedItem is TypeItem<HouseType> selectedHouse))
+            if (teamTypesListView.SelectedItems.Count == 0 || !(cmbHouse.SelectedItem is ListItem<HouseType> selectedHouse))
             {
                 return;
             }
             ListViewItem item = teamTypesListView.SelectedItems[0];
-            if (item.SubItems.Count > 1 && item.SubItems[1].Text != selectedHouse.Name)
+            if (item.SubItems.Count > 1 && item.SubItems[1].Text != selectedHouse.Label)
             {
-                item.SubItems[1].Text = selectedHouse.Name;
+                item.SubItems[1].Text = selectedHouse.Label;
             }
         }
 

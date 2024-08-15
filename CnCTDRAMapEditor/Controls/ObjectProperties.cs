@@ -149,7 +149,7 @@ namespace MobiusEditor.Controls
                 captureUnknownImage = null;
             }
             captureUnknownImage = ToolStripRenderer.CreateDisabledImage(captureImage);
-            houseComboBox.DataSource = plugin.Map.Houses.Select(t => new TypeItem<HouseType>(t.Type.Name, t.Type)).ToArray();
+            houseComboBox.DataSource = plugin.Map.Houses.Select(t => new ListItem<HouseType>(t.Type, t.Type.Name)).ToArray();
             missionComboBox.DataSource = plugin.Map.MissionTypes;
             Disposed += (sender, e) =>
             {
@@ -310,7 +310,7 @@ namespace MobiusEditor.Controls
                 case Infantry infantry:
                     {
                         houseComboBox.Enabled = true;
-                        directionComboBox.DataSource = Plugin.Map.UnitDirectionTypes.Select(t => new TypeItem<DirectionType>(t.Name, t)).ToArray();
+                        directionComboBox.DataSource = Plugin.Map.UnitDirectionTypes.Select(t => new ListItem<DirectionType>(t, t.Name)).ToArray();
                         missionComboBox.DataBindings.Add("SelectedItem", obj, "Mission");
                         missionLabel.Visible = missionComboBox.Visible = true;
                         basePriorityLabel.Visible = basePriorityNud.Visible = false;
@@ -322,7 +322,7 @@ namespace MobiusEditor.Controls
                 case Unit unit:
                     {
                         houseComboBox.Enabled = true;
-                        directionComboBox.DataSource = Plugin.Map.UnitDirectionTypes.Select(t => new TypeItem<DirectionType>(t.Name, t)).ToArray();
+                        directionComboBox.DataSource = Plugin.Map.UnitDirectionTypes.Select(t => new ListItem<DirectionType>(t, t.Name)).ToArray();
                         missionComboBox.DataBindings.Add("SelectedItem", obj, "Mission");
                         missionLabel.Visible = missionComboBox.Visible = true;
                         basePriorityLabel.Visible = basePriorityNud.Visible = false;
@@ -335,7 +335,7 @@ namespace MobiusEditor.Controls
                     {
                         houseComboBox.Enabled = building.IsPrebuilt;
                         bool directionVisible = (building.Type != null) && building.Type.HasTurret;
-                        directionComboBox.DataSource = Plugin.Map.BuildingDirectionTypes.Select(t => new TypeItem<DirectionType>(t.Name, t)).ToArray();
+                        directionComboBox.DataSource = Plugin.Map.BuildingDirectionTypes.Select(t => new ListItem<DirectionType>(t, t.Name)).ToArray();
                         directionLabel.Visible = directionVisible;
                         directionComboBox.Visible = directionVisible;
                         missionLabel.Visible = missionComboBox.Visible = false;
@@ -451,7 +451,7 @@ namespace MobiusEditor.Controls
                 {
                     // Fix for changing the combobox to one only contain "None".
                     houseComboBox.DataBindings.Clear();
-                    houseComboBox.DataSource = house.Yield().Select(t => new TypeItem<HouseType>(t.Name, t)).ToArray();
+                    houseComboBox.DataSource = house.Yield().Select(t => new ListItem<HouseType>(t, t.Name)).ToArray();
                     houseComboBox.SelectedIndex = 0;
                     building.House = house;
                     houseComboBox.DataBindings.Add("SelectedValue", obj, "House");
@@ -464,10 +464,10 @@ namespace MobiusEditor.Controls
                 if (selected != null && selected.Flags.HasFlag(HouseTypeFlag.BaseHouse | HouseTypeFlag.Special))
                 {
                     houseComboBox.DataBindings.Clear();
-                    TypeItem<HouseType>[] houses = Plugin.Map.Houses.Select(t => new TypeItem<HouseType>(t.Type.Name, t.Type)).ToArray();
+                    ListItem<HouseType>[] houses = Plugin.Map.Houses.Select(t => new ListItem<HouseType>(t.Type, t.Type.Name)).ToArray();
                     houseComboBox.DataSource = houses;
-                    String opposing = Plugin.GameInfo.GetClassicOpposingPlayer(Plugin.Map.BasicSection.Player);
-                    HouseType restoredHouse = Plugin.Map.Houses.Where(h => h.Type.Equals(opposing)).FirstOrDefault()?.Type ?? houses.First().Type;
+                    string opposing = Plugin.GameInfo.GetClassicOpposingPlayer(Plugin.Map.BasicSection.Player);
+                    HouseType restoredHouse = Plugin.Map.Houses.Where(h => h.Type.Equals(opposing)).FirstOrDefault()?.Type ?? houses.First().Value;
                     building.House = restoredHouse;
                     houseComboBox.DataBindings.Add("SelectedValue", obj, "House");
                 }

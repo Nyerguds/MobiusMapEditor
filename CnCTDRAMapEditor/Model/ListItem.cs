@@ -20,13 +20,13 @@ using System.Windows.Forms;
 namespace MobiusEditor.Model
 {
     /// <summary>
-    /// Static tool class to handle <see cref="TypeItem{T}"/>
+    /// Static tool class to handle <see cref="ListItem{T}"/>
     /// </summary>
-    public static class TypeItem
+    public static class ListItem
     {
-        public static TypeItem<T> MakeListItem<T>(T value, string Label)
+        public static ListItem<T> MakeListItem<T>(T value, string Label)
         {
-            return new TypeItem<T>(Label, value);
+            return new ListItem<T>(value, Label);
         }
 
         public static T GetValueFromComboBox<T>(ComboBox dropdown)
@@ -36,9 +36,9 @@ namespace MobiusEditor.Model
 
         public static T GetValueFromComboBox<T>(ComboBox dropdown, T defaultValue)
         {
-            if (dropdown.SelectedItem is TypeItem<T> li)
+            if (dropdown.SelectedItem is ListItem<T> li)
             {
-                return li.Type;
+                return li.Value;
             }
             return defaultValue;
         }
@@ -50,25 +50,25 @@ namespace MobiusEditor.Model
 
         public static T GetValueFromListBox<T>(ListBox listBox, T defaultValue)
         {
-            if (listBox.SelectedItem is TypeItem<T> li)
+            if (listBox.SelectedItem is ListItem<T> li)
             {
-                return li.Type;
+                return li.Value;
             }
             return defaultValue;
         }
 
-        public static int GetIndexInList<T>(T value, TypeItem<T>[] items)
+        public static int GetIndexInList<T>(T value, ListItem<T>[] items)
         {
             return GetIndexInList<T>(value, items, -1);
         }
 
-        public static int GetIndexInList<T>(T value, TypeItem<T>[] items, int defaultIndex)
+        public static int GetIndexInList<T>(T value, ListItem<T>[] items, int defaultIndex)
         {
             int len = items.Length;
             for (int i = 0; i < len; ++i)
             {
-                TypeItem<T> item = items[i];
-                if (item != null && item.Type.Equals(value))
+                ListItem<T> item = items[i];
+                if (item != null && item.Value.Equals(value))
                 {
                     return i;
                 }
@@ -85,8 +85,8 @@ namespace MobiusEditor.Model
         {
             for (int i = 0; i < comboBox.Items.Count; ++i)
             {
-                TypeItem<T> item = comboBox.Items[i] as TypeItem<T>;
-                if (item != null && item.Type.Equals(value))
+                ListItem<T> item = comboBox.Items[i] as ListItem<T>;
+                if (item != null && item.Value.Equals(value))
                 {
                     return i;
                 }
@@ -94,18 +94,18 @@ namespace MobiusEditor.Model
             return defaultIndex;
         }
 
-        public static int GetIndexInListByLabel<T>(string label, TypeItem<T>[] items)
+        public static int GetIndexInListByLabel<T>(string label, ListItem<T>[] items)
         {
             return GetIndexInListByLabel(label, items, -1);
         }
 
-        public static int GetIndexInListByLabel<T>(string label, TypeItem<T>[] items, int defaultIndex)
+        public static int GetIndexInListByLabel<T>(string label, ListItem<T>[] items, int defaultIndex)
         {
             int len = items.Length;
             for (int i = 0; i < len; ++i)
             {
-                TypeItem<T> item = items[i];
-                if (item != null && item.Name.Equals(label))
+                ListItem<T> item = items[i];
+                if (item != null && item.Label.Equals(label))
                 {
                     return i;
                 }
@@ -122,8 +122,8 @@ namespace MobiusEditor.Model
         {
             for (int i = 0; i < dropdown.Items.Count; ++i)
             {
-                TypeItem<T> item = dropdown.Items[i] as TypeItem<T>;
-                if (item != null && item.Name.Equals(label))
+                ListItem<T> item = dropdown.Items[i] as ListItem<T>;
+                if (item != null && item.Label.Equals(label))
                 {
                     return i;
                 }
@@ -137,17 +137,17 @@ namespace MobiusEditor.Model
         /// <param name="value">Value to find.</param>
         /// <param name="items">List to check.</param>
         /// <returns></returns>
-        public static T CheckInList<T>(T value, IEnumerable<TypeItem<T>> items)
+        public static T CheckInList<T>(T value, IEnumerable<ListItem<T>> items)
         {
-            foreach (TypeItem<T> item in items)
+            foreach (ListItem<T> item in items)
             {
-                if (item != null && item.Type.Equals(value))
+                if (item != null && item.Value.Equals(value))
                 {
                     return value;
                 }
             }
-            TypeItem<T> firstItem = items.FirstOrDefault();
-            T first = firstItem == null ? default : firstItem.Type;
+            ListItem<T> firstItem = items.FirstOrDefault();
+            T first = firstItem == null ? default : firstItem.Value;
             return first;
         }
 
@@ -158,11 +158,11 @@ namespace MobiusEditor.Model
         /// <param name="items">List to check.</param>
         /// <param name="defaultValue">Value to return as default on failure.</param>
         /// <returns></returns>
-        public static T CheckInList<T>(T value, IEnumerable<TypeItem<T>> items, T defaultValue)
+        public static T CheckInList<T>(T value, IEnumerable<ListItem<T>> items, T defaultValue)
         {
-            foreach (TypeItem<T> item in items)
+            foreach (ListItem<T> item in items)
             {
-                if (item != null && item.Type.Equals(value))
+                if (item != null && item.Value.Equals(value))
                 {
                     return value;
                 }
@@ -176,34 +176,34 @@ namespace MobiusEditor.Model
     /// both a value and an explicit string to show.
     /// </summary>
     /// <typeparam name="T">Type of the value.</typeparam>
-    public class TypeItem<T> : IEquatable<TypeItem<T>>, IComparable<TypeItem<T>>
+    public class ListItem<T> : IEquatable<ListItem<T>>, IComparable<ListItem<T>>
     {
-        public string Name { get; private set; }
-        public T Type { get; private set; }
+        public string Label { get; private set; }
+        public T Value { get; private set; }
 
-        public TypeItem(string name, T type)
+        public ListItem(T value, string label)
         {
-            Name = name;
-            Type = type;
+            Value = value;
+            Label = label;
         }
 
-        public bool Equals(TypeItem<T> other)
+        public bool Equals(ListItem<T> other)
         {
             return other != null
-                && ((this.Type == null && other.Type == null) || this.Type.Equals(other.Type))
-                && String.Equals(this.Name, other.Name, StringComparison.InvariantCultureIgnoreCase);
+                && ((this.Value == null && other.Value == null) || this.Value.Equals(other.Value))
+                && String.Equals(this.Label, other.Label, StringComparison.InvariantCultureIgnoreCase);
         }
 
-        public int CompareTo(TypeItem<T> other)
+        public int CompareTo(ListItem<T> other)
         {
             if (this.Equals(other))
                 return 0;
-            return String.Compare(this.Name ?? String.Empty, other.Name ?? String.Empty);
+            return String.Compare(this.Label ?? String.Empty, other.Label ?? String.Empty);
         }
 
         public override string ToString()
         {
-            return Name;
+            return Label;
         }
     }
 }
