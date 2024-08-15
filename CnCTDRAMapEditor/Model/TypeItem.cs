@@ -41,5 +41,10 @@ namespace MobiusEditor.Model
                 return 0;
             return String.Compare(this.Name ?? String.Empty, other.Name ?? String.Empty);
         }
+
+        public override string ToString()
+        {
+            return Name;
+        }
     }
 }

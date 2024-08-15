@@ -71,7 +71,6 @@ namespace MobiusEditor.Tools
             this.jumpToButton = jumpToButton;
             this.jumpToButton.Click += JumpToButton_Click;
             this.waypointCombo = waypointCombo;
-            this.waypointCombo.DisplayMember = "";
             this.waypointCombo.DataSource = plugin.Map.Waypoints.ToArray();
             this.waypointCombo.SelectedIndexChanged += this.WaypointCombo_SelectedIndexChanged;
             navigationWidget.MouseCellChanged += MouseoverWidget_MouseCellChanged;
