@@ -74,7 +74,7 @@ namespace MobiusEditor.Tools.Dialogs
             // 
             // terrainTypeListBox
             // 
-            this.terrainTypeListBox.DisplayMember = "Name";
+            this.terrainTypeListBox.DisplayMember = "Label";
             this.terrainTypeListBox.Dock = System.Windows.Forms.DockStyle.Fill;
             this.terrainTypeListBox.DrawMode = System.Windows.Forms.DrawMode.OwnerDrawVariable;
             this.terrainTypeListBox.FormattingEnabled = true;
@@ -84,7 +84,7 @@ namespace MobiusEditor.Tools.Dialogs
             this.terrainTypeListBox.Name = "terrainTypeListBox";
             this.terrainTypeListBox.Size = new System.Drawing.Size(244, 310);
             this.terrainTypeListBox.TabIndex = 1;
-            this.terrainTypeListBox.ValueMember = "Type";
+            this.terrainTypeListBox.ValueMember = "Value";
             // 
             // tableLayoutPanel2
             // 

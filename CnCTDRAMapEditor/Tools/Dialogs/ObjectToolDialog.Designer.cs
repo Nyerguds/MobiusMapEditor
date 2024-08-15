@@ -74,7 +74,7 @@ namespace MobiusEditor.Tools.Dialogs
             // 
             // objectTypeListBox
             // 
-            this.objectTypeListBox.DisplayMember = "Name";
+            this.objectTypeListBox.DisplayMember = "Label";
             this.objectTypeListBox.Dock = System.Windows.Forms.DockStyle.Fill;
             this.objectTypeListBox.DrawMode = System.Windows.Forms.DrawMode.OwnerDrawVariable;
             this.objectTypeListBox.FormattingEnabled = true;
@@ -84,7 +84,7 @@ namespace MobiusEditor.Tools.Dialogs
             this.objectTypeListBox.Name = "objectTypeListBox";
             this.objectTypeListBox.Size = new System.Drawing.Size(234, 453);
             this.objectTypeListBox.TabIndex = 2;
-            this.objectTypeListBox.ValueMember = "Type";
+            this.objectTypeListBox.ValueMember = "Value";
             // 
             // tableLayoutPanel2
             // 

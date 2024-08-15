@@ -73,7 +73,7 @@ namespace MobiusEditor.Tools.Dialogs
             //
             // smudgeTypeListBox
             //
-            this.smudgeTypeListBox.DisplayMember = "Name";
+            this.smudgeTypeListBox.DisplayMember = "Label";
             this.smudgeTypeListBox.Dock = System.Windows.Forms.DockStyle.Fill;
             this.smudgeTypeListBox.DrawMode = System.Windows.Forms.DrawMode.OwnerDrawVariable;
             this.smudgeTypeListBox.FormattingEnabled = true;
@@ -83,7 +83,7 @@ namespace MobiusEditor.Tools.Dialogs
             this.smudgeTypeListBox.Name = "smudgeTypeListBox";
             this.smudgeTypeListBox.Size = new System.Drawing.Size(244, 310);
             this.smudgeTypeListBox.TabIndex = 2;
-            this.smudgeTypeListBox.ValueMember = "Type";
+            this.smudgeTypeListBox.ValueMember = "Value";
             //
             // tableLayoutPanel2
             //

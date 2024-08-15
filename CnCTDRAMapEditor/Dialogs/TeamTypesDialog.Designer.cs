@@ -442,7 +442,7 @@ namespace MobiusEditor.Dialogs
             // cmbHouse
             // 
             this.tableLayoutPanel2.SetColumnSpan(this.cmbHouse, 2);
-            this.cmbHouse.DisplayMember = "Name";
+            this.cmbHouse.DisplayMember = "Label";
             this.cmbHouse.Dock = System.Windows.Forms.DockStyle.Fill;
             this.cmbHouse.DropDownStyle = System.Windows.Forms.ComboBoxStyle.DropDownList;
             this.cmbHouse.FormattingEnabled = true;
@@ -451,7 +451,7 @@ namespace MobiusEditor.Dialogs
             this.cmbHouse.Name = "cmbHouse";
             this.cmbHouse.Size = new System.Drawing.Size(121, 21);
             this.cmbHouse.TabIndex = 10;
-            this.cmbHouse.ValueMember = "Type";
+            this.cmbHouse.ValueMember = "Value";
             this.cmbHouse.SelectedValueChanged += new System.EventHandler(this.cmbHouse_SelectedValueChanged);
             // 
             // chbRoundabout

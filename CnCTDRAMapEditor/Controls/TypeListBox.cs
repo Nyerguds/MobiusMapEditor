@@ -47,8 +47,8 @@ namespace MobiusEditor.Controls
 
         public TypeListBox()
         {
-            DisplayMember = "Name";
-            ValueMember = "Type";
+            DisplayMember = "Label";
+            ValueMember = "Value";
         }
 
         protected override void OnMeasureItem(MeasureItemEventArgs e)

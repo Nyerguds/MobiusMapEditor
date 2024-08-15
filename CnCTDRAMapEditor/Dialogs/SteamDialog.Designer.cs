@@ -255,7 +255,7 @@ namespace MobiusEditor.Dialogs
             // 
             // cmbVisibility
             // 
-            this.cmbVisibility.DisplayMember = "Name";
+            this.cmbVisibility.DisplayMember = "Label";
             this.cmbVisibility.Dock = System.Windows.Forms.DockStyle.Fill;
             this.cmbVisibility.DropDownStyle = System.Windows.Forms.ComboBoxStyle.DropDownList;
             this.cmbVisibility.FormattingEnabled = true;
