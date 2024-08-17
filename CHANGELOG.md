@@ -627,6 +627,7 @@ Unreleased.
 * Added .mix files to the supported formats to open, giving the ability to load official maps straight from the game's internal archives.
 * Compacted the space around the objects in the Map tool, making it show a lot more items at once.
 * The editor will now only connect to Steam if the Publish function is opened, making it possible to leave the editor open while testing maps in-game.
+* Buildings and solid overlay types (walls, fields) are now their own separate placement layer, which does not interfere with units, infantry and Terrain, which allows overlapping these things without issues.
 * Dropping a file into the editor that causes a dialog to be opened (like mix files and images) will no longer freeze the source you dragged the file from while the dialog in the editor is open.
 * Removed theater restrictions on Terrain objects; if the object is found in the theater, it will be shown.
 * Fixed bug that prevented the Red Alert civilian "C3" from loading, and that prevented the Einstein color fix from working.
@@ -644,7 +645,7 @@ Unreleased.
 * The placement previews for map templates will now always show the terrain types. This indication will be less pronounced when the map terrain type indicators option is disabled.
 * Added extra indicators (shortcut: F4) for cells occupied by objects on the map.
 * Added outlines for overlapped buildings and Terrain objects. They will be considered overlapped if all of their cells that contain graphics are considered overlapped, since that would imply the object is obscured from view.
-* Added outlines for overlapped overlay and walls. This only affects solid overlay that obstructs the map, not pavement types.
+* Added outlines for overlapped overlay and walls. This only affects solid overlay that obstructs the map, not pavement types. Note that for walls, this is disabled by default (see "OutlineColorWall" in [the manual](MANUAL.md#colors-and-transparency)).
 * Implemented a new scaling method that vastly reduces saving times of multiplayer map thumbnails and image exports.
 * Fixed issue that caused any unknown video names configured on TD missions to be marked as "Remaster only".
 * Fixed a bug where the values of team type orders, trigger events and trigger actions were saved as value "-1" when a new item's value was not changed from its default.
@@ -654,13 +655,11 @@ Unreleased.
 * Removed incorrect indication on RA's "Credits Exceed" trigger event that claimed the value was multiplied by 100.
 * Fixed RA "Build Aircraft Type" trigger event to correctly save the unit ID.
 * Added checks on Events in Red Alert triggers that crash the game if no House is set on the trigger itself.
-* Fixed RA mission load checks on buildings overlapping non-buildings.
-* Added mission load checks in both TD and RA on solid overlay objects ovelapping other objects.
 * Fixed the fact RA mission rules were only applied after the map was populated, which could make buildings disappear from overlapping with bibs that were actually disabled in the rules.
-* Fixed classic mode not using the classic hash pattern tile to draw the terrain type indicators on the map tiles tool window.
-* Fixed a crash that happened on Tiberian Dawn maps when switching to Infantry or Unit editing mode after having been in the Building tool, if the template building there had the Prebuilt option unchecked.
+* Fixed classic mode using the high resolution hash pattern to draw the terrain type indicators on the map tiles tool window, which looked out of place on classic graphics.
+* Fixed a crash that happened on Tiberian Dawn maps when switching to Infantry or Unit editing mode after having been in the Building tool, if the template building there had the Prebuilt option unchecked, leaving the House set to "none".
 * Fixed overlapping multiplayer starting point flags not working in combination with Sole Survivor football areas.
-* Rebalanced House-specific indicator colors (used for range indicators and overlap outlines) to be more similar in the remastered and classic view.
+* Rebalanced the tint used for the House-colored range and outline indicators to be more similar in the remastered and classic view.
 * Fixed the "FAKE" label on fake buildings not being shown as more transparent on placement previews.
 * Optimised all indicator drawing by caching the generated images and overlap outlines.
 * Fixed an issue in the redo of drag-moving infantry, that created a ghost duplicate of the dragged infantry unit that could cause crashes.
@@ -668,3 +667,4 @@ Unreleased.
 * Added an indicator to the building tool to indicate whether a building is capturable.
 * Added support for C&C95 v1.06c's bib disabling and capturability rule tweaks.
 * Fixed trigger changes on Terrain objects not immediately refreshing the map.
+* Fixed an internal issue with the unit/infantry/building properties popup not cleaning up its internal resources after closing.

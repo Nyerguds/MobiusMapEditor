@@ -202,7 +202,7 @@ An outline will be shown around objects that are partially or fully behind other
 * **OutlineColorCrateSteel**: The outline color for steel crates.
 * **OutlineColorTerrain**: The outline color for Terrain objects (trees and rocks).
 * **OutlineColorSolidOverlay**: The outline color for impassable overlay. Pavement-type overlay is never outlined.
-* **OutlineColorWall**: The outline color for walls. Note that this one is disabled by default (by setting its alpha to 0) because it is very common to have overlaps on, and it is rarely useful to show.
+* **OutlineColorWall**: The outline color for walls. Note that this one is disabled by default (by setting its alpha to 0) because they are very common to have overlaps on, and it is rarely useful to show them.
 
 Alpha transparency factors used:
 
