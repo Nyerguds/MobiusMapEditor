@@ -2286,7 +2286,7 @@ namespace MobiusEditor
                 if (loadInfo.FileType == FileType.PGM || loadInfo.FileType == FileType.MEG)
                 {
                     resaveType = FileType.INI;
-                    loadInfo.FileName = null;
+                    resaveName = null;
                 }
 #endif
                 mapPanel.MapImage = plugin.MapImage;
