@@ -1020,7 +1020,7 @@ namespace MobiusEditor.Utility
                 }
             }
             mixInfo.Type = MixContentType.Bin;
-            mixInfo.Info = "Tiberian Dawn 64x64 Map";
+            mixInfo.Info = "Tiberian Dawn Map Tile Data (64x64)";
             return true;
         }
 
@@ -1052,7 +1052,7 @@ namespace MobiusEditor.Utility
                 previousCell = cell;
             }
             mixInfo.Type = MixContentType.BinSole;
-            mixInfo.Info = "Tiberian Dawn / Sole Survivor 128x128 Map";
+            mixInfo.Info = "Tiberian Dawn / Sole Survivor Map Tile Data (128x128)";
             return true;
         }
 

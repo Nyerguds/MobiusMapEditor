@@ -329,7 +329,8 @@ namespace MobiusEditor.Dialogs
             }
             else
             {
-                MessageBox.Show("This file type cannot be handled by the map editor. Only map files (indicated as green) and mix files (indicated as yellow) can be opened.", titleMain);
+                MessageBox.Show("This file type cannot be handled by the map editor. Only map files (indicated as green) and mix files (indicated as yellow) can be opened." +
+                    "\n\nHowever, you can press Ctrl+S to extract the selected file from the archive.", titleMain);
             }
         }
 

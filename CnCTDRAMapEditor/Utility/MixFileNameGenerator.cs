@@ -837,11 +837,11 @@ namespace MobiusEditor.Utility
                                 bool hasArg0 = EnhFormatString.HasArg(extraInfo, 0);
                                 if (hasArg0)
                                 {
-                                    int highestArg = EnhFormatString.GetHighestArg(extraInfo);
-                                    object[] args = new object[highestArg + 1];
+                                    int argsLength = EnhFormatString.GetHighestArg(extraInfo) + 1;
+                                    object[] args = new object[argsLength];
                                     args[0] = new EnhFormatString(String.IsNullOrEmpty(info) ? string.Empty : info);
                                     // Preserve all args after {0}.
-                                    for (int i = 1; i <= highestArg; ++i)
+                                    for (int i = 1; i < argsLength; ++i)
                                     {
                                         args[i] = new FormatPreserveArg(i);
                                     }
@@ -865,14 +865,15 @@ namespace MobiusEditor.Utility
         public class FileNameGeneratorEntry
         {
             // Regex: \[(((\d+)-(\d+))|(((?:\([^\[\]\(\))]+\))|(?:[^\[\]]))+))\]
+            // Groups:  123     4      56~
             // Group 1: full capture (not actually used; just for testing)
             // Group 2: numeric block (needs to be first to have priority over the non-numeric one since it's also valid for that format)
             // Group 3: first number in numeric part
             // Group 4: second number in numeric part
             // Group 5: non-numeric block: group containing all chunks to iterate over (not actually used; just for testing)
             // Group 6: Repeating group of the chunks to iterate over; each one is either a block surrounded with ( ), or a single character. Empty () blocks are allowed.
-            //                                                         12   3     4     56~
-            private static readonly Regex IterateRegex = new Regex("\\[(((\\d+)-(\\d+))|(((?:\\([^\\[\\]\\(\\))]*\\))|(?:[^\\[\\]]))+))\\]", RegexOptions.Compiled);
+            //                                                         123      4       56~
+            private static readonly Regex iterateRegex = new Regex("\\[(((\\d+)-(\\d+))|(((?:\\([^\\[\\]\\(\\))]*\\))|(?:[^\\[\\]]))+))\\]", RegexOptions.Compiled);
             public bool IsTheaterDependent { get; private set; }
             public int HighestArg { get; private set; }
             public string ExtraInfo { get; set; }
@@ -894,7 +895,7 @@ namespace MobiusEditor.Utility
                 // This ignores highest arg in info.
                 IsTheaterDependent = highestArgFormat > 0;
                 HighestArg = Math.Max(highestArgFormat, highestArgInfo);
-                Match iteratorMatch = IterateRegex.Match(format);
+                Match iteratorMatch = iterateRegex.Match(format);
                 List<string[]> iterationBlocks = new List<string[]>();
                 // Chop that string up!
                 int currentIndex = 0;
@@ -962,9 +963,16 @@ namespace MobiusEditor.Utility
                 iterations = iterationBlocks.ToArray();
             }
 
+            /// <summary>
+            /// Gets all names that can be generated from this entry, along with the accompanying info string for each one.
+            /// </summary>
+            /// <param name="baseName">Basic name format to apply the generator on.</param>
+            /// <param name="extraInfo">Extra info</param>
+            /// <param name="theaterInfo">The theater names, in all configured long and short variants.</param>
+            /// <returns>All different file names that can be generated from this entry, along with the accompanying description.</returns>
             public IEnumerable<(string, string)> GetNames(string baseName, string extraInfo, string[][] theaterInfo)
             {
-                foreach ((string, string) name in CreateNames(baseName, extraInfo, theaterInfo, 0, new int[iterations.Length], iterations.Length, iterations.Length - 1))
+                foreach ((string, string) name in CreateNames(baseName, extraInfo, theaterInfo, 0, new int[iterations.Length]))
                 {
                     yield return name;
                 }
@@ -974,41 +982,49 @@ namespace MobiusEditor.Utility
             /// This is the main workhorse, it creates new strings and formats them to output the final composed names.
             /// </summary>
             /// <param name="baseName">base name to format into the string as {0}</param>
-            /// <param name="theaterInfo">Theater info, used to iterate over the names in case groups beyond {0} are used.</param>
+            /// <param name="theaterInfo">Array of theater names in all their configured forms. Used to iterate over the names in case groups beyond {0} are used.</param>
             /// <param name="currentChunkPosition">The position of the entry which is replaced by new items currently.</param>
-            /// <param name="chunkEntries">The current key represented as int array, to be filled ith the array of items to iterate.</param>
-            /// <param name="chunkLength">The length of the full key, to know when to end.</param>
-            /// <param name="indexOfLastChunk">The length of the full key minus one, to know when to end.</param>
+            /// <param name="chunkEntries">The current key represented as int array, to be filled ith the array of items to iterate. Its length should always match the amount in <see cref="iterations"/>.</param>
             /// <returns>The list of all names with their corresponding descriptions.</returns>
-            private IEnumerable<(string, string)> CreateNames(string baseName, string extraInfo, string[][] theaterInfo, int currentChunkPosition, int[] chunkEntries, int chunkLength, Int32 indexOfLastChunk)
+            private IEnumerable<(string, string)> CreateNames(string baseName, string extraInfo, string[][] theaterInfo, int currentChunkPosition, int[] chunkEntries)
             {
-                int nextCharPosition = currentChunkPosition + 1;
+                int indexOfLastChunk = chunkEntries.Length - 1;
+                int nextChunkPosition = currentChunkPosition + 1;
                 int entriesLength = iterations[currentChunkPosition].Length;
-                // We are looping through the full length of our entries-to-test array
+                // We are looping through the full length of our array of entries to generate.
                 for (int i = 0; i < entriesLength; i++)
                 {
-                    // The string at the currentChunkPosition will be replaced by a new string.
-                    // from the chunkEntries array, a new combination will be created using the "iterations" data.
+                    // The string index at the currentChunkPosition in chunkEntries will be replaced by the next one,
+                    // and from these indices, a new string combination will be created using the "iterations" data.
                     chunkEntries[currentChunkPosition] = i;
-
-                    // The method calls itself recursively until all positions of the key char array have been replaced
+                    // The method calls itself recursively until all positions of the key char array have been replaced.
                     if (currentChunkPosition < indexOfLastChunk)
                     {
-                        foreach ((string, string) nameInfo in this.CreateNames(baseName, extraInfo, theaterInfo, nextCharPosition, chunkEntries, chunkLength, indexOfLastChunk))
+                        foreach ((string, string) nameInfo in this.CreateNames(baseName, extraInfo, theaterInfo, nextChunkPosition, chunkEntries))
                         {
                             yield return nameInfo;
                         }
                         continue;
                     }
-                    foreach ((string, string) generatedName in BuildString(baseName, extraInfo, theaterInfo, chunkEntries, chunkLength))
+                    // This only outputs multiple entries if the item uses the theater info.
+                    foreach ((string, string) generatedName in BuildString(baseName, extraInfo, theaterInfo, chunkEntries))
                     {
                         yield return generatedName;
                     }
                 }
             }
 
-            private IEnumerable<(string, string)> BuildString(string baseName, string extraInfo, string[][] theaterInfo, int[] keyEntries, int keyLength)
+            /// <summary>
+            /// Builds a string out of a filled key entries list combined with the iterations info. If theater info is used, this returns one entry per theater.
+            /// </summary>
+            /// <param name="baseName">Base name to insert into the formatting.</param>
+            /// <param name="extraInfo">Extra info for this entry; if applicable, this will be adapted to the theater.</param>
+            /// <param name="theaterInfo">Array of theater names in all their configured forms. Used to iterate over the names in case groups beyond {0} are used.</param>
+            /// <param name="keyEntries">Array of indices indicating which iteration to use for each chunk.</param>
+            /// <returns></returns>
+            private IEnumerable<(string, string)> BuildString(string baseName, string extraInfo, string[][] theaterInfo, int[] keyEntries)
             {
+                int keyLength = iterations.Length;
                 string[] chunks = new string[keyLength];
                 for (int i = 0; i < keyLength; i++)
                 {
@@ -1045,11 +1061,10 @@ namespace MobiusEditor.Utility
                         string name = String.Format(format, strings);
                         string info = extraInfo == null ? null : String.Format(extraInfo, strings);
                         yield return (name, info);
-
                     }
                 }
-
             }
+
         }
     }
 }

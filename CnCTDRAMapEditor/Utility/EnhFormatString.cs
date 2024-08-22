@@ -22,7 +22,7 @@ namespace MobiusEditor.Utility
     /// {0:X} will cut off the string argument at X characters. {0:X-Y} will cut out the substring from index X to Y.
     /// Based on https://stackoverflow.com/a/57704658/395685
     /// </summary>
-    public struct EnhFormatString : IFormattable
+    public readonly struct EnhFormatString : IFormattable
     {
         private static readonly Regex FormatDetectRegex = new Regex("{(\\d+)(?::\\d+(?:-\\d+)?)?}", RegexOptions.Compiled);
         private static readonly Regex FormatRegex = new Regex("^(\\d+)(?:-(\\d+))?$", RegexOptions.Compiled);
@@ -53,7 +53,6 @@ namespace MobiusEditor.Utility
             bool singleIndex = match.Groups[2].Value.Length == 0;
             int index1 = Math.Min(_string.Length, Int32.Parse(match.Groups[1].Value));
             int index2 = singleIndex ? 0 : Math.Min(_string.Length, Int32.Parse(match.Groups[2].Value));
-            // impossible case: second index is smaller than first. Return empty.
             if (!singleIndex)
             {
                 if (index2 == index1)
