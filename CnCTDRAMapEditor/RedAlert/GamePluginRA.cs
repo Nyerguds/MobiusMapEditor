@@ -3154,6 +3154,12 @@ namespace MobiusEditor.RedAlert
             Encoding utf8 = new UTF8Encoding(false, false);
             byte[] linebreak = utf8.GetBytes("\r\n");
             INI ini = new INI();
+            List<(string section, string key)> utf8Components = new List<(string section, string key)>();
+            utf8Components.AddRange(new[] { ("Steam", null), ("Briefing", "Text"), ("Basic", "Author") });
+            if (!Globals.UseClassicFiles || !Globals.ClassicEncodesNameAsCp437 || fileType == FileType.PGM || fileType == FileType.MEG)
+            {
+                utf8Components.Add(("Basic", "Name"));
+            }
             switch (fileType)
             {
                 case FileType.INI:
@@ -3164,7 +3170,7 @@ namespace MobiusEditor.RedAlert
                     {
                         string iniText = ini.ToString("\n");
                         // Possibly scan extra ini content for all units/structs/etc with "Name" fields and save them as UTF-8 too? Not sure how the Remaster handles these.
-                        GeneralUtils.WriteMultiEncoding(iniText.Split('\n'), mprWriter, dos437, utf8, new[] { ("Steam", null), ("Briefing", "Text"), ("Basic", "Name"), ("Basic", "Author") }, linebreak);
+                        GeneralUtils.WriteMultiEncoding(iniText.Split('\n'), mprWriter, dos437, utf8, utf8Components.ToArray(), linebreak);
                     }
                     if (!Map.BasicSection.SoloMission && (!Globals.UseClassicFiles || !Globals.ClassicProducesNoMetaFiles))
                     {
@@ -3202,7 +3208,7 @@ namespace MobiusEditor.RedAlert
                     using (MegafileBuilder megafileBuilder = new MegafileBuilder(String.Empty, path))
                     {
                         string iniText = ini.ToString("\n");
-                        GeneralUtils.WriteMultiEncoding(iniText.Split('\n'), mprWriter, dos437, utf8, new[] { ("Steam", null), ("Briefing", "Text"), ("Basic", "Name"), ("Basic", "Author") }, linebreak);
+                        GeneralUtils.WriteMultiEncoding(iniText.Split('\n'), mprWriter, dos437, utf8, utf8Components.ToArray(), linebreak);
                         mprStream.Position = 0;
                         if (customPreview != null)
                         {

@@ -71,6 +71,7 @@ namespace MobiusEditor
             EnforceObjectMaximums = Properties.Settings.Default.EnforceObjectMaximums;
             Ignore106Scripting = Properties.Settings.Default.Ignore106Scripting;
             ClassicProducesNoMetaFiles = Properties.Settings.Default.ClassicProducesNoMetaFiles;
+            ClassicEncodesNameAsCp437 = Properties.Settings.Default.ClassicEncodesNameAsCp437;
             ConvertRaObsoleteClear = Properties.Settings.Default.ConvertRaObsoleteClear;
             BlockingBibs = Properties.Settings.Default.BlockingBibs;
             DisableAirUnits = Properties.Settings.Default.DisableAirUnits;
@@ -187,6 +188,7 @@ namespace MobiusEditor
         public static bool ConvertCraters { get; private set; }
         public static bool FilterTheaterObjects { get; private set; }
         public static bool WriteClassicBriefing { get; private set; }
+        public static bool ClassicEncodesNameAsCp437 { get; private set; }
         public static bool ApplyHarvestBug { get; private set; }
         public static bool NoOwnedObjectsInSole { get; private set; }
         public static bool FixClassicEinstein { get; private set; }

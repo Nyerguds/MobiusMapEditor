@@ -134,12 +134,12 @@ namespace MobiusEditor.Model
             Bottom     /**/ = 1 << 4,
         }
 
-        private static readonly int randomSeed;
+        // Seed itself is no longer random. Fixed seed gives consistency on resaves.
+        private const int randomSeed = 1621259415;
         private static Dictionary<ConcFill, int> concreteStateToIcon = new Dictionary<ConcFill, int>();
 
         static Map()
         {
-            randomSeed = Guid.NewGuid().GetHashCode();
             concreteStateToIcon = IconFillStates.Select((value, index) => new { value, index })
                       .ToDictionary(pair => pair.value, pair => pair.index);
             // Add default, since it does not appear in the cellStates.

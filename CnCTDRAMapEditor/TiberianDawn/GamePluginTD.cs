@@ -2526,6 +2526,12 @@ namespace MobiusEditor.TiberianDawn
             Encoding utf8 = new UTF8Encoding(false, false);
             byte[] linebreak = utf8.GetBytes("\r\n");
             INI ini = new INI();
+            List<(string section, string key)> utf8Components = new List<(string section, string key)>();
+            utf8Components.AddRange(new[] { ("Steam", null), ("Briefing", "Text"), ("Basic", "Author") });
+            if (!Globals.UseClassicFiles || !Globals.ClassicEncodesNameAsCp437 || fileType == FileType.PGM || fileType == FileType.MEG)
+            {
+                utf8Components.Add(("Basic", "Name"));
+            }
             switch (fileType)
             {
                 case FileType.INI:
@@ -2536,7 +2542,7 @@ namespace MobiusEditor.TiberianDawn
                     {
                         // Use '\n' in proprocessing for simplicity. WriteMultiEncoding will use full line breaks.
                         string iniText = forSole ? ini.ToString("\n") : FixRoad2Save(ini, "\n");
-                        GeneralUtils.WriteMultiEncoding(iniText.Split('\n'), iniWriter, dos437, utf8, new[] { ("Steam", null), ("Briefing", "Text"), ("Basic", "Name"), ("Basic", "Author") }, linebreak);
+                        GeneralUtils.WriteMultiEncoding(iniText.Split('\n'), iniWriter, dos437, utf8, utf8Components.ToArray(), linebreak);
                     }
                     using (FileStream binStream = new FileStream(binPath, FileMode.Create))
                     using (BinaryWriter binWriter = new BinaryWriter(binStream))
@@ -2590,7 +2596,7 @@ namespace MobiusEditor.TiberianDawn
                     using (MegafileBuilder megafileBuilder = new MegafileBuilder(String.Empty, path))
                     {
                         string iniText = forSole ? ini.ToString("\n") : FixRoad2Save(ini, "\n");
-                        GeneralUtils.WriteMultiEncoding(iniText.Split('\n'), iniWriter, dos437, utf8, new[] { ("Steam", null), ("Briefing", "Text"), ("Basic", "Name"), ("Basic", "Author") }, linebreak);
+                        GeneralUtils.WriteMultiEncoding(iniText.Split('\n'), iniWriter, dos437, utf8, utf8Components.ToArray(), linebreak);
                         iniWriter.Flush();
                         iniStream.Position = 0;
                         if (!isMegaMap)

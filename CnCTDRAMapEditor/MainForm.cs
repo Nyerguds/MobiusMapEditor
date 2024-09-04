@@ -2517,7 +2517,10 @@ namespace MobiusEditor
             if (activeToolForm != null)
             {
                 activeToolForm.ResizeEnd -= ActiveToolForm_ResizeEnd;
+                activeToolForm.Shown -= this.ActiveToolForm_Shown;
                 activeToolForm.Hide();
+                activeToolForm.Visible = false;
+                activeToolForm.Owner = null;
                 activeToolForm = null;
             }
             toolStatusLabel.Text = String.Empty;
@@ -2662,9 +2665,10 @@ namespace MobiusEditor
                 // Allow the tool to refresh the cell info under the mouse cursor.
                 activeTool.RequestMouseInfoRefresh += ViewTool_RequestMouseInfoRefresh;
                 activeToolForm.ResizeEnd -= ActiveToolForm_ResizeEnd;
-                activeToolForm.Shown -= this.ActiveToolForm_Shown;
                 activeToolForm.Shown += this.ActiveToolForm_Shown;
-                activeToolForm.Show(this);
+                activeToolForm.Visible = false;
+                activeToolForm.Owner = this;
+                activeToolForm.Show();
                 activeTool.Activate();
                 activeToolForm.ResizeEnd += ActiveToolForm_ResizeEnd;
             }
