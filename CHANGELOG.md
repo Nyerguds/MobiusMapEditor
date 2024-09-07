@@ -668,3 +668,4 @@ Unreleased.
 * Added support for C&C95 v1.06c's bib disabling and capturability rule tweaks.
 * Fixed trigger changes on Terrain objects not immediately refreshing the map.
 * Fixed an internal issue with the unit/infantry/building properties popup not cleaning up its internal resources after closing.
+* Overlap detection for drawing outlines on infantry is now handled per infantry sub-position, making it much more accurate.

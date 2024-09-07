@@ -32,7 +32,7 @@ namespace MobiusEditor.Model
         public ITechnoType TechnoType => type;
 
         public Rectangle OverlapBounds => Type.OverlapBounds;
-        public bool[,] OpaqueMask => Type.OpaqueMask;
+        public bool[,][] OpaqueMask => Type.OpaqueMask;
 
         public bool[,] OccupyMask => Type.OccupyMask;
         public bool[,] BaseOccupyMask => Type.OccupyMask;

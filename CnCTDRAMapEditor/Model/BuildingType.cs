@@ -75,7 +75,7 @@ namespace MobiusEditor.Model
         public int Storage { get; set; }
         public bool Capturable { get; set; }
         public Rectangle OverlapBounds => new Rectangle(Point.Empty, OccupyMask.GetDimensions());
-        public bool[,] OpaqueMask { get; private set; }
+        public bool[,][] OpaqueMask { get; private set; }
         public bool[,] OccupyMask { get; private set; }
 
         /// <summary>Actual footprint of the building, without bibs involved.</summary>
@@ -301,7 +301,7 @@ namespace MobiusEditor.Model
                     }
                 }
                 this.Thumbnail = th;
-                this.OpaqueMask = GeneralUtils.FindOpaqueCells(th, this.Size, 10, 25, 0x80);
+                this.OpaqueMask = GeneralUtils.MakeOpaqueMask(th, this.Size, 25, 10, 20, 0x80);
             }
             else
             {

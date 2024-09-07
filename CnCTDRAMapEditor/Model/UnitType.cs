@@ -158,7 +158,7 @@ namespace MobiusEditor.Model
         public FrameUsage BodyFrameUsage { get; private set; }
         public FrameUsage TurretFrameUsage { get; private set; }
         public Rectangle OverlapBounds => new Rectangle(-1, -1, 3, 3);
-        public bool[,] OpaqueMask => new bool[1, 1] { { true } };
+        public bool[,][] OpaqueMask => new bool[1, 1][] { { new bool[] { true, true, true, true, true } } };
         public bool[,] OccupyMask => new bool[1, 1] { { true } };
         public bool[,] BaseOccupyMask => new bool[1, 1] { { true } };
         public int ZOrder => Globals.ZOrderDefault;

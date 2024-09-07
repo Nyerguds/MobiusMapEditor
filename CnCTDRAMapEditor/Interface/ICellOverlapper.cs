@@ -21,7 +21,7 @@ namespace MobiusEditor.Interface
         /// <summary>Rectangular bounds of this overlapper.</summary>
         Rectangle OverlapBounds { get; }
         /// <summary>Determines for each cell whether other graphics drawn under this one are considered to be mostly covered up.</summary>
-        bool[,] OpaqueMask { get; }
+        bool[,][] OpaqueMask { get; }
         // TODO: implement this
         /// <summary>Determines for each infantry sub-cell position in each cell whether other graphics drawn under this one are considered to be mostly covered up.</summary>
         //bool[,][] OpaqueMaskDetailed { get; }

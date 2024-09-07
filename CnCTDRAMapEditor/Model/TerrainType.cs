@@ -28,7 +28,7 @@ namespace MobiusEditor.Model
         public string Name { get; private set; }
         public string DisplayName { get; private set; }
         public Rectangle OverlapBounds => new Rectangle(Point.Empty, this.Size);
-        public bool[,] OpaqueMask { get; private set; }
+        public bool[,][] OpaqueMask { get; private set; }
         public bool[,] OccupyMask { get; private set; }
         public Size Size => this.OccupyMask.GetDimensions();
         public bool[,] BaseOccupyMask => OccupyMask;
@@ -211,7 +211,7 @@ namespace MobiusEditor.Model
                     render.RenderAction(g);
                 }
                 this.Thumbnail = th;
-                this.OpaqueMask = GeneralUtils.FindOpaqueCells(th, this.Size, 10, 25, 0x80);
+                this.OpaqueMask = GeneralUtils.MakeOpaqueMask(th, this.Size, 25, 10, 20, 0x80);
             }
             else
             {

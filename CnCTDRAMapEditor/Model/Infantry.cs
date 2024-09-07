@@ -127,7 +127,7 @@ namespace MobiusEditor.Model
         public Rectangle OverlapBounds => new Rectangle(-1, -1, 3, 3);
         // Infantry groups never cover enough to be seen as obstructing view of what is under them.
         // Note that crates are a special case; they always see cells occupied by units as a reason to show an outline.
-        public bool[,] OpaqueMask => new bool[1, 1] { { false } };
+        public bool[,][] OpaqueMask => new bool[1, 1][] { { stoppingLocations.Select(loc => loc != null).ToArray() } };
         public bool[,] OccupyMask => new bool[1, 1] { { true } };
         public bool[,] BaseOccupyMask => new bool[1, 1] { { true } };
         public int ZOrder => Globals.ZOrderDefault;

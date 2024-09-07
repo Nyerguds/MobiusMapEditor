@@ -1423,14 +1423,18 @@ namespace MobiusEditor.Dialogs
 
         private void HideToolTip(Control target)
         {
-            if (this.tooltipShownOn != null)
+            try
             {
-                this.toolTip1.Hide(this.tooltipShownOn);
+                if (this.tooltipShownOn != null)
+                {
+                    this.toolTip1.Hide(this.tooltipShownOn);
+                }
+                if (target != null)
+                {
+                    this.toolTip1.Hide(target);
+                }
             }
-            if (target != null)
-            {
-                this.toolTip1.Hide(target);
-            }
+            catch { /* ignore */ }
             tooltipShownOn = null;
         }
     }
