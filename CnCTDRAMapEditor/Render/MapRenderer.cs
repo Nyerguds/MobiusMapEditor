@@ -1251,26 +1251,6 @@ namespace MobiusEditor.Render
             return (renderBounds, render);
         }
 
-        private static Point GetRenderPoint(Object obj, InfantryStoppingType? ist)
-        {
-            if (obj is Building building)
-            {
-                return GetBuildingRenderPoint(building);
-            }
-            else if (obj is Terrain terrain)
-            {
-                return GetTerrainRenderPoint(terrain);
-            }
-            else if (obj is InfantryGroup && ist.HasValue)
-            {
-                return GetInfantryRenderPoint(ist.Value);
-            }
-            else
-            {
-                return GetVehicleRenderPoint();
-            }
-        }
-
         private static Point GetVehicleRenderPoint()
         {
             return new Point(Globals.PixelWidth / 2, Globals.PixelHeight / 2);
@@ -1445,11 +1425,37 @@ namespace MobiusEditor.Render
                 {
                     continue;
                 }
-                // Solid overlay should never exist on cells with units.
-                bool unitsAlwaysOverlap = !overlay.Type.IsSolid && !overlay.Type.IsWall;
-                if (!visibleCells.Contains(location) || (onlyIfBehindObjects && !IsOverlapped(map, location, unitsAlwaysOverlap, null, null, location, -1)))
+                if (!visibleCells.Contains(location))
                 {
                     continue;
+                }
+                if (onlyIfBehindObjects)
+                {
+                    if (overlay.Type.OpaqueMask == null) {
+                        continue;
+                    }
+                    bool[] toCheck = overlay.Type.OpaqueMask[0, 0];
+                    InfantryStoppingType[] toLoop = Enum.GetValues(typeof(InfantryStoppingType)).Cast<InfantryStoppingType>().ToArray();
+                    bool occupied = false;
+                    for (int i = 0; i < toLoop.Length; i++)
+                    {
+                        if (!toCheck[i])
+                        {
+                            continue;
+                        }
+                        InfantryStoppingType ist = toLoop[i];
+                        // no need to give the object; it's only checked against the Overlappers list,
+                        // which the Overlay isn't included in since it's a purely single-cell object.
+                        if (IsOverlapped(map, location, true, ist, null, -1))
+                        {
+                            occupied = true;
+                            break;
+                        }
+                    }
+                    if (!occupied)
+                    {
+                        continue;
+                    }
                 }
                 includedCells.Add(cell);
                 includedPoints.Add(location, overlay);
@@ -1535,7 +1541,8 @@ namespace MobiusEditor.Render
                 {
                     continue;
                 }
-                foreach (InfantryStoppingType ist in InfantryGroup.RenderOrder)
+                InfantryStoppingType[] toCheck = Enum.GetValues(typeof(InfantryStoppingType)).Cast<InfantryStoppingType>().ToArray();
+                foreach (InfantryStoppingType ist in toCheck)
                 {
                     Infantry infantry = infantryGroup.Infantry[(int)ist];
                     if (infantry == null)
@@ -1544,7 +1551,7 @@ namespace MobiusEditor.Render
                     }
                     if (onlyIfBehindObjects)
                     {
-                        if (!IsOverlapped(map, location, false, ist, infantryGroup, location, infantry.DrawOrderCache))
+                        if (!IsOverlapped(map, location, false, ist, infantryGroup, infantry.DrawOrderCache))
                         {
                             continue;
                         }
@@ -1640,10 +1647,27 @@ namespace MobiusEditor.Render
                     bool allOpaque = true;
                     // only evaluate center point
                     Point[] opaquePoints = Enumerable.Range(0, maskY).SelectMany(nrY => Enumerable.Range(0, maskX).Select(nrX => new Point(nrX, nrY)))
-                        .Where(pt => opaqueMask[pt.Y, pt.X][0]).Select(pt => new Point(objLocation.X + pt.X, objLocation.Y + pt.Y)).ToArray();
+                        .Where(pt => opaqueMask[pt.Y, pt.X] != null && opaqueMask[pt.Y, pt.X].Length > 0 && opaqueMask[pt.Y, pt.X].Any()).ToArray();
                     foreach (Point opaquePoint in opaquePoints)
                     {
-                        if (!IsOverlapped(map, opaquePoint, false, null, placedObj, objLocation, paintOrder))
+                        Point realPoint = new Point(objLocation.X + opaquePoint.X, objLocation.Y + opaquePoint.Y);
+                        InfantryStoppingType[] toCheck = Enum.GetValues(typeof(InfantryStoppingType)).Cast<InfantryStoppingType>().ToArray();
+                        bool isSubOverlapped = false;
+                        bool[] opaqueCellMask = opaqueMask[opaquePoint.Y, opaquePoint.X];
+                        foreach (InfantryStoppingType ist in toCheck)
+                        {
+                            if (!opaqueCellMask[(int)ist])
+                            {
+                                continue;
+                            }
+                            if (IsOverlapped(map, realPoint, false, ist, placedObj, paintOrder))
+                            {
+                                isSubOverlapped = true;
+                                break;
+                            }
+                        }
+                        // if any of the occupied sub-cells are overlapped, consider it partially overlapped and thus eligible for outline.
+                        if (!isSubOverlapped)
                         {
                             allOpaque = false;
                             break;
@@ -1708,19 +1732,20 @@ namespace MobiusEditor.Render
         /// <param name="unitsAlwaysOverlap">True to immediately return true if the cell is occupied by units.</param>
         /// <param name="ist">When filled in, the overlapper is treated as infantry on that location.</param>
         /// <param name="objectToCheck">Object for which overlap is being checked. This object is automatically ignored in the objects it loops over to check for overlaps.</param>
-        /// <param name="objectLocation">Object location on the map.</param>
+        /// <param name="objectPaintOrder">Cached paint order of the object, to easily check if it can be overlapped at all.</param>
         /// <returns>true if the cell is considered filled enough to overlap things.</returns>
-        private static bool IsOverlapped(Map map, Point location, bool unitsAlwaysOverlap, InfantryStoppingType? ist,
-            ICellOverlapper objectToCheck, Point objectLocation, int objectPaintOrder)
+        private static bool IsOverlapped(Map map, Point location, bool unitsAlwaysOverlap, InfantryStoppingType? ist, ICellOverlapper objectToCheck, int objectPaintOrder)
         {
             ICellOccupier techno = map.Technos[location];
+            int subIndex = ist.HasValue ? (int)ist.Value : 0;
             // Single-cell occupier. Always pass. Since this is only used for single-cell objects, only map.Technos needs to be checked.
             if (unitsAlwaysOverlap && (techno is Unit || techno is InfantryGroup) && techno != objectToCheck)
             {
-                return true;
+                if (!(techno is InfantryGroup ig) || ig.Infantry[subIndex] != null)
+                {
+                    return true;
+                }
             }
-            int subIndex = ist.HasValue ? (int)ist.Value : 0;
-            //Point centerPoint = GetRenderPoint(objectToCheck, ist);
             // Logic for multi-cell occupiers; buildings and terrain.
             // Return true if either an occupied cell, or overlayed by graphics deemed opaque.
             ICellOverlapper[] technos = map.Overlappers.OverlappersAt(location).Where(ov => !ReferenceEquals(ov,objectToCheck)).ToArray();
@@ -1750,6 +1775,10 @@ namespace MobiusEditor.Render
                 {
                     continue;
                 }
+                if (ovl is InfantryGroup ig && (ig.Infantry[subIndex] == null || ig.Infantry[subIndex].DrawOrderCache < objectPaintOrder))
+                {
+                    continue;
+                }
                 // Get list of points, find current point in the list.
                 Rectangle boundsRect = new Rectangle(pt.Value, new Size(maskX, maskY));
                 List<Point> pts = boundsRect.Points().OrderBy(p => p.Y * map.Metrics.Width + p.X).ToList();
@@ -1760,7 +1789,7 @@ namespace MobiusEditor.Render
                 }
                 // Trick to convert 2-dimensional arrays to linear format.
                 bool[][] opaqueArr = opaqueMask.Cast<bool[]>().ToArray();
-                if (opaqueArr[index][subIndex])
+                if (index < opaqueArr.Length && opaqueArr[index] != null && subIndex < opaqueArr[index].Length && opaqueArr[index][subIndex])
                 {
                     // If obscured from view by graphics, return true.
                     return true;

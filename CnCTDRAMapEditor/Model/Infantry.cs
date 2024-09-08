@@ -125,9 +125,7 @@ namespace MobiusEditor.Model
         private static readonly Point[] stoppingLocations = new Point[Globals.NumInfantryStops];
 
         public Rectangle OverlapBounds => new Rectangle(-1, -1, 3, 3);
-        // Infantry groups never cover enough to be seen as obstructing view of what is under them.
-        // Note that crates are a special case; they always see cells occupied by units as a reason to show an outline.
-        public bool[,][] OpaqueMask => new bool[1, 1][] { { stoppingLocations.Select(loc => loc != null).ToArray() } };
+        public bool[,][] OpaqueMask => new bool[1, 1][] { { Infantry.Select(loc => loc != null).ToArray() } };
         public bool[,] OccupyMask => new bool[1, 1] { { true } };
         public bool[,] BaseOccupyMask => new bool[1, 1] { { true } };
         public int ZOrder => Globals.ZOrderDefault;
@@ -153,6 +151,7 @@ namespace MobiusEditor.Model
             }
             return stoppingDistances.OrderBy(sd => sd.dist).Select(sd => sd.type);
         }
+
         public static InfantryStoppingType[] RenderOrder =
         {
             InfantryStoppingType.UpperRight,
@@ -161,11 +160,6 @@ namespace MobiusEditor.Model
             InfantryStoppingType.LowerRight,
             InfantryStoppingType.LowerLeft,
         };
-
-        public static int RenderPriority(InfantryStoppingType ist)
-        {
-            return Enumerable.Range(0, RenderOrder.Length).Where(i => RenderOrder[i] == ist).FirstOrDefault();
-        }
 
         public static Point RenderPosition(InfantryStoppingType ist, bool adjust)
         {

@@ -2076,7 +2076,6 @@ namespace MobiusEditor.Model
                     this.UpdateWallOverlays(toRefresh.Points().ToHashSet());
                 }
             }
-            //this.Technos.Remove(e.Occupier);
             if (e.Occupier is ICellOverlapper overlapper)
             {
                 if (this.updateCount == 0)

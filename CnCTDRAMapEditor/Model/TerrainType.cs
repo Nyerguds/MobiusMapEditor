@@ -211,7 +211,7 @@ namespace MobiusEditor.Model
                     render.RenderAction(g);
                 }
                 this.Thumbnail = th;
-                this.OpaqueMask = GeneralUtils.MakeOpaqueMask(th, this.Size, 25, 10, 20, 0x80);
+                this.OpaqueMask = GeneralUtils.MakeOpaqueMask(th, this.Size, 25, 10, 20, 0x80, false);
             }
             else
             {

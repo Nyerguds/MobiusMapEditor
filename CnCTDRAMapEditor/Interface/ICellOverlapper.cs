@@ -20,11 +20,11 @@ namespace MobiusEditor.Interface
     {
         /// <summary>Rectangular bounds of this overlapper.</summary>
         Rectangle OverlapBounds { get; }
-        /// <summary>Determines for each cell whether other graphics drawn under this one are considered to be mostly covered up.</summary>
+        /// <summary>
+        /// Determines for each infantry sub-cell position in each cell whether other graphics drawn under it are considered to be 'mostly covered up'.
+        /// Each coordinate must contain an array of 5 booleans.
+        /// </summary>
         bool[,][] OpaqueMask { get; }
-        // TODO: implement this
-        /// <summary>Determines for each infantry sub-cell position in each cell whether other graphics drawn under this one are considered to be mostly covered up.</summary>
-        //bool[,][] OpaqueMaskDetailed { get; }
         /// <summary>Value for Z-sorting; can be used to make objects specifically show as "flatter" than others so pieces sticking out at the top don't overlap objects on these cells.</summary>
         int ZOrder { get; }
     }

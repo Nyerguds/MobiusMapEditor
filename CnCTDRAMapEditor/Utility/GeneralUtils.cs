@@ -646,7 +646,7 @@ namespace MobiusEditor.Utility
         /// <param name="borderThreshold">If center is not deemed opaque enough, threshold percentage of pixels in the outer border that make the image still count as opaque.</param>
         /// <param name="minAlpha">Minimum alpha value to consider a pixel to be opaque.</param>
         /// <returns></returns>
-        public static bool[,][] MakeOpaqueMask(Bitmap image, Size size, int borderPercentage, int centerThreshold, int borderThreshold, int minAlpha)
+        public static bool[,][] MakeOpaqueMask(Bitmap image, Size size, int borderPercentage, int centerThreshold, int borderThreshold, int minAlpha, bool ignoreBlack)
         {
             int width = image.Width;
             int height = image.Height;
@@ -678,7 +678,7 @@ namespace MobiusEditor.Utility
                     for (int x = 0; x < size.Width; ++x)
                     {
                         Rectangle cellRect = new Rectangle(fullCellsize * x, fullCellsize * y, fullCellsize, fullCellsize);
-                        cellEvaluation[y, x] = AreSubCellsOpaque(image, cellRect, borderPercentage, centerThreshold, borderThreshold, minAlpha);
+                        cellEvaluation[y, x] = AreSubCellsOpaque(image, cellRect, borderPercentage, centerThreshold, borderThreshold, minAlpha, ignoreBlack);
                     }
                 }
             }
@@ -693,7 +693,7 @@ namespace MobiusEditor.Utility
             return cellEvaluation;
         }
 
-        private static bool[] AreSubCellsOpaque(Bitmap image, Rectangle cellRect, int borderPercentage, int centerThreshold, int borderThreshold, int minAlpha)
+        private static bool[] AreSubCellsOpaque(Bitmap image, Rectangle cellRect, int borderPercentage, int centerThreshold, int borderThreshold, int minAlpha, bool ignoreBlack)
         {
             Point[] subCellCoords = new Point[] { new Point(1, 1), new Point(0, 0), new Point(2, 0), new Point(0, 2), new Point(2, 2) };
             bool[] subCells = new bool[5];
@@ -705,12 +705,12 @@ namespace MobiusEditor.Utility
             {
                 Point subCellMul = subCellCoords[pt];
                 Rectangle subCellRect = new Rectangle(cellRect.X + cellWidth * subCellMul.X / 4, cellRect.Y + cellHeight * subCellMul.Y / 4, subCellWidth, subCellHeight);
-                subCells[pt] = IsSubCellOpaque(image, subCellRect, borderPercentage, centerThreshold, borderThreshold, minAlpha);
+                subCells[pt] = IsSubCellOpaque(image, subCellRect, borderPercentage, centerThreshold, borderThreshold, minAlpha, ignoreBlack);
             }
             return subCells;
         }
 
-        private static bool IsSubCellOpaque(Bitmap image, Rectangle subCellRect, int borderPercentage, int centerThreshold, int borderThreshold, int minAlpha)
+        private static bool IsSubCellOpaque(Bitmap image, Rectangle subCellRect, int borderPercentage, int centerThreshold, int borderThreshold, int minAlpha, bool ignoreBlack)
         {
             int subCellWidth = subCellRect.Width;
             int subCellHeight = subCellRect.Height;
@@ -725,7 +725,7 @@ namespace MobiusEditor.Utility
             int stride;
             byte[] data = ImageUtils.GetImageData(image, out stride, ref centerRect, PixelFormat.Format32bppArgb, true);
             int centerOpaquePixels = 0;
-            bool centerMatch = EvalAreaAlpha(data, stride, minAlpha, 0, centerHeight, 0, centerWidth, centerPixelsThreshold, ref centerOpaquePixels);
+            bool centerMatch = EvalAreaAlpha(data, stride, minAlpha, 0, centerHeight, 0, centerWidth, centerPixelsThreshold, ref centerOpaquePixels, ignoreBlack);
             if (centerMatch)
             {
                 return true;
@@ -736,25 +736,25 @@ namespace MobiusEditor.Utility
             data = ImageUtils.GetImageData(image, out stride, ref subCellRect, PixelFormat.Format32bppArgb, true);
             int borderOpaquePixels = 0;
             int topPartMaxY = borderHeight;
-            bool edgeTopMatch = EvalAreaAlpha(data, stride, minAlpha, 0, topPartMaxY, 0, subCellWidth, borderPixelsThreshold, ref borderOpaquePixels);
+            bool edgeTopMatch = EvalAreaAlpha(data, stride, minAlpha, 0, topPartMaxY, 0, subCellWidth, borderPixelsThreshold, ref borderOpaquePixels, ignoreBlack);
             if (edgeTopMatch)
             {
                 return true;
             }
             int bottomPartStartY = centerHeight + borderHeight;
-            bool edgeBottomMatch = EvalAreaAlpha(data, stride, minAlpha, bottomPartStartY, subCellHeight, 0, subCellWidth, borderPixelsThreshold, ref borderOpaquePixels);
+            bool edgeBottomMatch = EvalAreaAlpha(data, stride, minAlpha, bottomPartStartY, subCellHeight, 0, subCellWidth, borderPixelsThreshold, ref borderOpaquePixels, ignoreBlack);
             if (edgeBottomMatch)
             {
                 return true;
             }
             int leftPartEndX = borderWidth;
-            bool edgeLeftMatch = EvalAreaAlpha(data, stride, minAlpha, topPartMaxY, bottomPartStartY, 0, leftPartEndX, borderPixelsThreshold, ref borderOpaquePixels);
+            bool edgeLeftMatch = EvalAreaAlpha(data, stride, minAlpha, topPartMaxY, bottomPartStartY, 0, leftPartEndX, borderPixelsThreshold, ref borderOpaquePixels, ignoreBlack);
             if (edgeLeftMatch)
             {
                 return true;
             }
             int rightPartStartX = centerWidth + borderWidth;
-            bool edgeRightMatch = EvalAreaAlpha(data, stride, minAlpha, topPartMaxY, bottomPartStartY, rightPartStartX, subCellWidth, borderPixelsThreshold, ref borderOpaquePixels);
+            bool edgeRightMatch = EvalAreaAlpha(data, stride, minAlpha, topPartMaxY, bottomPartStartY, rightPartStartX, subCellWidth, borderPixelsThreshold, ref borderOpaquePixels, ignoreBlack);
             if (edgeRightMatch)
             {
                 return true;
@@ -762,7 +762,7 @@ namespace MobiusEditor.Utility
             return false;
         }
 
-        private static bool EvalAreaAlpha(byte[] imgData, int stride, int minAlpha, int yStart, int yEnd, int xStart, int xEnd, int threshold, ref int curAmount)
+        private static bool EvalAreaAlpha(byte[] imgData, int stride, int minAlpha, int yStart, int yEnd, int xStart, int xEnd, int threshold, ref int curAmount, bool ignoreBlack)
         {
             int lineAddr = yStart * stride;
             for (int cellY = yStart; cellY < yEnd; ++cellY)
@@ -770,15 +770,36 @@ namespace MobiusEditor.Utility
                 int addr = lineAddr + xStart;
                 for (int cellX = xStart; cellX < xEnd; ++cellX)
                 {
-                    if (imgData[addr + 3] >= minAlpha)
+                    int curAddr = addr;
+                    addr += 4;
+                    if (imgData[curAddr + 3] < minAlpha)
                     {
-                        curAmount++;
-                        if (curAmount > threshold)
+                        continue;
+                    }
+                    if (ignoreBlack)
+                    {
+                        // Check brightness to exclude shadow
+                        byte red = imgData[curAddr + 2];
+                        byte grn = imgData[curAddr + 1];
+                        byte blu = imgData[curAddr + 0];
+                        // Integer method.
+                        int redBalanced = red * red * 2126;
+                        int grnBalanced = grn * grn * 7152;
+                        int bluBalanced = blu * blu * 0722;
+                        int lum = (redBalanced + grnBalanced + bluBalanced) / 255 / 255;
+                        // The integer division will automatically reduce anything near-black
+                        // to zero, so actually checking against a threshold is unnecessary.
+                        // if (lum > lumThresholdSq * 1000)
+                        if (lum == 0)
                         {
-                            return true;
+                            continue;
                         }
                     }
-                    addr += 4;
+                    curAmount++;
+                    if (curAmount > threshold)
+                    {
+                        return true;
+                    }
                 }
                 lineAddr += stride;
             }

@@ -14,6 +14,7 @@
 // with this program. If not, see https://github.com/electronicarts/CnC_Remastered_Collection
 using MobiusEditor.Interface;
 using MobiusEditor.Render;
+using MobiusEditor.Utility;
 using System;
 using System.Diagnostics;
 using System.Drawing;
@@ -51,7 +52,7 @@ namespace MobiusEditor.Model
         Crate           /**/ = WoodCrate | SteelCrate,
     }
     [DebuggerDisplay("{Name}")]
-    public class OverlayType : ICellOccupier, IBrowsableType
+    public class OverlayType : ICellOccupier, IBrowsableType, ICellOverlapper
     {
         public int ID { get; private set; }
         public string Name { get; private set; }
@@ -63,6 +64,9 @@ namespace MobiusEditor.Model
         public int ForceTileNr { get; private set; }
         public bool[,] OccupyMask => new bool[1, 1] { { true } };
         public bool[,] BaseOccupyMask => new bool[1, 1] { { true } };
+        public bool[,][] OpaqueMask { get; private set; }
+        public Rectangle OverlapBounds => new Rectangle(0, 0, 1, 1);
+        public int ZOrder => -1;
         public bool IsResource => (this.Flag & (OverlayTypeFlag.TiberiumOrGold | OverlayTypeFlag.Gems)) != OverlayTypeFlag.None;
         public bool IsTiberiumOrGold => (this.Flag & OverlayTypeFlag.TiberiumOrGold) != OverlayTypeFlag.None;
         public bool IsGem => (this.Flag & OverlayTypeFlag.Gems) != OverlayTypeFlag.None;
@@ -170,6 +174,22 @@ namespace MobiusEditor.Model
                 MapRenderer.RenderOverlay(gameInfo, Point.Empty, null, Globals.PreviewTileSize, Globals.PreviewTileScale, mockOverlay, false).Item2(g);
             }
             this.Thumbnail = th;
+            // only certain types are analysed for opaqueness
+            if (this.IsCrate || this.IsSolid)
+            {
+                // Overlaps over shadow areas are ignored on overlay; they're the bottom layer anyway.
+                OpaqueMask = this.OpaqueMask = GeneralUtils.MakeOpaqueMask(th, new Size(1, 1), 25, 10, 20, 0x80, !Globals.UseClassicFiles);
+            }
+            else if (this.IsWall)
+            {
+                // Walls generally look like they occupy the whole cell, and have different states.
+                OpaqueMask = new bool[1, 1][] { { new bool[] { true, true, true, true, true } } };
+            }
+            else
+            {
+                // Pavement types and such are ignored and never outlined.
+                OpaqueMask = new bool[1, 1][] { { new bool[] { false, false, false, false, false } } };
+            }
             if (oldImage != null)
             {
                 try { oldImage.Dispose(); }

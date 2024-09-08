@@ -19,7 +19,7 @@ using System.Drawing;
 namespace MobiusEditor.Model
 {
     [DebuggerDisplay("{Type}: {Icon}")]
-    public class Overlay : ICellOccupier
+    public class Overlay : ICellOccupier, ICellOverlapper
     {
         public OverlayType Type { get; set; }
 
@@ -29,6 +29,9 @@ namespace MobiusEditor.Model
 
         public bool[,] OccupyMask => Type.OccupyMask;
         public bool[,] BaseOccupyMask => Type.OccupyMask;
+        public bool[,][] OpaqueMask => Type.OpaqueMask;
+        public Rectangle OverlapBounds => Type.OverlapBounds;
+        public int ZOrder => Type.ZOrder;
 
         public bool IsPreview { get; set; }
 
