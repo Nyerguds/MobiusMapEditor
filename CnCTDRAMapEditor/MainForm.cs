@@ -230,6 +230,7 @@ namespace MobiusEditor
         private Dictionary<GameType, List<string>>[] FindMissionMixFiles(MixFileNameGenerator romfis, string cachedMixInfoFile)
         {
             INI cachedMixIni = new INI();
+            INI newMixIni = new INI();
             if (File.Exists(cachedMixInfoFile))
             {
                 try
@@ -265,7 +266,7 @@ namespace MobiusEditor
                     if (Directory.Exists(classicRoot))
                     {
                         string[] allMixFiles = Directory.GetFiles(classicRoot, "*.mix", SearchOption.TopDirectoryOnly);
-                        List<string> validMixFiles = GetMixFilesWithMissions(gameInfo, allMixFiles, romfis, cachedMixIni, "Classic_");
+                        List<string> validMixFiles = GetMixFilesWithMissions(gameInfo, allMixFiles, romfis, cachedMixIni, newMixIni, "Classic_");
                         if (validMixFiles.Count > 0)
                         {
                             classicMixFiles.Add(gameInfo.GameType, validMixFiles);
@@ -284,7 +285,7 @@ namespace MobiusEditor
                     if (Directory.Exists(remasterRoot))
                     {
                         string[] allMixFiles = Directory.GetFiles(remasterRoot, "*.mix", SearchOption.AllDirectories);
-                        List<string> validMixFiles = GetMixFilesWithMissions(gameInfo, allMixFiles, romfis, cachedMixIni, "Remaster_");
+                        List<string> validMixFiles = GetMixFilesWithMissions(gameInfo, allMixFiles, romfis, cachedMixIni, newMixIni, "Remaster_");
                         if (validMixFiles.Count > 0)
                         {
                             remasterMixFiles.Add(gameInfo.GameType, validMixFiles);
@@ -296,7 +297,7 @@ namespace MobiusEditor
             {
                 return null;
             }
-            string cachedIni = cachedMixIni.ToString("\r\n");
+            string cachedIni = newMixIni.ToString("\r\n");
             String cachedMixInfoPath = Path.GetDirectoryName(cachedMixInfoFile);
             if (!Directory.Exists(cachedMixInfoPath))
             {
@@ -375,7 +376,7 @@ namespace MobiusEditor
             }
         }
 
-        private List<string> GetMixFilesWithMissions(GameInfo gameInfo, string[] allMixFiles, MixFileNameGenerator romfis, INI cachedMixIni, string iniPrefix)
+        private List<string> GetMixFilesWithMissions(GameInfo gameInfo, string[] allMixFiles, MixFileNameGenerator romfis, INI cachedMixIni, INI newMixIni, string iniPrefix)
         {
             string iniSectionName = iniPrefix + gameInfo.IniName;
             INISection curGameIniSection = cachedMixIni[iniSectionName] ?? null;
@@ -388,7 +389,7 @@ namespace MobiusEditor
                     return validMixFiles;
                 }
                 string fullMixPath = Path.GetFullPath(mixFile);
-                bool mixHandledFromIni = CheckMixPathInIni(fullMixPath, validMixFiles, cachedMixIni, curGameIniSection, newGameIniSection);
+                bool mixHandledFromIni = CheckMixPathInIni(fullMixPath, validMixFiles, curGameIniSection, newGameIniSection);
                 if (mixHandledFromIni || !MixFile.CheckValidMix(fullMixPath, gameInfo.CanUseNewMixFormat))
                 {
                     continue;
@@ -406,12 +407,13 @@ namespace MobiusEditor
                     // Format: c:\path\mixfile.mix,submix=lastMod,filesize,hasMissions
                     long timeStamp = File.GetLastWriteTime(fullMixPath).Ticks;
                     FileInfo mixInfo = new FileInfo(fullMixPath);
-                    newGameIniSection[fullMixPath] = timeStamp.ToString() + "," + mixInfo.Length.ToString() + "," + hasMissions.ToString();
+                    string fullMixPathIni = Uri.EscapeDataString("\"" + mixInfo.FullName + "\"");
+                    newGameIniSection[fullMixPathIni] = timeStamp.ToString() + "," + mixInfo.Length.ToString() + "," + hasMissions.ToString();
                     foreach (MixEntry entry in entries.Where(entr => entr.Type == MixContentType.Mix))
                     {
                         string subName = MixPath.GetMixEntryName(entry);
                         string subMixPath = fullMixPath + ";" + subName;
-                        string subMixPathIni = fullMixPath + "," + subName;
+                        string subMixPathIni = Uri.EscapeDataString("\"" + subMixPath + "\"");
                         hasMissions = 0;
                         using (MixFile subMix = new MixFile(mix, entry))
                         {
@@ -428,12 +430,11 @@ namespace MobiusEditor
                 }
             }
             // Replace old info with new info.
-            cachedMixIni.Sections.Remove(iniSectionName);
-            cachedMixIni.Sections.Add(newGameIniSection);
+            newMixIni.Sections.Add(newGameIniSection);
             return validMixFiles;
         }
 
-        private bool CheckMixPathInIni(string fullMixPath, List<string> validMixFiles, INI cachedMixIni, INISection curGameIniSection, INISection newGameIniSection)
+        private bool CheckMixPathInIni(string fullMixPath, List<string> validMixFiles, INISection curGameIniSection, INISection newGameIniSection)
         {
             if (curGameIniSection == null)
             {
@@ -441,7 +442,20 @@ namespace MobiusEditor
             }
             Dictionary<string, string> allKeys = curGameIniSection.Keys.ToDictionary();
             List<string> mixPaths = allKeys.Keys.ToList();
-            string mainMixInfo = curGameIniSection.Keys.TryGetValue(fullMixPath);
+            for (int i = 0; i < mixPaths.Count; i++)
+            {
+                string path = mixPaths[i];
+                if (path.Length > 0 && path[0] == '%')
+                {
+                    mixPaths[i] = Uri.UnescapeDataString(path).Trim('\"');
+                }
+            }
+            string fullMixPathIni = Uri.EscapeDataString("\"" + fullMixPath + "\"");
+            string mainMixInfo = curGameIniSection.Keys.TryGetValue(fullMixPathIni);
+            if (mainMixInfo == null)
+            {
+                mainMixInfo = curGameIniSection.Keys.TryGetValue(fullMixPath);
+            }
             if (mainMixInfo == null)
             {
                 return false;
@@ -474,15 +488,20 @@ namespace MobiusEditor
             {
                 validMixFiles.Add(fullMixPath);
             }
-            newGameIniSection[fullMixPath] = mainMixInfo;
-            string subMixPath = fullMixPath + ",";
+            newGameIniSection[fullMixPathIni] = mainMixInfo;
+            string subMixPathOld = fullMixPath + ",";
             string subMixPathReplace = fullMixPath + ";";
             foreach (string mixPath in mixPaths)
             {
-                if (mixPath.StartsWith(subMixPath))
+                if (mixPath.StartsWith(subMixPathReplace) || mixPath.StartsWith(subMixPathOld))
                 {
-                    string subMixInfo = curGameIniSection.Keys.TryGetValue(mixPath);
-                    string usableMixPath = subMixPathReplace + mixPath.Substring(subMixPath.Length);
+                    string mixPathIni = Uri.EscapeDataString("\"" + mixPath + "\"");
+                    string subMixInfo = curGameIniSection.Keys.TryGetValue(mixPathIni);
+                    if (subMixInfo == null)
+                    {
+                        subMixInfo = curGameIniSection.Keys.TryGetValue(mixPath);
+                    }
+                    string usableMixPath = subMixPathReplace + mixPath.Substring(subMixPathOld.Length);
                     string[] subMixData = subMixInfo.Split(',');
                     if (subMixData.Length < 3)
                     {
@@ -494,7 +513,7 @@ namespace MobiusEditor
                     {
                         continue;
                     }
-                    newGameIniSection[mixPath] = subMixInfo;
+                    newGameIniSection[mixPathIni] = subMixInfo;
                     if (hasMissions == 1)
                     {
                         validMixFiles.Add(usableMixPath);
@@ -839,18 +858,6 @@ namespace MobiusEditor
         private void FileOpenMenuItem_Click(object sender, EventArgs e)
         {
             PromptSaveMap(OpenFile, false);
-        }
-
-        private void FileOpenFromMixMenuItem_Click(object sender, EventArgs e)
-        {
-            string lastMix = mru.Files.Where(pth => MixPath.IsMixPath(pth) && MRU.GetBaseFileInfo(pth).Exists).FirstOrDefault();
-            if (lastMix == null)
-            {
-                return;
-            }
-            MixPath.GetComponents(lastMix, out string[] mixParts, out string[] filenameParts);
-            string mixOnly = String.Join(";", mixParts);
-            PromptSaveMap(() => OpenFile(mixOnly, true), false);
         }
 
         private void OpenFile()

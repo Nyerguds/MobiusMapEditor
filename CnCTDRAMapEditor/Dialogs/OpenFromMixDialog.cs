@@ -359,8 +359,14 @@ namespace MobiusEditor.Dialogs
             mixContentsListView.BeginUpdate();
             mixContentsListView.Items.Clear();
             int nrofFiles = mixInfo.Count;
-            bool selectFirst = !idToSelect.HasValue;
-            ListViewItem selected = null;
+            bool selectId = idToSelect.HasValue;
+            bool selectFirst = !selectId;
+            int toSelectIndex = -1;
+            ListViewItem toSelect = null;
+            bool selectFirstMission = !selectId;
+            int missToSelectIndex = -1;
+            int lastMissIndex = -1;
+            ListViewItem missToSelect = null;
             for (int i = 0; i < nrofFiles; ++i)
             {
                 MixEntry mixFileInfo = mixInfo[i];
@@ -371,11 +377,12 @@ namespace MobiusEditor.Dialogs
                 };
                 if (selectFirst || idToSelect.HasValue && mixFileInfo.Id == idToSelect.Value)
                 {
-                    selected = item;
+                    toSelect = item;
+                    toSelectIndex = i;
                     idToSelect = null;
                     selectFirst = false;
                 }
-                switch (mixFileInfo.Type)
+                switch (mt)
                 {
                     case MixContentType.MapTd:
                     case MixContentType.MapSole:
@@ -383,22 +390,37 @@ namespace MobiusEditor.Dialogs
                     case MixContentType.BinSole:
                     case MixContentType.MapRa:
                         item.BackColor = Color.FromArgb(0xFF, 0xD0, 0xFF, 0xD0); //Color.LightGreen;
+                        if (selectFirstMission)
+                        {
+                            missToSelect = item;
+                            missToSelectIndex = i;
+                            selectFirstMission = false;
+                        }
+                        lastMissIndex = i;
                         break;
                     case MixContentType.Mix:
                         item.BackColor = Color.FromArgb(0xFF, 0xFF, 0xFF, 0x80); // Color.LightYellow
                         break;
                 }
-                item.SubItems.Add(mixFileInfo.Type.ToString());
+                item.SubItems.Add(mt.ToString());
                 item.SubItems.Add(mixFileInfo.Length.ToString());
                 item.SubItems.Add(mixFileInfo.Description);
                 item.SubItems.Add(mixFileInfo.Info);
                 mixContentsListView.Items.Add(item).ToolTipText = mixFileInfo.Name ?? mixFileInfo.IdString;
             }
             mixContentsListView.EndUpdate();
-            if (selected != null)
+            if (missToSelect != null && !(selectId && toSelect != null))
             {
-                selected.Selected = true;
+                missToSelect.Selected = true;
+                mixContentsListView.EnsureVisible(lastMissIndex);
+                mixContentsListView.EnsureVisible(missToSelectIndex);
             }
+            else if (toSelect != null)
+            {
+                toSelect.Selected = true;
+                mixContentsListView.EnsureVisible(toSelectIndex);
+            }
+            
         }
 
         private void MixContentsListView_SizeChanged(object sender, EventArgs e)
