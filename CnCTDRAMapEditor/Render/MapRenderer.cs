@@ -1416,16 +1416,11 @@ namespace MobiusEditor.Render
             List<int> includedCells = new List<int>();
             float outlineThickness = 0.05f;
             byte alphaThreshold = (byte)(Globals.UseClassicFiles ? 0x80 : 0x40);
-            //double lumThreshold = 0.01d;
             // Get all included points in an initial sweep so they're all available in the second processing step.
             foreach ((int cell, Overlay overlay) in map.Overlay)
             {
                 OverlayType ovlt = overlay.Type;
-                if (!ovlt.Flag.HasAnyFlags(types) || !map.Metrics.GetLocation(cell, out Point location))
-                {
-                    continue;
-                }
-                if (!visibleCells.Contains(location))
+                if (!ovlt.Flag.HasAnyFlags(types) || !map.Metrics.GetLocation(cell, out Point location)|| !visibleCells.Contains(location))
                 {
                     continue;
                 }
@@ -1444,8 +1439,6 @@ namespace MobiusEditor.Render
                             continue;
                         }
                         InfantryStoppingType ist = toLoop[i];
-                        // no need to give the object; it's only checked against the Overlappers list,
-                        // which the Overlay isn't included in since it's a purely single-cell object.
                         if (IsOverlapped(map, location, true, ist, overlay, -1))
                         {
                             occupied = true;

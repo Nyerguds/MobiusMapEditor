@@ -178,7 +178,7 @@ namespace MobiusEditor.Model
             if (this.IsCrate || this.IsSolid)
             {
                 // Overlaps over shadow areas are ignored on overlay; they're the bottom layer anyway.
-                OpaqueMask = this.OpaqueMask = GeneralUtils.MakeOpaqueMask(th, new Size(1, 1), 25, 10, 20, 0x80, !Globals.UseClassicFiles);
+                OpaqueMask = this.OpaqueMask = GeneralUtils.MakeOpaqueMask(th, new Size(1, 1), 25, 10, 20, Globals.UseClassicFiles ? 0x80 : 0x40, !Globals.UseClassicFiles);
             }
             else if (this.IsWall)
             {
