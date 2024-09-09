@@ -625,12 +625,15 @@ Released on 31 Jan 2023 at 20:50 GMT
 Unreleased.
 
 * Added .mix files to the supported formats to open, giving the ability to load official maps straight from the game's internal archives.
+* Implemented a new scaling method that vastly reduces saving times of multiplayer map thumbnails and image exports.
 * Compacted the space around the objects in the Map tool, making it show a lot more items at once.
 * The editor will now only connect to Steam if the Publish function is opened, making it possible to leave the editor open while testing maps in-game.
 * Buildings and solid overlay types (walls, fields) are now their own separate placement layer, which does not interfere with units, infantry and Terrain, which allows overlapping these things without issues.
+* Classic mode now uses classic pixel fonts, allowing for much nicer image exports of maps at their original size in classic mode.
 * Dropping a file into the editor that causes a dialog to be opened (like mix files and images) will no longer freeze the source you dragged the file from while the dialog in the editor is open.
 * Removed theater restrictions on Terrain objects; if the object is found in the theater, it will be shown.
 * Fixed bug that prevented the Red Alert civilian "C3" from loading, and that prevented the Einstein color fix from working.
+* The "New from image" function now gives a warning if the chosen image is not the expected size for the selected map type.
 * In the trigger editor, when hovering over the trigger action dropdown when it has one of the Tiberian Dawn "Dstry Trig '????'" actions selected, a tooltip will show with the contents of the linked trigger to destroy.
 * In the trigger editor, when hovering over the trigger action dropdown when it has the Tiberian Dawn "DZ at 'Z'" action selected, a tooltip will show the currently set location of the Flare waypoint.
 * In the trigger editor, when hovering over a dropdown containing the list of team types, a tooltip will show a brief overview of the selected team type.
@@ -646,7 +649,8 @@ Unreleased.
 * Added extra indicators (shortcut: F4) for cells occupied by objects on the map.
 * Added outlines for overlapped buildings and Terrain objects. They will be considered overlapped if all of their cells that contain graphics are considered overlapped, since that would imply the object is obscured from view.
 * Added outlines for overlapped overlay and walls. This only affects solid overlay that obstructs the map, not pavement types. Note that for walls, this is disabled by default (see "OutlineColorWall" in [the manual](MANUAL.md#colors-and-transparency)).
-* Implemented a new scaling method that vastly reduces saving times of multiplayer map thumbnails and image exports.
+* The overlap algorithm that determines if an outline is needed now works per infantry sub-cell position rather than per whole cell, giving much more accurate results.
+* The overlap algorithm that determines if an outline is needed now keeps the draw-order of objects in mind, so an object that is drawn over another object will never be considered to be overlapped by that second one.
 * Fixed issue that caused any unknown video names configured on TD missions to be marked as "Remaster only".
 * Fixed a bug where the values of team type orders, trigger events and trigger actions were saved as value "-1" when a new item's value was not changed from its default.
 * Fixed RA sound effect string "water impace".
@@ -668,4 +672,3 @@ Unreleased.
 * Added support for C&C95 v1.06c's bib disabling and capturability rule tweaks.
 * Fixed trigger changes on Terrain objects not immediately refreshing the map.
 * Fixed an internal issue with the unit/infantry/building properties popup not cleaning up its internal resources after closing.
-* Overlap detection for drawing outlines on infantry is now handled per infantry sub-position, making it much more accurate.
