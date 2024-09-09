@@ -1700,7 +1700,7 @@ namespace MobiusEditor
                         "Are you sure you want to continue?";
                     object[] parms = { String.Empty, String.Empty, String.Format(mapStr, gType.Name), size.Width, size.Height };
                     // If either total size is larger than double, or one of the sizes is larger than 3x that dimension, they're Probably Doing It Wrong; give extra info.
-                    if (imageSize.Width > size.Width * 2 && imageSize.Height > size.Height * 2 || imageSize.Width > size.Width * 3 || imageSize.Height > size.Height * 2)
+                    if ((imageSize.Width > size.Width * 2 && imageSize.Height > size.Height * 2) || imageSize.Width > size.Width * 3 || imageSize.Height > size.Height * 2)
                     {
                         parms[0] = "much ";
                         parms[1] = ", but it can't magically convert an image into a map looking like the image";
