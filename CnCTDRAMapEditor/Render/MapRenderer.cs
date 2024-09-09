@@ -1446,7 +1446,7 @@ namespace MobiusEditor.Render
                         InfantryStoppingType ist = toLoop[i];
                         // no need to give the object; it's only checked against the Overlappers list,
                         // which the Overlay isn't included in since it's a purely single-cell object.
-                        if (IsOverlapped(map, location, true, ist, null, -1))
+                        if (IsOverlapped(map, location, true, ist, overlay, -1))
                         {
                             occupied = true;
                             break;
