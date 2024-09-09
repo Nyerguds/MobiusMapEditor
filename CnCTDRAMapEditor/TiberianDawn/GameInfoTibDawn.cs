@@ -45,6 +45,8 @@ namespace MobiusEditor.TiberianDawn
         public override string ClassicFolderDefault => "Classic\\TD\\";
         public override string ClassicFolderSetting => "ClassicPathTD";
         public override string ClassicStringsFile => "conquer.eng";
+        public override Size MapSize => Constants.MaxSize;
+        public override Size MapSizeMega => Constants.MaxSizeMega;
         public override TheaterType[] AllTheaters => TheaterTypes.GetAllTypes().ToArray();
         public override TheaterType[] AvailableTheaters => TheaterTypes.GetTypes().ToArray();
         public override bool MegamapIsSupported => true;

@@ -77,6 +77,10 @@ namespace MobiusEditor.Model
         public abstract string ClassicFolderSetting { get; }
         /// <summary>File name of the classic strings file for this game.</summary>
         public abstract string ClassicStringsFile { get; }
+        /// <summary>Map size for normal maps of this type</summary>
+        public abstract Size MapSize { get; }
+        /// <summary>Map size for megamaps of this type</summary>
+        public abstract Size MapSizeMega { get; }
         /// <summary>Lists all theaters theoretically supported by this type.</summary>
         public abstract TheaterType[] AllTheaters { get; }
         /// <summary>Lists all theaters supported by this type which are actually found.</summary>

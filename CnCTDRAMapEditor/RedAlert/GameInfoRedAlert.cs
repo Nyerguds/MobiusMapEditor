@@ -45,6 +45,8 @@ namespace MobiusEditor.RedAlert
         public override string ClassicFolderDefault => "Classic\\RA\\";
         public override string ClassicFolderSetting => "ClassicPathRA";
         public override string ClassicStringsFile => "conquer.eng";
+        public override Size MapSize => Constants.MaxSize;
+        public override Size MapSizeMega => Constants.MaxSize;
         public override TheaterType[] AllTheaters => TheaterTypes.GetAllTypes().ToArray();
         public override TheaterType[] AvailableTheaters => TheaterTypes.GetTypes().ToArray();
         public override bool MegamapIsSupported => true;

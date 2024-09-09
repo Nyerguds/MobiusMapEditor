@@ -599,7 +599,7 @@ namespace MobiusEditor.RedAlert
             // Remap classic Einstein DOS graphics to no longer look like Mobius.
             InfantryTypes.Einstein.ClassicGraphicsRemap = Globals.FixClassicEinstein ? InfantryClassicRemap.RemapEinstein : null;
 
-            Map = new Map(basicSection, null, Constants.MaxSize, typeof(House), houseTypes, null,
+            Map = new Map(basicSection, null, gameTypeInfo.MapSize, typeof(House), houseTypes, null,
                 TheaterTypes.GetTypes(), TemplateTypes.GetTypes(),
                 TerrainTypes.GetTypes(), OverlayTypes.GetTypes(), SmudgeTypes.GetTypes(Globals.ConvertCraters),
                 EventTypes.GetTypes(), cellEventTypes, unitEventTypes, structureEventTypes, terrainEventTypes,

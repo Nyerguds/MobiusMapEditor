@@ -1642,7 +1642,7 @@ namespace MobiusEditor
         {
             GameType gameType = GameType.None;
             string theater = null;
-            bool isTdMegaMap = false;
+            bool isMegaMap = false;
             bool isSinglePlay = false;
             using (NewMapDialog nmd = new NewMapDialog(withImage))
             {
@@ -1653,10 +1653,11 @@ namespace MobiusEditor
                     return;
                 }
                 gameType = nmd.GameType;
-                isTdMegaMap = nmd.MegaMap;
+                isMegaMap = nmd.MegaMap;
                 isSinglePlay = nmd.SinglePlayer;
                 theater = nmd.Theater;
             }
+            GameInfo gType = GameTypeFactory.GetGameInfo(gameType);
             if (withImage && imagePath == null)
             {
                 using (OpenFileDialog ofd = new OpenFileDialog())
@@ -1671,13 +1672,53 @@ namespace MobiusEditor
                     }
                     imagePath = ofd.FileName;
                 }
+                Size size = isMegaMap ? gType.MapSizeMega : gType.MapSize;
+                Size imageSize;
+                try
+                {
+                    using (Bitmap bm = new Bitmap(imagePath))
+                    {
+                        imageSize = new Size(bm.Width, bm.Height);
+                    }
+                }
+                catch
+                {
+                    MessageBox.Show(this, String.Format("Could not load image {0}.", imagePath), "Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
+                    return;
+                }
+                // Warn when size doesn't match map size.
+                if (imageSize.Width > size.Width || imageSize.Height > size.Height)
+                {
+                    string mapStr = ((isMegaMap && !gType.MegamapIsOptional) || (!isMegaMap && !gType.MegamapIsDefault)) ? "{0} map"
+                        : (isMegaMap ? "{0} megamap" : "small {0} map");
+                    const string messageTemplate = "The image you have chosen is {0}larger than the map size. " +
+                        "Note that every pixel on the image represents one cell on the map, so for a {2}, the expected image size is {3}×{4}.\n\n" +
+                        "This function is meant to allow map makers to plan out the layout of their map in an image editor, " +
+                        "with more tools available in terms of symmetry, copy-pasting, drawing straight lines, drawing curves, etc" +
+                        "{1}" + 
+                        ".\n\n" +
+                        "Are you sure you want to continue?";
+                    object[] parms = { String.Empty, String.Empty, String.Format(mapStr, gType.Name), size.Width, size.Height };
+                    // If either total size is larger than double, or one of the sizes is larger than 3x that dimension, they're Probably Doing It Wrong; give extra info.
+                    if (imageSize.Width > size.Width * 2 && imageSize.Height > size.Height * 2 || imageSize.Width > size.Width * 3 || imageSize.Height > size.Height * 2)
+                    {
+                        parms[0] = "much ";
+                        parms[1] = ", but it can't magically convert an image into a map looking like the image";
+                    }
+                    string messageSize = string.Format(messageTemplate, parms);
+                    DialogResult dr = MessageBox.Show(this, messageSize, "Warning", MessageBoxButtons.YesNo, MessageBoxIcon.Error);
+                    if (dr != DialogResult.Yes)
+                    {
+                        return;
+                    }
+                }
             }
             Unload();
             string loading = "Loading new map";
             if (withImage)
                 loading += " from image";
             loadMultiThreader.ExecuteThreaded(
-                () => NewFile(gameType, imagePath, theater, isTdMegaMap, isSinglePlay, this),
+                () => NewFile(gameType, imagePath, theater, isMegaMap, isSinglePlay, this),
                 PostLoad, true,
                 (e, l) => LoadUnloadUi(e, l, loadMultiThreader),
                 loading);

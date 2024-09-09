@@ -470,7 +470,7 @@ namespace MobiusEditor.TiberianDawn
             string[] unitActionTypes = { };
             string[] structureActionTypes = { };
             string[] terrainActionTypes = { };
-            Size mapSize = !megaMap ? Constants.MaxSize : Constants.MaxSizeMega;
+            Size mapSize = !megaMap ? gameTypeInfo.MapSize : gameTypeInfo.MapSizeMega;
             Map = new Map(basicSection, null, mapSize, typeof(House), houseTypes,
                 null, TheaterTypes.GetTypes(), TemplateTypes.GetTypes(),
                 TerrainTypes.GetTypes(), OverlayTypes.GetTypes(), SmudgeTypes.GetTypes(Globals.ConvertCraters),
