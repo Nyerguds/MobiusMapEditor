@@ -625,7 +625,7 @@ Released on 31 Jan 2023 at 20:50 GMT
 Unreleased.
 
 * Added .mix files to the supported formats to open, giving the ability to load official maps straight from the game's internal archives.
-* Implemented a new scaling method that vastly reduces saving times of multiplayer map thumbnails and image exports.
+* Implemented a new scaling method that vastly reduces the saving time of multiplayer map thumbnails and image exports.
 * Compacted the space around the objects in the Map tool, making it show a lot more items at once.
 * The editor will now only connect to Steam if the Publish function is opened, making it possible to leave the editor open while testing maps in-game.
 * Buildings and solid overlay types (walls, fields) are now their own separate placement layer, which does not interfere with units, infantry and Terrain, which allows overlapping these things without issues.

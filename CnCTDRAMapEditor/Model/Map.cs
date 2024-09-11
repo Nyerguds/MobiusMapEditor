@@ -136,15 +136,6 @@ namespace MobiusEditor.Model
 
         // Seed itself is no longer random. Fixed seed gives consistency on resaves.
         private const int randomSeed = 1621259415;
-        private static Dictionary<ConcFill, int> concreteStateToIcon = new Dictionary<ConcFill, int>();
-
-        static Map()
-        {
-            concreteStateToIcon = IconFillStates.Select((value, index) => new { value, index })
-                      .ToDictionary(pair => pair.value, pair => pair.index);
-            // Add default, since it does not appear in the cellStates.
-            concreteStateToIcon.Add(ConcFill.None, 0);
-        }
 
         // Keep this list synchronised with the MapLayerFlag enum
         public static String[] MapLayerNames = {
@@ -198,6 +189,9 @@ namespace MobiusEditor.Model
             /* 5 */ ConcFill.Center | ConcFill.Top,
             /* 6 */ ConcFill.Bottom | ConcFill.Top,
         };
+
+        private static readonly Dictionary<ConcFill, int> concreteStateToIcon = IconFillStates.Select((value, index) => new { value, index })
+            .Append(new { value = ConcFill.None, index = 0 }).ToDictionary(pair => pair.value, pair => pair.index);
 
         private static readonly Regex TileInfoSplitRegex = new Regex("^([^:]+):(\\d+)$", RegexOptions.Compiled);
 
