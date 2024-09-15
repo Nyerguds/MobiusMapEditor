@@ -23,16 +23,48 @@ namespace MobiusEditor.Utility
 {
     public class MixParseException : Exception
     {
+        protected readonly String AffectedEntryIdTag = "MixParseExceptionAffectedEntryId";
+
         public MixParseException()
-        { }
+        {
+            this.AffectedEntryId = 0;
+        }
 
         public MixParseException(string message)
             :base(message)
-        { }
+        {
+            this.AffectedEntryId = 0;
+        }
 
         public MixParseException(string message, Exception innerException)
             : base(message, innerException)
-        { }
+        {
+            this.AffectedEntryId = 0;
+        }
+
+        public MixParseException(uint id)
+        {
+            this.AffectedEntryId = id;
+        }
+
+        public MixParseException(string message, uint id)
+            : base(message)
+        {
+            this.AffectedEntryId = id;
+        }
+
+        public MixParseException(string message, Exception innerException, uint id)
+            : base(message, innerException)
+        {
+            this.AffectedEntryId = id;
+        }
+
+        public uint AffectedEntryId
+        {
+            get { return (uint)this.Data[this.AffectedEntryIdTag]; }
+            set { this.Data[this.AffectedEntryIdTag] = value; }
+        }
+
     }
 
     public class MixFile : IDisposable
@@ -42,6 +74,7 @@ namespace MobiusEditor.Utility
         private static readonly int Exponent = 65537;
 
         private Dictionary<uint, MixEntry[]> mixFileContents = new Dictionary<uint, MixEntry[]>();
+        private List<uint> headerIds = new List<uint>();
         private HashMethod hasher = HashMethod.GetRegisteredMethods().FirstOrDefault();
 
         /// <summary>Path the file was loaded from. For embedded mix files, this will be the original path with the deeper opened mix file(s) indicated behind " -&gt; ".</summary>
@@ -56,6 +89,7 @@ namespace MobiusEditor.Utility
         public bool HasEncryption { get; private set; }
         public bool HasChecksum { get; private set; }
         public IEnumerable<uint> FileIds => this.mixFileContents.Keys.OrderBy(k => k);
+        public List<uint> HeaderIds => headerIds.ToList();
 
         /// <summary>Hasher to use.</summary>
         public HashMethod Hasher
@@ -121,7 +155,7 @@ namespace MobiusEditor.Utility
             {
                 return false;
             }
-            dummy.FilePath = container.FilePath + " -> " + name;
+            dummy.FilePath = container.FilePath + " → " + name;
             dummy.FileName = entry.Name;
             dummy.FileId = entry.Id;
             dummy.fileStart = actualEntry.Offset;
@@ -195,7 +229,7 @@ namespace MobiusEditor.Utility
             {
                 throw new FileNotFoundException(name + " was not found inside this mix archive.");
             }
-            this.FilePath = container.FilePath + " -> " + name;
+            this.FilePath = container.FilePath + " → " + name;
             this.FileName = entry.Name;
             this.FileId = entry.Id;
             this.fileStart = actualEntry.Offset;
@@ -529,7 +563,7 @@ namespace MobiusEditor.Utility
             {
                 uint fileId = ArrayUtils.ReadUInt32FromByteArrayLe(header, hdrPtr);
                 uint fileOffset = ArrayUtils.ReadUInt32FromByteArrayLe(header, hdrPtr + 4) + dataStart;
-                uint fileLength = ArrayUtils.ReadUInt32FromByteArrayLe(header, hdrPtr + 8);
+                uint fileLength = ArrayUtils.ReadUInt32FromByteArrayLe(header, hdrPtr + 8) & 0x7FFFFFFF;
                 hdrPtr += 12;
                 if (fileOffset + fileLength > mixLength)
                 {
@@ -537,10 +571,12 @@ namespace MobiusEditor.Utility
                     {
                         return false;
                     }
-                    throw new MixParseException(String.Format("Not a valid mix file: file #{0} with id {1:X08} exceeds archive length.", i, fileId));
+                    throw new MixParseException(String.Format("Not a valid mix file: file #{0} with id {1:X08} exceeds archive length.", i, fileId), fileId);
                 }
                 MixEntry entry = new MixEntry(fileId, fileOffset, fileLength);
+                entry.Index = i;
                 MixEntry[] existing;
+                headerIds.Add(fileId);
                 if (!this.mixFileContents.TryGetValue(fileId, out existing))
                 {
                     this.mixFileContents.Add(fileId, new[] { entry });
@@ -709,6 +745,7 @@ namespace MobiusEditor.Utility
 
     public class MixEntry
     {
+        public int Index;
         public uint Id;
         public string Name;
         public int Duplicate;
@@ -728,6 +765,7 @@ namespace MobiusEditor.Utility
 
         public MixEntry(MixEntry orig)
         {
+            Index = orig.Index;
             Id = orig.Id;
             Name = orig.Name;
             Duplicate = orig.Duplicate;

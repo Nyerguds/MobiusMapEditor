@@ -1782,7 +1782,34 @@ namespace MobiusEditor
                         // Ignore and just fall through.
                     }
                 }
-                MessageBox.Show(this, String.Format("Error loading {0}: Could not identify map type.", feedbackName), "Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
+                const string feedback = "Could not identify map type.";
+                string message = feedback;
+                if (recheckMix && ".mix".Equals(Path.GetExtension(fileName), StringComparison.OrdinalIgnoreCase))
+                {
+                    try
+                    {
+                        // mix already failed; let's see why.
+                        MixFile mixFile = new MixFile(fileName);
+                    }
+                    catch (MixParseException mpe)
+                    {
+                        message = mpe.Message;
+                        uint affectedId = mpe.AffectedEntryId;
+                        if (affectedId != 0 && this.romfis != null)
+                        {
+                            List<MixEntry> entries = romfis.IdentifySingleFile(affectedId);
+                            if (entries.Count == 1)
+                            {
+                                message += string.Format(" (File id identified as \"{0}\")", entries[0].Name);
+                            }
+                            else if (entries.Count > 1)
+                            {
+                                message += string.Format(" (Possible name matches: {0})", String.Join(", ", entries.Select(entr => "\"" + entr.Name + "\"").ToArray()));
+                            }
+                        }
+                    }
+                }
+                MessageBox.Show(this, String.Format("Error loading {0}: ", feedbackName) + message, "Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
                 RefreshActiveTool(true);
                 return;
             }

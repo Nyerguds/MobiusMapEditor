@@ -36,7 +36,8 @@ namespace MobiusEditor.Utility
         /// <returns>The result of the analysis.</returns>
         public static List<MixEntry> AnalyseFiles(MixFile current, bool missionsOnly, Func<bool> checkAbort)
         {
-            List<uint> filesList = current.FileIds.ToList();
+            List<uint> filesList = current.HeaderIds.ToList();
+            Dictionary<uint,int> encountered = new Dictionary<uint,int>();
             List<MixEntry> fileInfo = new List<MixEntry>();
             foreach (uint fileId in filesList)
             {
@@ -45,21 +46,26 @@ namespace MobiusEditor.Utility
                     return null;
                 }
                 MixEntry[] entries = current.GetFullFileInfo(fileId);
-                for (int i = 0; i < entries.Length; ++i)
+                int index = encountered.TryGetOrDefault(fileId, 0);
+                encountered[fileId] = index + 1;
+                MixEntry mixInfo = entries[index];
+                fileInfo.Add(mixInfo);
+                // Only do identification if type is set to unknown.
+                if (mixInfo.Type == MixContentType.Unknown)
                 {
-                    MixEntry mixInfo = entries[i];
-                    fileInfo.Add(mixInfo);
-                    // Only do identification if type is set to unknown.
-                    if (mixInfo.Type == MixContentType.Unknown)
+                    using (Stream file = current.OpenFile(mixInfo))
                     {
-                        using (Stream file = current.OpenFile(mixInfo))
-                        {
-                            TryIdentifyFile(file, mixInfo, current, missionsOnly);
-                        }
+                        TryIdentifyFile(file, mixInfo, current, missionsOnly);
                     }
                 }
+                
             }
-            return fileInfo.OrderBy(x => x.SortName).ToList();
+            // Header order
+            return fileInfo;
+            // Filename order
+            //return fileInfo.OrderBy(x => x.SortName).ToList();
+            // File offset order
+            //return fileInfo.OrderBy(x => x.Offset).ToList();
         }
 
         private static void TryIdentifyFile(Stream fileStream, MixEntry mixInfo, MixFile source, bool missionsAndMixFilesOnly)

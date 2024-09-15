@@ -306,7 +306,7 @@ namespace MobiusEditor.Dialogs
                 return null;
             }
             int icon = mappingsIcons.ContainsKey(col) ? mappingsIcons[col] : tmpl.GetIconIndex(tmpl.GetFirstValidIcon());
-            return String.Format("#{0:X6} -> {1}:{2}", col & 0xFFFFFF, tmpl.Name, icon);
+            return String.Format("#{0:X6} → {1}:{2}", col & 0xFFFFFF, tmpl.Name, icon);
         }
 
         private void picZoom_MouseDown(Object sender, MouseEventArgs e)

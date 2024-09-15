@@ -455,7 +455,7 @@ namespace MobiusEditor.Utility
             {
                 forcedHasher = dbFileHasher;
             }
-            Dictionary<string,double> identifiedAmounts = new Dictionary<string,double>();
+            Dictionary<string, double> identifiedAmounts = new Dictionary<string, double>();
             for (int i = 0; i < games.Count; ++i)
             {
                 string gameName = games[i];
@@ -550,6 +550,27 @@ namespace MobiusEditor.Utility
                 forcedHasher = maxGame.Hasher;
             }
             return maxGame?.Name;
+        }
+
+        /// <summary>
+        /// Identify a file inside the whole range of known filenames.
+        /// </summary>
+        /// <param name="id">id to identify.</param>
+        /// <param name="forcedGameType">Game type identified on the parent; is always taken as primary type.</param>
+        /// <param name="forcedHasher">
+        ///     If no specific game type was identified, but a hasher was, it can be force through this.
+        ///     At the end of this function, this object will always contain the used hasher.
+        /// </param>
+        /// <returns>The game type identified for this mix file.</returns>
+        public List<MixEntry> IdentifySingleFile(uint id)
+        {
+            List<MixEntry> matches = new List<MixEntry>();
+            foreach (string game in games)
+            {
+                GameDefinition gameDef = gameInfo[game];
+                matches.AddRange(gameDef.FileInfo.Where(fi => fi.Id == id));
+            }
+            return matches;
         }
 
         private Dictionary<uint, MixEntry> GetXccDatabaseInfo(MixFile mixFile, out HashMethod hm)

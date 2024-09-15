@@ -24,6 +24,8 @@ namespace MobiusEditor.Dialogs
 {
     public partial class OpenFromMixDialog : Form, IHasStatusLabel
     {
+
+        private ListViewColumnSorter lvwColumnSorter;
         private bool resizing = false;
         private string[] initPaths = null;
         private List<MixFile> openedMixFiles = new List<MixFile>();
@@ -48,6 +50,9 @@ namespace MobiusEditor.Dialogs
         public OpenFromMixDialog(MixFile baseMix, string[] internalMixParts, MixFileNameGenerator romfis)
         {
             InitializeComponent();
+            lvwColumnSorter = new ListViewColumnSorter();
+            lvwColumnSorter.NumberColumms = new int[] { 2, 5, 6 };
+            this.mixContentsListView.ListViewItemSorter = lvwColumnSorter;
             titleMain = this.Text;
             this.romfis = romfis;
             identifiedHasher = null;
@@ -68,7 +73,7 @@ namespace MobiusEditor.Dialogs
 
         private void SetTitle()
         {
-            this.Text = titleMain + " - " + string.Join(" -> ", openedMixFiles.Select(mix => mix.FileName).ToArray());
+            this.Text = titleMain + " - " + string.Join(" → ", openedMixFiles.Select(mix => mix.FileName).ToArray());
         }
 
         private void LoadMixContents(uint? idToSelect)
@@ -349,12 +354,16 @@ namespace MobiusEditor.Dialogs
 
         private void FillList(List<MixEntry> mixInfo, uint? idToSelect)
         {
-            currentMixInfo = mixInfo;
             if (mixInfo == null)
             {
+                currentMixInfo = null;
                 mixContentsListView.Items.Clear();
                 return;
             }
+            lvwColumnSorter.SortColumn = 0;
+            lvwColumnSorter.Order = SortOrder.Ascending;
+            mixInfo = mixInfo.OrderBy(x => x.SortName).ToList();
+            currentMixInfo = mixInfo;
             SetTitle();
             mixContentsListView.BeginUpdate();
             mixContentsListView.Items.Clear();
@@ -406,6 +415,8 @@ namespace MobiusEditor.Dialogs
                 item.SubItems.Add(mixFileInfo.Length.ToString());
                 item.SubItems.Add(mixFileInfo.Description);
                 item.SubItems.Add(mixFileInfo.Info);
+                item.SubItems.Add(mixFileInfo.Index.ToString());
+                item.SubItems.Add(mixFileInfo.Offset.ToString());
                 mixContentsListView.Items.Add(item).ToolTipText = mixFileInfo.Name ?? mixFileInfo.IdString;
             }
             mixContentsListView.EndUpdate();
@@ -554,6 +565,36 @@ namespace MobiusEditor.Dialogs
                 return;
             e.Cancel = true;
             e.NewWidth = lv.Columns[e.ColumnIndex].Width;
+        }
+
+        private void mixContentsListView_ColumnClick(object sender, ColumnClickEventArgs e)
+        {
+            ListView listView = sender as ListView;
+            if (listView == null)
+            {
+                return;
+            }
+            // Determine if clicked column is already the column that is being sorted.
+            if (e.Column == lvwColumnSorter.SortColumn)
+            {
+                // Reverse the current sort direction for this column.
+                if (lvwColumnSorter.Order == SortOrder.Ascending)
+                {
+                    lvwColumnSorter.Order = SortOrder.Descending;
+                }
+                else
+                {
+                    lvwColumnSorter.Order = SortOrder.Ascending;
+                }
+            }
+            else
+            {
+                // Set the column number that is to be sorted; default to ascending.
+                lvwColumnSorter.SortColumn = e.Column;
+                lvwColumnSorter.Order = SortOrder.Ascending;
+            }
+            // Perform the sort with these new sort options.
+            listView.Sort();
         }
     }
 }
