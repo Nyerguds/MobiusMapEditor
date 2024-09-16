@@ -18,12 +18,16 @@ using System.Collections.Generic;
 using System.Drawing;
 using System.IO;
 using System.Linq;
+using System.Text.RegularExpressions;
 using System.Windows.Forms;
 
 namespace MobiusEditor.Dialogs
 {
     public partial class OpenFromMixDialog : Form, IHasStatusLabel
     {
+        private static readonly Regex isNumber = new Regex("^-?\\d+$");
+        // ID string, possibly with repeat index behind it
+        private static readonly Regex isId = new Regex("^\\[[0-9A-F]{8}\\]( \\(\\d+\\))?$");
 
         private ListViewColumnSorter lvwColumnSorter;
         private bool resizing = false;
@@ -51,7 +55,26 @@ namespace MobiusEditor.Dialogs
         {
             InitializeComponent();
             lvwColumnSorter = new ListViewColumnSorter();
-            lvwColumnSorter.NumberColumms = new int[] { 2, 5, 6 };
+            Comparer<string>[] columnComparers = new Comparer<string>[7];
+            Comparer<string> idComparer = Comparer<string>.Create((s1, s2) => {
+                string st1 = isId.IsMatch(s1) ? "zzzzzzzzzzzz" + s1 : s1;
+                string st2 = isId.IsMatch(s2) ? "zzzzzzzzzzzz" + s2 : s2;
+                return lvwColumnSorter.DefaultObjectComparer.Compare(st1, st2);
+            });
+            Comparer<string> numComparer = Comparer<string>.Create((s1, s2) => {
+                string st1 = String.IsNullOrEmpty(s1) ? "0" : s1;
+                string st2 = String.IsNullOrEmpty(s2) ? "0" : s2;
+                if (!isNumber.IsMatch(st1) || !isNumber.IsMatch(st2))
+                {
+                    return lvwColumnSorter.DefaultObjectComparer.Compare(st1, st2);
+                }
+                return int.Parse(st1).CompareTo(int.Parse(st2));
+            });
+            columnComparers[0] = idComparer;
+            columnComparers[2] = numComparer;
+            columnComparers[5] = numComparer;
+            columnComparers[6] = numComparer;
+            lvwColumnSorter.SpecificComparers = columnComparers;
             this.mixContentsListView.ListViewItemSorter = lvwColumnSorter;
             titleMain = this.Text;
             this.romfis = romfis;
@@ -361,7 +384,7 @@ namespace MobiusEditor.Dialogs
                 return;
             }
             lvwColumnSorter.SortColumn = 0;
-            lvwColumnSorter.Order = SortOrder.Ascending;
+            lvwColumnSorter.SortOrder = SortOrder.Ascending;
             mixInfo = mixInfo.OrderBy(x => x.SortName).ToList();
             currentMixInfo = mixInfo;
             SetTitle();
@@ -578,20 +601,20 @@ namespace MobiusEditor.Dialogs
             if (e.Column == lvwColumnSorter.SortColumn)
             {
                 // Reverse the current sort direction for this column.
-                if (lvwColumnSorter.Order == SortOrder.Ascending)
+                if (lvwColumnSorter.SortOrder == SortOrder.Ascending)
                 {
-                    lvwColumnSorter.Order = SortOrder.Descending;
+                    lvwColumnSorter.SortOrder = SortOrder.Descending;
                 }
                 else
                 {
-                    lvwColumnSorter.Order = SortOrder.Ascending;
+                    lvwColumnSorter.SortOrder = SortOrder.Ascending;
                 }
             }
             else
             {
                 // Set the column number that is to be sorted; default to ascending.
                 lvwColumnSorter.SortColumn = e.Column;
-                lvwColumnSorter.Order = SortOrder.Ascending;
+                lvwColumnSorter.SortOrder = SortOrder.Ascending;
             }
             // Perform the sort with these new sort options.
             listView.Sort();

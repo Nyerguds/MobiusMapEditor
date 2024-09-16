@@ -1,10 +1,9 @@
-﻿// This class is based on example code from the Microsoft documentation, at
-// https://learn.microsoft.com/en-gb/troubleshoot/developer/visualstudio/csharp/language-compilers/sort-listview-by-column
-// The only modification is the ability to treat columns as numeric.
-using System;
+﻿// This class is based on example code from the Microsoft documentation, at http://support.microsoft.com/kb/319401
+// (redirect to https://learn.microsoft.com/en-gb/troubleshoot/developer/visualstudio/csharp/language-compilers/sort-listview-by-column)
+// It has been modified to optionally insert specific string modifiers per column.
 using System.Collections;
+using System.Collections.Generic;
 using System.Linq;
-using System.Text.RegularExpressions;
 using System.Windows.Forms;
 
 namespace MobiusEditor.Utility
@@ -14,39 +13,23 @@ namespace MobiusEditor.Utility
     /// </summary>
     public class ListViewColumnSorter : IComparer
     {
-        private static readonly Regex isNumber = new Regex("^-?\\d+$");
-        /// <summary>
-        /// Specifies the columns to sort as numbers.
-        /// </summary>
-        private int[] numericColumms;
-
-        /// <summary>
-        /// Specifies the column to be sorted
-        /// </summary>
-        private int ColumnToSort;
-
-        /// <summary>
-        /// Specifies the order in which to sort (i.e. 'Ascending').
-        /// </summary>
-        private SortOrder OrderOfSort;
 
         /// <summary>
         /// Case insensitive comparer object
         /// </summary>
-        private CaseInsensitiveComparer ObjectCompare;
+        private CaseInsensitiveComparer defaultObjectComparer;
 
         /// <summary>
         /// Class constructor. Initializes various elements
         /// </summary>
         public ListViewColumnSorter()
         {
-            this.NumberColumms = new int[0];            
             // Initialize the column to '0'
-            ColumnToSort = 0;
+            SortColumn = 0;
             // Initialize the sort order to 'none'
-            OrderOfSort = SortOrder.None;
+            SortOrder = SortOrder.None;
             // Initialize the CaseInsensitiveComparer object
-            ObjectCompare = new CaseInsensitiveComparer();
+            defaultObjectComparer = new CaseInsensitiveComparer();
         }
 
         /// <summary>
@@ -57,44 +40,49 @@ namespace MobiusEditor.Utility
         /// <returns>The result of the comparison. "0" if equal, negative if 'x' is less than 'y' and positive if 'x' is greater than 'y'</returns>
         public int Compare(object x, object y)
         {
-            int compareResult = 0;
-            ListViewItem listviewX, listviewY;
-
             // Cast the objects to be compared to ListViewItem objects
-            listviewX = (ListViewItem)x;
-            listviewY = (ListViewItem)y;
-
+            ListViewItem listviewX = x as ListViewItem;
+            ListViewItem listviewY = y as ListViewItem;
+            // Check if the contents are null
+            bool xIsNull = listviewX == null || listviewX.SubItems.Count <= SortColumn;
+            bool yIsNull = listviewY == null || listviewY.SubItems.Count <= SortColumn;
+            if (xIsNull && yIsNull)
+            {
+                return 0;
+            }
+            if (xIsNull)
+            {
+                return -1;
+            }
+            if (yIsNull)
+            {
+                return 1;
+            }
+            // Retrieve the actual text to compare
+            string compareX = listviewX.SubItems[SortColumn].Text;
+            string compareY = listviewY.SubItems[SortColumn].Text;
+            // Get the comparer to use
+            IComparer comparer;
+            if (SpecificComparers != null && SortColumn < SpecificComparers.Length && SpecificComparers[SortColumn] != null)
+            {
+                comparer = SpecificComparers[SortColumn];
+            }
+            else
+            {
+                comparer = defaultObjectComparer;
+            }
             // Compare the two items
-            string compareX = listviewX.SubItems[ColumnToSort].Text;
-            string compareY = listviewY.SubItems[ColumnToSort].Text;
-            bool sortedNumeric = false;
-            if (numericColumms.Contains(ColumnToSort))
-            {
-                string compareXNum = String.IsNullOrEmpty(compareX) ? "0" : compareX;
-                string compareYNum = String.IsNullOrEmpty(compareY) ? "0" : compareY;
-                if (isNumber.IsMatch(compareXNum) && isNumber.IsMatch(compareYNum))
-                {
-                    int intX = Int32.Parse(compareXNum);
-                    int intY = Int32.Parse(compareYNum);
-                    compareResult = intX.CompareTo(intY);
-                    sortedNumeric = true;
-                }
-            }
-            if (!sortedNumeric)
-            {
-                compareResult = ObjectCompare.Compare(compareX, compareY);
-            }
-
+            int compareResult = comparer.Compare(compareX, compareY);
             // Calculate correct return value based on object comparison
-            if (OrderOfSort == SortOrder.Ascending)
+            if (SortOrder == SortOrder.Ascending)
             {
                 // Ascending sort is selected, return normal result of compare operation
                 return compareResult;
             }
-            else if (OrderOfSort == SortOrder.Descending)
+            else if (SortOrder == SortOrder.Descending)
             {
                 // Descending sort is selected, return negative result of compare operation
-                return (-compareResult);
+                return -compareResult;
             }
             else
             {
@@ -106,30 +94,22 @@ namespace MobiusEditor.Utility
         /// <summary>
         /// Gets or sets the number of the column to which to apply the sorting operation (Defaults to '0').
         /// </summary>
-        public int[] NumberColumms
-        {
-            get { return numericColumms.ToArray(); }
-            set { numericColumms = value == null ? new int[0] : value.ToArray(); }
-        }
-
-
-        /// <summary>
-        /// Gets or sets the number of the column to which to apply the sorting operation (Defaults to '0').
-        /// </summary>
-        public int SortColumn
-        {
-            get { return ColumnToSort; }
-            set { ColumnToSort = value; }
-        }
+        public int SortColumn { get; set; }
 
         /// <summary>
         /// Gets or sets the order of sorting to apply (for example, 'Ascending' or 'Descending').
         /// </summary>
-        public SortOrder Order
-        {
-            get { return OrderOfSort; }
-            set { OrderOfSort = value; }
-        }
+        public SortOrder SortOrder { get; set; }
 
+        /// <summary>
+        /// Default comparer. Exposed so it could be called as fallback in the comparers set in <see cref="SpecificComparers"/>
+        /// </summary>
+        public CaseInsensitiveComparer DefaultObjectComparer => defaultObjectComparer;
+
+        /// <summary>
+        /// Gets or sets specific comparers for each column. Any that are undefined will result in
+        /// case-insensitive string compare.
+        /// </summary>
+        public Comparer<string>[] SpecificComparers { get; set; }
     }
 }
