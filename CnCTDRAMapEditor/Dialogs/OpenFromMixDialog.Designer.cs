@@ -87,9 +87,9 @@ namespace MobiusEditor.Dialogs
             // 
             // nameColumnHeader
             // 
-            this.nameColumnHeader.Tag = "-160";
+            this.nameColumnHeader.Tag = "-120";
             this.nameColumnHeader.Text = "Name";
-            this.nameColumnHeader.Width = 160;
+            this.nameColumnHeader.Width = 120;
             // 
             // typeColumnHeader
             // 
@@ -117,9 +117,9 @@ namespace MobiusEditor.Dialogs
             // 
             // indexColumnHeader
             // 
-            this.indexColumnHeader.Tag = "-80";
-            this.indexColumnHeader.Text = "Header index";
-            this.indexColumnHeader.Width = 80;
+            this.indexColumnHeader.Tag = "-40";
+            this.indexColumnHeader.Text = "Index";
+            this.indexColumnHeader.Width = 40;
             // 
             // offsetColumnHeader
             // 

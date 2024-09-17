@@ -509,10 +509,13 @@ namespace MobiusEditor.Dialogs
                 {
                     while (diff > 0)
                     {
+                        // Could get stuck if all adjustable columns are zero
+                        bool anyHandled = false;
                         for (int i = 0; i < columns; ++i)
                         {
                             if (tagWidths[i] > 0 && colWidths[i] > 0)
                             {
+                                anyHandled= true;
                                 colWidths[i]--;
                                 diff--;
                                 if (diff == 0)
@@ -520,6 +523,10 @@ namespace MobiusEditor.Dialogs
                                     break;
                                 }
                             }
+                        }
+                        if (!anyHandled)
+                        {
+                            break;
                         }
                     }
                     while (diff < 0)
