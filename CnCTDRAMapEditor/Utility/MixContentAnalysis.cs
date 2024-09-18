@@ -107,6 +107,8 @@ namespace MobiusEditor.Utility
                 return;
             if (IdentifyLut(fileStream, mixInfo))
                 return;
+            if (IdentifyWsa(fileStream, mixInfo))
+                return;
             // These types analyse the full file from byte array. I'm restricting the buffer for them to 5mb; they shouldn't need more.
             // Eventually, all of these (except ini I guess) should ideally be switched to stream to speed up the processing.
             if (mixInfo.Length <= maxProcessed)
@@ -118,8 +120,6 @@ namespace MobiusEditor.Utility
                 fileStream.Seek(0, SeekOrigin.Begin);
                 if (!missionsAndMixFilesOnly)
                 {
-                    if (IdentifyWsa(fileContents, mixInfo))
-                        return;
                     if (IdentifyCcTmp(fileContents, mixInfo))
                         return;
                     if (IdentifyRaTmp(fileContents, mixInfo))
@@ -406,29 +406,33 @@ namespace MobiusEditor.Utility
             }
 }
 
-        private static bool IdentifyWsa(byte[] fileContents, MixEntry mixInfo)
+        private static bool IdentifyWsa(Stream fileStream, MixEntry mixInfo)
         {
+            const int palLength = 0x300;
             try
             {
-                int datalen = fileContents.Length;
-                if (datalen < 14)
+                fileStream.Seek(0, SeekOrigin.Begin);
+                long fileLength = fileStream.Length;
+                byte[] buffer = new byte[14];
+                int headerLen = fileStream.Read(buffer, 0, buffer.Length);
+                if (headerLen < 14)
                 {
                     return false;
                 }
-                ushort nrOfFrames = ArrayUtils.ReadUInt16FromByteArrayLe(fileContents, 0);
+                ushort nrOfFrames = ArrayUtils.ReadUInt16FromByteArrayLe(buffer, 0);
                 if (nrOfFrames == 0)
                 {
                     return false;
                 }
-                ushort xPos = ArrayUtils.ReadUInt16FromByteArrayLe(fileContents, 2);
-                ushort yPos = ArrayUtils.ReadUInt16FromByteArrayLe(fileContents, 4);
-                ushort xorWidth = ArrayUtils.ReadUInt16FromByteArrayLe(fileContents, 6);
-                ushort xorHeight = ArrayUtils.ReadUInt16FromByteArrayLe(fileContents, 8);
+                ushort xPos = ArrayUtils.ReadUInt16FromByteArrayLe(buffer, 2);
+                ushort yPos = ArrayUtils.ReadUInt16FromByteArrayLe(buffer, 4);
+                ushort xorWidth = ArrayUtils.ReadUInt16FromByteArrayLe(buffer, 6);
+                ushort xorHeight = ArrayUtils.ReadUInt16FromByteArrayLe(buffer, 8);
                 int buffSize = 2;
-                uint deltaBufferSize = (uint)ArrayUtils.ReadIntFromByteArray(fileContents, 0x0A, buffSize, true);
-                ushort flags = ArrayUtils.ReadUInt16FromByteArrayLe(fileContents, 0x0A + buffSize);
+                uint deltaBufferSize = (uint)ArrayUtils.ReadIntFromByteArray(buffer, 0x0A, buffSize, true);
+                ushort flags = ArrayUtils.ReadUInt16FromByteArrayLe(buffer, 0x0A + buffSize);
                 int headerSize = 0x0C + buffSize;
-                if (xorWidth == 0 || xorHeight == 0)
+                if (xorWidth == 0 || xorWidth > 320 || xorHeight == 0 || xorHeight > 200)
                 {
                     return false;
                 }
@@ -438,15 +442,17 @@ namespace MobiusEditor.Utility
                 uint[] frameOffsets = new uint[nrOfFrames + 2];
                 for (int i = 0; i < nrOfFrames + 2; ++i)
                 {
-                    if (fileContents.Length <= dataIndexOffset + 4)
+                    if (fileLength <= dataIndexOffset + 4)
                     {
                         return false;
                     }
-                    uint curOffs = ArrayUtils.ReadUInt32FromByteArrayLe(fileContents, dataIndexOffset);
+                    fileStream.Seek(dataIndexOffset, SeekOrigin.Begin);
+                    fileStream.Read(buffer, 0, 4);
+                    uint curOffs = ArrayUtils.ReadUInt32FromByteArrayLe(buffer, 0);
                     frameOffsets[i] = curOffs;
                     if (hasPalette)
-                        curOffs += 300;
-                    if (curOffs > fileContents.Length)
+                        curOffs += palLength;
+                    if (curOffs > fileLength)
                     {
                         return false;
                     }
@@ -455,22 +461,24 @@ namespace MobiusEditor.Utility
                 bool hasLoopFrame = frameOffsets[nrOfFrames + 1] != 0;
                 uint endOffset = frameOffsets[nrOfFrames + (hasLoopFrame ? 1 : 0)];
                 if (hasPalette)
-                    endOffset += 0x300;
-                if (endOffset != fileContents.Length)
+                    endOffset += palLength;
+                if (endOffset != fileLength)
                 {
                     return false;
                 }
                 if (hasPalette)
                 {
-                    if (fileContents.Length < paletteOffset + 0x300)
+                    if (fileLength < paletteOffset + palLength)
                     {
                         return false;
                     }
-                    int paletteEnd = paletteOffset + 0x300;
-                    for (int i = paletteOffset; i < paletteEnd; i++)
+                    fileStream.Seek(paletteOffset, SeekOrigin.Begin);
+                    byte[] palData = new byte[palLength];
+                    fileStream.Read(palData, 0, palLength);
+                    for (int i = 0; i < palLength; ++i)
                     {
                         // verify 6-bit palette
-                        if (fileContents[i] > 0x3F)
+                        if (palData[i] > 0x3F)
                         {
                             return false;
                         }
