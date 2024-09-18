@@ -2068,6 +2068,7 @@ namespace MobiusEditor.Render
             }
             double tileScaleHor = tileSize.Width / 128.0;
             float borderSize = Math.Max(0.5f, tileSize.Width / 60.0f);
+            // The "bounds" in this are a bit weird; they have the real paint position, but the size is relative to Globals.OriginalTileSize
             List<(string trigger, Rectangle bounds, int alpha)> allTriggers = new List<(string trigger, Rectangle bounds, int alpha)>();
             if (mapTechnos != null)
             {

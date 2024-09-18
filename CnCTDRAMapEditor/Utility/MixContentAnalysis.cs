@@ -85,6 +85,10 @@ namespace MobiusEditor.Utility
             // Very strict requirements, and jumps over the majority of file contents while checking, so check this first.
             // These are ALWAYS identified, even if set to "missions only", because not identifying them slows down the rest of the analysis.
             // Ideally, all file types will eventually end up in here. Sadly, for ini that won't be the case.
+            if (IdentifyShp(fileStream, mixInfo))
+                return;
+            if (IdentifyD2Shp(fileStream, mixInfo))
+                return;
             if (IdentifyMix(source, mixInfo))
                 return;
             if (IdentifyAud(fileStream, mixInfo))
@@ -94,10 +98,6 @@ namespace MobiusEditor.Utility
             if (IdentifyVqp(fileStream, mixInfo))
                 return;
             if (IdentifyPalTable(fileStream, mixInfo))
-                return;
-            if (IdentifyShp(fileStream, mixInfo))
-                return;
-            if (IdentifyD2Shp(fileStream, mixInfo))
                 return;
             if (IdentifyBmp(fileStream, mixInfo))
                 return;
@@ -115,6 +115,8 @@ namespace MobiusEditor.Utility
                 return;
             if (IdentifyCcTmp(fileStream, mixInfo))
                 return;
+            if (IdentifyRaTmp(fileStream, mixInfo))
+                return;
             // These types analyse the full file from byte array. I'm restricting the buffer for them to 5mb; they shouldn't need more.
             // Eventually, all of these (except ini I guess) should ideally be switched to stream to speed up the processing.
             if (mixInfo.Length <= maxProcessed)
@@ -126,8 +128,6 @@ namespace MobiusEditor.Utility
                 fileStream.Seek(0, SeekOrigin.Begin);
                 if (!missionsAndMixFilesOnly)
                 {
-                    if (IdentifyRaTmp(fileContents, mixInfo))
-                        return;
                     if (IdentifyCcFont(fileContents, mixInfo))
                         return;
                 }
@@ -166,7 +166,7 @@ namespace MobiusEditor.Utility
                 if (shpData != null)
                 {
                     mixInfo.Type = MixContentType.ShpTd;
-                    mixInfo.Info = string.Format("C&C SHP; {0} frame{1}, {2}x{3}", shpData.Length, shpData.Length == 1 ? string.Empty : "s", width, height);
+                    mixInfo.Info = string.Format("C&C SHP; {0} frame{1}, {2}×{3}", shpData.Length, shpData.Length == 1 ? string.Empty : "s", width, height);
                     return true;
                 }
             }
@@ -235,7 +235,7 @@ namespace MobiusEditor.Utility
                     return false;
                 }
                 mixInfo.Type = MixContentType.Pcx;
-                mixInfo.Info = string.Format("PCX Image; {0}x{1}, {2} bpp", width, height, bitsPerPixel);
+                mixInfo.Info = string.Format("PCX Image; {0}×{1}, {2} bpp", width, height, bitsPerPixel);
                 return true;
             }
             catch (Exception)
@@ -288,7 +288,7 @@ namespace MobiusEditor.Utility
                     return false;
                 }
                 mixInfo.Type = MixContentType.Bmp;
-                mixInfo.Info = string.Format("Bitmap Image; DIB v{0}, {1}x{2}, {3} bpp", dibformat, width, height, bitsPerPixel);
+                mixInfo.Info = string.Format("Bitmap Image; DIB v{0}, {1}×{2}, {3} bpp", dibformat, width, height, bitsPerPixel);
                 return true;
             }
             catch (Exception)
@@ -305,7 +305,7 @@ namespace MobiusEditor.Utility
                 if (shpData != null)
                 {
                     mixInfo.Type = MixContentType.ShpD2;
-                    mixInfo.Info = string.Format("Dune II SHP; {0} frame{1}, {2}x{3}", shpData.Length, shpData.Length == 1 ? string.Empty : "s", widths.Max(), heights.Max());
+                    mixInfo.Info = string.Format("Dune II SHP; {0} frame{1}, {2}×{3}", shpData.Length, shpData.Length == 1 ? string.Empty : "s", widths.Max(), heights.Max());
                     return true;
                 }
             }
@@ -360,7 +360,7 @@ namespace MobiusEditor.Utility
                     }
                 }
                 mixInfo.Type = MixContentType.Cps;
-                mixInfo.Info = "CPS Image; 320x200";
+                mixInfo.Info = "CPS Image; 320×200";
                 return true;
             }
             catch (Exception)
@@ -408,7 +408,7 @@ namespace MobiusEditor.Utility
             {
                 return false;
             }
-}
+        }
 
         private static bool IdentifyWsa(Stream fileStream, MixEntry mixInfo)
         {
@@ -489,8 +489,8 @@ namespace MobiusEditor.Utility
                     }
                 }
                 mixInfo.Type = MixContentType.Wsa;
-                string posInfo = xPos != 0 && yPos != 0 ? string.Format(" at position {0}x{1}", xPos, yPos) : string.Empty;
-                mixInfo.Info = string.Format("WSA Animation; {0}x{1}{2}, {3} frame{4}{5}",
+                string posInfo = xPos != 0 && yPos != 0 ? string.Format(" at position {0}×{1}", xPos, yPos) : string.Empty;
+                mixInfo.Info = string.Format("WSA Animation; {0}×{1}{2}, {3} frame{4}{5}",
                     xorWidth, xorHeight, posInfo, nrOfFrames, nrOfFrames == 1 ? string.Empty : "s", hasLoopFrame ? " + loop frame" : string.Empty);
                 return true;
             }
@@ -565,21 +565,105 @@ namespace MobiusEditor.Utility
             }
         }
 
-        private static bool IdentifyRaTmp(byte[] fileContents, MixEntry mixInfo)
+        private static bool IdentifyRaTmp(Stream fileStream, MixEntry mixInfo)
         {
             try
             {
-                byte[][] tmpData = ClassicSpriteLoader.GetRaTmpData(fileContents, out int[] widths, out int[] heights, out byte[] landTypesInfo,
-                    out bool[] tileUseList, out int headerWidth, out int headerHeight, false);
-                if (tmpData != null)
+                const int headerSize = 0x28;
+                fileStream.Seek(0, SeekOrigin.Begin);
+                long fileLength = mixInfo.Length;
+                if (fileLength < headerSize)
                 {
-                    mixInfo.Type = MixContentType.TmpRa;
-                    mixInfo.Info = string.Format("RA Template; {0}x{1}", headerWidth, headerHeight);
-                    return true;
+                    return false;
                 }
+                byte[] buffer = new byte[headerSize];
+                int headerLen = fileStream.Read(buffer, 0, buffer.Length);
+                short hdrWidth = ArrayUtils.ReadInt16FromByteArrayLe(buffer, 0x00);
+                short hdrHeight = ArrayUtils.ReadInt16FromByteArrayLe(buffer, 0x02);
+                // Amount of icons to form the full icon set. Not necessarily the same as the amount of actual icons.
+                short hdrCount = ArrayUtils.ReadInt16FromByteArrayLe(buffer, 0x04);
+                // Always 0
+                short hdrAllocated = ArrayUtils.ReadInt16FromByteArrayLe(buffer, 0x06);
+                // New in RA
+                int tilesX = ArrayUtils.ReadInt16FromByteArrayLe(buffer, 0x08);
+                int tilesY = ArrayUtils.ReadInt16FromByteArrayLe(buffer, 0x0A);
+                int hdrSize = ArrayUtils.ReadInt32FromByteArrayLe(buffer, 0x0C);
+                // Offset of start of actual icon data. Generally always 0x20
+                int hdrIconsPtr = ArrayUtils.ReadInt32FromByteArrayLe(buffer, 0x10);
+                // Offset of start of palette data. Probably always 0.
+                int hdrPalettesPtr = ArrayUtils.ReadInt32FromByteArrayLe(buffer, 0x14);
+                // Offset of remaps data. Dune II leftover of 4 bit to 8 bit translation tables.
+                // Always seems to be 0x2C730FXX (with values differing for the lowest byte), which makes no sense as ptr.
+                int hdrRemapsPtr = ArrayUtils.ReadInt32FromByteArrayLe(buffer, 0x18);
+                // Offset of 'transparency flags'? Generally points to an empty array at the end of the file.
+                int hdrTransFlagPtr = ArrayUtils.ReadInt32FromByteArrayLe(buffer, 0x1C);
+                // Offset of 'color' map, indicating the terrain type for each type. This includes unused cells, which are usually indicated as 0.
+                int hdrColorMapPtr = ArrayUtils.ReadInt32FromByteArrayLe(buffer, 0x20);
+                // Offset of actual icon set definition, defining for each index which icon data to use. FF for none.
+                int hdrMapPtr = ArrayUtils.ReadInt32FromByteArrayLe(buffer, 0x24);
+                // File size check
+                if (hdrSize != fileLength)
+                {
+                    return false;
+                }
+                // Only allowing standard 24x24 size
+                if (hdrHeight != 24 || hdrWidth != 24)
+                {
+                    return false;
+                }
+                // Checking some normally hardcoded values
+                if (hdrAllocated != 0 || hdrPalettesPtr != 0)
+                {
+                    return false;
+                }
+                if (hdrCount == 0)
+                {
+                    return false;
+                }
+                // Checking if data is all inside the file
+                if (hdrIconsPtr >= fileLength || (hdrMapPtr + hdrCount) > fileLength)
+                {
+                    return false;
+                }
+                int tileSize = hdrWidth * hdrHeight;
+                // Maps the available images onto the full iconset definition
+                byte[] map = new byte[hdrCount];
+                fileStream.Seek(hdrMapPtr, SeekOrigin.Begin);
+                fileStream.Read(map, 0, hdrCount);
+                byte[] landTypesInfo = new byte[Math.Max(1, tilesX) * Math.Max(1, tilesY)];
+                if (hdrMapPtr + landTypesInfo.Length > fileLength)
+                {
+                    return false;
+                }
+                fileStream.Seek(hdrColorMapPtr, SeekOrigin.Begin);
+                fileStream.Read(landTypesInfo, 0, landTypesInfo.Length);
+                // Get max index plus one for real images count. Nothing in the file header actually specifies this directly.
+                int actualImages = map.Max(x => x == 0xff ? -1 : x) + 1;
+                if (hdrTransFlagPtr + actualImages > fileLength)
+                {
+                    return false;
+                }
+                if (hdrIconsPtr + actualImages * tileSize > fileLength)
+                {
+                    return false;
+                }
+                string tilesInfo;
+                if (tilesX == -1 && tilesY == -1)
+                {
+                    tilesInfo = string.Format("{0} images", actualImages);
+                }
+                else
+                {
+                    tilesInfo = string.Format("{0}×{1}", tilesX, tilesY);
+                }
+                mixInfo.Type = MixContentType.TmpRa;
+                mixInfo.Info = "RA Template; " + tilesInfo;
+                return true;
             }
-            catch (FileTypeLoadException) { /* ignore */ }
-            return false;
+            catch (Exception)
+            {
+                return false;
+            }
         }
 
         private static bool IdentifyCcFont(byte[] fileContents, MixEntry mixInfo)
@@ -590,7 +674,7 @@ namespace MobiusEditor.Utility
                 if (shpData != null)
                 {
                     mixInfo.Type = MixContentType.Font;
-                    mixInfo.Info = string.Format("Font; {0} symbol{1}, {2}x{3}", shpData.Length, shpData.Length != 1 ? "s" : String.Empty, widths.Max(), height);
+                    mixInfo.Info = string.Format("Font; {0} symbol{1}, {2}×{3}", shpData.Length, shpData.Length != 1 ? "s" : String.Empty, widths.Max(), height);
                     return true;
                 }
             }
@@ -625,7 +709,7 @@ namespace MobiusEditor.Utility
                         string mapTheater = map.TryGetValue("Theater") ?? "?";
                         string mapName = bas.TryGetValue("Name");
                         List<string> mapDesc = new List<string>();
-                        mapDesc.Add(string.Format("; {0}x{1}", mapWidth, mapheight));
+                        mapDesc.Add(string.Format("; {0}×{1}", mapWidth, mapheight));
                         MixContentType mapType = MixContentType.MapTd;
                         if (SoleSurvivor.GamePluginSS.CheckForSSmap(ini))
                             mapType = MixContentType.MapSole;
@@ -913,7 +997,7 @@ namespace MobiusEditor.Utility
             string time = hours > 0 ? string.Format("{0}:{1:D2}:{2:D2}", hours, minutes, seconds) : string.Format("{0}:{1:D2}", minutes, seconds);
 
             mixInfo.Type = MixContentType.Vqa;
-            mixInfo.Info = string.Format("Video file; VQA v{0}, {1}x{2}, {3}, {4}fps",
+            mixInfo.Info = string.Format("Video file; VQA v{0}, {1}×{2}, {3}, {4}fps",
                 version, width, height, time, frameRate);
             return true;
         }
@@ -1085,7 +1169,7 @@ namespace MobiusEditor.Utility
                 }
             }
             mixInfo.Type = MixContentType.Bin;
-            mixInfo.Info = "Tiberian Dawn Map Tile Data (64x64)";
+            mixInfo.Info = "Tiberian Dawn Map Tile Data (64×64)";
             return true;
         }
 
@@ -1117,7 +1201,7 @@ namespace MobiusEditor.Utility
                 previousCell = cell;
             }
             mixInfo.Type = MixContentType.BinSole;
-            mixInfo.Info = "Tiberian Dawn / Sole Survivor Map Tile Data (128x128)";
+            mixInfo.Info = "Tiberian Dawn / Sole Survivor Map Tile Data (128×128)";
             return true;
         }
 

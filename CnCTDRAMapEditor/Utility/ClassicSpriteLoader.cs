@@ -1053,20 +1053,20 @@ namespace MobiusEditor.Utility
         /// <param name="heights">Heights of all returned frames.</param>
         /// <param name="landTypesInfo">Land type info for each frame.</param>
         /// <param name="tileUseList">Array indicating which tiles are used.</param>
-        /// <param name="headerWidth">Width of tileset piece in amount of tiles.</param>
-        /// <param name="headerHeight">Height of tileset piece in amount of tiles.</param>
+        /// <param name="tilesX">Width of tileset piece in amount of tiles.</param>
+        /// <param name="tilesY">Height of tileset piece in amount of tiles.</param>
         /// <param name="throwWhenParsing">If false, parse errors will simply return <see langword="false"/> instead of throwing an exception.</param>
         /// <returns></returns>
         /// <exception cref="FileTypeLoadException"></exception>
         /// <exception cref="ArgumentException"></exception>
-        public static byte[][] GetRaTmpData(byte[] fileData, out int[] widths, out int[] heights, out byte[] landTypesInfo, out bool[] tileUseList, out int headerWidth, out int headerHeight, bool throwWhenParsing)
+        public static byte[][] GetRaTmpData(byte[] fileData, out int[] widths, out int[] heights, out byte[] landTypesInfo, out bool[] tileUseList, out int tilesX, out int tilesY, bool throwWhenParsing)
         {
             widths = null;
             heights = null;
             landTypesInfo = null;
             tileUseList = null;
-            headerWidth = 0;
-            headerHeight = 0;
+            tilesX = 0;
+            tilesY = 0;
             int fileLen = fileData.Length;
             if (fileLen < 0x28)
             {
@@ -1083,8 +1083,8 @@ namespace MobiusEditor.Utility
             // Always 0
             short hdrAllocated = ArrayUtils.ReadInt16FromByteArrayLe(fileData, 0x06);
             // New in RA
-            headerWidth = ArrayUtils.ReadInt16FromByteArrayLe(fileData, 0x08);
-            headerHeight = ArrayUtils.ReadInt16FromByteArrayLe(fileData, 0x0A);
+            tilesX = ArrayUtils.ReadInt16FromByteArrayLe(fileData, 0x08);
+            tilesY = ArrayUtils.ReadInt16FromByteArrayLe(fileData, 0x0A);
             int hdrSize = ArrayUtils.ReadInt32FromByteArrayLe(fileData, 0x0C);
             // Offset of start of actual icon data. Generally always 0x20
             int hdrIconsPtr = ArrayUtils.ReadInt32FromByteArrayLe(fileData, 0x10);
@@ -1147,7 +1147,7 @@ namespace MobiusEditor.Utility
             // Maps the available images onto the full iconset definition
             byte[] map = new byte[hdrCount];
             Array.Copy(fileData, hdrMapPtr, map, 0, hdrCount);
-            landTypesInfo = new byte[Math.Max(1, headerWidth) * Math.Max(1, headerHeight)];
+            landTypesInfo = new byte[Math.Max(1, tilesX) * Math.Max(1, tilesY)];
             if (hdrMapPtr + landTypesInfo.Length > fileLen)
             {
                 if (!throwWhenParsing)
