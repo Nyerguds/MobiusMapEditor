@@ -27,6 +27,10 @@ namespace MobiusEditor.Utility
         /// <summary>Maximum file size that gets processed by byte array (5 MiB).</summary>
         private const uint maxProcessed = 0x500000;
 
+        const int PalLength = 0x300;
+        const int PalMax = 0x3F;
+        const int XccHeaderLength = 0x34;
+
         /// <summary>
         /// Analyses the files inside a mix archive to identify the file types.
         /// </summary>
@@ -109,6 +113,8 @@ namespace MobiusEditor.Utility
                 return;
             if (IdentifyWsa(fileStream, mixInfo))
                 return;
+            if (IdentifyCcTmp(fileStream, mixInfo))
+                return;
             // These types analyse the full file from byte array. I'm restricting the buffer for them to 5mb; they shouldn't need more.
             // Eventually, all of these (except ini I guess) should ideally be switched to stream to speed up the processing.
             if (mixInfo.Length <= maxProcessed)
@@ -120,8 +126,6 @@ namespace MobiusEditor.Utility
                 fileStream.Seek(0, SeekOrigin.Begin);
                 if (!missionsAndMixFilesOnly)
                 {
-                    if (IdentifyCcTmp(fileContents, mixInfo))
-                        return;
                     if (IdentifyRaTmp(fileContents, mixInfo))
                         return;
                     if (IdentifyCcFont(fileContents, mixInfo))
@@ -349,7 +353,7 @@ namespace MobiusEditor.Utility
                     for (int i = 0; i < paletteLength; i++)
                     {
                         // verify 6-bit palette
-                        if (pal[i] > 0x3F)
+                        if (pal[i] > PalMax)
                         {
                             return false;
                         }
@@ -369,29 +373,29 @@ namespace MobiusEditor.Utility
         private static bool IdentifyLut(Stream fileStream, MixEntry mixInfo)
         {
             // RA chrono vortex lookup table
-            const int lutDimensions = 64;
-            const int lutSize = lutDimensions * lutDimensions * 3;
-            const int maxBrightness = 16;
-            if (mixInfo.Length != lutSize)
+            const int LutDimensions = 64;
+            const int LutSize = LutDimensions * LutDimensions * 3;
+            const int LutMaxBrightness = 16;
+            if (mixInfo.Length != LutSize)
             {
                 return false;
             }
             try
             {
-                byte[] table = new byte[lutSize];
+                byte[] table = new byte[LutSize];
                 fileStream.Seek(0, SeekOrigin.Begin);
-                int read = fileStream.Read(table, 0, lutSize);
-                if (read < lutSize)
+                int read = fileStream.Read(table, 0, LutSize);
+                if (read < LutSize)
                 {
                     return false;
                 }
-                for (int i = 0; i < lutSize; i += 3)
+                for (int i = 0; i < LutSize; i += 3)
                 {
                     int x = table[i + 0];
                     int y = table[i + 1];
                     int b = table[i + 2];
                     // boundaries check. Pretty much all we can do.
-                    if (x >= lutDimensions || y >= lutDimensions || b >= maxBrightness)
+                    if (x >= LutDimensions || y >= LutDimensions || b >= LutMaxBrightness)
                     {
                         return false;
                     }
@@ -408,11 +412,10 @@ namespace MobiusEditor.Utility
 
         private static bool IdentifyWsa(Stream fileStream, MixEntry mixInfo)
         {
-            const int palLength = 0x300;
             try
             {
                 fileStream.Seek(0, SeekOrigin.Begin);
-                long fileLength = fileStream.Length;
+                long fileLength = mixInfo.Length;
                 byte[] buffer = new byte[14];
                 int headerLen = fileStream.Read(buffer, 0, buffer.Length);
                 if (headerLen < 14)
@@ -432,7 +435,8 @@ namespace MobiusEditor.Utility
                 uint deltaBufferSize = (uint)ArrayUtils.ReadIntFromByteArray(buffer, 0x0A, buffSize, true);
                 ushort flags = ArrayUtils.ReadUInt16FromByteArrayLe(buffer, 0x0A + buffSize);
                 int headerSize = 0x0C + buffSize;
-                if (xorWidth == 0 || xorWidth > 320 || xorHeight == 0 || xorHeight > 200)
+                // Target resolution is maximum 320x200
+                if (xorWidth == 0 || (xPos + xorWidth) > 320 || xorHeight == 0 || (yPos + xorHeight) > 200)
                 {
                     return false;
                 }
@@ -451,7 +455,7 @@ namespace MobiusEditor.Utility
                     uint curOffs = ArrayUtils.ReadUInt32FromByteArrayLe(buffer, 0);
                     frameOffsets[i] = curOffs;
                     if (hasPalette)
-                        curOffs += palLength;
+                        curOffs += PalLength;
                     if (curOffs > fileLength)
                     {
                         return false;
@@ -461,24 +465,24 @@ namespace MobiusEditor.Utility
                 bool hasLoopFrame = frameOffsets[nrOfFrames + 1] != 0;
                 uint endOffset = frameOffsets[nrOfFrames + (hasLoopFrame ? 1 : 0)];
                 if (hasPalette)
-                    endOffset += palLength;
+                    endOffset += PalLength;
                 if (endOffset != fileLength)
                 {
                     return false;
                 }
                 if (hasPalette)
                 {
-                    if (fileLength < paletteOffset + palLength)
+                    if (fileLength < paletteOffset + PalLength)
                     {
                         return false;
                     }
                     fileStream.Seek(paletteOffset, SeekOrigin.Begin);
-                    byte[] palData = new byte[palLength];
-                    fileStream.Read(palData, 0, palLength);
-                    for (int i = 0; i < palLength; ++i)
+                    byte[] palData = new byte[PalLength];
+                    fileStream.Read(palData, 0, PalLength);
+                    for (int i = 0; i < PalLength; ++i)
                     {
                         // verify 6-bit palette
-                        if (palData[i] > 0x3F)
+                        if (palData[i] > PalMax)
                         {
                             return false;
                         }
@@ -496,20 +500,69 @@ namespace MobiusEditor.Utility
             }
         }
 
-        private static bool IdentifyCcTmp(byte[] fileContents, MixEntry mixInfo)
+        private static bool IdentifyCcTmp(Stream fileStream, MixEntry mixInfo)
         {
             try
             {
-                byte[][] tmpData = ClassicSpriteLoader.GetCcTmpData(fileContents, out int[] widths, out int[] heights, false);
-                if (tmpData != null)
+                uint fileLen = mixInfo.Length;
+                if (fileLen < 0x20)
                 {
-                    mixInfo.Type = MixContentType.TmpTd;
-                    mixInfo.Info = string.Format("C&C Template; {0} tile{1}", tmpData.Length, tmpData.Length == 1 ? string.Empty : "s");
-                    return true;
+                    return false;
                 }
+                fileStream.Seek(0, SeekOrigin.Begin);
+                long fileLength = mixInfo.Length;
+                byte[] buffer = new byte[0x20];
+                int headerLen = fileStream.Read(buffer, 0, buffer.Length);
+                short hdrWidth = ArrayUtils.ReadInt16FromByteArrayLe(buffer, 0x00);
+                short hdrHeight = ArrayUtils.ReadInt16FromByteArrayLe(buffer, 0x02);
+                // Amount of icons to form the full icon set. Not necessarily the same as the amount of actual icons.
+                short hdrCount = ArrayUtils.ReadInt16FromByteArrayLe(buffer, 0x04);
+                // Always 0
+                short hdrAllocated = ArrayUtils.ReadInt16FromByteArrayLe(buffer, 0x06);
+                int hdrSize = ArrayUtils.ReadInt32FromByteArrayLe(buffer, 0x08);
+                // Offset of start of actual icon data. Generally always 0x20
+                int hdrIconsPtr = ArrayUtils.ReadInt32FromByteArrayLe(buffer, 0x0C);
+                // Offset of start of palette data. Probably always 0.
+                int hdrPalettesPtr = ArrayUtils.ReadInt32FromByteArrayLe(buffer, 0x10);
+                // Offset of remaps data. Dune II leftover of 4 bit to 8 bit translation tables.
+                // Always fixed value 0x0D1AFFFF, which makes no sense as ptr.
+                int hdrRemapsPtr = ArrayUtils.ReadInt32FromByteArrayLe(buffer, 0x14);
+                // Offset of 'transparency flags'? Generally points to an empty array at the end of the file.
+                int hdrTransFlagPtr = ArrayUtils.ReadInt32FromByteArrayLe(buffer, 0x18);
+                // Offset of actual icon set definition, defining for each index which icon data to use. FF for none.
+                int hdrMapPtr = ArrayUtils.ReadInt32FromByteArrayLe(buffer, 0x1C);
+                // File size check
+                if (hdrSize != fileLen)
+                {
+                    return false;
+                }
+                // Only allowing standard 24x24 size
+                if (hdrHeight != 24 || hdrWidth != 24)
+                {
+                    return false;
+                }
+                // Checking some normally hardcoded values
+                if (hdrAllocated != 0 || hdrPalettesPtr != 0)// || hdrRemapsPtr != 0x0D1AFFFF)
+                {
+                    return false;
+                }
+                if (hdrCount == 0)
+                {
+                    return false;
+                }
+                // Checking if data is all inside the file
+                if (hdrIconsPtr >= fileLen || (hdrMapPtr + hdrCount) > fileLen)
+                {
+                    return false;
+                }
+                mixInfo.Type = MixContentType.TmpTd;
+                mixInfo.Info = string.Format("C&C Template; {0} tile{1}", hdrCount, hdrCount == 1 ? string.Empty : "s");
+                return true;
             }
-            catch (FileTypeLoadException) { /* ignore */ }
-            return false;
+            catch (Exception)
+            {
+                return false;
+            }
         }
 
         private static bool IdentifyRaTmp(byte[] fileContents, MixEntry mixInfo)
@@ -694,7 +747,7 @@ namespace MobiusEditor.Utility
 
         private static bool IdentifyPalette(byte[] fileContents, MixEntry mixInfo)
         {
-            if (fileContents.Length == 0x300 && fileContents.All(b => b < 0x40))
+            if (fileContents.Length == PalLength && fileContents.All(b => b <= PalMax))
             {
                 mixInfo.Type = MixContentType.Pal;
                 mixInfo.Info = "6-bit colour palette";
@@ -930,8 +983,6 @@ namespace MobiusEditor.Utility
             mixInfo.Info = string.Format("Palette stretch table");
             return true;
         }
-
-        const int XccHeaderLength = 0x34;
 
         public static bool IdentifyXccNames(Stream fileStream, MixEntry mixInfo)
         {
