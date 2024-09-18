@@ -24,6 +24,8 @@ namespace MobiusEditor.Utility
     {
         private static readonly char[] badIniHeaderRange = Enumerable.Range(0, 0x20).Select(i => (char)i).ToArray();
         private static readonly HashSet<byte> badTextRange = Enumerable.Range(0, 0x20).Where(v => v != '\t' && v != '\r' && v != '\n' && v != ' ').Select(i => (byte)i).ToHashSet();
+
+        private static readonly int HighestTdMapVal = TiberianDawn.TemplateTypes.GetTypes().Max(t => (int)t.ID);
         /// <summary>Maximum file size that gets processed by byte array (5 MiB).</summary>
         private const uint maxProcessed = 0x500000;
 
@@ -125,7 +127,6 @@ namespace MobiusEditor.Utility
                 byte[] fileContents = new byte[fileLength];
                 fileStream.Seek(0, SeekOrigin.Begin);
                 fileStream.Read(fileContents, 0, fileLength);
-                fileStream.Seek(0, SeekOrigin.Begin);
                 if (!missionsAndMixFilesOnly)
                 {
                     if (IdentifyCcFont(fileContents, mixInfo))
@@ -143,10 +144,10 @@ namespace MobiusEditor.Utility
                 if (IdentifyTdMap(fileStream, mixInfo))
                     return;
                 // Always needs to happen before sole maps since all palettes will technically match that format.
-                if (IdentifyPalette(fileContents, mixInfo))
+                if (IdentifyPalette(fileStream, mixInfo))
                     return;
                 // Only check for sole map if name is known and type is correct.
-                if (".bin".Equals(extension, StringComparison.OrdinalIgnoreCase) && IdentifySoleMap(fileContents, mixInfo))
+                if (".bin".Equals(extension, StringComparison.OrdinalIgnoreCase) && IdentifySoleMap(fileStream, mixInfo))
                     return;
             }
             // Only do this if it passes the check on extension.
@@ -829,15 +830,22 @@ namespace MobiusEditor.Utility
             return false;
         }
 
-        private static bool IdentifyPalette(byte[] fileContents, MixEntry mixInfo)
+        private static bool IdentifyPalette(Stream fileStream, MixEntry mixInfo)
         {
-            if (fileContents.Length == PalLength && fileContents.All(b => b <= PalMax))
+            if (mixInfo.Length != PalLength)
             {
-                mixInfo.Type = MixContentType.Pal;
-                mixInfo.Info = "6-bit colour palette";
-                return true;
+                return false;
             }
-            return false;
+            byte[] fileContents = new byte[PalLength];
+            fileStream.Seek(0, SeekOrigin.Begin);
+            fileStream.Read(fileContents, 0, PalLength);
+            if (fileContents.Any(b => b > PalMax))
+            {
+                return false;
+            }
+            mixInfo.Type = MixContentType.Pal;
+            mixInfo.Info = "6-bit colour palette";
+            return true;
         }
 
         private static bool IdentifyMix(MixFile source, MixEntry mixInfo)
@@ -883,7 +891,6 @@ namespace MobiusEditor.Utility
             byte[] header = new byte[12];
             byte[] chunk = new byte[8];
             fileStream.Read(header, 0, header.Length);
-            fileStream.Seek(0, SeekOrigin.Begin);
             int frequency = ArrayUtils.ReadUInt16FromByteArrayLe(header, 0);
             int fileSize = ArrayUtils.ReadInt32FromByteArrayLe(header, 2);
             int uncompressedSize = ArrayUtils.ReadInt32FromByteArrayLe(header, 6);
@@ -915,7 +922,6 @@ namespace MobiusEditor.Utility
                 // "DEAF", for an audio format. Someone had fun with that file design.
                 if (id != 0x0000DEAF)
                 {
-                    fileStream.Seek(0, SeekOrigin.Begin);
                     return false;
                 }
                 chunks++;
@@ -924,11 +930,9 @@ namespace MobiusEditor.Utility
                 if (ptr > fileLength)
                 {
                     // Current chunk exceeds file bounds; that's an error.
-                    fileStream.Seek(0, SeekOrigin.Begin);
                     return false;
                 }
             }
-            fileStream.Seek(0, SeekOrigin.Begin);
             if (uncompressedSize != outputLength)
             {
                 return false;
@@ -951,7 +955,6 @@ namespace MobiusEditor.Utility
             }
             byte[] headerInfo = new byte[vqHdrSize];
             fileStream.Read(headerInfo, 0, vqHdrSize);
-            fileStream.Seek(0, SeekOrigin.Begin);
             string strForm = Encoding.ASCII.GetString(headerInfo, 0, 4);
             if (!"FORM".Equals(strForm))
             {
@@ -985,7 +988,6 @@ namespace MobiusEditor.Utility
             int width = ArrayUtils.ReadUInt16FromByteArrayLe(headerInfo, ptr + 6);
             int height = ArrayUtils.ReadUInt16FromByteArrayLe(headerInfo, ptr + 8);
             int frameRate = headerInfo[ptr + 12];
-
             int fullSeconds = numFrames / frameRate;
             int seconds = fullSeconds % 60;
             if ((numFrames / (double)frameRate) - fullSeconds >= 0.5 || (fullSeconds == 0 && numFrames > 0))
@@ -993,9 +995,7 @@ namespace MobiusEditor.Utility
             int fullMinutes = fullSeconds / 60;
             int minutes = fullMinutes % 60;
             int hours = fullMinutes / 60;
-
             string time = hours > 0 ? string.Format("{0}:{1:D2}:{2:D2}", hours, minutes, seconds) : string.Format("{0}:{1:D2}", minutes, seconds);
-
             mixInfo.Type = MixContentType.Vqa;
             mixInfo.Info = string.Format("Video file; VQA v{0}, {1}×{2}, {3}, {4}fps",
                 version, width, height, time, frameRate);
@@ -1016,7 +1016,6 @@ namespace MobiusEditor.Utility
 
             if (fileLength != 4 + (32896 * blocks))
             {
-                fileStream.Seek(0, SeekOrigin.Begin);
                 return false;
             }
             for (int i = 0; i < blocks; ++i)
@@ -1030,11 +1029,9 @@ namespace MobiusEditor.Utility
                 int cur = fileStream.ReadByte();
                 if (cur != 0)
                 {
-                    fileStream.Seek(0, SeekOrigin.Begin);
                     return false;
                 }
             }
-            fileStream.Seek(0, SeekOrigin.Begin);
             mixInfo.Type = MixContentType.Vqp;
             mixInfo.Info = string.Format("Video stretch table; {0} block{1}", blocks, blocks == 1 ? string.Empty : "s");
             return true;
@@ -1051,7 +1048,6 @@ namespace MobiusEditor.Utility
             }
             byte[] table = new byte[tblSize];
             fileStream.Read(table, 0, tblSize);
-            fileStream.Seek(0, SeekOrigin.Begin);
             for (int y = 0; y < 256; ++y)
             {
                 for (int x = 0; x < 256; ++x)
@@ -1147,23 +1143,23 @@ namespace MobiusEditor.Utility
 
         private static bool IdentifyTdMap(Stream fileStream, MixEntry mixInfo)
         {
-            int highestTdMapVal = TiberianDawn.TemplateTypes.GetTypes().Max(t => (int)t.ID);
-            int fileLength = (int)mixInfo.Length;
-            if (fileLength != 8192)
+            const int TdMapSize = 8192;
+            if (mixInfo.Length != TdMapSize)
             {
                 return false;
             }
+            int fileLength = (int)mixInfo.Length;
             fileStream.Seek(0, SeekOrigin.Begin);
             byte[] fileContents = new byte[fileLength];
             fileLength = fileStream.Read(fileContents, 0, fileLength);
-            if (fileLength != 8192)
+            if (fileLength != TdMapSize)
             {
                 return false;
             }
-            for (int i = 0; i < 8192; i += 2)
+            for (int i = 0; i < TdMapSize; i += 2)
             {
                 byte val = fileContents[i];
-                if (val > highestTdMapVal && val != 0xFF)
+                if (val > HighestTdMapVal && val != 0xFF)
                 {
                     return false;
                 }
@@ -1173,17 +1169,19 @@ namespace MobiusEditor.Utility
             return true;
         }
 
-        private static bool IdentifySoleMap(byte[] fileContents, MixEntry mixInfo)
+        private static bool IdentifySoleMap(Stream fileStream, MixEntry mixInfo)
         {
             const int maxCell = 0x4000; // 128 * 128;
-            int highestTdMapVal = TiberianDawn.TemplateTypes.GetTypes().Max(t => (int)t.ID);
-            int fileLength = fileContents.Length;
+            int fileLength = (int)mixInfo.Length;
             // 0x400 is chosen because it's larger than a colour palette, and
             // all official maps are about 0x4000; 10 times larger than that.
-            if (fileLength % 4 != 0 || fileLength <= 0x400)
+            if (fileLength % 4 != 0 || fileLength <= 0x400 || fileLength > 4 * maxCell)
             {
                 return false;
             }
+            byte[] fileContents = new byte[fileLength];
+            fileStream.Seek(0, SeekOrigin.Begin);
+            fileStream.Read(fileContents, 0, fileLength);
             // This scan assumes all cells get consecutively higher. Even if the format can work
             // with unordered cells, it should never actually happen, especially inside mix files.
             int previousCell = -1;
@@ -1194,7 +1192,7 @@ namespace MobiusEditor.Utility
                 int cell = (cellHi << 8) | cellLow;
                 // The id of the tile on that cell.
                 byte val = fileContents[i + 2];
-                if (cell <= previousCell || cell >= maxCell || (val > highestTdMapVal && val != 0xFF))
+                if (cell <= previousCell || cell >= maxCell || (val > HighestTdMapVal && val != 0xFF))
                 {
                     return false;
                 }
