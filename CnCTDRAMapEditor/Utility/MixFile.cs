@@ -206,12 +206,12 @@ namespace MobiusEditor.Utility
         }
 
         public MixFile(MixFile container, uint nameId)
-            : this(container, new MixEntry(nameId, 0, 0), true)
+            : this(container, new MixEntry(nameId, 0, 0, 0), true)
         {
         }
 
         public MixFile(MixFile container, uint nameId, bool handleAdvanced)
-            : this(container, new MixEntry(nameId, 0, 0), handleAdvanced)
+            : this(container, new MixEntry(nameId, 0, 0, 0), handleAdvanced)
         {
         }
 
@@ -573,8 +573,7 @@ namespace MobiusEditor.Utility
                     }
                     throw new MixParseException(String.Format("Not a valid mix file: file #{0} with id {1:X08} exceeds archive length.", i, fileId), fileId);
                 }
-                MixEntry entry = new MixEntry(fileId, fileOffset, fileLength);
-                entry.Index = i;
+                MixEntry entry = new MixEntry(fileId, fileOffset, fileLength, i);
                 MixEntry[] existing;
                 headerIds.Add(fileId);
                 if (!this.mixFileContents.TryGetValue(fileId, out existing))
@@ -792,11 +791,12 @@ namespace MobiusEditor.Utility
             Length = 0;
         }
 
-        public MixEntry(uint id, uint offset, uint length)
+        public MixEntry(uint id, uint offset, uint length, int index)
         {
             Id = id;
             Offset = offset;
             Length = length;
+            Index = index;
         }
 
         public override string ToString()

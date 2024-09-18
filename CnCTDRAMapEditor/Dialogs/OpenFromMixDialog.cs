@@ -56,9 +56,10 @@ namespace MobiusEditor.Dialogs
             InitializeComponent();
             lvwColumnSorter = new ListViewColumnSorter();
             Comparer<string>[] columnComparers = new Comparer<string>[7];
+            // This follows the same logic as MixEntry.SortName
             Comparer<string> idComparer = Comparer<string>.Create((s1, s2) => {
-                string st1 = isId.IsMatch(s1) ? "zzzzzzzzzzzz" + s1 : s1;
-                string st2 = isId.IsMatch(s2) ? "zzzzzzzzzzzz" + s2 : s2;
+                string st1 = isId.IsMatch(s1) ? ("zzzzzzzzzzzz" + s1) : s1;
+                string st2 = isId.IsMatch(s2) ? ("zzzzzzzzzzzz" + s2) : s2;
                 return lvwColumnSorter.DefaultObjectComparer.Compare(st1, st2);
             });
             Comparer<string> numComparer = Comparer<string>.Create((s1, s2) => {
@@ -70,10 +71,10 @@ namespace MobiusEditor.Dialogs
                 }
                 return int.Parse(st1).CompareTo(int.Parse(st2));
             });
-            columnComparers[0] = idComparer;
-            columnComparers[2] = numComparer;
-            columnComparers[5] = numComparer;
-            columnComparers[6] = numComparer;
+            columnComparers[0] = idComparer; // Name or id
+            columnComparers[2] = numComparer; // Size
+            columnComparers[5] = numComparer; // Index in header
+            columnComparers[6] = numComparer; // File offset
             lvwColumnSorter.SpecificComparers = columnComparers;
             this.mixContentsListView.ListViewItemSorter = lvwColumnSorter;
             titleMain = this.Text;
@@ -169,7 +170,20 @@ namespace MobiusEditor.Dialogs
 
         private void MixContentsListView_KeyDown(object sender, KeyEventArgs e)
         {
-            switch (e.KeyData) {
+            if (!(sender is ListView lv))
+            {
+                return;
+            }
+            switch (e.KeyData)
+            {
+                case Keys.Up:
+                    MoveSelection(lv, -1);
+                    e.Handled = true;
+                    break;
+                case Keys.Down:
+                    MoveSelection(lv, 1);
+                    e.Handled = true;
+                    break;
                 case Keys.Enter:
                     OpenCurrentlySelected();
                     e.Handled = true;
@@ -182,6 +196,23 @@ namespace MobiusEditor.Dialogs
                     SaveCurrentlySelected();
                     e.Handled = true;
                     break;
+            }
+        }
+
+        private void MoveSelection(ListView lv, int amount)
+        {
+            // PageUp and PageDown work fine for some reason; it's just Up and Down
+            // that jump to the start unless an item was specifically clicked.
+            int oldIndex = lv.SelectedIndices.Count == 0 ? 0 : lv.SelectedIndices[0];
+            int newIndex = Math.Min(lv.Items.Count - 1, Math.Max(0, oldIndex + amount));
+            if (lv.Items.Count > oldIndex)
+            {
+                lv.Items[oldIndex].Selected = false;
+            }
+            if (lv.Items.Count > newIndex)
+            {
+                lv.Items[newIndex].Selected = true;
+                lv.Items[newIndex].EnsureVisible();
             }
         }
 
@@ -288,7 +319,7 @@ namespace MobiusEditor.Dialogs
                 MixFile subMix = null;
                 try
                 {
-                    subMix = name != null ? new MixFile(current, name) : new MixFile(current, selected.Id);
+                    subMix = new MixFile(current, selected);
                 }
                 catch
                 {

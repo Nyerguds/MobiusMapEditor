@@ -556,12 +556,7 @@ namespace MobiusEditor.Utility
         /// Identify a file inside the whole range of known filenames.
         /// </summary>
         /// <param name="id">id to identify.</param>
-        /// <param name="forcedGameType">Game type identified on the parent; is always taken as primary type.</param>
-        /// <param name="forcedHasher">
-        ///     If no specific game type was identified, but a hasher was, it can be force through this.
-        ///     At the end of this function, this object will always contain the used hasher.
-        /// </param>
-        /// <returns>The game type identified for this mix file.</returns>
+        /// <returns>All known files matching the given ID.</returns>
         public List<MixEntry> IdentifySingleFile(uint id)
         {
             List<MixEntry> matches = new List<MixEntry>();

@@ -3,7 +3,6 @@
 // It has been modified to optionally insert specific string modifiers per column.
 using System.Collections;
 using System.Collections.Generic;
-using System.Linq;
 using System.Windows.Forms;
 
 namespace MobiusEditor.Utility
@@ -13,11 +12,10 @@ namespace MobiusEditor.Utility
     /// </summary>
     public class ListViewColumnSorter : IComparer
     {
-
         /// <summary>
         /// Case insensitive comparer object
         /// </summary>
-        private CaseInsensitiveComparer defaultObjectComparer;
+        private readonly CaseInsensitiveComparer defaultObjectComparer;
 
         /// <summary>
         /// Class constructor. Initializes various elements
