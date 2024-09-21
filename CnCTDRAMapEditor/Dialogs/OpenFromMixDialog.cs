@@ -174,14 +174,26 @@ namespace MobiusEditor.Dialogs
             {
                 return;
             }
+            // List navigation is messed up by the fact the actual "selection caret" can't be
+            // moved by any program instructions. There also seem to be OS differences in how
+            // PageUp and PageDown are handled. So we just ignore it and take full control.
+            // Home and End are the only keys not affected by any of this.
             switch (e.KeyData)
             {
                 case Keys.Up:
-                    MoveSelection(lv, -1);
+                    MoveSelectionUpDown(lv, true);
                     e.Handled = true;
                     break;
                 case Keys.Down:
-                    MoveSelection(lv, 1);
+                    MoveSelectionUpDown(lv,false);
+                    e.Handled = true;
+                    break;
+                case Keys.PageUp:
+                    MoveSelectionPageUpDown(lv, true);
+                    e.Handled = true;
+                    break;
+                case Keys.PageDown:
+                    MoveSelectionPageUpDown(lv, false);
                     e.Handled = true;
                     break;
                 case Keys.Enter:
@@ -199,12 +211,10 @@ namespace MobiusEditor.Dialogs
             }
         }
 
-        private void MoveSelection(ListView lv, int amount)
+        private void MoveSelectionUpDown(ListView lv, bool up)
         {
-            // PageUp and PageDown work fine for some reason; it's just Up and Down
-            // that jump to the start unless an item was specifically clicked.
             int oldIndex = lv.SelectedIndices.Count == 0 ? 0 : lv.SelectedIndices[0];
-            int newIndex = Math.Min(lv.Items.Count - 1, Math.Max(0, oldIndex + amount));
+            int newIndex = Math.Min(lv.Items.Count - 1, Math.Max(0, oldIndex + (up ? -1 : 1)));
             if (lv.Items.Count > oldIndex)
             {
                 lv.Items[oldIndex].Selected = false;
@@ -214,6 +224,63 @@ namespace MobiusEditor.Dialogs
                 lv.Items[newIndex].Selected = true;
                 lv.Items[newIndex].EnsureVisible();
             }
+        }
+
+        private void MoveSelectionPageUpDown(ListView lv, bool up)
+        {
+            (int first, int last) = getVisibleItems(lv);
+            if (first == -1 || last == -1)
+            {
+                return;
+            }
+            int maxScrollAmount = last - first;
+            int oldIndex = lv.SelectedIndices.Count == 0 ? 0 : lv.SelectedIndices[0];
+            int newIndex;
+            bool onExtreme = (up && oldIndex == first) || (!up && oldIndex == last);
+            if (oldIndex < first || oldIndex > last || onExtreme)
+            {
+                // if outside view, or on the last visible item in this direction, just scroll by the max amount.
+                newIndex = Math.Min(lv.Items.Count - 1, Math.Max(0, oldIndex + (up ? -1 : 1) * maxScrollAmount));
+            }
+            else
+            {
+                // If the selected item is visible, and not on the last visible item in this direction,
+                // put it on the last visible item in this direction.
+                newIndex = up ? first : last;
+            }
+            if (lv.Items.Count > oldIndex)
+            {
+                lv.Items[oldIndex].Selected = false;
+            }
+            lv.Items[newIndex].Selected = true;
+            lv.Items[newIndex].EnsureVisible();
+        }
+
+        private (int, int) getVisibleItems(ListView lv)
+        {
+            ListViewItem first = lv.TopItem;
+            if (lv.Items.Count == 0 || first == null)
+            {
+                return (-1, -1);
+            }
+            int offset = first.GetBounds(ItemBoundsPortion.Entire).Y;
+            Rectangle clientRect = lv.ClientRectangle;
+            // Remove header, using offset of first visible item.
+            clientRect = new Rectangle(clientRect.X, clientRect.Y + offset, clientRect.Width, clientRect.Height - offset);
+            ListViewItem last = null;
+            for (int i = first.Index; i < lv.Items.Count; ++i)
+            {
+                ListViewItem item = lv.Items[i];
+                Rectangle itemBounds = item.GetBounds(ItemBoundsPortion.Entire);
+                // items in ListView are only drawn if they are fully inside.
+                if (!clientRect.IntersectsWith(itemBounds) || itemBounds.Bottom > clientRect.Bottom)
+                {
+                    // passed visible area.
+                    break;
+                }
+                last = item;
+            }
+            return (first.Index, last == null ? -1 : last.Index);
         }
 
         private void BtnCloseFile_Click(object sender, EventArgs e)
