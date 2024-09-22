@@ -43,26 +43,23 @@ For usage and configuration, see [MANUAL.md](MANUAL.md).
 A brief overview of the improvements and added features:
 
 * Can be configured to run independently from the C&C Remastered Collection, using classic graphics.
-* Multithreading for loading and saving, preventing the application from freezing during these operations.
+* Can open files straight from the games' .mix archives.
+* Improved problem detection in map loading, which will always give a full list of the found issues, rather than refusing to open the map.
 * Keyboard shortcuts for most functions in the editor.
-* Drag & drop support.
-* Creating a map starting from an image containing the rough design and symmetry.
+* Drag & drop support for opening missions.
 * Flood fill function for map tiles, to easily fill large areas in water-based and Interior maps.
+* Multithreading for loading and saving, preventing the application from freezing during these operations.
 * Image export function, with adjustable scale, and choice of shown object types.
-* An ini rules section in the map settings, with support for adding keys even in sections like [Basic] that are managed by the editor. The editor will automatically adapt to rule changes in RA maps.
+* An ini rules section in the map settings. The editor will automatically adapt to rule changes conerning power use, bibs and capturability.
 * Sole Survivor and Tiberian Dawn megamap support.
-* Different size support for craters.
-* A placement grid is shown while placing down or moving objects.
-* Mod loading support to allow applying graphics fixes, and filling in graphics for objects that were not remastered.
 * Missing objects added: unused decorations and pavements in Overlay and Smudge, and farmer fields and haystacks in Buildings.
+* Mod loading support to allow applying graphics fixes, and filling in graphics for objects that were not remastered.
 * The ability to enable/disable the added units of Red Alert's Aftermath expansion pack in missions.
 * Vastly improved triggers and teamtypes editors, with clear descriptions and tooltips for all options, and a trigger analysis function to detect possible issues.
-* Improved problem detection in map loading, which will always give a full list of the found issues, rather than refusing to open the map.
-* Expanded Undo/Redo functionality to include all actions in the editor.
 * Map objects overview, including analysis of unused scripting objects (triggers, globals, teams, waypoints).
-* Power balance and silo level tools, which account for buildings scripted to be built later, and for rule tweaks in RA maps.
+* Power balance and silo level tools, which account for rule tweaks and for buildings scripted to be built later.
 * Tile randomisation in Red Alert interior maps, allowing the use of previously unused alternate graphics that exist for almost all tiles.
-* Options in the editor's .config file can tweak specific editor behaviour, like disallowing overlapping bibs or theater-illegal objects.
+* Options in the editor's .config file can tweak specific editor behaviour, like allowing overlapping bibs or theater-illegal objects.
 
 The full change log can be viewed in [CHANGELOG.md](CHANGELOG.md)
 
@@ -73,7 +70,5 @@ Some ideas that might get implemented in the future:
 * A function to automatically add ant rules.
 * The ability to change a map's theater.
 * A copy & paste function.
-* Support for classic fonts, so 1:1 image exports from Classic mode actually have readable labels.
 * Support for Attack Tarcom orders.
 * A filter on waypoints in the Teamtypes
-* Showing linked triggers on the triggers UI

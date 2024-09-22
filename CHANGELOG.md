@@ -641,13 +641,13 @@ Unreleased.
 * Added mission load checks and warnings on team type arguments, and on the limits of units/orders list lengths.
 * Added system to avoid loading the same mod from both the workshop items and from the local mods under the Documents folder. If given by name, local mods are given priority.
 * The \[Enter\] shortcut for the "Jump To" function is now indicated in the status bar in Waypoints and Celltriggers mode.
-* Added a specific "PreviewScaleClassic" setting.
+* Added a specific "PreviewScaleClassic" setting, rather than automatically calculating it from the one meant for the Remaster graphics.
 * Fixed Red Alert map load not giving feedback on the removal of Aircraft.
 * Added a warning indicator on the Autocreate option in the team types editor if the "Max Allowed" setting is set to 0.
 * Enabling map terrain type indicators will now show a different color for each terrain type, editable per type in the settings file.
 * The placement previews for map templates will now always show the terrain types. This indication will be less pronounced when the map terrain type indicators option is disabled.
 * Added extra indicators (shortcut: F4) for cells occupied by objects on the map.
-* Added outlines for overlapped buildings and Terrain objects. They will be considered overlapped if all of their cells that contain graphics are considered overlapped, since that would imply the object is obscured from view.
+* Added outlines for overlapped buildings and Terrain objects. They will only be considered overlapped if all of their cells that contain graphics are considered overlapped, since that would imply the object is obscured from view.
 * Added outlines for overlapped overlay and walls. This only affects solid overlay that obstructs the map, not pavement types. Note that for walls, this is disabled by default (see "OutlineColorWall" in [the manual](MANUAL.md#colors-and-transparency)).
 * The overlap algorithm that determines if an outline is needed now works per infantry sub-cell position rather than per whole cell, giving much more accurate results.
 * The overlap algorithm that determines if an outline is needed now keeps the draw-order of objects in mind, so an object that is drawn over another object will never be considered to be overlapped by that second one.
@@ -672,3 +672,4 @@ Unreleased.
 * Added support for C&C95 v1.06c's bib disabling and capturability rule tweaks.
 * Fixed trigger changes on Terrain objects not immediately refreshing the map.
 * Fixed an internal issue with the unit/infantry/building properties popup not cleaning up its internal resources after closing.
+* Waypoints now use the "Select" cursor graphics as indicator on the map, rather than the green beacon that was barely visible behind the text.

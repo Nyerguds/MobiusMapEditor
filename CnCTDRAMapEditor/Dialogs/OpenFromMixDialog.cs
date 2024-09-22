@@ -185,7 +185,7 @@ namespace MobiusEditor.Dialogs
                     e.Handled = true;
                     break;
                 case Keys.Down:
-                    MoveSelectionUpDown(lv,false);
+                    MoveSelectionUpDown(lv, false);
                     e.Handled = true;
                     break;
                 case Keys.PageUp:
@@ -272,7 +272,7 @@ namespace MobiusEditor.Dialogs
             {
                 ListViewItem item = lv.Items[i];
                 Rectangle itemBounds = item.GetBounds(ItemBoundsPortion.Entire);
-                // items in ListView are only drawn if they are fully inside.
+                // items in ListView are only selected if they are fully inside.
                 if (!clientRect.IntersectsWith(itemBounds) || itemBounds.Bottom > clientRect.Bottom)
                 {
                     // passed visible area.
