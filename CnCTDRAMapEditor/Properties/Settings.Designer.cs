@@ -80,6 +80,15 @@ namespace MobiusEditor.Properties {
         [global::System.Configuration.ApplicationScopedSettingAttribute()]
         [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
         [global::System.Configuration.DefaultSettingValueAttribute("True")]
+        public bool ClassicEncodesNameAsCp437 {
+            get {
+                return ((bool)(this["ClassicEncodesNameAsCp437"]));
+            }
+        }
+        
+        [global::System.Configuration.ApplicationScopedSettingAttribute()]
+        [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
+        [global::System.Configuration.DefaultSettingValueAttribute("True")]
         public bool LazyInitSteam {
             get {
                 return ((bool)(this["LazyInitSteam"]));
@@ -340,7 +349,7 @@ namespace MobiusEditor.Properties {
         
         [global::System.Configuration.ApplicationScopedSettingAttribute()]
         [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
-        [global::System.Configuration.DefaultSettingValueAttribute("0, 170, 0")]
+        [global::System.Configuration.DefaultSettingValueAttribute("0, 255, 0")]
         public global::System.Drawing.Color HashColorTechnoPart {
             get {
                 return ((global::System.Drawing.Color)(this["HashColorTechnoPart"]));
@@ -349,7 +358,7 @@ namespace MobiusEditor.Properties {
         
         [global::System.Configuration.ApplicationScopedSettingAttribute()]
         [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
-        [global::System.Configuration.DefaultSettingValueAttribute("0, 255, 0")]
+        [global::System.Configuration.DefaultSettingValueAttribute("0, 170, 0")]
         public global::System.Drawing.Color HashColorTechnoFull {
             get {
                 return ((global::System.Drawing.Color)(this["HashColorTechnoFull"]));

@@ -272,6 +272,12 @@ namespace MobiusEditor.Utility
             {
                 gamePath = Path.Combine(applicationPath, gamePath);
             }
+            string rootPath = Path.Combine(applicationPath, path);
+            // 0. Overrides in actual program folder.
+            if (File.Exists(rootPath))
+            {
+                return File.Open(rootPath, FileMode.Open, FileAccess.Read);
+            }
             // 1. Loose files in game files path
             string loosePath = Path.Combine(gamePath, path);
             if (File.Exists(loosePath))

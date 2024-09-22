@@ -33,5 +33,9 @@ namespace MobiusEditor.Interface
         string Trigger { get; set; }
         /// <summary>Direction that the object is facing.</summary>
         DirectionType Direction { get; set; }
+        /// <summary>Cached index of the order in which this object was painted along with other overlappers. This provides a quick solution to complicated overlap checks.</summary>
+        int DrawOrderCache { get; set; }
+        /// <summary>Cached index of the frame of the object that was rendered. This is used for distinguishing outlines.</summary>
+        int DrawFrameCache { get; set; }
     }
 }

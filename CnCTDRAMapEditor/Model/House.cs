@@ -17,6 +17,7 @@ using System;
 using System.Collections;
 using System.Collections.Generic;
 using System.ComponentModel;
+using System.Diagnostics;
 using System.Globalization;
 using System.Linq;
 
@@ -135,6 +136,7 @@ namespace MobiusEditor.Model
         }
     }
 
+    [DebuggerDisplay("{Type}")]
     public class House
     {
         public static readonly string None = "None";

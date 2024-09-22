@@ -78,7 +78,10 @@ namespace MobiusEditor.Controls
             this.triggerComboBox.Name = "triggerComboBox";
             this.triggerComboBox.Size = new System.Drawing.Size(132, 28);
             this.triggerComboBox.TabIndex = 9;
-            this.triggerComboBox.SelectedIndexChanged += new System.EventHandler(this.comboBox_SelectedValueChanged);
+            this.triggerComboBox.SelectedIndexChanged += new System.EventHandler(this.TriggerComboBox_SelectedValueChanged);
+            this.triggerComboBox.MouseEnter += new System.EventHandler(this.TriggerComboBox_MouseEnter);
+            this.triggerComboBox.MouseLeave += new System.EventHandler(this.HideToolTip);
+            this.triggerComboBox.MouseMove += new System.Windows.Forms.MouseEventHandler(TriggerComboBox_MouseMove);
             // 
             // lblTriggerTypesInfo
             // 
@@ -91,7 +94,8 @@ namespace MobiusEditor.Controls
             this.lblTriggerTypesInfo.TabIndex = 10;
             this.lblTriggerTypesInfo.TextAlign = System.Drawing.ContentAlignment.MiddleCenter;
             this.lblTriggerTypesInfo.MouseEnter += new System.EventHandler(this.LblTriggerTypesInfo_MouseEnter);
-            this.lblTriggerTypesInfo.MouseLeave += new System.EventHandler(this.LblTriggerTypesInfo_MouseLeave);
+            this.lblTriggerTypesInfo.MouseLeave += new System.EventHandler(this.HideToolTip);
+            this.lblTriggerTypesInfo.MouseMove += new System.Windows.Forms.MouseEventHandler(this.LblTriggerTypesInfo_MouseMove);
             // 
             // TerrainProperties
             // 

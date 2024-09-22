@@ -193,6 +193,7 @@ namespace MobiusEditor.Tools
                             selectedObjectProperties = null;
                             navigationWidget.Refresh();
                             AddPropertiesUndoRedo(infantry, preEdit);
+                            infantry.PropertyChanged -= SelectedInfantry_PropertyChanged;
                         };
                         infantry.PropertyChanged += SelectedInfantry_PropertyChanged;
                         selectedObjectProperties.Show(mapPanel, mapPanel.PointToClient(Control.MousePosition));
@@ -779,7 +780,7 @@ namespace MobiusEditor.Tools
                         ifg.Infantry[(int)InfantryStoppingType.Center] = mockInfantry;
                         mockInfantry.InfantryGroup = ifg;
                         technoSet.Add(0, ifg);
-                        MapRenderer.RenderAllTechnoTriggers(g, plugin.GameInfo, technoSet, tm.Bounds, Globals.PreviewTileSize, Layers, Color.LimeGreen, null, false);
+                        MapRenderer.RenderAllTechnoTriggers(g, plugin.GameInfo, technoSet, null, tm.Bounds, Globals.PreviewTileSize, Layers, Color.LimeGreen, null, false);
                         mockInfantry.InfantryGroup = null;
                     }
                 }

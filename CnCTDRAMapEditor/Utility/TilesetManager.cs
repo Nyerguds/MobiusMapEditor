@@ -16,6 +16,7 @@ using MobiusEditor.Interface;
 using MobiusEditor.Model;
 using System;
 using System.Collections.Generic;
+using System.Drawing;
 using System.IO;
 using System.Linq;
 using System.Xml;
@@ -218,6 +219,18 @@ namespace MobiusEditor.Utility
         public bool TileExists(string name)
         {
             return GetTileDataLength(name) > 0;
+        }
+
+        public Bitmap GetTile(string remasterSprite, int remastericon, string classicSprite, int classicicon, ITeamColor teamColor)
+        {
+            Tile tile;
+            bool found = GetTeamColorTileData(remasterSprite, remastericon, teamColor, out tile);
+            return found && tile != null && tile.Image != null ? new Bitmap(tile.Image) : null;
+        }
+
+        public Bitmap GetTexture(string remasterTexturePath, string classicSprite, int classicicon, bool ignoreClassicShadow)
+        {
+            return textureManager.GetTexture(remasterTexturePath, null, false).Item1;
         }
 
         #region IDisposable Support

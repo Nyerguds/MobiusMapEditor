@@ -20,6 +20,9 @@
     <Setting Name="ClassicProducesNoMetaFiles" Type="System.Boolean" Scope="Application">
       <Value Profile="(Default)">False</Value>
     </Setting>
+    <Setting Name="ClassicEncodesNameAsCp437" Type="System.Boolean" Scope="Application">
+      <Value Profile="(Default)">True</Value>
+    </Setting>
     <Setting Name="LazyInitSteam" Type="System.Boolean" Scope="Application">
       <Value Profile="(Default)">True</Value>
     </Setting>
@@ -108,10 +111,10 @@
       <Value Profile="(Default)">40, 0, 0, 255</Value>
     </Setting>
     <Setting Name="HashColorTechnoPart" Type="System.Drawing.Color" Scope="Application">
-      <Value Profile="(Default)">0, 170, 0</Value>
+      <Value Profile="(Default)">0, 255, 0</Value>
     </Setting>
     <Setting Name="HashColorTechnoFull" Type="System.Drawing.Color" Scope="Application">
-      <Value Profile="(Default)">0, 255, 0</Value>
+      <Value Profile="(Default)">0, 170, 0</Value>
     </Setting>
     <Setting Name="HashColorLandClear" Type="System.Drawing.Color" Scope="Application">
       <Value Profile="(Default)">0, 255, 255, 255</Value>

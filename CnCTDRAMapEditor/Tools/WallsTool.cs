@@ -226,7 +226,7 @@ namespace MobiusEditor.Tools
             if (map.Metrics.GetCell(location, out int cell))
             {
                 var overlay = new Overlay { Type = SelectedWallType, Icon = 0 };
-                if (map.Technos.CanAdd(cell, overlay) && map.Buildings.CanAdd(cell, overlay))
+                if (map.Buildings.CanAdd(cell, overlay)) // && map.Technos.CanAdd(cell, overlay))
                 {
                     if (!undoOverlays.ContainsKey(cell))
                     {
@@ -425,7 +425,7 @@ namespace MobiusEditor.Tools
             }
             Overlay onCell = previewMap.Overlay[cell];
             Overlay overlay = new Overlay { Type = selected, Icon = 0, IsPreview = true };
-            if (previewMap.Technos.CanAdd(cell, overlay) && previewMap.Buildings.CanAdd(cell, overlay))
+            if (previewMap.Buildings.CanAdd(cell, overlay)) // && previewMap.Technos.CanAdd(cell, overlay))
             {
                 previewMap.Overlay[cell] = overlay;
                 mapPanel.Invalidate(previewMap, Rectangle.Inflate(new Rectangle(location, new Size(1, 1)), 1, 1));

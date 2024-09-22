@@ -79,7 +79,7 @@ namespace MobiusEditor.Tools.Dialogs
             //
             // genericTypeListBox
             //
-            this.genericTypeListBox.DisplayMember = "Name";
+            this.genericTypeListBox.DisplayMember = "Label";
             this.genericTypeListBox.Dock = System.Windows.Forms.DockStyle.Fill;
             this.genericTypeListBox.DrawMode = System.Windows.Forms.DrawMode.OwnerDrawVariable;
             this.genericTypeListBox.FormattingEnabled = true;
@@ -88,7 +88,7 @@ namespace MobiusEditor.Tools.Dialogs
             this.genericTypeListBox.Name = "genericTypeListBox";
             this.genericTypeListBox.Size = new System.Drawing.Size(268, 268);
             this.genericTypeListBox.TabIndex = 2;
-            this.genericTypeListBox.ValueMember = "Type";
+            this.genericTypeListBox.ValueMember = "Value";
             // 
             // genericTypeMapPanel
             // 

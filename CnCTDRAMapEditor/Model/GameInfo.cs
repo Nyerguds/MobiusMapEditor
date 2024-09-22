@@ -1,10 +1,22 @@
-﻿using MobiusEditor.Interface;
+﻿//         DO WHAT THE FUCK YOU WANT TO PUBLIC LICENSE
+//                     Version 2, December 2004
+//
+//  Copyright (C) 2004 Sam Hocevar<sam@hocevar.net>
+//
+//  Everyone is permitted to copy and distribute verbatim or modified
+//  copies of this license document, and changing it is allowed as long
+//  as the name is changed.
+//
+//             DO WHAT THE FUCK YOU WANT TO PUBLIC LICENSE
+//    TERMS AND CONDITIONS FOR COPYING, DISTRIBUTION AND MODIFICATION
+//
+//   0. You just DO WHAT THE FUCK YOU WANT TO.
+using MobiusEditor.Interface;
 using MobiusEditor.Utility;
 using System;
 using System.Collections.Generic;
 using System.Drawing;
 using System.Linq;
-// Special. Technically color "JP" exists for this, but it's wrong. Clone Spain instead.
 
 namespace MobiusEditor.Model
 {
@@ -65,6 +77,10 @@ namespace MobiusEditor.Model
         public abstract string ClassicFolderSetting { get; }
         /// <summary>File name of the classic strings file for this game.</summary>
         public abstract string ClassicStringsFile { get; }
+        /// <summary>Map size for normal maps of this type</summary>
+        public abstract Size MapSize { get; }
+        /// <summary>Map size for megamaps of this type</summary>
+        public abstract Size MapSizeMega { get; }
         /// <summary>Lists all theaters theoretically supported by this type.</summary>
         public abstract TheaterType[] AllTheaters { get; }
         /// <summary>Lists all theaters supported by this type which are actually found.</summary>
@@ -106,8 +122,8 @@ namespace MobiusEditor.Model
         /// </summary>
         /// <param name="mfm">MixfileManager to load the archives into.</param>
         /// <param name="loadErrors">List of load errors. </param>
-        /// <param name="fileLoadErrors"></param>
-        /// <param name="forRemaster"></param>
+        /// <param name="fileLoadErrors">A list to collect errors into.</param>
+        /// <param name="forRemaster">Indicates if this init is for remastered mode.</param>
         public abstract void InitClassicFiles(MixfileManager mfm, List<string> loadErrors, List<string> fileLoadErrors, bool forRemaster);
         /// <summary>Retrieves the typical opposing player for the given House name, e.g. for TD, GoodGuy will give BadGuy.</summary>
         /// <param name="player">The player to get the opposing player for.</param>
@@ -118,14 +134,17 @@ namespace MobiusEditor.Model
         /// <returns>True if the given layer is used for this game.</returns>
         public abstract bool SupportsMapLayer(MapLayerFlag mlf);
         /// <summary>Fetches the Waypoints-mode icon for the UI. This returns a new image that needs to be disposed afterwards.</summary>
-        /// <returns>The waypoints UI icon</returns>
+        /// <returns>The waypoints UI icon.</returns>
         public abstract Bitmap GetWaypointIcon();
         /// <summary>Fetches the Celltriggers-mode icon for the UI. This returns a new image that needs to be disposed afterwards.</summary>
-        /// <returns>The celltriggers UI icon</returns>
+        /// <returns>The celltriggers UI icon.</returns>
         public abstract Bitmap GetCellTriggerIcon();
         /// <summary>Fetches the Select-mode icon for the UI. This returns a new image that needs to be disposed afterwards.</summary>
-        /// <returns>The select mode UI icon</returns>
+        /// <returns>The select mode UI icon.</returns>
         public abstract Bitmap GetSelectIcon();
+        /// <summary>Fetches the Capture icon for the building properties UI. This returns a new image that needs to be disposed afterwards.</summary>
+        /// <returns>An icon indicating this object is capturable.</returns>
+        public abstract Bitmap GetCaptureIcon();
         /// <summary>Checks whether the briefing has any kind of issues concerning length or supported characters.</summary>
         /// <param name="briefing">The briefing to check</param>
         /// <returns>Null if everything is okay, otherwise any issues to show on the user interface.</returns>
@@ -139,48 +158,6 @@ namespace MobiusEditor.Model
         #endregion
 
         #region protected functions
-        protected Bitmap GetTile(string remasterSprite, int remastericon, string classicSprite, int classicicon)
-        {
-            Tile tile;
-            if (!Globals.UseClassicFiles)
-            {
-                if (Globals.TheTilesetManager.GetTileData(remasterSprite, remastericon, out tile) && tile != null && tile.Image != null)
-                    return new Bitmap(tile.Image);
-            }
-            else
-            {
-                if (Globals.TheTilesetManager.GetTileData(classicSprite, classicicon, out tile) && tile != null && tile.Image != null)
-                    return new Bitmap(tile.Image);
-            }
-            return null;
-        }
-
-        /// <summary>
-        /// Retrieves a bitmap from the tileset manager. Depending on whether classic or remastered graphics
-        /// are used, the first or last two args will be used.
-        /// </summary>
-        /// <param name="remasterTexturePath">Path of th texture in the remastered tilesets.</param>
-        /// <param name="classicSprite">Classic sprite to load.</param>
-        /// <param name="classicicon">Frame to use from the classic sprite.</param>
-        /// <returns>
-        /// The requested image. This is a clone of the image in the internal texture manager, and should be disposed after use.
-        /// </returns>
-        protected Bitmap GetTexture(string remasterTexturePath, string classicSprite, int classicicon)
-        {
-            if (!Globals.UseClassicFiles && Globals.TheTilesetManager is TilesetManager tsm)
-            {
-                // The Texture manager returns a clone of its own cached image. The Tileset manager caches those clones again,
-                // and is responsible for their cleanup, but if we use the Texture manager directly, it needs to be disposed.
-                return tsm.TextureManager.GetTexture(remasterTexturePath, null, false).Item1;
-            }
-            else if (Globals.UseClassicFiles && Globals.TheTilesetManager.GetTileData(classicSprite, classicicon, out Tile tile)
-                && tile != null && tile.Image != null)
-            {
-                // Clone this, so it's equivalent to the remaster one and can be used in a Using block.
-                return new Bitmap(tile.Image);
-            }
-            return null;
-        }
 
         /// <summary>
         /// Creates a remap object for a specific font, by remapping all indices to the closest color on te palette.
@@ -190,17 +167,18 @@ namespace MobiusEditor.Model
         /// <param name="tsmc">Classic tileset manager, to get the color info from.</param>
         /// <param name="textColor">Requested color for the text. Probably won't match exactly since it is looked up in the palette.</param>
         /// <param name="clearIndices">Indices on the graphics that need to be cleared to transparent (index 0).</param>
-        /// <returns></returns>
+        /// <returns>A TeamRemap object for the given color.</returns>
+        /// <remarks>The generated remap is cached in the TeamRemapManager.</remarks>
         protected TeamRemap GetClassicFontRemapSimple(string fontName, TilesetManagerClassic tsmc, TeamRemapManager trm, Color textColor, params int[] clearIndices)
         {
             if (fontName == null)
             {
                 return null;
             }
-            List<int> indicesFiltered = clearIndices.Where(x => x > 0 && x < 16).ToList();
+            List<int> indicesFiltered = (clearIndices ?? new int[0]).Where(x => x > 0 && x < 16).ToList();
             indicesFiltered.Sort();
             string cleared = String.Join("-", indicesFiltered.Select(i => i.ToString("X")));
-            string remapName = fontName + "_" + textColor.ToArgb().ToString("X4") + (cleared.Length > 0 ? "_" : string.Empty) + cleared;
+            string remapName = "FontRemap_" + fontName + "_" + textColor.ToArgb().ToString("X4") + (cleared.Length > 0 ? "_" : string.Empty) + cleared;
             TeamRemap fontRemap = trm.GetItem(remapName);
             if (fontRemap != null)
             {
@@ -244,16 +222,16 @@ namespace MobiusEditor.Model
 
     public enum ClassicFont
     {
-        /// <summary>Font used for Waypoints</summary>
+        /// <summary>Font used for Waypoints.</summary>
         Waypoints,
         /// <summary>Font used for waypoints with longer names. Separate because it needs a smaller font to fit inside one cell.</summary>
         WaypointsLong,
-        /// <summary>Font used for cell triggers</summary>
+        /// <summary>Font used for cell triggers.</summary>
         CellTriggers,
-        /// <summary>Font used for techno triggers, except infantry</summary>
+        /// <summary>Font used for techno triggers on multi-cell objects.</summary>
         TechnoTriggers,
-        /// <summary>Font used for infantry techno triggers. Separate because it might need to be smaller.</summary>
-        InfantryTriggers,
+        /// <summary>Font used for one-cell techno triggers. Separate because it might need to be smaller.</summary>
+        TechnoTriggersSmall,
         /// <summary>Font used for rebuild priority numbers on buildings.</summary>
         RebuildPriority,
         /// <summary>Font used for "FAKE" labels on buildings.</summary>

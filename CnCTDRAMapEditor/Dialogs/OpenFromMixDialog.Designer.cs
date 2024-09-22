@@ -47,6 +47,8 @@ namespace MobiusEditor.Dialogs
             this.SizeColumnHeader = ((System.Windows.Forms.ColumnHeader)(new System.Windows.Forms.ColumnHeader()));
             this.DescColumnHeader = ((System.Windows.Forms.ColumnHeader)(new System.Windows.Forms.ColumnHeader()));
             this.infoColumnHeader = ((System.Windows.Forms.ColumnHeader)(new System.Windows.Forms.ColumnHeader()));
+            this.indexColumnHeader = ((System.Windows.Forms.ColumnHeader)(new System.Windows.Forms.ColumnHeader()));
+            this.offsetColumnHeader = ((System.Windows.Forms.ColumnHeader)(new System.Windows.Forms.ColumnHeader()));
             this.btnCancel = new System.Windows.Forms.Button();
             this.btnOpen = new System.Windows.Forms.Button();
             this.btnCloseFile = new System.Windows.Forms.Button();
@@ -62,9 +64,10 @@ namespace MobiusEditor.Dialogs
             this.typeColumnHeader,
             this.SizeColumnHeader,
             this.DescColumnHeader,
-            this.infoColumnHeader});
+            this.infoColumnHeader,
+            this.indexColumnHeader,
+            this.offsetColumnHeader});
             this.mixContentsListView.FullRowSelect = true;
-            this.mixContentsListView.HeaderStyle = System.Windows.Forms.ColumnHeaderStyle.Nonclickable;
             this.mixContentsListView.HideSelection = false;
             this.mixContentsListView.LabelWrap = false;
             this.mixContentsListView.Location = new System.Drawing.Point(8, 8);
@@ -76,6 +79,7 @@ namespace MobiusEditor.Dialogs
             this.mixContentsListView.TabIndex = 1;
             this.mixContentsListView.UseCompatibleStateImageBehavior = false;
             this.mixContentsListView.View = System.Windows.Forms.View.Details;
+            this.mixContentsListView.ColumnClick += new System.Windows.Forms.ColumnClickEventHandler(this.mixContentsListView_ColumnClick);
             this.mixContentsListView.ColumnWidthChanging += new System.Windows.Forms.ColumnWidthChangingEventHandler(this.mixContentsListView_ColumnWidthChanging);
             this.mixContentsListView.SizeChanged += new System.EventHandler(this.MixContentsListView_SizeChanged);
             this.mixContentsListView.DoubleClick += new System.EventHandler(this.MixContentsListView_DoubleClick);
@@ -83,9 +87,9 @@ namespace MobiusEditor.Dialogs
             // 
             // nameColumnHeader
             // 
-            this.nameColumnHeader.Tag = "-160";
+            this.nameColumnHeader.Tag = "-120";
             this.nameColumnHeader.Text = "Name";
-            this.nameColumnHeader.Width = 160;
+            this.nameColumnHeader.Width = 120;
             // 
             // typeColumnHeader
             // 
@@ -110,6 +114,18 @@ namespace MobiusEditor.Dialogs
             this.infoColumnHeader.Tag = "1";
             this.infoColumnHeader.Text = "Info";
             this.infoColumnHeader.Width = 100;
+            // 
+            // indexColumnHeader
+            // 
+            this.indexColumnHeader.Tag = "-40";
+            this.indexColumnHeader.Text = "Index";
+            this.indexColumnHeader.Width = 40;
+            // 
+            // offsetColumnHeader
+            // 
+            this.offsetColumnHeader.Tag = "-80";
+            this.offsetColumnHeader.Text = "File offset";
+            this.offsetColumnHeader.Width = 80;
             // 
             // btnCancel
             // 
@@ -176,5 +192,7 @@ namespace MobiusEditor.Dialogs
         private System.Windows.Forms.Button btnCloseFile;
         private System.Windows.Forms.ColumnHeader SizeColumnHeader;
         private System.Windows.Forms.ColumnHeader DescColumnHeader;
+        private System.Windows.Forms.ColumnHeader indexColumnHeader;
+        private System.Windows.Forms.ColumnHeader offsetColumnHeader;
     }
 }

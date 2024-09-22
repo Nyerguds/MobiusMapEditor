@@ -41,7 +41,6 @@ namespace MobiusEditor.Model
             {
                 return false;
             }
-
             var rectangle = overlapper.OverlapBounds;
             rectangle.Offset(location);
             overlappers[overlapper] = rectangle;
@@ -72,7 +71,6 @@ namespace MobiusEditor.Model
             {
                 return false;
             }
-
             overlappers.Remove(overlapper);
             return true;
         }

@@ -153,8 +153,10 @@ namespace MobiusEditor.Tools
                     selectedSmudgeProperties = new SmudgePropertiesPopup(plugin, smudge);
                     selectedSmudgeProperties.Closed += (cs, ce) =>
                     {
+                        selectedSmudgeProperties = null;
                         navigationWidget.Refresh();
                         AddPropertiesUndoRedo(smudge, preEdit);
+                        smudge.PropertyChanged -= SelectedSmudge_PropertyChanged;
                     };
                     smudge.PropertyChanged += SelectedSmudge_PropertyChanged;
                     selectedSmudgeProperties.Show(mapPanel, mapPanel.PointToClient(Control.MousePosition));

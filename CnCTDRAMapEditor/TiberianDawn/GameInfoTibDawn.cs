@@ -45,6 +45,8 @@ namespace MobiusEditor.TiberianDawn
         public override string ClassicFolderDefault => "Classic\\TD\\";
         public override string ClassicFolderSetting => "ClassicPathTD";
         public override string ClassicStringsFile => "conquer.eng";
+        public override Size MapSize => Constants.MaxSize;
+        public override Size MapSizeMega => Constants.MaxSizeMega;
         public override TheaterType[] AllTheaters => TheaterTypes.GetAllTypes().ToArray();
         public override TheaterType[] AvailableTheaters => TheaterTypes.GetTypes().ToArray();
         public override bool MegamapIsSupported => true;
@@ -106,20 +108,25 @@ namespace MobiusEditor.TiberianDawn
 
         public override Bitmap GetWaypointIcon()
         {
-            return GetTile("beacon", 0, "mouse", 12);
+            return Globals.TheTilesetManager.GetTexture(@"DATA\ART\TEXTURES\SRGB\ICON_SELECT_FRIENDLY_X2_00.DDS", "mouse", 12, true);
         }
 
         public override Bitmap GetCellTriggerIcon()
         {
-            return GetTile("mine", 3, "mine.shp", 3);
+            return Globals.TheTilesetManager.GetTile("mine", 3, "mine.shp", 3, null);
         }
 
         public override Bitmap GetSelectIcon()
         {
             // Remaster: Chronosphere cursor from TEXTURES_SRGB.MEG
-            // Alt: @"DATA\ART\TEXTURES\SRGB\ICON_IONCANNON_15.DDS
+            // Alt: @"DATA\ART\TEXTURES\SRGB\ICON_IONCANNON_15.DDS"
             // Classic: Ion Cannon cursor
-            return GetTexture(@"DATA\ART\TEXTURES\SRGB\ICON_SELECT_GREEN_04.DDS", "mouse", 118);
+            return Globals.TheTilesetManager.GetTexture(@"DATA\ART\TEXTURES\SRGB\ICON_SELECT_GREEN_04.DDS", "mouse", 118, true);
+        }
+
+        public override Bitmap GetCaptureIcon()
+        {
+            return Globals.TheTilesetManager.GetTexture(@"DATA\ART\TEXTURES\SRGB\ICON_MOUNT_UNIT_X2_02.DDS", "mouse", 121, true);
         }
 
         public override string EvaluateBriefing(string briefing)
@@ -148,6 +155,7 @@ namespace MobiusEditor.TiberianDawn
             crop = false;
             remap = null;
             string fontName = null;
+            int[] toClear;
             switch (font)
             {
                 case ClassicFont.Waypoints:
@@ -157,8 +165,14 @@ namespace MobiusEditor.TiberianDawn
                     break;
                 case ClassicFont.WaypointsLong: // The DOS 6point.fnt would be ideal for this, but they replaced it with a much larger one in C&C95.
                     crop = true;
-                    fontName = "scorefnt.fnt";
-                    remap = GetClassicFontRemapSimple(fontName, tsmc, trm, textColor);
+                    fontName = "6ptdos.fnt";
+                    toClear = new int[] { 2, 3 };
+                    if (!tsmc.TileExists(fontName))
+                    {
+                        fontName = "scorefnt.fnt";
+                        toClear = new int[0];
+                    }
+                    remap = GetClassicFontRemapSimple(fontName, tsmc, trm, textColor, toClear);
                     break;
                 case ClassicFont.CellTriggers:
                     crop = true;
@@ -171,13 +185,31 @@ namespace MobiusEditor.TiberianDawn
                     remap = GetClassicFontRemapSimple(fontName, tsmc, trm, textColor);
                     break;
                 case ClassicFont.TechnoTriggers:
-                case ClassicFont.InfantryTriggers:
                     crop = true;
-                    fontName = "3point.fnt";
+                    fontName = "6ptdos.fnt";
+                    toClear = new int[] { 2, 3 };
+                    if (!tsmc.TileExists(fontName))
+                    {
+                        fontName = "scorefnt.fnt";
+                        toClear = new int[0];
+                    }
+                    remap = GetClassicFontRemapSimple(fontName, tsmc, trm, textColor, toClear);
+                    break;
+                case ClassicFont.TechnoTriggersSmall:
+                    crop = true;
+                    fontName = "5pntthin.fnt";
+                    if (!tsmc.TileExists(fontName))
+                    {
+                        fontName = "3point.fnt";
+                    }
                     remap = GetClassicFontRemapSimple(fontName, tsmc, trm, textColor);
                     break;
                 case ClassicFont.FakeLabels:
                     break;
+            }
+            if (!tsmc.TileExists(fontName))
+            {
+                fontName = null;
             }
             return fontName;
         }

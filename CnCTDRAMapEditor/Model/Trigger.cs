@@ -134,7 +134,7 @@ namespace MobiusEditor.Model
         }
     }
 
-    [DebuggerDisplay("{EventControl}: EV1:{Event1} | EV2:{Event2} -> AC1{Action1} | AC2:{Action2}, {PersistentType}")]
+    [DebuggerDisplay("{EventControl}: EV1:{Event1} | EV2:{Event2} → AC1{Action1} | AC2:{Action2}, {PersistentType}")]
     public class Trigger : INamedType, ICloneable, IEquatable<Trigger>
     {
         public static readonly string None = "None";

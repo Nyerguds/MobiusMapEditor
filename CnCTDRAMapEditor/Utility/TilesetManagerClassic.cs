@@ -65,7 +65,7 @@ namespace MobiusEditor.Utility
 
         public void Reset(GameType gameType, TheaterType theater)
         {
-            foreach (Dictionary<Int32, ShapeFrameData> tiles in this.tileData.Values)
+            foreach (Dictionary<int, ShapeFrameData> tiles in this.tileData.Values)
             {
                 foreach (ShapeFrameData shapeFrame in tiles.Values)
                 {
@@ -88,7 +88,7 @@ namespace MobiusEditor.Utility
             int palLength = 0x100;
             this.currentlyLoadedPaletteBare = new Color[0x100];
             this.currentlyLoadedPalette = new Color[0x100];
-            for (Int32 i = 0; i < pal.Length && i < palLength; ++i)
+            for (int i = 0; i < pal.Length && i < palLength; ++i)
             {
                 this.currentlyLoadedPalette[i] = pal[i];
                 this.currentlyLoadedPaletteBare[i] = pal[i];
@@ -142,10 +142,10 @@ namespace MobiusEditor.Utility
             return index;
         }
 
-        public Boolean GetTeamColorTileData(String name, Int32 shape, ITeamColor teamColor, out Tile tile, Boolean generateFallback, Boolean onlyIfDefined, Boolean withShadow, string remapGraphicsSource, byte[] remapTable, bool clearCachedVersion)
+        public bool GetTeamColorTileData(string name, int shape, ITeamColor teamColor, out Tile tile, bool generateFallback, bool onlyIfDefined, bool withShadow, string remapGraphicsSource, byte[] remapTable, bool clearCachedVersion)
         {
             tile = null;
-            String teamColorName = teamColor == null ? String.Empty : (teamColor.Name ?? String.Empty);
+            string teamColorName = teamColor == null ? String.Empty : (teamColor.Name ?? String.Empty);
             Dictionary<int, ShapeFrameData> shapeFile;
             ShapeFrameData shapeFrame;
             bool cached = tileData.TryGetValue(name, out shapeFile);
@@ -208,22 +208,22 @@ namespace MobiusEditor.Utility
             return tile != null && !shapeFrame.IsDummy;
         }
 
-        public Boolean GetTeamColorTileData(String name, Int32 shape, ITeamColor teamColor, out Tile tile, Boolean generateFallback, Boolean onlyIfDefined, string remapGraphicsSource, byte[] remapTable)
+        public bool GetTeamColorTileData(string name, int shape, ITeamColor teamColor, out Tile tile, bool generateFallback, bool onlyIfDefined, string remapGraphicsSource, byte[] remapTable)
         {
             return GetTeamColorTileData(name, shape, teamColor, out tile, generateFallback, onlyIfDefined, true, remapGraphicsSource, remapTable, false);
         }
 
-        public Boolean GetTeamColorTileData(String name, Int32 shape, ITeamColor teamColor, out Tile tile, Boolean generateFallback, Boolean onlyIfDefined)
+        public bool GetTeamColorTileData(string name, int shape, ITeamColor teamColor, out Tile tile, bool generateFallback, bool onlyIfDefined)
         {
             return GetTeamColorTileData(name, shape, teamColor, out tile, generateFallback, onlyIfDefined, true, null, null, false);
         }
 
-        public Boolean GetTileData(String name, Int32 shape, out Tile tile, Boolean generateFallback, Boolean onlyIfDefined)
+        public bool GetTileData(string name, int shape, out Tile tile, bool generateFallback, bool onlyIfDefined)
         {
             return GetTeamColorTileData(name, shape, null, out tile, generateFallback, onlyIfDefined, true, null, null, false);
         }
 
-        public Boolean GetTeamColorTileData(String name, Int32 shape, ITeamColor teamColor, out Tile tile)
+        public bool GetTeamColorTileData(string name, int shape, ITeamColor teamColor, out Tile tile)
         {
             return GetTeamColorTileData(name, shape, teamColor, out tile, false, false, true, null, null, false);
         }
@@ -233,7 +233,7 @@ namespace MobiusEditor.Utility
             return GetTeamColorTileData(name, shape, teamColor, out tile, false, false, !ignoreShadow, null, null, false);
         }
 
-        public Boolean GetTileData(String name, Int32 shape, out Tile tile)
+        public bool GetTileData(string name, int shape, out Tile tile)
         {
             return GetTeamColorTileData(name, shape, null, out tile, false, false, true, null, null, false);
         }
@@ -266,7 +266,19 @@ namespace MobiusEditor.Utility
             return GetTileDataLength(name) > 0;
         }
 
-        private Dictionary<int, ShapeFrameData> GetShapeFile(String name)
+        public Bitmap GetTile(string remasterSprite, int remastericon, string classicSprite, int classicicon, ITeamColor teamColor)
+        {
+            bool found = GetTeamColorTileData(classicSprite, classicicon, teamColor, out Tile tile);
+            return found && tile != null && tile.Image != null ? new Bitmap(tile.Image) : null;
+        }
+
+        public Bitmap GetTexture(string remasterTexturePath, string classicSprite, int classicicon, bool ignoreClassicShadow)
+        {
+            bool found = GetTeamColorTileData(classicSprite, classicicon, null, ignoreClassicShadow, out Tile tile);
+            return found && tile != null && tile.Image != null ? new Bitmap(tile.Image) : null;
+        }
+
+        private Dictionary<int, ShapeFrameData> GetShapeFile(string name)
         {
             bool isShpExt = false;
             bool isFntExt = false;
@@ -280,7 +292,7 @@ namespace MobiusEditor.Utility
                 {
                     return null;
                 }
-                String ext = Path.GetExtension(name);
+                string ext = Path.GetExtension(name);
                 isShpExt = ".shp".Equals(ext, StringComparison.OrdinalIgnoreCase);
                 isFntExt = ".fnt".Equals(ext, StringComparison.OrdinalIgnoreCase);
 
@@ -458,9 +470,9 @@ namespace MobiusEditor.Utility
             return shapeFile;
         }
 
-        private Tile RemapShapeFile(Dictionary<Int32, ShapeFrameData> shapeFile, Int32 shape, ITeamColor teamColor, bool generateFallback, bool withShadow, out ShapeFrameData shapeFrame)
+        private Tile RemapShapeFile(Dictionary<int, ShapeFrameData> shapeFile, int shape, ITeamColor teamColor, bool generateFallback, bool withShadow, out ShapeFrameData shapeFrame)
         {
-            String teamColorName = teamColor == null ? String.Empty : teamColor.Name;
+            string teamColorName = teamColor == null ? String.Empty : teamColor.Name;
             if (!withShadow)
             {
                 teamColorName += " no-shadow";

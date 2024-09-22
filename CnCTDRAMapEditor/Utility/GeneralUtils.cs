@@ -637,61 +637,173 @@ namespace MobiusEditor.Utility
         }
 
         /// <summary>
-        /// Chops up an image into cells and determines for each cell if it can be considered "mostly opaque".
+        /// Chops up an image into cells and determines for each sub-cell of each cell if it can be considered "mostly opaque".
         /// </summary>
         /// <param name="image">Image to scan.</param>
         /// <param name="size">Size of the object in cells.</param>
-        /// <param name="minPercentage">Minimum percentage of pixels that need to be opaque before the cell is considered opaque.</param>
-        /// <param name="borderPercentage">Percentage of the width/height of the cell to ignore as outer border.</param>
+        /// <param name="borderPercentage">Percentage of the width/height of the cell to see as secondary border around a center.</param>
+        /// <param name="centerThreshold">Threshold percentage of pixels in the center that make the image count as opaque.</param>
+        /// <param name="borderThreshold">If center is not deemed opaque enough, threshold percentage of pixels in the outer border that make the image still count as opaque.</param>
         /// <param name="minAlpha">Minimum alpha value to consider a pixel to be opaque.</param>
         /// <returns></returns>
-        public static bool[,] FindOpaqueCells(Bitmap image, Size size, int minPercentage, int borderPercentage, int minAlpha)
+        public static bool[,][] MakeOpaqueMask(Bitmap image, Size size, int borderPercentage, int centerThreshold, int borderThreshold, int minAlpha, bool ignoreBlack)
         {
             int width = image.Width;
             int height = image.Height;
-            bool[,] cellEvaluation = new bool[size.Height, size.Width];
+            bool[,][] cellEvaluation = new bool[size.Height, size.Width][];
             int fullCellWidth = width / size.Width;
             int fullCellHeight = height / size.Height;
-            int cellBorderX = fullCellWidth * borderPercentage / 100;
-            int cellBorderY = fullCellHeight * borderPercentage / 100;
-            int usedCellWidth = fullCellWidth - cellBorderX * 2;
-            int usedCellHeight = fullCellHeight - cellBorderY * 2;
-            for (int y = 0; y < size.Height; ++y)
+            int fullCellsize = Math.Min(fullCellWidth, fullCellHeight);
+            int padX = width - size.Width * fullCellsize;
+            int padY = height - size.Height * fullCellsize;
+            Bitmap imageToUse = image;
+            bool disposeImage = false;
+            try
             {
-                for (int x = 0; x < size.Width; ++x)
+                if (padX > 0 || padY > 0)
                 {
-                    Rectangle cellRect = new Rectangle(fullCellHeight * x + cellBorderX, fullCellHeight * y + cellBorderY, usedCellWidth, usedCellHeight);
-                    int cellWidth = cellRect.Width;
-                    int cellHeight = cellRect.Height;
-                    int cellPixels = cellWidth * cellHeight;
-                    int threshold = cellPixels * minPercentage / 100;
-                    int stride;
-                    byte[] data = ImageUtils.GetImageData(image, out stride, ref cellRect, PixelFormat.Format32bppArgb, true);
-                    int opaquePixels = 0;
-                    int lineAddr = 0;
-                    for (int cellY = 0; cellY < cellWidth; ++cellY)
+                    disposeImage = true;
+                    width = size.Width * fullCellsize;
+                    height = size.Height * fullCellsize;
+                    imageToUse = new Bitmap(width, height);
+                    imageToUse.SetResolution(image.HorizontalResolution, image.VerticalResolution);
+                    using (Graphics g = Graphics.FromImage(imageToUse))
                     {
-                        int addr = lineAddr;
-                        for (int cellX = 0; cellX < cellHeight; ++cellX)
-                        {
-                            if (data[addr + 3] >= minAlpha)
-                            {
-                                opaquePixels++;
-                                if (opaquePixels > threshold)
-                                {
-                                    // Abort loop by setting y to max.
-                                    cellY = cellHeight;
-                                    break;
-                                }
-                            }
-                            addr += 4;
-                        }
-                        lineAddr += stride;
+                        g.DrawImage(imageToUse, new Rectangle(padX, padY, image.Width, image.Height),
+                                    new Rectangle(0, 0, image.Width, image.Height), GraphicsUnit.Pixel);
                     }
-                    cellEvaluation[y, x] = opaquePixels > threshold;
+                }
+                for (int y = 0; y < size.Height; ++y)
+                {
+                    for (int x = 0; x < size.Width; ++x)
+                    {
+                        Rectangle cellRect = new Rectangle(fullCellsize * x, fullCellsize * y, fullCellsize, fullCellsize);
+                        cellEvaluation[y, x] = AreSubCellsOpaque(image, cellRect, borderPercentage, centerThreshold, borderThreshold, minAlpha, ignoreBlack);
+                    }
+                }
+            }
+            finally
+            {
+                if (disposeImage && imageToUse != null)
+                {
+                    try { imageToUse.Dispose(); }
+                    catch { /* ignore.*/ }
                 }
             }
             return cellEvaluation;
+        }
+
+        private static bool[] AreSubCellsOpaque(Bitmap image, Rectangle cellRect, int borderPercentage, int centerThreshold, int borderThreshold, int minAlpha, bool ignoreBlack)
+        {
+            Point[] subCellCoords = new Point[] { new Point(1, 1), new Point(0, 0), new Point(2, 0), new Point(0, 2), new Point(2, 2) };
+            bool[] subCells = new bool[5];
+            int cellWidth = cellRect.Width;
+            int cellHeight = cellRect.Height;
+            int subCellWidth = Math.Max(1, cellWidth / 2);
+            int subCellHeight = Math.Max(1, cellHeight / 2);
+            for (int pt = 0; pt < subCellCoords.Length; ++pt)
+            {
+                Point subCellMul = subCellCoords[pt];
+                Rectangle subCellRect = new Rectangle(cellRect.X + cellWidth * subCellMul.X / 4, cellRect.Y + cellHeight * subCellMul.Y / 4, subCellWidth, subCellHeight);
+                subCells[pt] = IsSubCellOpaque(image, subCellRect, borderPercentage, centerThreshold, borderThreshold, minAlpha, ignoreBlack);
+            }
+            return subCells;
+        }
+
+        private static bool IsSubCellOpaque(Bitmap image, Rectangle subCellRect, int borderPercentage, int centerThreshold, int borderThreshold, int minAlpha, bool ignoreBlack)
+        {
+            int subCellWidth = subCellRect.Width;
+            int subCellHeight = subCellRect.Height;
+            int borderWidth = subCellWidth * borderPercentage / 100;
+            int borderHeight = subCellHeight * borderPercentage / 100;
+            int centerWidth = subCellWidth - borderWidth * 2;
+            int centerHeight = subCellHeight - borderHeight * 2;
+
+            Rectangle centerRect = new Rectangle(subCellRect.X + borderWidth, subCellRect.Y + borderHeight, centerWidth, centerHeight);
+            int centerPixels = centerRect.Width * centerRect.Height;
+            int centerPixelsThreshold = centerPixels * centerThreshold / 100;
+            int stride;
+            byte[] data = ImageUtils.GetImageData(image, out stride, ref centerRect, PixelFormat.Format32bppArgb, true);
+            int centerOpaquePixels = 0;
+            bool centerMatch = EvalAreaAlpha(data, stride, minAlpha, 0, centerHeight, 0, centerWidth, centerPixelsThreshold, ref centerOpaquePixels, ignoreBlack);
+            if (centerMatch)
+            {
+                return true;
+            }
+            // center didn't match. Check surrounding area.
+            int borderPixels = subCellWidth * subCellHeight - centerPixels;
+            int borderPixelsThreshold = (borderPixels) * borderThreshold / 100;
+            data = ImageUtils.GetImageData(image, out stride, ref subCellRect, PixelFormat.Format32bppArgb, true);
+            int borderOpaquePixels = 0;
+            int topPartMaxY = borderHeight;
+            bool edgeTopMatch = EvalAreaAlpha(data, stride, minAlpha, 0, topPartMaxY, 0, subCellWidth, borderPixelsThreshold, ref borderOpaquePixels, ignoreBlack);
+            if (edgeTopMatch)
+            {
+                return true;
+            }
+            int bottomPartStartY = centerHeight + borderHeight;
+            bool edgeBottomMatch = EvalAreaAlpha(data, stride, minAlpha, bottomPartStartY, subCellHeight, 0, subCellWidth, borderPixelsThreshold, ref borderOpaquePixels, ignoreBlack);
+            if (edgeBottomMatch)
+            {
+                return true;
+            }
+            int leftPartEndX = borderWidth;
+            bool edgeLeftMatch = EvalAreaAlpha(data, stride, minAlpha, topPartMaxY, bottomPartStartY, 0, leftPartEndX, borderPixelsThreshold, ref borderOpaquePixels, ignoreBlack);
+            if (edgeLeftMatch)
+            {
+                return true;
+            }
+            int rightPartStartX = centerWidth + borderWidth;
+            bool edgeRightMatch = EvalAreaAlpha(data, stride, minAlpha, topPartMaxY, bottomPartStartY, rightPartStartX, subCellWidth, borderPixelsThreshold, ref borderOpaquePixels, ignoreBlack);
+            if (edgeRightMatch)
+            {
+                return true;
+            }
+            return false;
+        }
+
+        private static bool EvalAreaAlpha(byte[] imgData, int stride, int minAlpha, int yStart, int yEnd, int xStart, int xEnd, int threshold, ref int curAmount, bool ignoreBlack)
+        {
+            int lineAddr = yStart * stride;
+            for (int cellY = yStart; cellY < yEnd; ++cellY)
+            {
+                int addr = lineAddr + xStart;
+                for (int cellX = xStart; cellX < xEnd; ++cellX)
+                {
+                    int curAddr = addr;
+                    addr += 4;
+                    if (imgData[curAddr + 3] < minAlpha)
+                    {
+                        continue;
+                    }
+                    if (ignoreBlack)
+                    {
+                        // Check brightness to exclude shadow
+                        byte red = imgData[curAddr + 2];
+                        byte grn = imgData[curAddr + 1];
+                        byte blu = imgData[curAddr + 0];
+                        // Integer method.
+                        int redBalanced = red * red * 2126;
+                        int grnBalanced = grn * grn * 7152;
+                        int bluBalanced = blu * blu * 0722;
+                        int lum = (redBalanced + grnBalanced + bluBalanced) / 255 / 255;
+                        // The integer division will automatically reduce anything near-black
+                        // to zero, so actually checking against a threshold is unnecessary.
+                        // if (lum > lumThresholdSq * 1000)
+                        if (lum == 0)
+                        {
+                            continue;
+                        }
+                    }
+                    curAmount++;
+                    if (curAmount > threshold)
+                    {
+                        return true;
+                    }
+                }
+                lineAddr += stride;
+            }
+            return false;
         }
 
         public static Point GetOccupiedCenter(bool[,] occupyMask, Size cellSize)

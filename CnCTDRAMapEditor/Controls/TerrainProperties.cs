@@ -17,7 +17,6 @@ using MobiusEditor.Model;
 using MobiusEditor.Utility;
 using System;
 using System.Collections.Generic;
-using System.ComponentModel;
 using System.Data;
 using System.Drawing;
 using System.Linq;
@@ -29,14 +28,15 @@ namespace MobiusEditor.Controls
     public partial class TerrainProperties : UserControl
     {
         private Bitmap infoImage;
+        private string triggerInfoToolTip;
+        private string triggerToolTip;
+        private Control tooltipShownOn;
+        private string[] filteredEvents;
+        private string[] filteredActions;
+
         private bool isMockObject;
 
-        string[] filteredEvents;
-        string[] filteredActions;
-
         public IGamePlugin Plugin { get; private set; }
-
-        private string triggerToolTip;
 
         private Terrain terrain;
         public Terrain Terrain
@@ -104,9 +104,13 @@ namespace MobiusEditor.Controls
                 terrain.Trigger = items[selectIndex];
                 triggerComboBox.DataBindings.Add("SelectedItem", terrain, "Trigger");
             }
+            int sel = triggerComboBox.SelectedIndex;
             triggerComboBox.SelectedIndexChanged += this.TriggerComboBox_SelectedIndexChanged;
             triggerComboBox.SelectedIndex = selectIndex;
-            triggerToolTip = Map.MakeAllowedTriggersToolTip(filteredEvents, filteredActions);
+            if (sel == selectIndex)
+            {
+                TriggerComboBox_SelectedIndexChanged(triggerComboBox, new EventArgs());
+            }
         }
 
         private void TriggerComboBox_SelectedIndexChanged(Object sender, EventArgs e)
@@ -117,18 +121,40 @@ namespace MobiusEditor.Controls
             }
             string selected = triggerComboBox.SelectedItem as string;
             Trigger trig = this.Plugin.Map.Triggers.FirstOrDefault(t => String.Equals(t.Name, selected, StringComparison.OrdinalIgnoreCase));
-            triggerToolTip = Map.MakeAllowedTriggersToolTip(filteredEvents, filteredActions, trig);
+            triggerInfoToolTip = Map.MakeAllowedTriggersToolTip(filteredEvents, filteredActions, trig);
+            triggerToolTip = Plugin.TriggerSummary(trig, true, false);
             Point pt = MousePosition;
             Point lblPos = lblTriggerTypesInfo.PointToScreen(Point.Empty);
-            Rectangle lblRect = new Rectangle(lblPos, lblTriggerTypesInfo.Size);
-            if (lblRect.Contains(pt))
+            Point cmbPos = triggerComboBox.PointToScreen(Point.Empty);
+            Rectangle lblInfoRect = new Rectangle(lblPos, lblTriggerTypesInfo.Size);
+            Rectangle cmbTrigRect = new Rectangle(cmbPos, triggerComboBox.Size);
+            if (lblInfoRect.Contains(pt))
             {
                 this.toolTip1.Hide(lblTriggerTypesInfo);
                 LblTriggerTypesInfo_MouseEnter(lblTriggerTypesInfo, e);
             }
+            else if (cmbTrigRect.Contains(pt))
+            {
+                this.toolTip1.Hide(triggerComboBox);
+                TriggerComboBox_MouseEnter(triggerComboBox, e);
+            }
         }
 
-        private void comboBox_SelectedValueChanged(object sender, EventArgs e)
+        private void TriggerComboBox_MouseEnter(Object sender, EventArgs e)
+        {
+            Control target = sender as Control;
+            ShowToolTip(target, triggerToolTip);
+        }
+
+        private void TriggerComboBox_MouseMove(object sender, MouseEventArgs e)
+        {
+            if (tooltipShownOn != sender)
+            {
+                TriggerComboBox_MouseEnter(sender, e);
+            }
+        }
+
+        private void TriggerComboBox_SelectedValueChanged(object sender, EventArgs e)
         {
             foreach (Binding binding in (sender as ComboBox).DataBindings)
             {
@@ -147,23 +173,46 @@ namespace MobiusEditor.Controls
         private void LblTriggerTypesInfo_MouseEnter(Object sender, EventArgs e)
         {
             Control target = sender as Control;
-            if (target == null || triggerToolTip == null)
+            ShowToolTip(target, triggerInfoToolTip);
+        }
+
+        private void LblTriggerTypesInfo_MouseMove(object sender, MouseEventArgs e)
+        {
+            if (tooltipShownOn != sender)
             {
-                this.toolTip1.Hide(target);
+                TriggerComboBox_MouseEnter(sender, e);
+            }
+        }
+
+        private void ShowToolTip(Control target, string message)
+        {
+            if (target == null || message == null)
+            {
+                this.HideToolTip(target, null);
                 return;
             }
             Point resPoint = target.PointToScreen(new Point(0, target.Height));
             MethodInfo m = toolTip1.GetType().GetMethod("SetTool",
                        BindingFlags.Instance | BindingFlags.NonPublic);
-            // private void SetTool(IWin32Window win, string text, TipInfo.Type type, Point position)
-            m.Invoke(toolTip1, new object[] { target, triggerToolTip, 2, resPoint });
-            //this.toolTip1.Show(triggerToolTip, target, target.Width, 0, 10000);
+            m.Invoke(toolTip1, new object[] { target, message, 2, resPoint });
+            this.tooltipShownOn = target;
         }
 
-        private void LblTriggerTypesInfo_MouseLeave(Object sender, EventArgs e)
+        private void HideToolTip(object sender, EventArgs e)
         {
-            Control target = sender as Control;
-            this.toolTip1.Hide(target);
+            try
+            {
+                if (this.tooltipShownOn != null)
+                {
+                    this.toolTip1.Hide(this.tooltipShownOn);
+                }
+                if (sender is Control target)
+                {
+                    this.toolTip1.Hide(target);
+                }
+            }
+            catch { /* ignore */ }
+            tooltipShownOn = null;
         }
 
         /// <summary>
@@ -193,7 +242,7 @@ namespace MobiusEditor.Controls
 
     public class TerrainPropertiesPopup : ToolStripDropDown
     {
-        private readonly ToolStripControlHost host;
+        private ToolStripControlHost host;
 
         public TerrainProperties TerrainProperties { get; private set; }
 
@@ -211,18 +260,17 @@ namespace MobiusEditor.Controls
             TerrainProperties.MaximumSize = TerrainProperties.Size;
             Size = TerrainProperties.Size;
             Items.Add(host);
-            TerrainProperties.Disposed += (sender, e) =>
-            {
-                TerrainProperties = null;
-                Dispose(true);
-            };
         }
 
         protected override void OnClosed(ToolStripDropDownClosedEventArgs e)
         {
-            base.OnClosed(e);
-
+            // Since dispose doesn't seem to auto-trigger, dispose and remove all this manually.
             TerrainProperties.Terrain = null;
+            TerrainProperties = null;
+            Items.Remove(host);
+            host.Dispose();
+            host = null;
+            base.OnClosed(e);
         }
     }
 }

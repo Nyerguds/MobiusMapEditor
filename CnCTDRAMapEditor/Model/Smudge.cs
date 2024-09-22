@@ -16,12 +16,13 @@ using MobiusEditor.Interface;
 using System;
 using System.Collections.Generic;
 using System.ComponentModel;
+using System.Diagnostics;
 using System.Drawing;
 using System.Runtime.CompilerServices;
 
 namespace MobiusEditor.Model
 {
-    [System.Diagnostics.DebuggerDisplay("{Type.Name}")]
+    [DebuggerDisplay("{Type}: {Icon}")]
     public class Smudge: ICellOverlapper, INotifyPropertyChanged, ICloneable, IEquatable<Smudge>
     {
         public event PropertyChangedEventHandler PropertyChanged;
@@ -31,10 +32,13 @@ namespace MobiusEditor.Model
         private int icon;
         public int Icon { get => icon; set => SetField(ref icon, value); }
 
+        public bool IsAutoBib => this.AttachedTo != null; // TODO start using this and remove extra "autobib" smudge types.
         public Building AttachedTo { get; set; }
 
         public Rectangle OverlapBounds => new Rectangle(Point.Empty, Type.Size);
-        public bool[,] OpaqueMask => new bool[1, 1] { { true } };
+        // Smudge is always drawn first; it can't overlap anything.
+        public bool[,][] OpaqueMask => new bool[1, 1][] { { new bool[5] } };
+        public int ZOrder => Globals.ZOrderFloor;
 
         public bool IsPreview { get; set; }
 

@@ -316,6 +316,7 @@ namespace MobiusEditor.Dialogs
             this.action1ComboBox.SelectedIndexChanged += new System.EventHandler(this.Action1ComboBox_SelectedIndexChanged);
             this.action1ComboBox.MouseEnter += new System.EventHandler(this.Action1ComboBox_MouseEnter);
             this.action1ComboBox.MouseLeave += new System.EventHandler(this.ToolTipComboBox_MouseLeave);
+            this.action1ComboBox.MouseMove += new System.Windows.Forms.MouseEventHandler(this.Action1ComboBox_MouseMove);
             // 
             // action2ComboBox
             // 

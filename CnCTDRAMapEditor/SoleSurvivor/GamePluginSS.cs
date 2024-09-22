@@ -29,6 +29,8 @@ namespace MobiusEditor.SoleSurvivor
         protected const int teamStartPoints = 8;
         private readonly GameInfoSole gameTypeInfo = new GameInfoSole();
 
+        private const string cratesSectionName = "Crates";
+
         protected static readonly IEnumerable<string> movieTypesSole = new string[]
         {
             "WESTLOGO",
@@ -57,7 +59,7 @@ namespace MobiusEditor.SoleSurvivor
 
         public static bool CheckForSSmap(INI iniContents)
         {
-            return INITools.CheckForIniInfo(iniContents, "Crates");
+            return INITools.CheckForIniInfo(iniContents, cratesSectionName);
         }
 
         protected CratesSection cratesSection;
@@ -178,7 +180,7 @@ namespace MobiusEditor.SoleSurvivor
                     house.Enabled = false;
                 }
             }
-            INISection cratesIniSection = extraSections.Extract("Crates");
+            INISection cratesIniSection = extraSections.Extract(cratesSectionName);
             if (cratesIniSection != null)
             {
                 try
@@ -258,6 +260,12 @@ namespace MobiusEditor.SoleSurvivor
         public override string Validate(bool forWarnings)
         {
             return Validate(forWarnings, true);
+        }
+
+        protected override List<string> ResetMissionRules(INI extraIniText, bool forFootprintTest, out bool footPrintsChanged)
+        {
+            footPrintsChanged = false;
+            return new List<string>();
         }
 
         public override HashSet<string> GetHousesWithProduction()

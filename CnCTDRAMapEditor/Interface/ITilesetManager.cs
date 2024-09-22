@@ -14,6 +14,7 @@
 using MobiusEditor.Model;
 using MobiusEditor.Utility;
 using System;
+using System.Drawing;
 
 namespace MobiusEditor.Interface
 {
@@ -100,5 +101,30 @@ namespace MobiusEditor.Interface
         /// <returns>The total amount of shapes available for the requested tile.</returns>
         /// <remarks>For the Remaster, this is based on xml info. In the classic files, this simply looks at the actual sprite file.</remarks>
         bool TileExists(string name);
+
+        /// <summary>
+        /// Gets a tile from the system, with data for retrieving either a remastered or classic shape.
+        /// </summary>
+        /// <param name="remasterSprite">Name of the sprite to fetch from the currently loaded remastered tilesets.</param>
+        /// <param name="classicicon">Frame to use from the remastered sprite, if this is the remastered tileset manager.</param>
+        /// <param name="classicSprite">Classic sprite to fetch from, if this is the Classic tileset manager</param>
+        /// <param name="classicicon">Frame to use from the classic sprite, if this is the Classic tileset manager</param>
+        /// <returns>
+        /// The requested image. This is a clone of the image in the internal texture manager, and should be disposed after use.
+        /// </returns>
+        Bitmap GetTile(string remasterSprite, int remastericon, string classicSprite, int classicicon, ITeamColor teamColor);
+
+        /// <summary>
+        /// Retrieves a bitmap from the tileset manager. Depending on whether classic or remastered graphics
+        /// are used, the first or last two args will be used.
+        /// </summary>
+        /// <param name="remasterTexturePath">Path of the texture to fetch in the remastered archives.</param>
+        /// <param name="classicSprite">Classic sprite to load, if this is the Classic tileset manager.</param>
+        /// <param name="classicicon">Frame to use from the classic sprite.</param>
+        /// <param name="ignoreClassicShadow">In classic graphics, don't apply shadow filter.</param>
+        /// <returns>
+        /// The requested image. This is a clone of the image in the internal texture manager, and should be disposed after use.
+        /// </returns>
+        Bitmap GetTexture(string remasterTexturePath, string classicSprite, int classicicon, bool ignoreClassicShadow);
     }
 }

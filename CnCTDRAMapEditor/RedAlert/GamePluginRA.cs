@@ -45,6 +45,11 @@ namespace MobiusEditor.RedAlert
         private const string remarkOld = " (Classic only)";
         private const string remarkNew = " (Remaster only)";
 
+        private const string IniRules = "rules.ini";
+        private const string IniAftermath = "aftrmath.ini";
+        private const string IniAftrMulti = "mplayer.ini";
+        private const string IniMap = "map file";
+
         private static readonly IEnumerable<string> movieTypesRemarksOld = new string[]
         {
             "SHIPYARD", // MISSING
@@ -259,7 +264,7 @@ namespace MobiusEditor.RedAlert
         public static IEnumerable<string> Movies => movieTypesRa;
         public static IEnumerable<string> MoviesClassic => movieTypesRa.Where(mv => !movieTypesRemarksNew.Contains(mv));
         public static IEnumerable<string> Themes => themeTypes;
-
+        private Dictionary<string, BuildingType> bareRuleBuildings;
         private static readonly IEnumerable<ITechnoType> fullTechnoTypes;
 
         public GameInfo GameInfo => gameTypeInfo;
@@ -331,20 +336,20 @@ namespace MobiusEditor.RedAlert
         {
             if (this.rulesIni != null)
             {
-                UpdateRules(rulesIni, this.Map, false);
+                UpdateRules(rulesIni, IniRules, this.Map, false);
             }
             if (expansionEnabled)
             {
                 if (this.aftermathRulesIni != null)
                 {
-                    UpdateRules(aftermathRulesIni, this.Map, false);
+                    UpdateRules(aftermathRulesIni, IniAftermath, this.Map, false);
                 }
                 if (this.aftermathMpRulesIni != null && !isSolo)
                 {
-                    UpdateRules(aftermathMpRulesIni, this.Map, false);
+                    UpdateRules(aftermathMpRulesIni, IniAftrMulti, this.Map, false);
                 }
             }
-            List<string> newErrors = UpdateRules(iniText, this.Map, false);
+            List<string> newErrors = UpdateRules(iniText, IniMap, this.Map, false);
             if (newErrors.Count > 0)
             {
                 modified = true;
@@ -385,23 +390,25 @@ namespace MobiusEditor.RedAlert
             Dictionary<string, bool> bibBackups = Map.BuildingTypes.ToDictionary(b => b.Name, b => b.HasBib, StringComparer.OrdinalIgnoreCase);
             if (this.rulesIni != null)
             {
-                UpdateRules(rulesIni, this.Map, forFootprintTest);
+                UpdateRules(rulesIni, IniRules, this.Map, forFootprintTest);
             }
             if (expansionEnabled)
             {
                 if (this.aftermathRulesIni != null)
                 {
-                    UpdateRules(aftermathRulesIni, this.Map, forFootprintTest);
+                    UpdateRules(aftermathRulesIni, IniAftermath,this.Map, forFootprintTest);
                 }
                 if (this.aftermathMpRulesIni != null && !isSolo)
                 {
-                    UpdateRules(aftermathMpRulesIni, this.Map, forFootprintTest);
+                    UpdateRules(aftermathMpRulesIni, IniAftrMulti, this.Map, forFootprintTest);
                 }
             }
+            // save the buildings as they are without the map's own rule tweaks.
+            bareRuleBuildings = this.Map.BuildingTypes.Select(b => b.Clone()).ToDictionary(b => b.Name, StringComparer.OrdinalIgnoreCase);
             List<string> errors = null;
             if (extraIniText != null)
             {
-                errors = UpdateRules(extraIniText, this.Map, forFootprintTest);
+                errors = UpdateRules(extraIniText, IniMap, this.Map, forFootprintTest);
             }
             footPrintsChanged = false;
             foreach (BuildingType bType in Map.BuildingTypes)
@@ -492,18 +499,20 @@ namespace MobiusEditor.RedAlert
         {
             List<string> errors = new List<string>();
             // This returns errors in original rules files. Ignore for now.
-            this.rulesIni = ReadRulesFile(Globals.TheArchiveManager.ReadFileClassic("rules.ini"));
-            errors.AddRange(UpdateRules(rulesIni, this.Map, false));
-            this.aftermathRulesIni = ReadRulesFile(Globals.TheArchiveManager.ReadFileClassic("aftrmath.ini"));
+            this.rulesIni = ReadRulesFile(Globals.TheArchiveManager.ReadFileClassic(IniRules));
+            errors.AddRange(UpdateRules(rulesIni, IniRules, this.Map, false));
+            this.aftermathRulesIni = ReadRulesFile(Globals.TheArchiveManager.ReadFileClassic(IniAftermath));
             if (this.Map.BasicSection.ExpansionEnabled && this.aftermathRulesIni != null)
             {
-                errors.AddRange(UpdateRules(aftermathRulesIni, this.Map, false));
+                errors.AddRange(UpdateRules(aftermathRulesIni, IniAftermath, this.Map, false));
             }
-            this.aftermathMpRulesIni = ReadRulesFile(Globals.TheArchiveManager.ReadFileClassic("mplayer.ini"));
+            this.aftermathMpRulesIni = ReadRulesFile(Globals.TheArchiveManager.ReadFileClassic(IniAftrMulti));
             if (this.aftermathMpRulesIni != null && this.Map.BasicSection.ExpansionEnabled && !this.Map.BasicSection.SoloMission)
             {
-                errors.AddRange(UpdateRules(aftermathMpRulesIni, this.Map, false));
+                errors.AddRange(UpdateRules(aftermathMpRulesIni, IniAftrMulti, this.Map, false));
             }
+            // save the buildings as they are without the map's own rule tweaks.
+            bareRuleBuildings = this.Map.BuildingTypes.Select(b => b.Clone()).ToDictionary(b => b.Name, StringComparer.OrdinalIgnoreCase);
             // Only one will be found.
             Globals.TheTeamColorManager.Load(@"DATA\XML\CNCRATEAMCOLORS.XML");
             Globals.TheTeamColorManager.Load("palette.cps");
@@ -590,7 +599,7 @@ namespace MobiusEditor.RedAlert
             // Remap classic Einstein DOS graphics to no longer look like Mobius.
             InfantryTypes.Einstein.ClassicGraphicsRemap = Globals.FixClassicEinstein ? InfantryClassicRemap.RemapEinstein : null;
 
-            Map = new Map(basicSection, null, Constants.MaxSize, typeof(House), houseTypes, null,
+            Map = new Map(basicSection, null, gameTypeInfo.MapSize, typeof(House), houseTypes, null,
                 TheaterTypes.GetTypes(), TemplateTypes.GetTypes(),
                 TerrainTypes.GetTypes(), OverlayTypes.GetTypes(), SmudgeTypes.GetTypes(Globals.ConvertCraters),
                 EventTypes.GetTypes(), cellEventTypes, unitEventTypes, structureEventTypes, terrainEventTypes,
@@ -772,7 +781,7 @@ namespace MobiusEditor.RedAlert
             List<string> errors = new List<string>();
             Map.BeginUpdate();
             // Fetch some rules.ini information
-            errors.AddRange(UpdateBuildingRules(ini, this.Map, false));
+            errors.AddRange(UpdateBuildingRules(ini, IniMap, this.Map, false));
             // Just gonna remove this; I assume it'll be invalid after a re-save anyway.
             ini.Sections.Extract("Digest");
             HouseType player = this.LoadBasic(ini);
@@ -2185,7 +2194,7 @@ namespace MobiusEditor.RedAlert
                     modified = true;
                     newBld.House = defHouse;
                 }
-                if (!Map.Buildings.CanAdd(cell, newBld) || !Map.Technos.CanAdd(cell, newBld, newBld.Type.BaseOccupyMask))
+                if (!Map.Buildings.CanAdd(cell, newBld)) // || !Map.Technos.CanAdd(cell, newBld, newBld.Type.BaseOccupyMask))
                 {
                     Map.CheckBuildingBlockingCell(cell, buildingType, errors, ref modified);
                     continue;
@@ -2467,27 +2476,12 @@ namespace MobiusEditor.RedAlert
                     modified = true;
                     continue;
                 }
-                if ((overlayType.IsWall || overlayType.IsSolid) && Map.Technos.ObjectAt(i, out ICellOccupier techno))
+                if ((overlayType.IsWall || overlayType.IsSolid) && Map.Buildings.ObjectAt(i, out ICellOccupier techno))
                 {
                     string desc = overlayType.IsWall ? "Wall" : "Solid overlay";
                     if (techno is Building building)
                     {
                         errors.Add(string.Format("{0} '{1}' overlaps structure '{2}' at cell {3}; skipping.", desc, overlayType.Name, building.Type.Name, i));
-                        modified = true;
-                    }
-                    else if (techno is Terrain terrain)
-                    {
-                        errors.Add(string.Format("{0} '{1}' overlaps terrain '{2}' at cell {3}; skipping.", desc, overlayType.Name, terrain.Type.Name, i));
-                        modified = true;
-                    }
-                    else if (techno is Unit unit)
-                    {
-                        errors.Add(string.Format("{0} '{1}' overlaps unit '{2}' at cell {3}; skipping.", desc, overlayType.Name, unit.Type.Name, i));
-                        modified = true;
-                    }
-                    else if (techno is InfantryGroup)
-                    {
-                        errors.Add(string.Format("{0} '{1}' overlaps infantry at cell {2}; skipping.", desc, overlayType.Name, i));
                         modified = true;
                     }
                     else
@@ -2895,7 +2889,7 @@ namespace MobiusEditor.RedAlert
         /// <param name="forFootprintTest">Run in test mode, where bibs are changed but nothing is actually updated on the map.</param>
         /// <param name="footPrintsChanged">Returns true of the rule changes modified any building footprint sizes.</param>
         /// <returns>Any errors returned by the parsing process.</returns>
-        private List<string> UpdateRules(INI ini, Map map, bool forFootprintTest)
+        private List<string> UpdateRules(INI ini, string iniName, Map map, bool forFootprintTest)
         {
             List<string> errors = new List<string>();
             if (ini == null)
@@ -2906,28 +2900,28 @@ namespace MobiusEditor.RedAlert
             {
                 if (!forFootprintTest)
                 {
-                    errors.AddRange(this.UpdateLandTypeRules(ini, map));
-                    errors.AddRange(this.UpdateGeneralRules(ini, map));
+                    errors.AddRange(this.UpdateLandTypeRules(ini, iniName, map));
+                    errors.AddRange(this.UpdateGeneralRules(ini, iniName, map));
                 }
-                errors.AddRange(UpdateBuildingRules(ini, map, forFootprintTest));
+                errors.AddRange(UpdateBuildingRules(ini, iniName, map, forFootprintTest));
             }
             return errors;
         }
 
-        private List<string> UpdateLandTypeRules(INI ini, Map map)
+        private List<string> UpdateLandTypeRules(INI ini, string iniName, Map map)
         {
             List<string> errors = new List<string>();
-            this.ReadLandType(ini, map, "Clear", LandClear, errors);
-            this.ReadLandType(ini, map, "Rough", LandRough, errors);
-            this.ReadLandType(ini, map, "Road", LandRoad, errors);
-            this.ReadLandType(ini, map, "Water", LandWater, errors);
-            this.ReadLandType(ini, map, "Rock", LandRock, errors);
-            this.ReadLandType(ini, map, "Beach", LandBeach, errors);
-            this.ReadLandType(ini, map, "River", LandRiver, errors);
+            this.ReadLandType(ini, iniName, map, "Clear", LandClear, errors);
+            this.ReadLandType(ini, iniName, map, "Rough", LandRough, errors);
+            this.ReadLandType(ini, iniName, map, "Road", LandRoad, errors);
+            this.ReadLandType(ini, iniName, map, "Water", LandWater, errors);
+            this.ReadLandType(ini, iniName, map, "Rock", LandRock, errors);
+            this.ReadLandType(ini, iniName, map, "Beach", LandBeach, errors);
+            this.ReadLandType(ini, iniName, map, "River", LandRiver, errors);
             return errors;
         }
 
-        private void ReadLandType(INI ini, Map map, string landType, LandIniSection landRules, List<string> errors)
+        private void ReadLandType(INI ini, string iniName, Map map, string landType, LandIniSection landRules, List<string> errors)
         {
             if (ini == null || landRules == null)
             {
@@ -2945,7 +2939,7 @@ namespace MobiusEditor.RedAlert
                 {
                     foreach ((string iniKey, string error) in parseErrors)
                     {
-                        errors.Add("Custom rules error on [" + landType + "]: " + error.TrimEnd('.') + ". Value for \"" + iniKey + "\" is ignored.");
+                        errors.Add("Tules error on [" + landType + "] in "+ iniName + ": " + error.TrimEnd('.') + ". Value for \"" + iniKey + "\" is ignored.");
                     }
                 }
             }
@@ -2954,28 +2948,28 @@ namespace MobiusEditor.RedAlert
                 if (errors != null)
                 {
                     // Normally won't happen with the aforementioned system.
-                    errors.Add("Custom rules error on [" + landType + "]: " + e.Message.TrimEnd('.') + ". Rule updates for [" + landType + "] are ignored.");
+                    errors.Add("Custom rules error on [" + landType + "] in " + iniName + ": " + e.Message.TrimEnd('.') + ". Rule updates for [" + landType + "] are ignored.");
                 }
             }
         }
 
-        private IEnumerable<string> UpdateGeneralRules(INI ini, Map map)
+        private IEnumerable<string> UpdateGeneralRules(INI ini, string iniName, Map map)
         {
             List<string> errors = new List<string>();
-            int? goldVal = GetIntRulesValue(ini, "General", "GoldValue", false, errors);
+            int? goldVal = GetIntRulesValue(ini, iniName, "General", "GoldValue", false, errors);
             map.TiberiumOrGoldValue = goldVal ?? Constants.DefaultGoldValue;
-            int? gemVal = GetIntRulesValue(ini, "General", "GemValue", false, errors);
+            int? gemVal = GetIntRulesValue(ini, iniName, "General", "GemValue", false, errors);
             map.GemValue = gemVal ?? Constants.DefaultGemValue;
-            int? radius = GetIntRulesValue(ini, "General", "DropZoneRadius", false, errors);
+            int? radius = GetIntRulesValue(ini, iniName, "General", "DropZoneRadius", false, errors);
             map.DropZoneRadius = radius ?? Constants.DefaultDropZoneRadius;
-            int? gapRadius = GetIntRulesValue(ini, "General", "GapRadius", false, errors);
+            int? gapRadius = GetIntRulesValue(ini, iniName, "General", "GapRadius", false, errors);
             map.GapRadius = gapRadius ?? Constants.DefaultGapRadius;
-            int? jamRadius = GetIntRulesValue(ini, "General", "RadarJamRadius", false, errors);
+            int? jamRadius = GetIntRulesValue(ini, iniName, "General", "RadarJamRadius", false, errors);
             map.RadarJamRadius = jamRadius ?? Constants.DefaultJamRadius;
             return errors;
         }
 
-        private int? GetIntRulesValue(INI ini, string sec, string key, bool percentage, List<string> errors)
+        private int? GetIntRulesValue(INI ini, string iniName, string sec, string key, bool percentage, List<string> errors)
         {
             INISection section = ini.Sections[sec];
             if (section == null)
@@ -2997,14 +2991,14 @@ namespace MobiusEditor.RedAlert
                 }
                 catch
                 {
-                    errors.Add(String.Format("Bad value \"{0}\" for \"{1}\" rule in section [{2}]. Needs an integer number{3}.",
+                    errors.Add(String.Format("Bad value \"{0}\" for \"{1}\" rule in section [{2}] of "+ iniName + ". Needs an integer number{3}.",
                         valStrOrig, key, sec, percentage ? " percentage" : String.Empty));
                 }
             }
             return null;
         }
 
-        private static IEnumerable<string> UpdateBuildingRules(INI ini, Map map, bool forFootPrintTest)
+        private static IEnumerable<string> UpdateBuildingRules(INI ini, string iniName, Map map, bool forFootPrintTest)
         {
             List<string> errors = new List<string>();
             Dictionary<string, BuildingType> originals = BuildingTypes.GetTypes().ToDictionary(b => b.Name, StringComparer.OrdinalIgnoreCase);
@@ -3034,6 +3028,7 @@ namespace MobiusEditor.RedAlert
                     bType.PowerUsage = orig.PowerUsage;
                     bType.PowerProduction = orig.PowerProduction;
                     bType.Storage = orig.Storage;
+                    bType.Capturable = orig.Capturable;
                 }
                 if (bldSettings == null)
                 {
@@ -3047,19 +3042,19 @@ namespace MobiusEditor.RedAlert
                     }
                     continue;
                 }
-                RaBuildingIniSection bld = new RaBuildingIniSection();
+                BuildingSection bld = new BuildingSection();
                 try
                 {
                     List<(string,string)> parseErrors = INI.ParseSection(new MapContext(map, true), bldSettings, bld, true);
                     foreach ((string iniKey, string error) in parseErrors)
                     {
-                        errors.Add("Custom rules error on [" + bType.Name + "]: " + error.TrimEnd('.') + ". Value for \"" + iniKey + "\" is ignored.");
+                        errors.Add("Custom rules error on [" + bType.Name + "] in " + iniName + ": " + error.TrimEnd('.') + ". Value for \"" + iniKey + "\" is ignored.");
                     }
                 }
                 catch (Exception e)
                 {
                     // Normally won't happen with the aforementioned system.
-                    errors.Add("Custom rules error on [" + bType.Name + "]: " + e.Message.TrimEnd('.') + ". Rule updates for [" + bType.Name + "] are ignored.");
+                    errors.Add("Custom rules error on [" + bType.Name + "] in " + iniName + ": " + e.Message.TrimEnd('.') + ". Rule updates for [" + bType.Name + "] are ignored.");
                     continue;
                 }
                 if (!forFootPrintTest)
@@ -3072,6 +3067,10 @@ namespace MobiusEditor.RedAlert
                     if (bldSettings.Keys.Contains("Storage"))
                     {
                         bType.Storage = bld.Storage;
+                    }
+                    if (bldSettings.Keys.Contains("Capturable"))
+                    {
+                        bType.Capturable = bld.Capturable;
                     }
                 }
                 bool hasBib = bldSettings.Keys.Contains("Bib") ? bld.Bib : orig.HasBib;
@@ -3155,6 +3154,12 @@ namespace MobiusEditor.RedAlert
             Encoding utf8 = new UTF8Encoding(false, false);
             byte[] linebreak = utf8.GetBytes("\r\n");
             INI ini = new INI();
+            List<(string section, string key)> utf8Components = new List<(string section, string key)>();
+            utf8Components.AddRange(new[] { ("Steam", null), ("Briefing", "Text"), ("Basic", "Author") });
+            if (!Globals.UseClassicFiles || !Globals.ClassicEncodesNameAsCp437 || fileType == FileType.PGM || fileType == FileType.MEG)
+            {
+                utf8Components.Add(("Basic", "Name"));
+            }
             switch (fileType)
             {
                 case FileType.INI:
@@ -3165,7 +3170,7 @@ namespace MobiusEditor.RedAlert
                     {
                         string iniText = ini.ToString("\n");
                         // Possibly scan extra ini content for all units/structs/etc with "Name" fields and save them as UTF-8 too? Not sure how the Remaster handles these.
-                        GeneralUtils.WriteMultiEncoding(iniText.Split('\n'), mprWriter, dos437, utf8, new[] { ("Steam", null), ("Briefing", "Text"), ("Basic", "Name"), ("Basic", "Author") }, linebreak);
+                        GeneralUtils.WriteMultiEncoding(iniText.Split('\n'), mprWriter, dos437, utf8, utf8Components.ToArray(), linebreak);
                     }
                     if (!Map.BasicSection.SoloMission && (!Globals.UseClassicFiles || !Globals.ClassicProducesNoMetaFiles))
                     {
@@ -3203,7 +3208,7 @@ namespace MobiusEditor.RedAlert
                     using (MegafileBuilder megafileBuilder = new MegafileBuilder(String.Empty, path))
                     {
                         string iniText = ini.ToString("\n");
-                        GeneralUtils.WriteMultiEncoding(iniText.Split('\n'), mprWriter, dos437, utf8, new[] { ("Steam", null), ("Briefing", "Text"), ("Basic", "Name"), ("Basic", "Author") }, linebreak);
+                        GeneralUtils.WriteMultiEncoding(iniText.Split('\n'), mprWriter, dos437, utf8, utf8Components.ToArray(), linebreak);
                         mprStream.Position = 0;
                         if (customPreview != null)
                         {
@@ -4903,8 +4908,12 @@ namespace MobiusEditor.RedAlert
             }
         }
 
-        public string TriggerSummary(Trigger trigger, bool withLineBreaks)
+        public string TriggerSummary(Trigger trigger, bool withLineBreaks, bool includeTriggerName)
         {
+            if (trigger == null)
+            {
+                return null;
+            }
             string[][] eventControlStrings =
             {
                     new[] { "{0} → {2}" ,"{0}\n  → {2}" },
@@ -4913,7 +4922,8 @@ namespace MobiusEditor.RedAlert
                     new[] { "{0} → {2}; {1} → {3}",  "{0} → {2};\n{1} → {3}" },
             };
             // name, house, repeat status, event control
-            string trigFormat = !withLineBreaks ? "{0}: {1}, {2}, {3}" : "{0}: {1}, {2},\n{3}";
+            string trigFormat = (includeTriggerName ? "{3}: " : String.Empty)
+                + (!withLineBreaks ? "{0}, {1}, {2}" : "{0}, {1},\n{2}");
             string evtControlFormat = eventControlStrings[(int)trigger.EventControl][!withLineBreaks ? 0 : 1];
             string persistence = GameInfo.PERSISTENCE_NAMES[(int)trigger.PersistentType];
             string evt1 = GetEventString(trigger.Event1);
@@ -4923,10 +4933,10 @@ namespace MobiusEditor.RedAlert
             if (trigger.EventControl != TriggerMultiStyleType.Linked
                 && !TriggerAction.None.Equals(act2, StringComparison.OrdinalIgnoreCase))
             {
-                act1 = act1 + " + " + act2;
+                act1 = withLineBreaks ? (act1 + "\n  → " + act2) : (act1 + " + " + act2);
             }
             string evtControl = String.Format(evtControlFormat, evt1, evt2, act1, act2);
-            return String.Format(trigFormat, trigger.Name, trigger.House, persistence, evtControl);
+            return String.Format(trigFormat, trigger.House, persistence, evtControl, trigger.Name);
         }
 
         private string GetEventString(TriggerEvent evt)
@@ -5002,7 +5012,8 @@ namespace MobiusEditor.RedAlert
                     break;
                 case ActionTypes.TACTION_FORCE_TRIGGER:
                 case ActionTypes.TACTION_DESTROY_TRIGGER:
-                    return String.Format(GameInfo.TRIG_ARG_FORMAT, act, act.Trigger ?? Trigger.None);
+                    actionArg = act.Trigger ?? Trigger.None;
+                    break;
                 case ActionTypes.TACTION_DZ:
                 case ActionTypes.TACTION_REVEAL_SOME:
                 case ActionTypes.TACTION_REVEAL_ZONE:
@@ -5109,6 +5120,20 @@ namespace MobiusEditor.RedAlert
         {
             LandIniSection landInfo = GetLandInfo(landType);
             return landInfo != null && landInfo.Buildable;
+        }
+
+        public bool? IsBuildingCapturable(Building building, out string info)
+        {
+            info = null;
+            bool capturable = building.Type.Capturable;
+            if (bareRuleBuildings.TryGetValue(building.Type.Name, out BuildingType bt) && bt.Capturable != capturable)
+            {
+                info = String.Format("• This building type is made {0}capturable\n" +
+                                     "   due to a rules tweak in the map file.",
+                                     building.Type.Capturable ? String.Empty : "un");
+            }
+            
+            return capturable;
         }
 
         private void BasicSection_PropertyChanged(object sender, PropertyChangedEventArgs e)

@@ -230,6 +230,7 @@ namespace MobiusEditor
         private Dictionary<GameType, List<string>>[] FindMissionMixFiles(MixFileNameGenerator romfis, string cachedMixInfoFile)
         {
             INI cachedMixIni = new INI();
+            INI newMixIni = new INI();
             if (File.Exists(cachedMixInfoFile))
             {
                 try
@@ -265,7 +266,7 @@ namespace MobiusEditor
                     if (Directory.Exists(classicRoot))
                     {
                         string[] allMixFiles = Directory.GetFiles(classicRoot, "*.mix", SearchOption.TopDirectoryOnly);
-                        List<string> validMixFiles = GetMixFilesWithMissions(gameInfo, allMixFiles, romfis, cachedMixIni, "Classic_");
+                        List<string> validMixFiles = GetMixFilesWithMissions(gameInfo, allMixFiles, romfis, cachedMixIni, newMixIni, "Classic_");
                         if (validMixFiles.Count > 0)
                         {
                             classicMixFiles.Add(gameInfo.GameType, validMixFiles);
@@ -284,7 +285,7 @@ namespace MobiusEditor
                     if (Directory.Exists(remasterRoot))
                     {
                         string[] allMixFiles = Directory.GetFiles(remasterRoot, "*.mix", SearchOption.AllDirectories);
-                        List<string> validMixFiles = GetMixFilesWithMissions(gameInfo, allMixFiles, romfis, cachedMixIni, "Remaster_");
+                        List<string> validMixFiles = GetMixFilesWithMissions(gameInfo, allMixFiles, romfis, cachedMixIni, newMixIni, "Remaster_");
                         if (validMixFiles.Count > 0)
                         {
                             remasterMixFiles.Add(gameInfo.GameType, validMixFiles);
@@ -296,7 +297,7 @@ namespace MobiusEditor
             {
                 return null;
             }
-            string cachedIni = cachedMixIni.ToString("\r\n");
+            string cachedIni = newMixIni.ToString("\r\n");
             String cachedMixInfoPath = Path.GetDirectoryName(cachedMixInfoFile);
             if (!Directory.Exists(cachedMixInfoPath))
             {
@@ -375,7 +376,7 @@ namespace MobiusEditor
             }
         }
 
-        private List<string> GetMixFilesWithMissions(GameInfo gameInfo, string[] allMixFiles, MixFileNameGenerator romfis, INI cachedMixIni, string iniPrefix)
+        private List<string> GetMixFilesWithMissions(GameInfo gameInfo, string[] allMixFiles, MixFileNameGenerator romfis, INI cachedMixIni, INI newMixIni, string iniPrefix)
         {
             string iniSectionName = iniPrefix + gameInfo.IniName;
             INISection curGameIniSection = cachedMixIni[iniSectionName] ?? null;
@@ -388,7 +389,7 @@ namespace MobiusEditor
                     return validMixFiles;
                 }
                 string fullMixPath = Path.GetFullPath(mixFile);
-                bool mixHandledFromIni = CheckMixPathInIni(fullMixPath, validMixFiles, cachedMixIni, curGameIniSection, newGameIniSection);
+                bool mixHandledFromIni = CheckMixPathInIni(fullMixPath, validMixFiles, curGameIniSection, newGameIniSection);
                 if (mixHandledFromIni || !MixFile.CheckValidMix(fullMixPath, gameInfo.CanUseNewMixFormat))
                 {
                     continue;
@@ -406,12 +407,13 @@ namespace MobiusEditor
                     // Format: c:\path\mixfile.mix,submix=lastMod,filesize,hasMissions
                     long timeStamp = File.GetLastWriteTime(fullMixPath).Ticks;
                     FileInfo mixInfo = new FileInfo(fullMixPath);
-                    newGameIniSection[fullMixPath] = timeStamp.ToString() + "," + mixInfo.Length.ToString() + "," + hasMissions.ToString();
+                    string fullMixPathIni = Uri.EscapeDataString("\"" + mixInfo.FullName + "\"");
+                    newGameIniSection[fullMixPathIni] = timeStamp.ToString() + "," + mixInfo.Length.ToString() + "," + hasMissions.ToString();
                     foreach (MixEntry entry in entries.Where(entr => entr.Type == MixContentType.Mix))
                     {
                         string subName = MixPath.GetMixEntryName(entry);
                         string subMixPath = fullMixPath + ";" + subName;
-                        string subMixPathIni = fullMixPath + "," + subName;
+                        string subMixPathIni = Uri.EscapeDataString("\"" + subMixPath + "\"");
                         hasMissions = 0;
                         using (MixFile subMix = new MixFile(mix, entry))
                         {
@@ -428,12 +430,11 @@ namespace MobiusEditor
                 }
             }
             // Replace old info with new info.
-            cachedMixIni.Sections.Remove(iniSectionName);
-            cachedMixIni.Sections.Add(newGameIniSection);
+            newMixIni.Sections.Add(newGameIniSection);
             return validMixFiles;
         }
 
-        private bool CheckMixPathInIni(string fullMixPath, List<string> validMixFiles, INI cachedMixIni, INISection curGameIniSection, INISection newGameIniSection)
+        private bool CheckMixPathInIni(string fullMixPath, List<string> validMixFiles, INISection curGameIniSection, INISection newGameIniSection)
         {
             if (curGameIniSection == null)
             {
@@ -441,7 +442,20 @@ namespace MobiusEditor
             }
             Dictionary<string, string> allKeys = curGameIniSection.Keys.ToDictionary();
             List<string> mixPaths = allKeys.Keys.ToList();
-            string mainMixInfo = curGameIniSection.Keys.TryGetValue(fullMixPath);
+            for (int i = 0; i < mixPaths.Count; i++)
+            {
+                string path = mixPaths[i];
+                if (path.Length > 0 && path[0] == '%')
+                {
+                    mixPaths[i] = Uri.UnescapeDataString(path).Trim('\"');
+                }
+            }
+            string fullMixPathIni = Uri.EscapeDataString("\"" + fullMixPath + "\"");
+            string mainMixInfo = curGameIniSection.Keys.TryGetValue(fullMixPathIni);
+            if (mainMixInfo == null)
+            {
+                mainMixInfo = curGameIniSection.Keys.TryGetValue(fullMixPath);
+            }
             if (mainMixInfo == null)
             {
                 return false;
@@ -474,15 +488,20 @@ namespace MobiusEditor
             {
                 validMixFiles.Add(fullMixPath);
             }
-            newGameIniSection[fullMixPath] = mainMixInfo;
-            string subMixPath = fullMixPath + ",";
+            newGameIniSection[fullMixPathIni] = mainMixInfo;
+            string subMixPathOld = fullMixPath + ",";
             string subMixPathReplace = fullMixPath + ";";
             foreach (string mixPath in mixPaths)
             {
-                if (mixPath.StartsWith(subMixPath))
+                if (mixPath.StartsWith(subMixPathReplace) || mixPath.StartsWith(subMixPathOld))
                 {
-                    string subMixInfo = curGameIniSection.Keys.TryGetValue(mixPath);
-                    string usableMixPath = subMixPathReplace + mixPath.Substring(subMixPath.Length);
+                    string mixPathIni = Uri.EscapeDataString("\"" + mixPath + "\"");
+                    string subMixInfo = curGameIniSection.Keys.TryGetValue(mixPathIni);
+                    if (subMixInfo == null)
+                    {
+                        subMixInfo = curGameIniSection.Keys.TryGetValue(mixPath);
+                    }
+                    string usableMixPath = subMixPathReplace + mixPath.Substring(subMixPathOld.Length);
                     string[] subMixData = subMixInfo.Split(',');
                     if (subMixData.Length < 3)
                     {
@@ -494,7 +513,7 @@ namespace MobiusEditor
                     {
                         continue;
                     }
-                    newGameIniSection[mixPath] = subMixInfo;
+                    newGameIniSection[mixPathIni] = subMixInfo;
                     if (hasMissions == 1)
                     {
                         validMixFiles.Add(usableMixPath);
@@ -839,18 +858,6 @@ namespace MobiusEditor
         private void FileOpenMenuItem_Click(object sender, EventArgs e)
         {
             PromptSaveMap(OpenFile, false);
-        }
-
-        private void FileOpenFromMixMenuItem_Click(object sender, EventArgs e)
-        {
-            string lastMix = mru.Files.Where(pth => MixPath.IsMixPath(pth) && MRU.GetBaseFileInfo(pth).Exists).FirstOrDefault();
-            if (lastMix == null)
-            {
-                return;
-            }
-            MixPath.GetComponents(lastMix, out string[] mixParts, out string[] filenameParts);
-            string mixOnly = String.Join(";", mixParts);
-            PromptSaveMap(() => OpenFile(mixOnly, true), false);
         }
 
         private void OpenFile()
@@ -1635,7 +1642,7 @@ namespace MobiusEditor
         {
             GameType gameType = GameType.None;
             string theater = null;
-            bool isTdMegaMap = false;
+            bool isMegaMap = false;
             bool isSinglePlay = false;
             using (NewMapDialog nmd = new NewMapDialog(withImage))
             {
@@ -1646,10 +1653,11 @@ namespace MobiusEditor
                     return;
                 }
                 gameType = nmd.GameType;
-                isTdMegaMap = nmd.MegaMap;
+                isMegaMap = nmd.MegaMap;
                 isSinglePlay = nmd.SinglePlayer;
                 theater = nmd.Theater;
             }
+            GameInfo gType = GameTypeFactory.GetGameInfo(gameType);
             if (withImage && imagePath == null)
             {
                 using (OpenFileDialog ofd = new OpenFileDialog())
@@ -1664,13 +1672,53 @@ namespace MobiusEditor
                     }
                     imagePath = ofd.FileName;
                 }
+                Size size = isMegaMap ? gType.MapSizeMega : gType.MapSize;
+                Size imageSize;
+                try
+                {
+                    using (Bitmap bm = new Bitmap(imagePath))
+                    {
+                        imageSize = new Size(bm.Width, bm.Height);
+                    }
+                }
+                catch
+                {
+                    MessageBox.Show(this, String.Format("Could not load image {0}.", imagePath), "Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
+                    return;
+                }
+                // Warn when size doesn't match map size.
+                if (imageSize.Width > size.Width || imageSize.Height > size.Height)
+                {
+                    string mapStr = ((isMegaMap && !gType.MegamapIsOptional) || (!isMegaMap && !gType.MegamapIsDefault)) ? "{0} map"
+                        : (isMegaMap ? "{0} megamap" : "small {0} map");
+                    const string messageTemplate = "The image you have chosen is {0}larger than the map size. " +
+                        "Note that every pixel on the image represents one cell on the map, so for a {2}, the expected image size is {3}×{4}.\n\n" +
+                        "This function is meant to allow map makers to plan out the layout of their map in an image editor, " +
+                        "with more tools available in terms of symmetry, copy-pasting, drawing straight lines, drawing curves, etc" +
+                        "{1}" + 
+                        ".\n\n" +
+                        "Are you sure you want to continue?";
+                    object[] parms = { String.Empty, String.Empty, String.Format(mapStr, gType.Name), size.Width, size.Height };
+                    // If either total size is larger than double, or one of the sizes is larger than 3x that dimension, they're Probably Doing It Wrong; give extra info.
+                    if ((imageSize.Width > size.Width * 2 && imageSize.Height > size.Height * 2) || imageSize.Width > size.Width * 3 || imageSize.Height > size.Height * 2)
+                    {
+                        parms[0] = "much ";
+                        parms[1] = ", but it can't magically convert an image into a map looking like the image";
+                    }
+                    string messageSize = string.Format(messageTemplate, parms);
+                    DialogResult dr = MessageBox.Show(this, messageSize, "Warning", MessageBoxButtons.YesNo, MessageBoxIcon.Error);
+                    if (dr != DialogResult.Yes)
+                    {
+                        return;
+                    }
+                }
             }
             Unload();
             string loading = "Loading new map";
             if (withImage)
                 loading += " from image";
             loadMultiThreader.ExecuteThreaded(
-                () => NewFile(gameType, imagePath, theater, isTdMegaMap, isSinglePlay, this),
+                () => NewFile(gameType, imagePath, theater, isMegaMap, isSinglePlay, this),
                 PostLoad, true,
                 (e, l) => LoadUnloadUi(e, l, loadMultiThreader),
                 loading);
@@ -1734,7 +1782,34 @@ namespace MobiusEditor
                         // Ignore and just fall through.
                     }
                 }
-                MessageBox.Show(this, String.Format("Error loading {0}: Could not identify map type.", feedbackName), "Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
+                const string feedback = "Could not identify map type.";
+                string message = feedback;
+                if (recheckMix && ".mix".Equals(Path.GetExtension(fileName), StringComparison.OrdinalIgnoreCase))
+                {
+                    try
+                    {
+                        // mix already failed; let's see why.
+                        MixFile mixFile = new MixFile(fileName);
+                    }
+                    catch (MixParseException mpe)
+                    {
+                        message = mpe.Message;
+                        uint affectedId = mpe.AffectedEntryId;
+                        if (affectedId != 0 && this.romfis != null)
+                        {
+                            List<MixEntry> entries = romfis.IdentifySingleFile(affectedId);
+                            if (entries.Count == 1)
+                            {
+                                message += string.Format(" (File id identified as \"{0}\")", entries[0].Name);
+                            }
+                            else if (entries.Count > 1)
+                            {
+                                message += string.Format(" (Possible name matches: {0})", String.Join(", ", entries.Select(entr => "\"" + entr.Name + "\"").ToArray()));
+                            }
+                        }
+                    }
+                }
+                MessageBox.Show(this, String.Format("Error loading {0}: ", feedbackName) + message, "Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
                 RefreshActiveTool(true);
                 return;
             }
@@ -2026,7 +2101,7 @@ namespace MobiusEditor
             Globals.TheTilesetManager.Reset(gameType, theaterType);
             Globals.TheShapeCacheManager.Reset();
             Globals.TheTeamColorManager.Reset(gameType, theaterType);
-            // Load game-specific data
+            // Load game-specific data. TODO make this return init errors.
             plugin.Initialize();
             // Needs to be done after the whole init, so colors reading is properly initialised.
             plugin.Map.FlagColors = plugin.GetFlagColors();
@@ -2286,7 +2361,7 @@ namespace MobiusEditor
                 if (loadInfo.FileType == FileType.PGM || loadInfo.FileType == FileType.MEG)
                 {
                     resaveType = FileType.INI;
-                    loadInfo.FileName = null;
+                    resaveName = null;
                 }
 #endif
                 mapPanel.MapImage = plugin.MapImage;
@@ -2517,7 +2592,10 @@ namespace MobiusEditor
             if (activeToolForm != null)
             {
                 activeToolForm.ResizeEnd -= ActiveToolForm_ResizeEnd;
+                activeToolForm.Shown -= this.ActiveToolForm_Shown;
                 activeToolForm.Hide();
+                activeToolForm.Visible = false;
+                activeToolForm.Owner = null;
                 activeToolForm = null;
             }
             toolStatusLabel.Text = String.Empty;
@@ -2662,9 +2740,10 @@ namespace MobiusEditor
                 // Allow the tool to refresh the cell info under the mouse cursor.
                 activeTool.RequestMouseInfoRefresh += ViewTool_RequestMouseInfoRefresh;
                 activeToolForm.ResizeEnd -= ActiveToolForm_ResizeEnd;
-                activeToolForm.Shown -= this.ActiveToolForm_Shown;
                 activeToolForm.Shown += this.ActiveToolForm_Shown;
-                activeToolForm.Show(this);
+                activeToolForm.Visible = false;
+                activeToolForm.Owner = this;
+                activeToolForm.Show();
                 activeTool.Activate();
                 activeToolForm.ResizeEnd += ActiveToolForm_ResizeEnd;
             }

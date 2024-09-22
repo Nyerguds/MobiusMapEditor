@@ -18,12 +18,18 @@ using System.Collections.Generic;
 using System.Drawing;
 using System.IO;
 using System.Linq;
+using System.Text.RegularExpressions;
 using System.Windows.Forms;
 
 namespace MobiusEditor.Dialogs
 {
     public partial class OpenFromMixDialog : Form, IHasStatusLabel
     {
+        private static readonly Regex isNumber = new Regex("^-?\\d+$");
+        // ID string, possibly with repeat index behind it
+        private static readonly Regex isId = new Regex("^\\[[0-9A-F]{8}\\]( \\(\\d+\\))?$");
+
+        private ListViewColumnSorter lvwColumnSorter;
         private bool resizing = false;
         private string[] initPaths = null;
         private List<MixFile> openedMixFiles = new List<MixFile>();
@@ -48,6 +54,29 @@ namespace MobiusEditor.Dialogs
         public OpenFromMixDialog(MixFile baseMix, string[] internalMixParts, MixFileNameGenerator romfis)
         {
             InitializeComponent();
+            lvwColumnSorter = new ListViewColumnSorter();
+            Comparer<string>[] columnComparers = new Comparer<string>[7];
+            // This follows the same logic as MixEntry.SortName
+            Comparer<string> idComparer = Comparer<string>.Create((s1, s2) => {
+                string st1 = isId.IsMatch(s1) ? ("zzzzzzzzzzzz" + s1) : s1;
+                string st2 = isId.IsMatch(s2) ? ("zzzzzzzzzzzz" + s2) : s2;
+                return lvwColumnSorter.DefaultObjectComparer.Compare(st1, st2);
+            });
+            Comparer<string> numComparer = Comparer<string>.Create((s1, s2) => {
+                string st1 = String.IsNullOrEmpty(s1) ? "0" : s1;
+                string st2 = String.IsNullOrEmpty(s2) ? "0" : s2;
+                if (!isNumber.IsMatch(st1) || !isNumber.IsMatch(st2))
+                {
+                    return lvwColumnSorter.DefaultObjectComparer.Compare(st1, st2);
+                }
+                return int.Parse(st1).CompareTo(int.Parse(st2));
+            });
+            columnComparers[0] = idComparer; // Name or id
+            columnComparers[2] = numComparer; // Size
+            columnComparers[5] = numComparer; // Index in header
+            columnComparers[6] = numComparer; // File offset
+            lvwColumnSorter.SpecificComparers = columnComparers;
+            this.mixContentsListView.ListViewItemSorter = lvwColumnSorter;
             titleMain = this.Text;
             this.romfis = romfis;
             identifiedHasher = null;
@@ -68,7 +97,7 @@ namespace MobiusEditor.Dialogs
 
         private void SetTitle()
         {
-            this.Text = titleMain + " - " + string.Join(" -> ", openedMixFiles.Select(mix => mix.FileName).ToArray());
+            this.Text = titleMain + " - " + string.Join(" → ", openedMixFiles.Select(mix => mix.FileName).ToArray());
         }
 
         private void LoadMixContents(uint? idToSelect)
@@ -141,7 +170,32 @@ namespace MobiusEditor.Dialogs
 
         private void MixContentsListView_KeyDown(object sender, KeyEventArgs e)
         {
-            switch (e.KeyData) {
+            if (!(sender is ListView lv))
+            {
+                return;
+            }
+            // List navigation is messed up by the fact the actual "selection caret" can't be
+            // moved by any program instructions. There also seem to be OS differences in how
+            // PageUp and PageDown are handled. So we just ignore it and take full control.
+            // Home and End are the only keys not affected by any of this.
+            switch (e.KeyData)
+            {
+                case Keys.Up:
+                    MoveSelectionUpDown(lv, true);
+                    e.Handled = true;
+                    break;
+                case Keys.Down:
+                    MoveSelectionUpDown(lv, false);
+                    e.Handled = true;
+                    break;
+                case Keys.PageUp:
+                    MoveSelectionPageUpDown(lv, true);
+                    e.Handled = true;
+                    break;
+                case Keys.PageDown:
+                    MoveSelectionPageUpDown(lv, false);
+                    e.Handled = true;
+                    break;
                 case Keys.Enter:
                     OpenCurrentlySelected();
                     e.Handled = true;
@@ -155,6 +209,78 @@ namespace MobiusEditor.Dialogs
                     e.Handled = true;
                     break;
             }
+        }
+
+        private void MoveSelectionUpDown(ListView lv, bool up)
+        {
+            int oldIndex = lv.SelectedIndices.Count == 0 ? 0 : lv.SelectedIndices[0];
+            int newIndex = Math.Min(lv.Items.Count - 1, Math.Max(0, oldIndex + (up ? -1 : 1)));
+            if (lv.Items.Count > oldIndex)
+            {
+                lv.Items[oldIndex].Selected = false;
+            }
+            if (lv.Items.Count > newIndex)
+            {
+                lv.Items[newIndex].Selected = true;
+                lv.Items[newIndex].EnsureVisible();
+            }
+        }
+
+        private void MoveSelectionPageUpDown(ListView lv, bool up)
+        {
+            (int first, int last) = getVisibleItems(lv);
+            if (first == -1 || last == -1)
+            {
+                return;
+            }
+            int maxScrollAmount = last - first;
+            int oldIndex = lv.SelectedIndices.Count == 0 ? 0 : lv.SelectedIndices[0];
+            int newIndex;
+            bool onExtreme = (up && oldIndex == first) || (!up && oldIndex == last);
+            if (oldIndex < first || oldIndex > last || onExtreme)
+            {
+                // if outside view, or on the last visible item in this direction, just scroll by the max amount.
+                newIndex = Math.Min(lv.Items.Count - 1, Math.Max(0, oldIndex + (up ? -1 : 1) * maxScrollAmount));
+            }
+            else
+            {
+                // If the selected item is visible, and not on the last visible item in this direction,
+                // put it on the last visible item in this direction.
+                newIndex = up ? first : last;
+            }
+            if (lv.Items.Count > oldIndex)
+            {
+                lv.Items[oldIndex].Selected = false;
+            }
+            lv.Items[newIndex].Selected = true;
+            lv.Items[newIndex].EnsureVisible();
+        }
+
+        private (int, int) getVisibleItems(ListView lv)
+        {
+            ListViewItem first = lv.TopItem;
+            if (lv.Items.Count == 0 || first == null)
+            {
+                return (-1, -1);
+            }
+            int offset = first.GetBounds(ItemBoundsPortion.Entire).Y;
+            Rectangle clientRect = lv.ClientRectangle;
+            // Remove header, using offset of first visible item.
+            clientRect = new Rectangle(clientRect.X, clientRect.Y + offset, clientRect.Width, clientRect.Height - offset);
+            ListViewItem last = null;
+            for (int i = first.Index; i < lv.Items.Count; ++i)
+            {
+                ListViewItem item = lv.Items[i];
+                Rectangle itemBounds = item.GetBounds(ItemBoundsPortion.Entire);
+                // items in ListView are only selected if they are fully inside.
+                if (!clientRect.IntersectsWith(itemBounds) || itemBounds.Bottom > clientRect.Bottom)
+                {
+                    // passed visible area.
+                    break;
+                }
+                last = item;
+            }
+            return (first.Index, last == null ? -1 : last.Index);
         }
 
         private void BtnCloseFile_Click(object sender, EventArgs e)
@@ -260,7 +386,7 @@ namespace MobiusEditor.Dialogs
                 MixFile subMix = null;
                 try
                 {
-                    subMix = name != null ? new MixFile(current, name) : new MixFile(current, selected.Id);
+                    subMix = new MixFile(current, selected);
                 }
                 catch
                 {
@@ -329,7 +455,8 @@ namespace MobiusEditor.Dialogs
             }
             else
             {
-                MessageBox.Show("This file type cannot be handled by the map editor. Only map files (indicated as green) and mix files (indicated as yellow) can be opened.", titleMain);
+                MessageBox.Show("This file type cannot be handled by the map editor. Only map files (indicated as green) and mix files (indicated as yellow) can be opened." +
+                    "\n\nHowever, you can press Ctrl+S to extract the selected file from the archive.", titleMain);
             }
         }
 
@@ -348,18 +475,28 @@ namespace MobiusEditor.Dialogs
 
         private void FillList(List<MixEntry> mixInfo, uint? idToSelect)
         {
-            currentMixInfo = mixInfo;
             if (mixInfo == null)
             {
+                currentMixInfo = null;
                 mixContentsListView.Items.Clear();
                 return;
             }
+            lvwColumnSorter.SortColumn = 0;
+            lvwColumnSorter.SortOrder = SortOrder.Ascending;
+            mixInfo = mixInfo.OrderBy(x => x.SortName).ToList();
+            currentMixInfo = mixInfo;
             SetTitle();
             mixContentsListView.BeginUpdate();
             mixContentsListView.Items.Clear();
             int nrofFiles = mixInfo.Count;
-            bool selectFirst = !idToSelect.HasValue;
-            ListViewItem selected = null;
+            bool selectId = idToSelect.HasValue;
+            bool selectFirst = !selectId;
+            int toSelectIndex = -1;
+            ListViewItem toSelect = null;
+            bool selectFirstMission = !selectId;
+            int missToSelectIndex = -1;
+            int lastMissIndex = -1;
+            ListViewItem missToSelect = null;
             for (int i = 0; i < nrofFiles; ++i)
             {
                 MixEntry mixFileInfo = mixInfo[i];
@@ -370,11 +507,12 @@ namespace MobiusEditor.Dialogs
                 };
                 if (selectFirst || idToSelect.HasValue && mixFileInfo.Id == idToSelect.Value)
                 {
-                    selected = item;
+                    toSelect = item;
+                    toSelectIndex = i;
                     idToSelect = null;
                     selectFirst = false;
                 }
-                switch (mixFileInfo.Type)
+                switch (mt)
                 {
                     case MixContentType.MapTd:
                     case MixContentType.MapSole:
@@ -382,22 +520,39 @@ namespace MobiusEditor.Dialogs
                     case MixContentType.BinSole:
                     case MixContentType.MapRa:
                         item.BackColor = Color.FromArgb(0xFF, 0xD0, 0xFF, 0xD0); //Color.LightGreen;
+                        if (selectFirstMission)
+                        {
+                            missToSelect = item;
+                            missToSelectIndex = i;
+                            selectFirstMission = false;
+                        }
+                        lastMissIndex = i;
                         break;
                     case MixContentType.Mix:
                         item.BackColor = Color.FromArgb(0xFF, 0xFF, 0xFF, 0x80); // Color.LightYellow
                         break;
                 }
-                item.SubItems.Add(mixFileInfo.Type.ToString());
+                item.SubItems.Add(mt.ToString());
                 item.SubItems.Add(mixFileInfo.Length.ToString());
                 item.SubItems.Add(mixFileInfo.Description);
                 item.SubItems.Add(mixFileInfo.Info);
+                item.SubItems.Add(mixFileInfo.Index.ToString());
+                item.SubItems.Add(mixFileInfo.Offset.ToString());
                 mixContentsListView.Items.Add(item).ToolTipText = mixFileInfo.Name ?? mixFileInfo.IdString;
             }
             mixContentsListView.EndUpdate();
-            if (selected != null)
+            if (missToSelect != null && !(selectId && toSelect != null))
             {
-                selected.Selected = true;
+                missToSelect.Selected = true;
+                mixContentsListView.EnsureVisible(lastMissIndex);
+                mixContentsListView.EnsureVisible(missToSelectIndex);
             }
+            else if (toSelect != null)
+            {
+                toSelect.Selected = true;
+                mixContentsListView.EnsureVisible(toSelectIndex);
+            }
+            
         }
 
         private void MixContentsListView_SizeChanged(object sender, EventArgs e)
@@ -452,10 +607,13 @@ namespace MobiusEditor.Dialogs
                 {
                     while (diff > 0)
                     {
+                        // Could get stuck if all adjustable columns are zero
+                        bool anyHandled = false;
                         for (int i = 0; i < columns; ++i)
                         {
                             if (tagWidths[i] > 0 && colWidths[i] > 0)
                             {
+                                anyHandled= true;
                                 colWidths[i]--;
                                 diff--;
                                 if (diff == 0)
@@ -463,6 +621,10 @@ namespace MobiusEditor.Dialogs
                                     break;
                                 }
                             }
+                        }
+                        if (!anyHandled)
+                        {
+                            break;
                         }
                     }
                     while (diff < 0)
@@ -531,6 +693,36 @@ namespace MobiusEditor.Dialogs
                 return;
             e.Cancel = true;
             e.NewWidth = lv.Columns[e.ColumnIndex].Width;
+        }
+
+        private void mixContentsListView_ColumnClick(object sender, ColumnClickEventArgs e)
+        {
+            ListView listView = sender as ListView;
+            if (listView == null)
+            {
+                return;
+            }
+            // Determine if clicked column is already the column that is being sorted.
+            if (e.Column == lvwColumnSorter.SortColumn)
+            {
+                // Reverse the current sort direction for this column.
+                if (lvwColumnSorter.SortOrder == SortOrder.Ascending)
+                {
+                    lvwColumnSorter.SortOrder = SortOrder.Descending;
+                }
+                else
+                {
+                    lvwColumnSorter.SortOrder = SortOrder.Ascending;
+                }
+            }
+            else
+            {
+                // Set the column number that is to be sorted; default to ascending.
+                lvwColumnSorter.SortColumn = e.Column;
+                lvwColumnSorter.SortOrder = SortOrder.Ascending;
+            }
+            // Perform the sort with these new sort options.
+            listView.Sort();
         }
     }
 }

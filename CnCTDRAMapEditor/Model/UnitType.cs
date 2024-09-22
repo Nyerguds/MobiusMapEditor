@@ -158,9 +158,11 @@ namespace MobiusEditor.Model
         public FrameUsage BodyFrameUsage { get; private set; }
         public FrameUsage TurretFrameUsage { get; private set; }
         public Rectangle OverlapBounds => new Rectangle(-1, -1, 3, 3);
-        public bool[,] OpaqueMask => new bool[1, 1] { { true } };
+        // Units are big enough to be visible even when partially overlapped, so they only count as overlapped if their center is overlapped.
+        public bool[,][] OpaqueMask => new bool[1, 1][] { { new bool[] { true, false, false, false, false } } };
         public bool[,] OccupyMask => new bool[1, 1] { { true } };
         public bool[,] BaseOccupyMask => new bool[1, 1] { { true } };
+        public int ZOrder => Globals.ZOrderDefault;
         public string OwnerHouse { get; private set; }
         public abstract bool IsGroundUnit { get; }
         public abstract bool IsAircraft { get; }

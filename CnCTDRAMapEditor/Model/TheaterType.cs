@@ -15,10 +15,12 @@
 using MobiusEditor.Utility;
 using System;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.Linq;
 
 namespace MobiusEditor.Model
 {
+    [DebuggerDisplay("{Name}")]
     public class TheaterType
     {
         public sbyte ID { get; private set; }

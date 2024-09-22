@@ -32,7 +32,7 @@ namespace MobiusEditor.Tools.Dialogs
             this.components = new System.ComponentModel.Container();
             this.tableLayoutPanel1 = new System.Windows.Forms.TableLayoutPanel();
             this.label1 = new System.Windows.Forms.Label();
-            this.triggerComboBox = new System.Windows.Forms.ComboBox();
+            this.cmbTrigger = new System.Windows.Forms.ComboBox();
             this.lblTriggerTypesInfo = new System.Windows.Forms.Label();
             this.toolTip1 = new System.Windows.Forms.ToolTip(this.components);
             this.btnJumpTo = new System.Windows.Forms.Button();
@@ -48,7 +48,7 @@ namespace MobiusEditor.Tools.Dialogs
             this.tableLayoutPanel1.ColumnStyles.Add(new System.Windows.Forms.ColumnStyle(System.Windows.Forms.SizeType.Absolute, 28F));
             this.tableLayoutPanel1.Controls.Add(this.btnJumpTo, 1, 1);
             this.tableLayoutPanel1.Controls.Add(this.label1, 0, 0);
-            this.tableLayoutPanel1.Controls.Add(this.triggerComboBox, 1, 0);
+            this.tableLayoutPanel1.Controls.Add(this.cmbTrigger, 1, 0);
             this.tableLayoutPanel1.Controls.Add(this.lblTriggerTypesInfo, 2, 0);
             this.tableLayoutPanel1.Dock = System.Windows.Forms.DockStyle.Fill;
             this.tableLayoutPanel1.Location = new System.Drawing.Point(0, 0);
@@ -74,26 +74,30 @@ namespace MobiusEditor.Tools.Dialogs
             // 
             // triggerComboBox
             // 
-            this.triggerComboBox.Dock = System.Windows.Forms.DockStyle.Fill;
-            this.triggerComboBox.DropDownStyle = System.Windows.Forms.ComboBoxStyle.DropDownList;
-            this.triggerComboBox.FormattingEnabled = true;
-            this.triggerComboBox.Location = new System.Drawing.Point(72, 3);
-            this.triggerComboBox.Name = "triggerComboBox";
-            this.triggerComboBox.Size = new System.Drawing.Size(146, 21);
-            this.triggerComboBox.TabIndex = 1;
+            this.cmbTrigger.Dock = System.Windows.Forms.DockStyle.Fill;
+            this.cmbTrigger.DropDownStyle = System.Windows.Forms.ComboBoxStyle.DropDownList;
+            this.cmbTrigger.FormattingEnabled = true;
+            this.cmbTrigger.Location = new System.Drawing.Point(72, 3);
+            this.cmbTrigger.Name = "cmbTrigger";
+            this.cmbTrigger.Size = new System.Drawing.Size(146, 21);
+            this.cmbTrigger.TabIndex = 1;
+            this.cmbTrigger.MouseEnter += new System.EventHandler(this.CmbTrigger_MouseEnter);
+            this.cmbTrigger.MouseLeave += new System.EventHandler(this.HideToolTip);
+            this.cmbTrigger.MouseMove += new System.Windows.Forms.MouseEventHandler(this.CmbTrigger_MouseMove);
             // 
-            // lblTriggerInfo
+            // lblTriggerTypesInfo
             // 
             this.lblTriggerTypesInfo.AutoSize = true;
             this.lblTriggerTypesInfo.Dock = System.Windows.Forms.DockStyle.Fill;
             this.lblTriggerTypesInfo.Location = new System.Drawing.Point(221, 0);
             this.lblTriggerTypesInfo.Margin = new System.Windows.Forms.Padding(0);
-            this.lblTriggerTypesInfo.Name = "lblTriggerInfo";
+            this.lblTriggerTypesInfo.Name = "lblTriggerTypesInfo";
             this.lblTriggerTypesInfo.Size = new System.Drawing.Size(29, 27);
             this.lblTriggerTypesInfo.TabIndex = 10;
             this.lblTriggerTypesInfo.TextAlign = System.Drawing.ContentAlignment.MiddleCenter;
             this.lblTriggerTypesInfo.MouseEnter += new System.EventHandler(this.LblTriggerTypesInfo_MouseEnter);
-            this.lblTriggerTypesInfo.MouseLeave += new System.EventHandler(this.LblTriggerInfo_MouseLeave);
+            this.lblTriggerTypesInfo.MouseLeave += new System.EventHandler(this.HideToolTip);
+            this.cmbTrigger.MouseMove += new System.Windows.Forms.MouseEventHandler(this.LblTriggerTypesInfo_MouseMove);
             // 
             // btnJumpTo
             // 
@@ -107,7 +111,7 @@ namespace MobiusEditor.Tools.Dialogs
             this.btnJumpTo.UseVisualStyleBackColor = true;
             // 
             // CellTriggersToolDialog
-            //
+            // 
             this.AcceptButton = this.btnJumpTo;
             this.ClientSize = new System.Drawing.Size(250, 65);
             this.ControlBox = false;
@@ -133,7 +137,7 @@ namespace MobiusEditor.Tools.Dialogs
 
         private System.Windows.Forms.TableLayoutPanel tableLayoutPanel1;
         private System.Windows.Forms.Label label1;
-        private System.Windows.Forms.ComboBox triggerComboBox;
+        private System.Windows.Forms.ComboBox cmbTrigger;
         private System.Windows.Forms.ToolTip toolTip1;
         private System.Windows.Forms.Label lblTriggerTypesInfo;
         private System.Windows.Forms.Button btnJumpTo;

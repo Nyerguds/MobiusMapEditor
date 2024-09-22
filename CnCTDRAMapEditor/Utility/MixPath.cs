@@ -1,4 +1,17 @@
-﻿using MobiusEditor.Interface;
+﻿//         DO WHAT THE FUCK YOU WANT TO PUBLIC LICENSE
+//                     Version 2, December 2004
+//
+//  Copyright (C) 2004 Sam Hocevar<sam@hocevar.net>
+//
+//  Everyone is permitted to copy and distribute verbatim or modified
+//  copies of this license document, and changing it is allowed as long
+//  as the name is changed.
+//
+//             DO WHAT THE FUCK YOU WANT TO PUBLIC LICENSE
+//    TERMS AND CONDITIONS FOR COPYING, DISTRIBUTION AND MODIFICATION
+//
+//   0. You just DO WHAT THE FUCK YOU WANT TO.
+using MobiusEditor.Interface;
 using System;
 using System.Collections.Generic;
 using System.Globalization;
@@ -8,7 +21,10 @@ using System.Text.RegularExpressions;
 
 namespace MobiusEditor.Utility
 {
-    internal class MixPath
+    /// <summary>
+    /// Facilitates working with paths that identify one or more files inside a .mix archive.
+    /// </summary>
+    public class MixPath
     {
         /// <summary>
         /// Pattern to identify a filename as file ID. This can be used to analyse the data returned by <see cref="GetComponents"/>.

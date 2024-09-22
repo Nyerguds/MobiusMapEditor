@@ -16,11 +16,13 @@ using MobiusEditor.Interface;
 using System;
 using System.Collections.Generic;
 using System.ComponentModel;
+using System.Diagnostics;
 using System.Drawing;
 using System.Runtime.CompilerServices;
 
 namespace MobiusEditor.Model
 {
+    [DebuggerDisplay("{Type}: {Trigger}")]
     public class Unit : ITechno, ICellOverlapper, ICellOccupier, INotifyPropertyChanged, ICloneable
     {
         public event PropertyChangedEventHandler PropertyChanged;
@@ -30,10 +32,13 @@ namespace MobiusEditor.Model
         public ITechnoType TechnoType => type;
 
         public Rectangle OverlapBounds => Type.OverlapBounds;
-        public bool[,] OpaqueMask => Type.OpaqueMask;
+        public bool[,][] OpaqueMask => Type.OpaqueMask;
 
         public bool[,] OccupyMask => Type.OccupyMask;
         public bool[,] BaseOccupyMask => Type.OccupyMask;
+        public int ZOrder => Type.ZOrder;
+        public int DrawOrderCache { get; set; }
+        public int DrawFrameCache { get; set; }
 
         private HouseType house;
         public HouseType House { get => house; set => SetField(ref house, value); }
@@ -72,6 +77,7 @@ namespace MobiusEditor.Model
             Direction = other.Direction;
             Mission = other.Mission;
             Trigger = other.Trigger;
+            DrawOrderCache = other.DrawOrderCache;
         }
 
         protected bool SetField<T>(ref T field, T value, [CallerMemberName] string propertyName = null)

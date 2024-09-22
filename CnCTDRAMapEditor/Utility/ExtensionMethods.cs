@@ -371,7 +371,7 @@ namespace MobiusEditor.Utility
             Rectangle resized = GeneralUtils.GetBoundingBoxCenter(cutout.Width, cutout.Height, maxWidth, maxHeight);
             using (Graphics g = Graphics.FromImage(newImg))
             {
-                g.CompositingMode = System.Drawing.Drawing2D.CompositingMode.SourceCopy;
+                g.CompositingMode = CompositingMode.SourceCopy;
                 if (clearColor.ToArgb() != Color.Transparent.ToArgb())
                 {
                     g.Clear(clearColor);
@@ -570,7 +570,7 @@ namespace MobiusEditor.Utility
         {
             // The principle: make a frame that's larger than the original, fill the edges with repeats
             // of the image's outer pixels, scale to desired size, then crop. The edge size is calculated
-            // to make the border in the resulting image at least 4 pixels wide.
+            // to make the border in the resulting image at least 8 pixels wide.
             int bmWidth = bitmap.Width;
             int bmHeight = bitmap.Height;
             Size imageSize = new Size(bmWidth, bmHeight);
@@ -593,12 +593,12 @@ namespace MobiusEditor.Utility
 
             int borderFractionX = 1;
             const int fractionDividerX = 16;
-            const int minimumEdge = 4;
+            const int minimumEdge = 8;
             // Use larger border fraction if result is less than 'minimumEdge' pixels.
             while (newSize.Width * borderFractionX / fractionDividerX < minimumEdge || bmWidth * borderFractionX / fractionDividerX < minimumEdge)
             {
                 // Increase is exponential until the full size (16/16) is reached, then the full size is added each time.
-                borderFractionX = borderFractionX < fractionDividerX ? borderFractionX * 2 : borderFractionX + fractionDividerX;
+                borderFractionX = borderFractionX < fractionDividerX ? (borderFractionX * 2) : (borderFractionX + fractionDividerX);
             }
             int bmBorderWidth = bmWidth * borderFractionX / fractionDividerX;
             int borderFractionY = 1;
@@ -606,7 +606,7 @@ namespace MobiusEditor.Utility
             while (newSize.Height * borderFractionY / fractionDividerY < minimumEdge || bmHeight * borderFractionY / fractionDividerY < minimumEdge)
             {
                 // Increase is exponential until the full size (16/16) is reached, then the full size is added each time.
-                borderFractionY = borderFractionY < fractionDividerY ? borderFractionY * 2 : borderFractionY + fractionDividerY;
+                borderFractionY = borderFractionY < fractionDividerY ? (borderFractionY * 2) : (borderFractionY + fractionDividerY);
             }
             int bmBorderHeight = bmHeight * borderFractionY / fractionDividerY;
             // Get original image data.
@@ -681,7 +681,7 @@ namespace MobiusEditor.Utility
                 using (Bitmap scaledImage = new Bitmap(newSize.Width + borderWidth * 2, newSize.Height + borderHeight * 2, PixelFormat.Format32bppArgb))
                 {
                     scaledImage.SetResolution(bitmap.HorizontalResolution, bitmap.VerticalResolution);
-                    // Scale expanded image to (twice) the intended size
+                    // Scale expanded image to the intended size, accounting for the added border.
                     using (Graphics g2 = Graphics.FromImage(scaledImage))
                     {
                         g2.CompositingQuality = compositingQuality;
@@ -689,7 +689,10 @@ namespace MobiusEditor.Utility
                         g2.InterpolationMode = interpolationMode;
                         g2.SmoothingMode = smoothingMode;
                         g2.PixelOffsetMode = pixelOffsetMode;
-                        g2.DrawImage(expandImage, new Rectangle(0, 0, newSize.Width + borderWidth * 2, newSize.Height + borderHeight * 2));
+                        g2.DrawImage(expandImage, 
+                            new Rectangle(0, 0, newSize.Width + borderWidth * 2, newSize.Height + borderHeight * 2), 
+                            new Rectangle(0, 0, expandWidth, expandHeight),
+                            GraphicsUnit.Pixel);
                     }
                     // Finally, create actual image at intended size.
                     Bitmap cutoutImage = new Bitmap(newSize.Width, newSize.Height, PixelFormat.Format32bppArgb);
@@ -701,7 +704,10 @@ namespace MobiusEditor.Utility
                         g3.InterpolationMode = InterpolationMode.NearestNeighbor;
                         g3.SmoothingMode = SmoothingMode.None;
                         g3.PixelOffsetMode = PixelOffsetMode.Half;
-                        g3.DrawImage(scaledImage, new Rectangle(0, 0, newSize.Width, newSize.Height), new Rectangle(borderWidth, borderHeight, newSize.Width, newSize.Height), GraphicsUnit.Pixel);
+                        g3.DrawImage(scaledImage, 
+                            new Rectangle(0, 0, newSize.Width, newSize.Height), 
+                            new Rectangle(borderWidth, borderHeight, newSize.Width, newSize.Height), 
+                            GraphicsUnit.Pixel);
                     }
                     //expandImage.Save(System.IO.Path.Combine(Program.ApplicationPath, "test_1_expand.png"), ImageFormat.Png);
                     //scaledImage.Save(System.IO.Path.Combine(Program.ApplicationPath, "test_2_scaled.png"), ImageFormat.Png);

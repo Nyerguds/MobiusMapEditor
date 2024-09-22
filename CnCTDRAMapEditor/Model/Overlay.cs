@@ -13,11 +13,13 @@
 // GNU General Public License along with permitted additional restrictions
 // with this program. If not, see https://github.com/electronicarts/CnC_Remastered_Collection
 using MobiusEditor.Interface;
+using System.Diagnostics;
 using System.Drawing;
 
 namespace MobiusEditor.Model
 {
-    public class Overlay : ICellOccupier
+    [DebuggerDisplay("{Type}: {Icon}")]
+    public class Overlay : ICellOccupier, ICellOverlapper
     {
         public OverlayType Type { get; set; }
 
@@ -27,6 +29,9 @@ namespace MobiusEditor.Model
 
         public bool[,] OccupyMask => Type.OccupyMask;
         public bool[,] BaseOccupyMask => Type.OccupyMask;
+        public bool[,][] OpaqueMask => Type.OpaqueMask;
+        public Rectangle OverlapBounds => Type.OverlapBounds;
+        public int ZOrder => Type.ZOrder;
 
         public bool IsPreview { get; set; }
 

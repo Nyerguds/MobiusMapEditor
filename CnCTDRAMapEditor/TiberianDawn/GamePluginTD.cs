@@ -261,19 +261,18 @@ namespace MobiusEditor.TiberianDawn
             return ini.ToString();
         }
 
-        public virtual IEnumerable<string> SetExtraIniText(String extraIniText, out bool footPrintsChanged)
+        public virtual IEnumerable<string> SetExtraIniText(string extraIniText, out bool footPrintsChanged)
         {
             return SetExtraIniText(extraIniText, false, out footPrintsChanged);
         }
 
-        public IEnumerable<string> TestSetExtraIniText(String extraIniText, bool isSolo, bool expansionEnabled, out bool footPrintsChanged)
+        public IEnumerable<string> TestSetExtraIniText(string extraIniText, bool isSolo, bool expansionEnabled, out bool footPrintsChanged)
         {
             // No such thing in TD as rules that change footprints, unless I add support for the 1.06 mission option.
-            footPrintsChanged = false;
-            return null;
+            return SetExtraIniText(extraIniText, true, out footPrintsChanged);
         }
 
-        public IEnumerable<string> SetExtraIniText(String extraIniText, bool forFootprintTest, out bool footPrintsChanged)
+        public IEnumerable<string> SetExtraIniText(string extraIniText, bool forFootprintTest, out bool footPrintsChanged)
         {
             footPrintsChanged = false;
             INI extraTextIni = new INI();
@@ -324,6 +323,7 @@ namespace MobiusEditor.TiberianDawn
             {
                 // Perhaps support the v1.06 bibs-disabling option in the future? Would need an entire bib-changing logic like RA has though.
             }
+            ResetMissionRules(extraTextIni, forFootprintTest, out footPrintsChanged);
             return null;
         }
 
@@ -391,7 +391,7 @@ namespace MobiusEditor.TiberianDawn
         {
             // Readonly, so I'm splitting this off
             HashSet<string> movies = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
-            String moviesMegPath = Path.Combine(Globals.TheArchiveManager.LoadRoot, "MOVIES_TD.MEG");
+            string moviesMegPath = Path.Combine(Globals.TheArchiveManager.LoadRoot, "MOVIES_TD.MEG");
             if (File.Exists(moviesMegPath))
             {
                 using (Megafile megafile = new Megafile(moviesMegPath))
@@ -470,7 +470,7 @@ namespace MobiusEditor.TiberianDawn
             string[] unitActionTypes = { };
             string[] structureActionTypes = { };
             string[] terrainActionTypes = { };
-            Size mapSize = !megaMap ? Constants.MaxSize : Constants.MaxSizeMega;
+            Size mapSize = !megaMap ? gameTypeInfo.MapSize : gameTypeInfo.MapSizeMega;
             Map = new Map(basicSection, null, mapSize, typeof(House), houseTypes,
                 null, TheaterTypes.GetTypes(), TemplateTypes.GetTypes(),
                 TerrainTypes.GetTypes(), OverlayTypes.GetTypes(), SmudgeTypes.GetTypes(Globals.ConvertCraters),
@@ -512,7 +512,7 @@ namespace MobiusEditor.TiberianDawn
             List<string> errors = new List<string>();
             bool modified = false;
             bool tryCheckSingle = false;
-            Byte[] iniBytes;
+            byte[] iniBytes;
             switch (fileType)
             {
                 case FileType.INI:
@@ -626,7 +626,7 @@ namespace MobiusEditor.TiberianDawn
         {
             if (movieEmpty.Equals(videoName))
                 return videoName;
-            String newName = GeneralUtils.AddRemarks(videoName, movieEmpty, true, movieTypesRemarksOld, remarkOld, out bool changed);
+            string newName = GeneralUtils.AddRemarks(videoName, movieEmpty, true, movieTypesRemarksOld, remarkOld, out bool changed);
             if (!changed)
             {
                 newName = GeneralUtils.AddRemarks(videoName, movieEmpty, true, movieTypesRemarksNew, remarkNew, false);
@@ -634,7 +634,7 @@ namespace MobiusEditor.TiberianDawn
             return newName;
         }
 
-        private void ParseIniContent(INI ini, Byte[] iniBytes, Boolean forSole)
+        private void ParseIniContent(INI ini, byte[] iniBytes, bool forSole)
         {
             Encoding encDOS = Encoding.GetEncoding(437);
             string iniText = encDOS.GetString(iniBytes);
@@ -683,7 +683,7 @@ namespace MobiusEditor.TiberianDawn
                     if (briefSectionUtf8.Keys.Contains("Text"))
                     {
                         string comment = briefSectionUtf8.GetComment("Text");
-                        String briefing = briefSectionUtf8.Keys["Text"];
+                        string briefing = briefSectionUtf8.Keys["Text"];
                         if (comment != null)
                         {
                             briefing = briefing + comment;
@@ -842,6 +842,7 @@ namespace MobiusEditor.TiberianDawn
             ini.Sections.Remove("Digest");
             BasicSection basic = (BasicSection)Map.BasicSection;
             HouseType player = this.LoadBasic(ini, basic);
+            UpdateBuildingRules(ini, this.Map, false);
             this.LoadMapInfo(ini, errors, ref modified);
 #if DEBUG
             //MessageBox.Show("Graphics loaded");
@@ -1806,7 +1807,7 @@ namespace MobiusEditor.TiberianDawn
                     modified = true;
                     newBld.House = defHouse;
                 }
-                if (!Map.Buildings.CanAdd(cell, newBld) || !Map.Technos.CanAdd(cell, newBld, newBld.Type.BaseOccupyMask))
+                if (!Map.Buildings.CanAdd(cell, newBld)) // || !Map.Technos.CanAdd(cell, newBld, newBld.Type.BaseOccupyMask))
                 {
                     Map.CheckBuildingBlockingCell(cell, buildingType, errors, ref modified);
                     continue;
@@ -1934,7 +1935,7 @@ namespace MobiusEditor.TiberianDawn
                     BasePriority = curPriorityVal++,
                     IsPrebuilt = false
                 };
-                if (!Map.Buildings.CanAdd(location, toRebuild) || !Map.Technos.CanAdd(location, toRebuild, toRebuild.Type.BaseOccupyMask))
+                if (!Map.Buildings.CanAdd(location, toRebuild)) // || !Map.Technos.CanAdd(location, toRebuild, toRebuild.Type.BaseOccupyMask))
                 {
                     Map.CheckBuildingBlockingCell(cell, buildingType, errors, ref modified, key);
                     continue;
@@ -2116,7 +2117,7 @@ namespace MobiusEditor.TiberianDawn
                     modified = true;
                     continue;
                 }
-                if ((overlayType.IsWall || overlayType.IsSolid) && Map.Technos.ObjectAt(cell, out ICellOccupier techno))
+                if ((overlayType.IsWall || overlayType.IsSolid) && Map.Buildings.ObjectAt(cell, out ICellOccupier techno))
                 {
                     string desc = overlayType.IsWall ? "Wall" : "Solid overlay";
                     if (techno is Building building)
@@ -2124,19 +2125,9 @@ namespace MobiusEditor.TiberianDawn
                         errors.Add(string.Format("{0} '{1}' overlaps structure '{2}' at cell {3}; skipping.", desc, overlayType.Name, building.Type.Name, cell));
                         modified = true;
                     }
-                    else if (techno is Terrain terrain)
+                    else if (techno is Overlay ovl)
                     {
-                        errors.Add(string.Format("{0} '{1}' overlaps terrain '{2}' at cell {3}; skipping.", desc, overlayType.Name, terrain.Type.Name, cell));
-                        modified = true;
-                    }
-                    else if (techno is Unit unit)
-                    {
-                        errors.Add(string.Format("{0} '{1}' overlaps unit '{2}' at cell {3}; skipping.", desc, overlayType.Name, unit.Type.Name, cell));
-                        modified = true;
-                    }
-                    else if (techno is InfantryGroup)
-                    {
-                        errors.Add(string.Format("{0} '{1}' overlaps infantry at cell {2}; skipping.", desc, overlayType.Name, cell));
+                        errors.Add(string.Format("{0} '{1}' overlaps overlay '{2}' at cell {3}; skipping.", desc, overlayType.Name, ovl.Type.Name, cell));
                         modified = true;
                     }
                     else
@@ -2407,6 +2398,110 @@ namespace MobiusEditor.TiberianDawn
             return templateType;
         }
 
+        /// <summary>
+        /// Applies any rules in the given extra ini content to the plugin.
+        /// </summary>
+        /// <param name="extraIniText">Ini content that remains after parsing an ini file. If null, only a rules reset is performed.</param>
+        /// <param name="forFootprintTest">Don't apply changes, just test the result for <paramref name="footPrintsChanged"/></param>
+        /// <param name="footPrintsChanged">Returns true if any building footprints were changed as a result of the ini rule changes.</param>
+        /// <returns>Any errors in parsing the <paramref name="extraIniText"/> contents.</returns>
+        protected virtual List<string> ResetMissionRules(INI extraIniText, bool forFootprintTest, out bool footPrintsChanged)
+        {
+            List<string> errors = new List<string>();
+            Dictionary<string, bool> bibBackups = Map.BuildingTypes.ToDictionary(b => b.Name, b => b.HasBib, StringComparer.OrdinalIgnoreCase);
+            errors.AddRange(UpdateBuildingRules(extraIniText, this.Map, forFootprintTest));
+            footPrintsChanged = false;
+            foreach (BuildingType bType in Map.BuildingTypes)
+            {
+                if (bibBackups.TryGetValue(bType.Name, out bool bTypeHadBib))
+                {
+                    bool bibChanged = bType.HasBib != bTypeHadBib;
+                    footPrintsChanged |= bibChanged;
+                    if (forFootprintTest && bibChanged)
+                    {
+                        // Restore old value. Test mode will make sure nothing on the map changed.
+                        bType.HasBib = bTypeHadBib;
+                    }
+                }
+            }
+            return errors;
+        }
+
+        private static IEnumerable<string> UpdateBuildingRules(INI ini, Map map, bool forFootPrintTest)
+        {
+            const string CapturableKey= "Capturable";
+            bool disableAllBibs = false;
+            INISection basicSection = ini.Sections["Basic"];
+            if (basicSection != null)
+            {
+                string noBibs = basicSection.TryGetValue("NoBibs");
+                disableAllBibs = YesNoBooleanTypeConverter.Parse(noBibs);
+            }                
+            List<string> errors = new List<string>();
+            Dictionary<string, BuildingType> originals = BuildingTypes.GetTypes().ToDictionary(b => b.Name, StringComparer.OrdinalIgnoreCase);
+            HashSet<Point> refreshPoints = new HashSet<Point>();
+            List<(Point Location, Building Occupier)> buildings = map.Buildings.OfType<Building>()
+                 .OrderBy(pb => pb.Location.Y * map.Metrics.Width + pb.Location.X).ToList();
+            // Remove all buildings
+            if (!forFootPrintTest)
+            {
+                foreach ((Point p, Building b) in buildings)
+                {
+                    refreshPoints.UnionWith(OccupierSet.GetOccupyPoints(p, b));
+                    map.Buildings.Remove(b);
+                }
+            }
+            // Potentially add new bibs that obstruct stuff
+            foreach (BuildingType bType in map.BuildingTypes)
+            {
+                if (!originals.TryGetValue(bType.Name, out BuildingType orig))
+                {
+                    continue;
+                }
+                bType.HasBib = disableAllBibs ? false : orig.HasBib;
+                if (!forFootPrintTest)
+                {
+                    bType.Capturable = orig.Capturable;
+                    INISection bldSettings = ini[bType.Name];
+                    if (bldSettings == null)
+                    {
+                        continue;
+                    }
+                    BuildingSection bld = new BuildingSection();
+                    try
+                    {
+                        List<(string, string)> parseErrors = INI.ParseSection(new MapContext(map, false), bldSettings, bld, true);
+                        foreach ((string iniKey, string error) in parseErrors.Where(b => CapturableKey.Equals(b.Item1, StringComparison.InvariantCulture)))
+                        {
+                            errors.Add("Custom rules error on [" + bType.Name + "]: " + error.TrimEnd('.') + ". Value for \"" + iniKey + "\" is ignored.");
+                        }
+                    }
+                    catch (Exception e)
+                    {
+                        // Normally won't happen with the aforementioned system.
+                        errors.Add("Custom rules error on [" + bType.Name + "]: " + e.Message.TrimEnd('.') + ". Rule updates for [" + bType.Name + "] are ignored.");
+                        continue;
+                    }
+                    if (bldSettings.Keys.Contains(CapturableKey))
+                    {
+                        bType.Capturable = bld.Capturable;
+                    }
+                }
+            }
+            if (forFootPrintTest)
+            {
+                return errors;
+            }
+            // Try re-adding the buildings.
+            foreach ((Point p, Building b) in buildings)
+            {
+                refreshPoints.UnionWith(OccupierSet.GetOccupyPoints(p, b));
+                map.Buildings.Add(p, b);
+            }
+            map.NotifyRulesChanges(refreshPoints);
+            return errors;
+        }
+
         public virtual bool Save(string path, FileType fileType)
         {
             return Save(path, fileType, null, false);
@@ -2431,6 +2526,12 @@ namespace MobiusEditor.TiberianDawn
             Encoding utf8 = new UTF8Encoding(false, false);
             byte[] linebreak = utf8.GetBytes("\r\n");
             INI ini = new INI();
+            List<(string section, string key)> utf8Components = new List<(string section, string key)>();
+            utf8Components.AddRange(new[] { ("Steam", null), ("Briefing", "Text"), ("Basic", "Author") });
+            if (!Globals.UseClassicFiles || !Globals.ClassicEncodesNameAsCp437 || fileType == FileType.PGM || fileType == FileType.MEG)
+            {
+                utf8Components.Add(("Basic", "Name"));
+            }
             switch (fileType)
             {
                 case FileType.INI:
@@ -2441,7 +2542,7 @@ namespace MobiusEditor.TiberianDawn
                     {
                         // Use '\n' in proprocessing for simplicity. WriteMultiEncoding will use full line breaks.
                         string iniText = forSole ? ini.ToString("\n") : FixRoad2Save(ini, "\n");
-                        GeneralUtils.WriteMultiEncoding(iniText.Split('\n'), iniWriter, dos437, utf8, new[] { ("Steam", null), ("Briefing", "Text"), ("Basic", "Name"), ("Basic", "Author") }, linebreak);
+                        GeneralUtils.WriteMultiEncoding(iniText.Split('\n'), iniWriter, dos437, utf8, utf8Components.ToArray(), linebreak);
                     }
                     using (FileStream binStream = new FileStream(binPath, FileMode.Create))
                     using (BinaryWriter binWriter = new BinaryWriter(binStream))
@@ -2495,7 +2596,7 @@ namespace MobiusEditor.TiberianDawn
                     using (MegafileBuilder megafileBuilder = new MegafileBuilder(String.Empty, path))
                     {
                         string iniText = forSole ? ini.ToString("\n") : FixRoad2Save(ini, "\n");
-                        GeneralUtils.WriteMultiEncoding(iniText.Split('\n'), iniWriter, dos437, utf8, new[] { ("Steam", null), ("Briefing", "Text"), ("Basic", "Name"), ("Basic", "Author") }, linebreak);
+                        GeneralUtils.WriteMultiEncoding(iniText.Split('\n'), iniWriter, dos437, utf8, utf8Components.ToArray(), linebreak);
                         iniWriter.Flush();
                         iniStream.Position = 0;
                         if (!isMegaMap)
@@ -2627,7 +2728,7 @@ namespace MobiusEditor.TiberianDawn
             if (String.IsNullOrWhiteSpace(basic.Name))
             {
                 string[] name = Path.GetFileNameWithoutExtension(fileName).Split(new[] { ' ', '_' }, StringSplitOptions.RemoveEmptyEntries);
-                for (Int32 i = 0; i < name.Length; i++)
+                for (int i = 0; i < name.Length; i++)
                 {
                     string word = name[i];
                     // Very very rough APA title casing :)
@@ -2738,7 +2839,7 @@ namespace MobiusEditor.TiberianDawn
             }
             if (oldSection != null)
             {
-                foreach (KeyValuePair<String, String> kvp in oldSection)
+                foreach (KeyValuePair<string, string> kvp in oldSection)
                 {
                     if (!briefingSection.Contains(kvp.Key))
                     {
@@ -3117,7 +3218,7 @@ namespace MobiusEditor.TiberianDawn
             }
         }
 
-        protected void SaveMapPreview(Stream stream, Boolean renderAll)
+        protected void SaveMapPreview(Stream stream, bool renderAll)
         {
             Map.GenerateMapPreview(this, renderAll).Save(stream);
         }
@@ -3721,13 +3822,14 @@ namespace MobiusEditor.TiberianDawn
             return errors;
         }
 
-        public string TriggerSummary(Trigger trigger, bool withLineBreaks)
+        public string TriggerSummary(Trigger trigger, bool withLineBreaks, bool includeTriggerName)
         {
-            string trigFormat = "{0}: {1}, {2}, {3} → {4}";
-            if (withLineBreaks)
+            if (trigger == null)
             {
-                trigFormat = "{0}: {1}, {2},\n{3} → {4}";
+                return null;
             }
+            string trigFormat = (includeTriggerName ? "{4}: " : String.Empty)
+                + (!withLineBreaks ? "{0}, {1}, {2} → {3}" : "{0}, {1},\n{2} → {3}");
             string evt = trigger.Event1.EventType ?? TriggerEvent.None;
             bool isDataEvent = evt == EventTypes.EVENT_CREDITS
                             || evt == EventTypes.EVENT_TIME
@@ -3754,7 +3856,7 @@ namespace MobiusEditor.TiberianDawn
                 act = String.Format(GameInfo.TRIG_ARG_FORMAT, act, trigger.Action1.Team ?? TeamType.None);
             }
             string persistence = GameInfo.PERSISTENCE_NAMES[(int)trigger.PersistentType];
-            return String.Format(trigFormat, trigger.Name, trigger.House, persistence, evt, act);
+            return String.Format(trigFormat, trigger.House, persistence, evt, act, trigger.Name);
         }
 
         public virtual ITeamColor[] GetFlagColors()
@@ -3825,6 +3927,46 @@ namespace MobiusEditor.TiberianDawn
                     return false;
             }
             return false;
+        }
+
+        public bool? IsBuildingCapturable(Building building, out string info)
+        {
+            bool? capturable = building.Type.Capturable;
+            // TODO add checks on triggers and 1.06 rule tweaks.
+            BuildingType bt = BuildingTypes.GetTypes().FirstOrDefault(b => String.Equals(building.Type.Name, b.Name, StringComparison.OrdinalIgnoreCase));
+            List<string> infoList = new List<string>();
+            info = null;
+            bool capturableClassic = building.Type.Capturable;
+            bool capturableRemaster = bt.Capturable;
+            bool capturabilitySetClassic = building.Type.Capturable != bt.Capturable;
+            bool capturabilitySetRemaster = false;
+            if (!Trigger.IsEmpty(building.Trigger) && (!bt.Capturable || !building.Type.Capturable))
+            {
+                Trigger trig = this.Map.Triggers.FirstOrDefault(t => String.Equals(t.Name, building.Trigger, StringComparison.OrdinalIgnoreCase));
+                if (trig != null && trig.Action1.ActionType == ActionTypes.ACTION_WINLOSE)
+                {
+                    capturable = true;
+                    capturableRemaster = true;
+                    capturabilitySetRemaster = true;
+                    infoList.Add("• This building is made capturable by trigger with\n" +
+                                 "   action \"" + ActionTypes.ACTION_WINLOSE + "\" (Remaster only)");
+                }
+            }
+            if (building.Type.Capturable != bt.Capturable)
+            {
+                // Check if it's due to ini tweaks by checking if base object is capturable.
+                infoList.Add(String.Format("• This building type is made {0}capturable due to\n" +
+                                           "   rules tweak in the map file (C&C95 v1.06 only)", building.Type.Capturable ? String.Empty : "un"));
+            }
+            if (infoList.Count > 0)
+            {
+                info = String.Join("\n", infoList.ToArray());
+            }
+            if ((capturabilitySetClassic && capturabilitySetRemaster) && capturableClassic != capturableRemaster)
+            {
+                capturable = null;
+            }
+            return capturable;
         }
 
         protected void BasicSection_PropertyChanged(object sender, PropertyChangedEventArgs e)

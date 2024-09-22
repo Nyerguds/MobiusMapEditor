@@ -16,6 +16,7 @@ using MobiusEditor.Interface;
 using System;
 using System.Collections.Generic;
 using System.ComponentModel;
+using System.Diagnostics;
 using System.Drawing;
 using System.Linq;
 using System.Numerics;
@@ -32,6 +33,7 @@ namespace MobiusEditor.Model
         LowerRight /**/ = 4
     }
 
+    [DebuggerDisplay("{Type}: {Trigger}")]
     public class Infantry : ITechno, INotifyPropertyChanged, ICloneable
     {
         public event PropertyChangedEventHandler PropertyChanged;
@@ -58,6 +60,8 @@ namespace MobiusEditor.Model
         public string Trigger { get => trigger; set => SetField(ref trigger, value); }
 
         public bool IsPreview { get; set; }
+        public int DrawOrderCache { get; set; }
+        public int DrawFrameCache { get; set; }
 
         public Infantry(InfantryGroup infantryGroup)
         {
@@ -84,6 +88,7 @@ namespace MobiusEditor.Model
             Direction = other.Direction;
             Trigger = other.Trigger;
             Mission = other.Mission;
+            DrawOrderCache = other.DrawOrderCache;
         }
 
         protected bool SetField<T>(ref T field, T value, [CallerMemberName] string propertyName = null)
@@ -120,9 +125,11 @@ namespace MobiusEditor.Model
         private static readonly Point[] stoppingLocations = new Point[Globals.NumInfantryStops];
 
         public Rectangle OverlapBounds => new Rectangle(-1, -1, 3, 3);
-        public bool[,] OpaqueMask => new bool[1, 1] { { true } };
+        public bool[,][] OpaqueMask => new bool[1, 1][] { { Infantry.Select(loc => loc != null).ToArray() } };
         public bool[,] OccupyMask => new bool[1, 1] { { true } };
         public bool[,] BaseOccupyMask => new bool[1, 1] { { true } };
+        public int ZOrder => Globals.ZOrderDefault;
+        public int DrawOrderCache { get; set; }
 
         public readonly Infantry[] Infantry = new Infantry[Globals.NumInfantryStops];
 
@@ -144,6 +151,7 @@ namespace MobiusEditor.Model
             }
             return stoppingDistances.OrderBy(sd => sd.dist).Select(sd => sd.type);
         }
+
         public static InfantryStoppingType[] RenderOrder =
         {
             InfantryStoppingType.UpperRight,
@@ -152,11 +160,6 @@ namespace MobiusEditor.Model
             InfantryStoppingType.LowerRight,
             InfantryStoppingType.LowerLeft,
         };
-
-        public static int RenderPriority(InfantryStoppingType ist)
-        {
-            return Enumerable.Range(0, RenderOrder.Length).Where(i => RenderOrder[i] == ist).FirstOrDefault();
-        }
 
         public static Point RenderPosition(InfantryStoppingType ist, bool adjust)
         {

@@ -17,7 +17,6 @@ using System.Drawing;
 using System.IO;
 using System.Linq;
 using System.Text;
-using System.Xml.Linq;
 using MobiusEditor.Interface;
 using MobiusEditor.Model;
 using MobiusEditor.Utility;
@@ -46,6 +45,8 @@ namespace MobiusEditor.RedAlert
         public override string ClassicFolderDefault => "Classic\\RA\\";
         public override string ClassicFolderSetting => "ClassicPathRA";
         public override string ClassicStringsFile => "conquer.eng";
+        public override Size MapSize => Constants.MaxSize;
+        public override Size MapSizeMega => Constants.MaxSize;
         public override TheaterType[] AllTheaters => TheaterTypes.GetAllTypes().ToArray();
         public override TheaterType[] AvailableTheaters => TheaterTypes.GetTypes().ToArray();
         public override bool MegamapIsSupported => true;
@@ -129,12 +130,12 @@ namespace MobiusEditor.RedAlert
 
         public override Bitmap GetWaypointIcon()
         {
-            return GetTile("beacon", 0, "mouse", 15);
+            return Globals.TheTilesetManager.GetTile("beacon", 0, "mouse", 15, null);
         }
 
         public override Bitmap GetCellTriggerIcon()
         {
-            return GetTile("mine", 3, "mine.shp", 3);
+            return Globals.TheTilesetManager.GetTile("mine", 3, "mine.shp", 3, null);
         }
 
         public override Bitmap GetSelectIcon()
@@ -142,7 +143,15 @@ namespace MobiusEditor.RedAlert
             // Remaster: Chronosphere cursor from TEXTURES_SRGB.MEG
             // Alt: @"DATA\ART\TEXTURES\SRGB\ICON_IONCANNON_15.DDS
             // Classic: Chronosphere cursor
-            return GetTexture(@"DATA\ART\TEXTURES\SRGB\ICON_SELECT_GREEN_04.DDS", "mouse", 101);
+            return Globals.TheTilesetManager.GetTexture(@"DATA\ART\TEXTURES\SRGB\ICON_SELECT_GREEN_04.DDS", "mouse", 101, true);
+        }
+
+        public override Bitmap GetCaptureIcon()
+        {
+            // Remaster: Chronosphere cursor from TEXTURES_SRGB.MEG
+            // Alt: @"DATA\ART\TEXTURES\SRGB\ICON_IONCANNON_15.DDS
+            // Classic: Chronosphere cursor
+            return Globals.TheTilesetManager.GetTexture(@"DATA\ART\TEXTURES\SRGB\ICON_MOUNT_UNIT_X2_02.DDS", "mouse", 115, true);
         }
 
         public override string EvaluateBriefing(string briefing)
@@ -245,7 +254,7 @@ namespace MobiusEditor.RedAlert
                     break;
                 case ClassicFont.WaypointsLong:
                     crop = true;
-                    fontName = "6point.fnt";
+                    fontName = "editfnt.fnt";
                     remap = GetClassicFontRemapSimple(fontName, tsmc, trm, textColor, 2, 3);
                     break;
                 case ClassicFont.CellTriggers:
@@ -259,16 +268,28 @@ namespace MobiusEditor.RedAlert
                     remap = GetClassicFontRemapSimple(fontName, tsmc, trm, textColor);
                     break;
                 case ClassicFont.TechnoTriggers:
-                case ClassicFont.InfantryTriggers:
                     crop = true;
-                    fontName = "3point.fnt";
+                    fontName = "editfnt.fnt";
+                    remap = GetClassicFontRemapSimple(fontName, tsmc, trm, textColor, 2, 3);
+                    break;
+                case ClassicFont.TechnoTriggersSmall:
+                    crop = true;
+                    fontName = "5pntthin.fnt";
+                    if (!tsmc.TileExists(fontName))
+                    {
+                        fontName = "3point.fnt";
+                    }
                     remap = GetClassicFontRemapSimple(fontName, tsmc, trm, textColor);
                     break;
                 case ClassicFont.FakeLabels:
                     crop = true;
-                    fontName = "6point.fnt";
+                    fontName = "editfnt.fnt";
                     remap = GetClassicFontRemapSimple(fontName, tsmc, trm, textColor, 2, 3);
                     break;
+            }
+            if (!tsmc.TileExists(fontName))
+            {
+                fontName = null;
             }
             return fontName;
         }

@@ -71,7 +71,6 @@ namespace MobiusEditor.Tools
             this.jumpToButton = jumpToButton;
             this.jumpToButton.Click += JumpToButton_Click;
             this.waypointCombo = waypointCombo;
-            this.waypointCombo.DisplayMember = "";
             this.waypointCombo.DataSource = plugin.Map.Waypoints.ToArray();
             this.waypointCombo.SelectedIndexChanged += this.WaypointCombo_SelectedIndexChanged;
             navigationWidget.MouseCellChanged += MouseoverWidget_MouseCellChanged;
@@ -535,12 +534,12 @@ namespace MobiusEditor.Tools
             if (Layers.HasFlag(MapLayerFlag.FootballArea) && gameInfo.SupportsMapLayer(MapLayerFlag.FootballArea))
             {
                 MapRenderer.RenderAllFootballAreas(graphics, previewMap, visibleCells, Globals.MapTileSize, Globals.MapTileScale, gameInfo);
-                MapRenderer.RenderWaypointFlags(graphics, gameInfo, previewMap, visibleCells, Globals.MapTileSize);
+                MapRenderer.RenderWaypointFlags(graphics, gameInfo, previewMap, visibleCells, Globals.MapTileSize, Globals.TheShapeCacheManager);
             }
             // If the selected waypoint is not a flag, re-render it as opaque.
             if (selected != null && (plugin.Map.BasicSection.SoloMission || (selected.Flag & WaypointFlag.PlayerStart) != WaypointFlag.PlayerStart))
             {
-                MapRenderer.RenderWaypoint(gameInfo, true, Globals.MapTileSize, map.FlagColors.ToArray(), selected, 1.0f, 0).Item2(graphics);
+                MapRenderer.RenderWaypoint(gameInfo, true, Globals.MapTileSize, map.FlagColors.ToArray(), selected, 1.0f, 0, Globals.TheShapeCacheManager).Item2(graphics);
             }
             // Render those here so they are put over the opaque redraw of the current waypoint.
             MapRenderer.RenderAllTechnoTriggers(graphics, gameInfo, plugin.Map, visibleCells, Globals.MapTileSize, Layers);

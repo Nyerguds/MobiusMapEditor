@@ -11,13 +11,11 @@
 //    TERMS AND CONDITIONS FOR COPYING, DISTRIBUTION AND MODIFICATION
 //
 //   0. You just DO WHAT THE FUCK YOU WANT TO.
-using System.Collections.Generic;
 using System.Drawing;
 using System.Linq;
 using MobiusEditor.Interface;
 using MobiusEditor.Model;
 using MobiusEditor.TiberianDawn;
-using MobiusEditor.Utility;
 
 namespace MobiusEditor.SoleSurvivor
 {
@@ -58,12 +56,12 @@ namespace MobiusEditor.SoleSurvivor
 
         public override Bitmap GetWaypointIcon()
         {
-            return GetTile("beacon", 0, "mouse", 12);
+            return Globals.TheTilesetManager.GetTile("beacon", 0, "mouse", 12, null);
         }
 
         public override Bitmap GetCellTriggerIcon()
         {
-            return GetTile("mine", 3, "mine.shp", 3);
+            return Globals.TheTilesetManager.GetTile("mine", 3, "mine.shp", 3, null);
         }
 
         public override string EvaluateBriefing(string briefing)

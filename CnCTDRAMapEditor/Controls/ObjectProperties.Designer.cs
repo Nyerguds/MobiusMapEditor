@@ -31,6 +31,7 @@ namespace MobiusEditor.Controls
         {
             this.components = new System.ComponentModel.Container();
             this.tableLayoutPanel1 = new System.Windows.Forms.TableLayoutPanel();
+            this.lblCapturable = new System.Windows.Forms.Label();
             this.label1 = new System.Windows.Forms.Label();
             this.label2 = new System.Windows.Forms.Label();
             this.directionLabel = new System.Windows.Forms.Label();
@@ -59,6 +60,7 @@ namespace MobiusEditor.Controls
             this.tableLayoutPanel1.ColumnStyles.Add(new System.Windows.Forms.ColumnStyle(System.Windows.Forms.SizeType.Percent, 40F));
             this.tableLayoutPanel1.ColumnStyles.Add(new System.Windows.Forms.ColumnStyle(System.Windows.Forms.SizeType.Percent, 60F));
             this.tableLayoutPanel1.ColumnStyles.Add(new System.Windows.Forms.ColumnStyle(System.Windows.Forms.SizeType.Absolute, 30F));
+            this.tableLayoutPanel1.Controls.Add(this.lblCapturable, 2, 0);
             this.tableLayoutPanel1.Controls.Add(this.label1, 0, 0);
             this.tableLayoutPanel1.Controls.Add(this.label2, 0, 1);
             this.tableLayoutPanel1.Controls.Add(this.directionLabel, 0, 2);
@@ -91,6 +93,19 @@ namespace MobiusEditor.Controls
             this.tableLayoutPanel1.RowStyles.Add(new System.Windows.Forms.RowStyle());
             this.tableLayoutPanel1.Size = new System.Drawing.Size(230, 240);
             this.tableLayoutPanel1.TabIndex = 0;
+            // 
+            // lblCapturable
+            // 
+            this.lblCapturable.Dock = System.Windows.Forms.DockStyle.Fill;
+            this.lblCapturable.Location = new System.Drawing.Point(200, 0);
+            this.lblCapturable.Margin = new System.Windows.Forms.Padding(0);
+            this.lblCapturable.Name = "lblCapturable";
+            this.lblCapturable.Size = new System.Drawing.Size(30, 27);
+            this.lblCapturable.TabIndex = 17;
+            this.lblCapturable.TextAlign = System.Drawing.ContentAlignment.MiddleCenter;
+            this.lblCapturable.MouseEnter += new System.EventHandler(this.LblCapturable_MouseEnter);
+            this.lblCapturable.MouseLeave += new System.EventHandler(this.HideToolTip);
+            this.lblCapturable.MouseMove += new System.Windows.Forms.MouseEventHandler(this.LblCapturable_MouseMove);
             // 
             // label1
             // 
@@ -149,7 +164,6 @@ namespace MobiusEditor.Controls
             // 
             // houseComboBox
             // 
-            this.houseComboBox.DisplayMember = "Name";
             this.houseComboBox.Dock = System.Windows.Forms.DockStyle.Fill;
             this.houseComboBox.DropDownStyle = System.Windows.Forms.ComboBoxStyle.DropDownList;
             this.houseComboBox.FormattingEnabled = true;
@@ -157,7 +171,7 @@ namespace MobiusEditor.Controls
             this.houseComboBox.Name = "houseComboBox";
             this.houseComboBox.Size = new System.Drawing.Size(114, 21);
             this.houseComboBox.TabIndex = 5;
-            this.houseComboBox.ValueMember = "Type";
+            this.houseComboBox.ValueMember = "Value";
             this.houseComboBox.SelectedIndexChanged += new System.EventHandler(this.comboBox_SelectedValueChanged);
             // 
             // strengthNud
@@ -187,7 +201,6 @@ namespace MobiusEditor.Controls
             // 
             // directionComboBox
             // 
-            this.directionComboBox.DisplayMember = "Name";
             this.directionComboBox.Dock = System.Windows.Forms.DockStyle.Fill;
             this.directionComboBox.DropDownStyle = System.Windows.Forms.ComboBoxStyle.DropDownList;
             this.directionComboBox.FormattingEnabled = true;
@@ -195,12 +208,11 @@ namespace MobiusEditor.Controls
             this.directionComboBox.Name = "directionComboBox";
             this.directionComboBox.Size = new System.Drawing.Size(114, 21);
             this.directionComboBox.TabIndex = 7;
-            this.directionComboBox.ValueMember = "Type";
+            this.directionComboBox.ValueMember = "Value";
             this.directionComboBox.SelectedIndexChanged += new System.EventHandler(this.comboBox_SelectedValueChanged);
             // 
             // missionComboBox
             // 
-            this.missionComboBox.DisplayMember = "Name";
             this.missionComboBox.Dock = System.Windows.Forms.DockStyle.Fill;
             this.missionComboBox.DropDownStyle = System.Windows.Forms.ComboBoxStyle.DropDownList;
             this.missionComboBox.FormattingEnabled = true;
@@ -208,7 +220,6 @@ namespace MobiusEditor.Controls
             this.missionComboBox.Name = "missionComboBox";
             this.missionComboBox.Size = new System.Drawing.Size(114, 21);
             this.missionComboBox.TabIndex = 8;
-            this.missionComboBox.ValueMember = "Type";
             this.missionComboBox.SelectedIndexChanged += new System.EventHandler(this.comboBox_SelectedValueChanged);
             // 
             // triggerComboBox
@@ -221,6 +232,9 @@ namespace MobiusEditor.Controls
             this.triggerComboBox.Size = new System.Drawing.Size(114, 21);
             this.triggerComboBox.TabIndex = 9;
             this.triggerComboBox.SelectedIndexChanged += new System.EventHandler(this.comboBox_SelectedValueChanged);
+            this.triggerComboBox.MouseEnter += new System.EventHandler(this.TriggerComboBox_MouseEnter);
+            this.triggerComboBox.MouseLeave += new System.EventHandler(this.HideToolTip);
+            this.triggerComboBox.MouseMove += new System.Windows.Forms.MouseEventHandler(this.TriggerComboBox_MouseMove);
             // 
             // basePriorityNud
             // 
@@ -241,11 +255,6 @@ namespace MobiusEditor.Controls
             this.basePriorityNud.Size = new System.Drawing.Size(116, 20);
             this.basePriorityNud.TabIndex = 11;
             this.basePriorityNud.ValueChanged += new System.EventHandler(this.nud_ValueChanged);
-            this.basePriorityNud.Value = new decimal(new int[] {
-            0,
-            0,
-            0,
-            0});
             // 
             // prebuiltCheckBox
             // 
@@ -303,7 +312,8 @@ namespace MobiusEditor.Controls
             this.lblTriggerTypesInfo.TabIndex = 16;
             this.lblTriggerTypesInfo.TextAlign = System.Drawing.ContentAlignment.MiddleCenter;
             this.lblTriggerTypesInfo.MouseEnter += new System.EventHandler(this.LblTriggerTypesInfo_MouseEnter);
-            this.lblTriggerTypesInfo.MouseLeave += new System.EventHandler(this.LblTriggerInfo_MouseLeave);
+            this.lblTriggerTypesInfo.MouseLeave += new System.EventHandler(this.HideToolTip);
+            this.lblTriggerTypesInfo.MouseMove += new System.Windows.Forms.MouseEventHandler(this.LblTriggerTypesInfo_MouseMove);
             // 
             // ObjectProperties
             // 
@@ -312,7 +322,7 @@ namespace MobiusEditor.Controls
             this.Controls.Add(this.tableLayoutPanel1);
             this.Name = "ObjectProperties";
             this.Size = new System.Drawing.Size(230, 240);
-            this.Load += new System.EventHandler(ObjectProperties_Load);
+            this.Load += new System.EventHandler(this.ObjectProperties_Load);
             this.Resize += new System.EventHandler(this.ObjectProperties_Resize);
             this.tableLayoutPanel1.ResumeLayout(false);
             this.tableLayoutPanel1.PerformLayout();
@@ -342,5 +352,6 @@ namespace MobiusEditor.Controls
         private System.Windows.Forms.CheckBox rebuildCheckBox;
         private System.Windows.Forms.ToolTip toolTip1;
         private System.Windows.Forms.Label lblTriggerTypesInfo;
+        private System.Windows.Forms.Label lblCapturable;
     }
 }
