@@ -622,7 +622,7 @@ Released on 31 Jan 2023 at 20:50 GMT
 
 ### v1.6.0.0:
 
-Unreleased.
+Released on 22 Sep 2024 at 15:00 GMT
 
 * Added .mix files to the supported formats to open, giving the ability to load official maps straight from the game's internal archives.
 * Implemented a new scaling method that vastly reduces the saving time of multiplayer map thumbnails and image exports.

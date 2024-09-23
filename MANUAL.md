@@ -256,7 +256,7 @@ Note that there is no support for running the editor for one specific game only,
 
 ### Tiberian Dawn and Sole Survivor
 
-These are read from the "Classic\\TD" subfolder by default. Note that the editor has not been specifically tested on an actual Sole Survivor folder.
+These are read from the "Classic\\TD" subfolder by default. Note that the TD folder included in the editor has a minor added fix (sc-ptem.mix) which won't be present in a bare TD/Sole install folder.
 
 * cclocal.mix (or local.mix) <sup>(*)</sup>
 * sc*.mix <sup>(1)</sup>
