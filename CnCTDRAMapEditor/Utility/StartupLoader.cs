@@ -206,11 +206,25 @@ namespace MobiusEditor.Utility
             }
             MegafileManager mfm = new MegafileManager(Path.Combine(runPath, Globals.MegafilePath), runPath, modPaths, romfis, gameFolders);
             var megafilesLoaded = true;
-            megafilesLoaded &= mfm.LoadArchive("CONFIG.MEG");
-            megafilesLoaded &= mfm.LoadArchive("TEXTURES_COMMON_SRGB.MEG");
-            megafilesLoaded &= mfm.LoadArchive("TEXTURES_RA_SRGB.MEG");
-            megafilesLoaded &= mfm.LoadArchive("TEXTURES_SRGB.MEG");
-            megafilesLoaded &= mfm.LoadArchive("TEXTURES_TD_SRGB.MEG");
+            GameInfo[] gameTypeInfo = GameTypeFactory.GetGameInfos();
+            HashSet<string> remasterFilesFound = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
+            List<string> remasterFilesToLoad = new List<string>();
+            foreach (GameInfo gic in gameTypeInfo)
+            {
+                string[] files = gic.RemasterMegFiles;
+                foreach (string file in files)
+                {
+                    if (!remasterFilesFound.Contains(file))
+                    {
+                        remasterFilesToLoad.Add(file);
+                        remasterFilesFound.Add(file);
+                    }
+                }
+            }
+            foreach (string remFile in remasterFilesToLoad)
+            {
+                megafilesLoaded &= mfm.LoadArchive(remFile);
+            }
             if (!megafilesLoaded)
             {
                 MessageBox.Show("Required data is missing or corrupt; please validate your installation.", "Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
@@ -219,7 +233,6 @@ namespace MobiusEditor.Utility
             // Classic main.mix and theater files, for rules reading and template land type detection in RA.
             List<string> loadErrors = new List<string>();
             List<string> fileLoadErrors = new List<string>();
-            GameInfo[] gameTypeInfo = GameTypeFactory.GetGameInfos();
             foreach (GameInfo gic in gameTypeInfo)
             {
                 gic.InitClassicFiles(mfm.ClassicFileManager, loadErrors, fileLoadErrors, true);

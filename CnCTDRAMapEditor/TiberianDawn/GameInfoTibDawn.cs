@@ -39,6 +39,7 @@ namespace MobiusEditor.TiberianDawn
         public override string ModsToLoad => Properties.Settings.Default.ModsToLoadTD;
         public override string ModsToLoadSetting => "ModsToLoadTD";
         public override string WorkshopTypeId => "TD";
+        public override string[] RemasterMegFiles => new string[] { "CONFIG.MEG", "TEXTURES_COMMON_SRGB.MEG", "TEXTURES_SRGB.MEG", "TEXTURES_TD_SRGB.MEG" };
         public override string ClassicFolder => Properties.Settings.Default.ClassicPathTD;
         public override string ClassicFolderRemaster => "CNCDATA\\TIBERIAN_DAWN";
         public override string ClassicFolderRemasterData => ClassicFolderRemaster + "\\CD1";

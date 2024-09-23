@@ -39,6 +39,7 @@ namespace MobiusEditor.RedAlert
         public override string ModsToLoad => Properties.Settings.Default.ModsToLoadRA;
         public override string ModsToLoadSetting => "ModsToLoadRA";
         public override string WorkshopTypeId => "RA";
+        public override string[] RemasterMegFiles => new string[] {"CONFIG.MEG", "TEXTURES_COMMON_SRGB.MEG", "TEXTURES_SRGB.MEG", "TEXTURES_RA_SRGB.MEG" };
         public override string ClassicFolder => Properties.Settings.Default.ClassicPathRA;
         public override string ClassicFolderRemaster => "CNCDATA\\RED_ALERT";
         public override string ClassicFolderRemasterData => ClassicFolderRemaster + "\\AFTERMATH";

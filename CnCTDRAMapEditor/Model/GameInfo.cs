@@ -65,6 +65,8 @@ namespace MobiusEditor.Model
         public abstract string ModsToLoadSetting { get; }
         /// <summary>Workshop identifier for maps for this game. If empty, workshop is not supported for this game.</summary>
         public abstract string WorkshopTypeId { get; }
+        /// <summary>Gives the list of remastered .meg files to load for this game.</summary>
+        public abstract string[] RemasterMegFiles { get; }
         /// <summary>Configured folder for this this game's Classic files</summary>
         public abstract string ClassicFolder { get; }
         /// <summary>Root folder of this game's Classic files under in the Remastered Collection's "Data" folder.</summary>

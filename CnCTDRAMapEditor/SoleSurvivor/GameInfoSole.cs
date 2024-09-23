@@ -26,6 +26,7 @@ namespace MobiusEditor.SoleSurvivor
         public override string Name => "Sole Survivor";
         public override string IniName => "SoleSurvivor";
         public override string WorkshopTypeId => null;
+        public override string[] RemasterMegFiles => new string[] { "CONFIG.MEG", "TEXTURES_COMMON_SRGB.MEG", "TEXTURES_SRGB.MEG", "TEXTURES_TD_SRGB.MEG" };
         public override string ClassicFolder => Properties.Settings.Default.ClassicPathSS;
         public override string ClassicFolderDefault => "Classic\\TD\\";
         public override string ClassicFolderSetting => "ClassicPathSS";
