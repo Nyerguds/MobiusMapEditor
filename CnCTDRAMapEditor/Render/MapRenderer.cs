@@ -1646,6 +1646,7 @@ namespace MobiusEditor.Render
                         Point realPoint = new Point(objLocation.X + opaquePoint.X, objLocation.Y + opaquePoint.Y);
                         InfantryStoppingType[] toCheck = Enum.GetValues(typeof(InfantryStoppingType)).Cast<InfantryStoppingType>().ToArray();
                         bool isSubOverlapped = false;
+                        bool cellHasGraphics = false;
                         bool[] opaqueCellMask = opaqueMask[opaquePoint.Y, opaquePoint.X];
                         foreach (InfantryStoppingType ist in toCheck)
                         {
@@ -1653,14 +1654,16 @@ namespace MobiusEditor.Render
                             {
                                 continue;
                             }
+                            cellHasGraphics = true;
                             if (IsOverlapped(map, realPoint, false, ist, placedObj, paintOrder))
                             {
+                                // If any of the sub-positions on a cell are overlapped, consider it partially overlapped and thus eligible for an outline.
                                 isSubOverlapped = true;
                                 break;
                             }
                         }
-                        // if any of the occupied sub-cells are overlapped, consider it partially overlapped and thus eligible for outline.
-                        if (!isSubOverlapped)
+                        // if any of the graphics-containing cells are not overlapped at all, consider the object visible enough, and thus not eligible for an outline.
+                        if (cellHasGraphics && !isSubOverlapped)
                         {
                             allOpaque = false;
                             break;
