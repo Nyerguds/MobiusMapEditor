@@ -84,10 +84,11 @@ Land types indicate which cells of the map tilesets are passable to different ty
 
 The colors for the different land types can be configured in the config file; see "Colors and transparency" below. These land types exist in the games:
 
-* Clear: Passable for land units. Normally not shown, except in placement previews, where its default color is white.
+* Clear: Passable for land units, and can be built on. Normally not shown, except in placement previews, where its default color is white.
 * Beach: Passable, but can't be built on. Its default color is yellow.
 * Rock: Land impassable for all units. Its default color is red.
-* Rough: Passable, but can't be built on. Its default color is pale purple. (Red Alert only)
+* Road: Passable for land units, and can be built on. Units move faster on roads. (Red Alert only)
+* Rough: Passable, but can't be built on. Its default color is grayish purple. (Red Alert only)
 * Water: Passable for ships only. Its default color is light blue.
 * River: Water impassable for all units. Its default color is dark blue. (Red Alert only)
 
@@ -106,8 +107,6 @@ This should make you end up in the "AppData\\Local\\Nyerguds" folder under your 
 ## Configuration
 
 The file "CnCTDRAMapEditor.exe.config" contains settings to customise the editor. The file is in xml format, meaning it can be opened in any text editor. This section details what its settings do.
-
-Note that this listing is updated as I develop. If options mentioned in this list do not exist in the settings file, chances are they refer to features that are already implemented in the source code on GitHub, but not yet released in a new version to download.
 
 ### Using classic files:
 
@@ -146,7 +145,7 @@ In classic graphics mode, the editor can still use mods, if they contain classic
 
 ### Mix content analysis:
 
-Starting from v1.5.1.0, the editor has the ability to open the original games' .mix archives to open the missions inside it. However, the names of the files inside those archives are only stored as hashed numeric values created with a one-way hashing algorithm. This means that, to identify these files, lists of all the original file names are needed. The system to generate these names and their hash values is controlled by a set of ini files, of which the main definitions file is configured in the settings:
+Starting from v1.6.0.0, the editor has the ability to open the original games' .mix archives to open the missions inside it. However, the names of the files inside those archives are only stored as hashed numeric values created with a one-way hashing algorithm. This means that, to identify these files, lists of all the original file names are needed. The system to generate these names and their hash values is controlled by a set of ini files, of which the main definitions file is configured in the settings:
 
 * **MixContentInfoFile**: Contains the definitions of the supported games for which mix file content analysis can be done, and any additional files to be loaded to get all information for each game. By default, this is set to "Classic\mixcontent.ini".
 
@@ -184,13 +183,13 @@ General:
 
 For the option "Extra indicators" → "Map terrain types":
 
-* **HashColorLandClear**: The color for cells of the 'Clear' land type. This is the default passable terrain. Defaults to transparent white. Note that by default, this one's alpha component is set to 0, to suppress the indicators for this type. However, the actual color information will be used for placement previews of map templates, to indicate all cells in the shape.
-* **HashColorLandBeach**: The color for cells of the 'Beach' land type. This is passable, but can't be built on. Defaults to yellow.
-* **HashColorLandRock**: The color for cells of the 'Rock' land type. This is fully impassable terrain. Defaults to dark red.
-* **HashColorLandRoad**: The color for cells of the 'Road' land type. Units move faster on roads. This type is only used in Red Alert. Defaults to brown.
-* **HashColorLandWater**: The color for cells of the 'Water' land type. This is water terrain that is passable for ships. Defaults to pale blue.
-* **HashColorLandRiver**: The color for cells of the 'River' land type. This is water terrain that is not passable for ships. Defaults to blue.
-* **HashColorLandRough**: The color for cells of the 'Rough' land type. This is passable, but can't be built on. Defaults to grayish purple.
+* **HashColorLandClear**: The color for cells of the 'Clear' land type. Defaults to transparent white. Note that by default, this one's alpha component is set to 0, to suppress the indicators for this type. However, the actual color information will be used for placement previews of map templates, to indicate all cells in the shape.
+* **HashColorLandBeach**: The color for cells of the 'Beach' land type. Defaults to yellow.
+* **HashColorLandRock**: The color for cells of the 'Rock' land type. Defaults to dark red.
+* **HashColorLandRoad**: The color for cells of the 'Road' land type. Defaults to brown.
+* **HashColorLandWater**: The color for cells of the 'Water' land type. Defaults to pale blue.
+* **HashColorLandRiver**: The color for cells of the 'River' land type. Defaults to blue.
+* **HashColorLandRough**: The color for cells of the 'Rough' land type. Defaults to grayish purple.
 
 For the option "Extra indicators" → "Occupied by objects":
 
@@ -199,13 +198,13 @@ For the option "Extra indicators" → "Occupied by objects":
 
 Outline colors for unowned objects:
 
-An outline will be shown around objects that are partially or fully behind other objects (or always, in the case of the *DefaultOutlineAllCrates* settings). For owned objects, these outlines are given the color of their owners, but for unowned objects, they are editable here. An overlap type can be disabled by adding an alpha factor of 0 in front of the R,G,B color values.
+An outline will be shown around objects that are partially or fully behind other objects (or always, in the case of the *DefaultOutlineAllCrates* settings). For owned objects, these outlines are given the color of their owners, but for unowned objects, they are editable here. An outline type can be disabled by adding an alpha factor of 0 in front of the R,G,B color values.
 
-* **OutlineColorCrateWood**: The outline color for wooden crates.
-* **OutlineColorCrateSteel**: The outline color for steel crates.
-* **OutlineColorTerrain**: The outline color for Terrain objects (trees and rocks).
-* **OutlineColorSolidOverlay**: The outline color for impassable overlay. Pavement-type overlay is never outlined.
-* **OutlineColorWall**: The outline color for walls. Note that this one is disabled by default (by setting its alpha to 0) because they are very common to have overlaps on, and it is rarely useful to show them.
+* **OutlineColorCrateWood**: The outline color for wooden crates. Defaults to brown.
+* **OutlineColorCrateSteel**: The outline color for steel crates. Defaults to silver.
+* **OutlineColorTerrain**: The outline color for Terrain objects (trees and rocks). Defaults to green.
+* **OutlineColorSolidOverlay**: The outline color for impassable overlay. Pavement-type overlay is never outlined. Defaults to gray.
+* **OutlineColorWall**: The outline color for walls. Defaults to purple. Note that this one is disabled by default (by setting its alpha to 0) because they are very common to have overlaps on, and it is rarely useful to show them.
 
 Alpha transparency factors used:
 
