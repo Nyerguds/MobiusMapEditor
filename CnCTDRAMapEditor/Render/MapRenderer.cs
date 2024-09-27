@@ -1429,23 +1429,26 @@ namespace MobiusEditor.Render
                     if (overlay.Type.ContentMask == null) {
                         continue;
                     }
-                    bool[] toCheck = overlay.Type.ContentMask[0, 0];
-                    InfantryStoppingType[] toLoop = Enum.GetValues(typeof(InfantryStoppingType)).Cast<InfantryStoppingType>().ToArray();
-                    bool occupied = false;
-                    for (int i = 0; i < toLoop.Length; i++)
+                    int occupiedSubPositions = 0;
+                    int overlappedSubPositions = 0;
+                    bool[] opaqueCellMask = overlay.Type.ContentMask[0, 0];
+                    InfantryStoppingType[] toCheck = Enum.GetValues(typeof(InfantryStoppingType)).Cast<InfantryStoppingType>().ToArray();
+                    foreach (InfantryStoppingType ist in toCheck)
                     {
-                        if (!toCheck[i])
+                        if (!opaqueCellMask[(int)ist])
                         {
                             continue;
                         }
-                        InfantryStoppingType ist = toLoop[i];
+                        occupiedSubPositions++;
                         if (IsOverlapped(map, location, true, ist, overlay, -1))
                         {
-                            occupied = true;
-                            break;
+                            overlappedSubPositions++;
                         }
                     }
-                    if (!occupied)
+                    // To show an outline, something needs to be overlapped, the total overlapped sub-cells must be at least half of the visible content,
+                    // and  at least 3/4th of the graphics-occupied cells need to be at least partially overlapped.
+                    bool showOutline = overlappedSubPositions > 0 && overlappedSubPositions * 2 >= occupiedSubPositions;
+                    if (!showOutline)
                     {
                         continue;
                     }
@@ -1686,18 +1689,7 @@ namespace MobiusEditor.Render
                 RegionData paintAreaRel = Globals.TheShapeCacheManager.GetShape(id);
                 if (paintAreaRel == null)
                 {
-                    // Clone without preview flag.
                     T toRender = placedObj;
-                    if (placedObj.IsPreview)
-                    {
-                        toRender = (T)placedObj.Clone();
-                        placedObj.IsPreview = false;
-                        if (placedObj is Building bld)
-                        {
-                            bld.BasePriority = 0;
-                            bld.IsPrebuilt = true;
-                        }
-                    }
                     using (Bitmap bm = new Bitmap(tileSize.Width * cellSize.Width, tileSize.Height * cellSize.Width, PixelFormat.Format32bppArgb))
                     {
                         using (Graphics ig = Graphics.FromImage(bm))

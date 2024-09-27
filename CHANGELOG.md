@@ -619,7 +619,6 @@ Released on 31 Jan 2023 at 20:50 GMT
 * Added an "EditorLanguage" option that can be used to change the language of the game text loaded in the editor. The default value is "Auto", which makes it autodetect the language using the system language.
 * Added an option to control the behaviour of allowing walls as structures, with an owner. Since this is a behavior tweaks option, and those are all enabled by default, it is called "DontAllowWallsAsBuildings".
 
-
 ### v1.6.0.0:
 
 Released on 22 Sep 2024 at 15:00 GMT
@@ -673,3 +672,11 @@ Released on 22 Sep 2024 at 15:00 GMT
 * Fixed trigger changes on Terrain objects not immediately refreshing the map.
 * Fixed an internal issue with the unit/infantry/building properties popup not cleaning up its internal resources after closing.
 * Waypoints now use the "Select" cursor graphics as indicator on the map, rather than the green beacon that was barely visible behind the text.
+
+### v1.6.0.1:
+
+Unreleased
+
+* Fixed bug that prevented overlap outlines from working on terrain objects with an extra cell that only contained shadow.
+* Added a new overlap detection logic for objects of the Terrain, Building and Overlay types that only gives them an outline if at least 3/4th of their cells have overlap, and at least 50% of their graphics (as determined by infantry sub-positions) are considered overlapped.
+* Fixed bug that occasionally showed building priority as 0 on preview buildings if they showed an overlap outline.
