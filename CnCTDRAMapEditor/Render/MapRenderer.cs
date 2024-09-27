@@ -1751,7 +1751,7 @@ namespace MobiusEditor.Render
                 {
                     continue;
                 }
-                bool[,][] opaqueMask = ovl.OverlapMask;
+                bool[,][] opaqueMask = Globals.IgnoreShadowOverlap? ovl.ContentMask : ovl.OverlapMask;
                 int maskY = opaqueMask == null ? 0 : opaqueMask.GetLength(0);
                 int maskX = opaqueMask == null ? 0 : opaqueMask.GetLength(1);
                 Point? pt = map.Technos[occ] ?? map.Buildings[occ];

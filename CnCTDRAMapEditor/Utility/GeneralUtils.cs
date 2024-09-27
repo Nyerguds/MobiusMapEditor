@@ -50,7 +50,7 @@ namespace MobiusEditor.Utility
     public static class GeneralUtils
     {
         /// <summary>
-        /// Returns the contents of the ini, or null if no ini content could be found in the file.
+        /// Returns the contents of the ini, or null if no ini content could be found in the file or any accompanying files.
         /// </summary>
         /// <param name="path">Path</param>
         /// <param name="fileType">Detected file type.</param>
@@ -60,14 +60,21 @@ namespace MobiusEditor.Utility
             try
             {
                 Encoding encDOS = Encoding.GetEncoding(437);
+                byte[] bytes;
                 string iniContents = null;
                 switch (fileType)
                 {
                     case FileType.INI:
+                        bytes = File.ReadAllBytes(path);
+                        iniContents = encDOS.GetString(bytes);
+                        break;
                     case FileType.BIN:
                         string iniPath = fileType == FileType.INI ? path : Path.ChangeExtension(path, ".ini");
-                        byte[] bytes = File.ReadAllBytes(path);
-                        iniContents = encDOS.GetString(bytes);
+                        if (File.Exists(iniPath))
+                        {
+                            bytes = File.ReadAllBytes(iniPath);
+                            iniContents = encDOS.GetString(bytes);
+                        }
                         break;
                     case FileType.MEG:
                     case FileType.PGM:
@@ -85,10 +92,10 @@ namespace MobiusEditor.Utility
                         }
                         break;
                     case FileType.MIX:
-                        byte[] iniBytes = MixPath.ReadFile(path, FileType.INI, out _);
-                        if (iniBytes != null)
+                        bytes = MixPath.ReadFile(path, FileType.INI, out _);
+                        if (bytes != null)
                         {
-                            iniContents = encDOS.GetString(iniBytes);
+                            iniContents = encDOS.GetString(bytes);
                         }
                         break;
                 }

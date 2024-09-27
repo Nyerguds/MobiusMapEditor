@@ -62,6 +62,7 @@ namespace MobiusEditor
             OutlineColorWall = Properties.Settings.Default.OutlineColorWall;
             PreviewAlphaFloat = Properties.Settings.Default.PreviewAlpha;
             UnbuiltAlphaFloat = Properties.Settings.Default.UnbuiltAlpha;
+            IgnoreShadowOverlap = Properties.Settings.Default.IgnoreShadowOverlap;
 
             UndoRedoStackSize = Properties.Settings.Default.UndoRedoStackSize;
             MinimumClampSize = Properties.Settings.Default.MinimumClampSize;
@@ -160,6 +161,8 @@ namespace MobiusEditor
         public static int PreviewAlphaInt => ((int)(PreviewAlphaFloat * 256)).Restrict(0, 255);
         public static float UnbuiltAlphaFloat { get; private set; }
         public static int UnbuiltAlphaInt => ((int)(UnbuiltAlphaFloat * 256)).Restrict(0, 255);
+
+        public static bool IgnoreShadowOverlap { get; private set; }
 
         private static double GetMinScale(){ return 1.0 / Math.Min(OriginalTileWidth, OriginalTileHeight); }
         public static double MapTileScale => Math.Max(GetMinScale(), Math.Abs(UseClassicFiles ? Properties.Settings.Default.MapScaleClassic : Properties.Settings.Default.MapScale));

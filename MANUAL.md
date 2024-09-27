@@ -206,6 +206,10 @@ An outline will be shown around objects that are partially or fully behind other
 * **OutlineColorSolidOverlay**: The outline color for impassable overlay. Pavement-type overlay is never outlined. Defaults to gray.
 * **OutlineColorWall**: The outline color for walls. Defaults to purple. Note that this one is disabled by default (by setting its alpha to 0) because they are very common to have overlaps on, and it is rarely useful to show them.
 
+Another extra option related to outlines:
+
+* **IgnoreShadowOverlap**: Don't show overlap outlines on objects that are only overlapped by shadows.
+
 Alpha transparency factors used:
 
 * **PreviewAlpha**: The alpha factor used when previewing an object to place down on the map. Defaults to 0.5 (50%)

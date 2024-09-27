@@ -152,6 +152,9 @@
     <Setting Name="OutlineColorWall" Type="System.Drawing.Color" Scope="Application">
       <Value Profile="(Default)">0, 192, 0, 192</Value>
     </Setting>
+    <Setting Name="IgnoreShadowOverlap" Type="System.Boolean" Scope="Application">
+      <Value Profile="(Default)">false</Value>
+    </Setting>
     <Setting Name="PreviewAlpha" Type="System.Single" Scope="Application">
       <Value Profile="(Default)">0.5</Value>
     </Setting>

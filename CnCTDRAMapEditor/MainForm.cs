@@ -1961,6 +1961,7 @@ namespace MobiusEditor
                     if (filesize == tdMax.Width * tdMax.Height * 2)
                     {
                         fileType = FileType.BIN;
+                        iniWasFetched = false;
                     }
                     else
                     {
