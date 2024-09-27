@@ -29,7 +29,8 @@ namespace MobiusEditor.Model
 
         public bool[,] OccupyMask => Type.OccupyMask;
         public bool[,] BaseOccupyMask => Type.OccupyMask;
-        public bool[,][] OpaqueMask => Type.OpaqueMask;
+        public bool[,][] OverlapMask => Type.OverlapMask;
+        public bool[,][] ContentMask => Type.ContentMask;
         public Rectangle OverlapBounds => Type.OverlapBounds;
         public int ZOrder => Type.ZOrder;
 

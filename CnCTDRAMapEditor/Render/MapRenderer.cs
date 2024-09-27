@@ -1426,10 +1426,10 @@ namespace MobiusEditor.Render
                 }
                 if (onlyIfBehindObjects)
                 {
-                    if (overlay.Type.OpaqueMask == null) {
+                    if (overlay.Type.ContentMask == null) {
                         continue;
                     }
-                    bool[] toCheck = overlay.Type.OpaqueMask[0, 0];
+                    bool[] toCheck = overlay.Type.ContentMask[0, 0];
                     InfantryStoppingType[] toLoop = Enum.GetValues(typeof(InfantryStoppingType)).Cast<InfantryStoppingType>().ToArray();
                     bool occupied = false;
                     for (int i = 0; i < toLoop.Length; i++)
@@ -1623,7 +1623,7 @@ namespace MobiusEditor.Render
             foreach ((Point objLocation, T placedObj) in occupiers.OrderBy(i => map.Metrics.GetCell(i.Location)))
             {
                 // This is a visibility check; check cells that are deemed "visible".
-                bool[,][] opaqueMask = placedObj.OpaqueMask;
+                bool[,][] opaqueMask = placedObj.ContentMask;
                 bool[,] occupyMask = placedObj.OccupyMask;
                 int paintOrder = placedObj.DrawOrderCache;
                 int maskY = opaqueMask == null ? 0 : opaqueMask.GetLength(0);
@@ -1637,39 +1637,41 @@ namespace MobiusEditor.Render
                 if (onlyIfBehindObjects)
                 {
                     // Select actual map points for all visible points in opaqueMask
-                    bool allOpaque = true;
-                    // only evaluate center point
-                    Point[] opaquePoints = Enumerable.Range(0, maskY).SelectMany(nrY => Enumerable.Range(0, maskX).Select(nrX => new Point(nrX, nrY)))
-                        .Where(pt => opaqueMask[pt.Y, pt.X] != null && opaqueMask[pt.Y, pt.X].Length > 0 && opaqueMask[pt.Y, pt.X].Any()).ToArray();
+                    Point[] opaquePoints = Enumerable.Range(0, maskY).SelectMany(nrY => Enumerable.Range(0, maskX).Select(nrX => new Point(nrX, nrY))).ToArray()
+                        .Where(pt => opaqueMask[pt.Y, pt.X] != null && opaqueMask[pt.Y, pt.X].Length > 0 && opaqueMask[pt.Y, pt.X].Any(b => b)).ToArray();
+                    // Cells occupancy is a measure of "important" cells; those with their center occupied.
+                    int overlappedCells = 0;
+                    // Subpositions gives an overall measure of how much of the object is covered.
+                    int occupiedSubPositions = 0;
+                    int overlappedSubPositions = 0;
                     foreach (Point opaquePoint in opaquePoints)
                     {
                         Point realPoint = new Point(objLocation.X + opaquePoint.X, objLocation.Y + opaquePoint.Y);
                         InfantryStoppingType[] toCheck = Enum.GetValues(typeof(InfantryStoppingType)).Cast<InfantryStoppingType>().ToArray();
-                        bool isSubOverlapped = false;
-                        bool cellHasGraphics = false;
                         bool[] opaqueCellMask = opaqueMask[opaquePoint.Y, opaquePoint.X];
+                        bool cellIsOverlapped = false;
                         foreach (InfantryStoppingType ist in toCheck)
                         {
                             if (!opaqueCellMask[(int)ist])
                             {
                                 continue;
                             }
-                            cellHasGraphics = true;
+                            occupiedSubPositions++;
                             if (IsOverlapped(map, realPoint, false, ist, placedObj, paintOrder))
                             {
-                                // If any of the sub-positions on a cell are overlapped, consider it partially overlapped and thus eligible for an outline.
-                                isSubOverlapped = true;
-                                break;
+                                overlappedSubPositions++;
+                                cellIsOverlapped = true;
                             }
                         }
-                        // if any of the graphics-containing cells are not overlapped at all, consider the object visible enough, and thus not eligible for an outline.
-                        if (cellHasGraphics && !isSubOverlapped)
+                        if (cellIsOverlapped)
                         {
-                            allOpaque = false;
-                            break;
+                            overlappedCells++;
                         }
                     }
-                    if (!allOpaque)
+                    // To show an outline, something needs to be overlapped, the total overlapped sub-cells must be at least half of the visible content,
+                    // and  at least 3/4th of the graphics-occupied cells need to be at least partially overlapped.
+                    bool showOutline = overlappedSubPositions > 0 && overlappedSubPositions * 2 >= occupiedSubPositions && overlappedCells * 4 / 3 >= opaquePoints.Length;
+                    if (!showOutline)
                     {
                         continue;
                     }
@@ -1757,7 +1759,7 @@ namespace MobiusEditor.Render
                 {
                     continue;
                 }
-                bool[,][] opaqueMask = ovl.OpaqueMask;
+                bool[,][] opaqueMask = ovl.OverlapMask;
                 int maskY = opaqueMask == null ? 0 : opaqueMask.GetLength(0);
                 int maskX = opaqueMask == null ? 0 : opaqueMask.GetLength(1);
                 Point? pt = map.Technos[occ] ?? map.Buildings[occ];

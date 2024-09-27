@@ -125,7 +125,8 @@ namespace MobiusEditor.Model
         private static readonly Point[] stoppingLocations = new Point[Globals.NumInfantryStops];
 
         public Rectangle OverlapBounds => new Rectangle(-1, -1, 3, 3);
-        public bool[,][] OpaqueMask => new bool[1, 1][] { { Infantry.Select(loc => loc != null).ToArray() } };
+        public bool[,][] OverlapMask => new bool[1, 1][] { { Infantry.Select(loc => loc != null).ToArray() } };
+        public bool[,][] ContentMask => OverlapMask;
         public bool[,] OccupyMask => new bool[1, 1] { { true } };
         public bool[,] BaseOccupyMask => new bool[1, 1] { { true } };
         public int ZOrder => Globals.ZOrderDefault;

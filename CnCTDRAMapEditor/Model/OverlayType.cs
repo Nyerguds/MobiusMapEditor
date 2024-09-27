@@ -64,7 +64,9 @@ namespace MobiusEditor.Model
         public int ForceTileNr { get; private set; }
         public bool[,] OccupyMask => new bool[1, 1] { { true } };
         public bool[,] BaseOccupyMask => new bool[1, 1] { { true } };
-        public bool[,][] OpaqueMask { get; private set; }
+        public bool[,][] OverlapMask => new bool[1, 1][] { { new bool[] { false, false, false, false, false } } };
+        public bool[,][] ContentMask { get; private set; }
+
         public Rectangle OverlapBounds => new Rectangle(0, 0, 1, 1);
         public int ZOrder => -1;
         public bool IsResource => (this.Flag & (OverlayTypeFlag.TiberiumOrGold | OverlayTypeFlag.Gems)) != OverlayTypeFlag.None;
@@ -174,21 +176,21 @@ namespace MobiusEditor.Model
                 MapRenderer.RenderOverlay(gameInfo, Point.Empty, null, Globals.PreviewTileSize, Globals.PreviewTileScale, mockOverlay, false).Item2(g);
             }
             this.Thumbnail = th;
-            // only certain types are analysed for opaqueness
+            // only certain types are analysed for opaqueness.
             if (this.IsCrate || this.IsSolid)
             {
                 // Overlaps over shadow areas are ignored on overlay; they're the bottom layer anyway.
-                OpaqueMask = this.OpaqueMask = GeneralUtils.MakeOpaqueMask(th, new Size(1, 1), 25, 10, 20, Globals.UseClassicFiles ? 0x80 : 0x40, !Globals.UseClassicFiles);
+                ContentMask = GeneralUtils.MakeOpaqueMask(th, new Size(1, 1), 25, 10, 20, Globals.UseClassicFiles ? 0x80 : 0x40, !Globals.UseClassicFiles);
             }
             else if (this.IsWall)
             {
                 // Walls generally look like they occupy the whole cell, and have different states.
-                OpaqueMask = new bool[1, 1][] { { new bool[] { true, true, true, true, true } } };
+                ContentMask = new bool[1, 1][] { { new bool[] { true, true, true, true, true } } };
             }
             else
             {
                 // Pavement types and such are ignored and never outlined.
-                OpaqueMask = new bool[1, 1][] { { new bool[] { false, false, false, false, false } } };
+                ContentMask = new bool[1, 1][] { { new bool[] { false, false, false, false, false } } };
             }
             if (oldImage != null)
             {
