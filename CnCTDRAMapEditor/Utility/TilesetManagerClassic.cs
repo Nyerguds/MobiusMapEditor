@@ -166,7 +166,6 @@ namespace MobiusEditor.Utility
                 tileData.Remove(name);
                 cached = false;
             }
-
             if (cached
                 && shapeFile.TryGetValue(shape, out shapeFrame)
                 && shapeFrame.TeamColorTiles.TryGetValue(teamColorName, out tile))

@@ -212,8 +212,10 @@ namespace MobiusEditor.Model
                     render.RenderAction(g);
                 }
                 this.Thumbnail = th;
-                this.OverlapMask = GeneralUtils.MakeOpaqueMask(th, this.Size, 25, 10, 20, 0x80, false);
-                this.ContentMask = GeneralUtils.MakeOpaqueMask(th, this.Size, 25, 10, 20, Globals.UseClassicFiles ? 0x80 : 0x40, !Globals.UseClassicFiles);
+                // calculate the areas of this that can overlap other objects (include shadow)
+                this.OverlapMask = GeneralUtils.MakeOpaqueMask(th, this.Size, 25, 10, 20, 0x10, false);
+                // calculate the areas of this that need to be overlapped to consider this covered (exclude shadow)
+                this.ContentMask = GeneralUtils.MakeOpaqueMask(th, this.Size, 25, 10, 20, 0xE0, !Globals.UseClassicFiles); 
             }
             else
             {

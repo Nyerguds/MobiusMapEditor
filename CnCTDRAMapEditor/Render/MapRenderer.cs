@@ -38,18 +38,20 @@ namespace MobiusEditor.Render
         public int ZOrder { get; private set; }
         public ITechno RenderedObject { get; private set; }
         public bool IsRendered { get; set; }
+        public bool isMock { get; set; }
 
-        public RenderInfo(Point renderPosition, Action<Graphics> paintAction, int zOrder, ITechno paintedObject)
+        public RenderInfo(Point renderPosition, Action<Graphics> paintAction, int zOrder, ITechno paintedObject, bool isMock)
         {
             this.RenderBasePoint = renderPosition;
             this.RenderAction = paintAction;
             this.ZOrder = zOrder;
             this.RenderedObject = paintedObject;
+            this.isMock = isMock;
             this.IsRendered = false;
         }
 
-        public RenderInfo(Point renderPosition, Action<Graphics> paintAction, ITechno paintedObject)
-            :this(renderPosition, paintAction, Globals.ZOrderDefault, paintedObject)
+        public RenderInfo(Point renderPosition, Action<Graphics> paintAction, ITechno paintedObject, bool isMock)
+            :this(renderPosition, paintAction, Globals.ZOrderDefault, paintedObject, isMock)
         {
         }
     }
@@ -655,7 +657,7 @@ namespace MobiusEditor.Render
             }
             Point centerPoint = GetTerrainRenderPoint(terrain);
             Point usedCenter = new Point(topLeft.X * Globals.PixelWidth + centerPoint.X, topLeft.Y * Globals.PixelHeight + centerPoint.Y);
-            return new RenderInfo(usedCenter, render, terrain);
+            return new RenderInfo(usedCenter, render, terrain, !succeeded);
         }
 
         public static RenderInfo RenderBuilding(GameInfo gameInfo, Map map, Point topLeft, Size tileSize, double tileScale, Building building, bool fullOpaque)
@@ -687,7 +689,7 @@ namespace MobiusEditor.Render
                 maxIcon = Globals.TheTilesetManager.GetTileDataLength(building.Type.GraphicsSource);
                 hasCollapseFrame = maxIcon > 1 && maxIcon % 2 == 1;
                 damageIconOffs = (maxIcon + (hasCollapseFrame ? 0 : 1)) / 2;
-                collapseIcon = maxIcon - 1;
+                collapseIcon = Math.Max(0, maxIcon - 1);
             }
             if (building.Type.HasTurret)
             {
@@ -741,7 +743,7 @@ namespace MobiusEditor.Render
                     int maxOverlayIcon = Globals.TheTilesetManager.GetTileDataLength(building.Type.FactoryOverlay);
                     overlayIcon = maxOverlayIcon / 2;
                 }
-                Globals.TheTilesetManager.GetTeamColorTileData(building.Type.FactoryOverlay, overlayIcon, Globals.TheTeamColorManager[building.House?.BuildingTeamColor], out factoryOverlayTile);
+                Globals.TheTilesetManager.GetTeamColorTileData(building.Type.FactoryOverlay, overlayIcon, Globals.TheTeamColorManager[building.House?.BuildingTeamColor], out factoryOverlayTile, false, false);
             }
             void render(Graphics g)
             {
@@ -783,7 +785,7 @@ namespace MobiusEditor.Render
             Point usedCenter = new Point(topLeft.X * Globals.PixelWidth + centerPoint.X, topLeft.Y * Globals.PixelHeight + centerPoint.Y);
             // "Z-Order" is for sorting buildings as floor level (0), flat on the floor (5), or sticking out of the floor (default; 10).
             // It determines whether pieces on unoccupied cells should overlap objects on these cells or be drawn below them.
-            return new RenderInfo(usedCenter, render, building.Type.ZOrder, building);
+            return new RenderInfo(usedCenter, render, building.Type.ZOrder, building, !succeeded);
         }
 
         private static int GetBuildingOverlayIcon(Map map, Point topLeft, Building building)
@@ -831,11 +833,6 @@ namespace MobiusEditor.Render
             Tile tile = null;
             // InfantryType.Init() should have taken care of RA's classic civilian remap mess at this point, and remapped all cached source graphics.
             bool success = Globals.TheTilesetManager.GetTeamColorTileData(infantry.Type.GraphicsSource, icon, teamColor, out tile, true, false);
-            if (tile == null || tile.Image == null)
-            {
-                Debug.Print(string.Format("Infantry {0} graphics ({1}, frame {2}) not found", infantry.Type.Name, infantry.Type.GraphicsSource, icon));
-                return new RenderInfo(Point.Empty, (g) => { }, infantry);
-            }
             Size imSize = tile.Image.Size;
             Point origLocation = new Point(topLeft.X * tileSize.Width, topLeft.Y * tileSize.Height);
             Point renderLocation = origLocation;
@@ -893,7 +890,7 @@ namespace MobiusEditor.Render
                 }
             }
             // Render position is the feet point, adjusted to 24-pixel cell location.
-            return new RenderInfo(new Point(topLeft.X * Globals.PixelWidth + offset.X, topLeft.Y * Globals.PixelHeight + offset.Y), render, infantry);
+            return new RenderInfo(new Point(topLeft.X * Globals.PixelWidth + offset.X, topLeft.Y * Globals.PixelHeight + offset.Y), render, infantry, !success);
         }
 
         public static RenderInfo RenderUnit(GameInfo gameInfo, Point topLeft, Size tileSize, Unit unit, bool fullOpaque)
@@ -973,13 +970,8 @@ namespace MobiusEditor.Render
                 teamColor = Globals.TheTeamColorManager[teamColorName];
             }
             // Get body frame
-            Globals.TheTilesetManager.GetTeamColorTileData(unit.Type.Name, icon, teamColor, out Tile tile, true, false);
+            bool succeeded = Globals.TheTilesetManager.GetTeamColorTileData(unit.Type.Name, icon, teamColor, out Tile tile, true, false);
             unit.DrawFrameCache = icon;
-            if (tile == null || tile.Image == null)
-            {
-                Debug.Print(string.Format("Unit {0} ({1}) not found", unit.Type.Name, icon));
-                return new RenderInfo(Point.Empty, (g) => { }, null);
-            }
             Size imSize = tile.Image.Size;
             Point location =
                 new Point(topLeft.X * tileSize.Width, topLeft.Y * tileSize.Height) +
@@ -1133,7 +1125,7 @@ namespace MobiusEditor.Render
             }
             Point centerPoint = GetVehicleRenderPoint();
             Point usedCenter = new Point(topLeft.X * Globals.PixelWidth + centerPoint.X, topLeft.Y * Globals.PixelHeight + centerPoint.Y);
-            return new RenderInfo(usedCenter, render, unit);
+            return new RenderInfo(usedCenter, render, unit, !succeeded);
         }
 
         public static (Rectangle, Action<Graphics>) RenderWaypoint(GameInfo gameInfo, bool soloMission, Size tileSize, ITeamColor[] flagColors, Waypoint waypoint,
@@ -1760,8 +1752,9 @@ namespace MobiusEditor.Render
                     continue;
                 }
                 // Object we're comparing with was drawn before the current one, so it can't possible overlap it.
-                // This caching allows extremely easy checks on overlap without much processing.
-                if (ovl is ITechno paintedObj && paintedObj.DrawOrderCache < objectPaintOrder)
+                // This caching allows extremely easy checks on overlap without much processing. Overlay is always
+                // drawn as bottom layer and should never be considered as overlapping anything else.
+                if (ovl is ITechno paintedObj && paintedObj.DrawOrderCache < objectPaintOrder || ovl is Overlay ov)
                 {
                     continue;
                 }

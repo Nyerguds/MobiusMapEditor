@@ -1490,7 +1490,7 @@ namespace MobiusEditor.Model
         {
             foreach (Trigger trig in triggers)
             {
-                if (trig.Event1 != null && allowedEventTypes.Contains(trig.Event1.EventType)
+                if (!Globals.EnforceTriggerTypes || (trig.Event1 != null && allowedEventTypes.Contains(trig.Event1.EventType))
                     || ((trig.EventControl == TriggerMultiStyleType.Or || trig.EventControl == TriggerMultiStyleType.And)
                         && trig.Event2 != null && allowedEventTypes.Contains(trig.Event2.EventType)))
                 {
@@ -1533,6 +1533,10 @@ namespace MobiusEditor.Model
             if (indicatedActions == null)
             {
                 indicatedActions = new string[0];
+            }
+            if (!Globals.EnforceTriggerTypes)
+            {
+                return "Trigger restricting has been disabled.";
             }
             StringBuilder tooltip = new StringBuilder();
             bool hasEvents = filteredEvents != null && filteredEvents.Length > 0;
@@ -1580,7 +1584,7 @@ namespace MobiusEditor.Model
         {
             foreach (Trigger trig in triggers)
             {
-                if (trig.Action1 != null && allowedActionTypes.Contains(trig.Action1.ActionType)
+                if (!Globals.EnforceTriggerTypes || (trig.Action1 != null && allowedActionTypes.Contains(trig.Action1.ActionType))
                     || (trig.Action2 != null && allowedActionTypes.Contains(trig.Action2.ActionType)))
                 {
                     yield return trig;

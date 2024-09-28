@@ -680,3 +680,5 @@ Unreleased
 * Fixed bug that prevented overlap outlines from working on terrain objects with an extra cell that only contained shadow.
 * Added a new overlap detection logic for objects of the Terrain, Building and Overlay types that only gives them an outline if at least 3/4th of their cells have overlap, and at least 50% of their graphics (as determined by infantry sub-positions) are considered overlapped.
 * Fixed bug that occasionally showed building priority as 0 on preview buildings if they showed an overlap outline.
+* Added option "IgnoreShadowOverlap" to not draw overlap outlines on objects that are only overlapped by shadows.
+* Added option "EnforceTriggerTypes" that can be disabled to allow any triggers on any object types.

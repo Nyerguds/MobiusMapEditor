@@ -91,11 +91,10 @@ namespace MobiusEditor.Controls
             triggerComboBox.SelectedIndexChanged -= this.TriggerComboBox_SelectedIndexChanged;
             triggerComboBox.DataSource = null;
             triggerComboBox.Items.Clear();
-            string[] items = Plugin.Map.FilterTerrainTriggers().Select(t => t.Name).Distinct().ToArray();
+            HashSet<string> allowedTriggers = Plugin.Map.FilterTerrainTriggers().Select(t => t.Name).Distinct().ToHashSet(StringComparer.OrdinalIgnoreCase);
             filteredEvents = Plugin.Map.EventTypes.Where(ev => Plugin.Map.TerrainEventTypes.Contains(ev)).Distinct().ToArray();
             filteredActions = Plugin.Map.ActionTypes.Where(ev => Plugin.Map.TerrainActionTypes.Contains(ev)).Distinct().ToArray();
-            HashSet<string> allowedTriggers = new HashSet<string>(items, StringComparer.OrdinalIgnoreCase);
-            items = Trigger.None.Yield().Concat(Plugin.Map.Triggers.Select(t => t.Name).Where(t => allowedTriggers.Contains(t)).Distinct()).ToArray();
+            string[] items = Trigger.None.Yield().Concat(Plugin.Map.Triggers.Select(t => t.Name).Where(t => allowedTriggers.Contains(t)).Distinct()).ToArray();
             int selectIndex = String.IsNullOrEmpty(selected) ? 0 : Enumerable.Range(0, items.Length).FirstOrDefault(x => String.Equals(items[x], selected, StringComparison.OrdinalIgnoreCase));
             triggerComboBox.DataSource = items;
             if (terrain != null)

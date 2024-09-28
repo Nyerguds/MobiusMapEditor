@@ -206,7 +206,7 @@ namespace MobiusEditor.Controls
             triggerComboBox.SelectedIndexChanged -= this.TriggerComboBox_SelectedIndexChanged;
             triggerComboBox.DataSource = null;
             triggerComboBox.Items.Clear();
-            string[] items;
+            HashSet<string> allowedTriggers;
             bool isAircraft = obj is Unit un && un.Type.IsAircraft;
             bool isOnMap = true;
             if (selected == null && obj is ITechno tch)
@@ -217,24 +217,24 @@ namespace MobiusEditor.Controls
             {
                 case Infantry infantry:
                 case Unit unit:
-                    items = Plugin.Map.FilterUnitTriggers().Select(t => t.Name).Distinct().ToArray();
+                    allowedTriggers = Plugin.Map.FilterUnitTriggers().Select(t => t.Name).Distinct().ToHashSet(StringComparer.OrdinalIgnoreCase);
                     filteredEvents = Plugin.Map.EventTypes.Where(ev => Plugin.Map.UnitEventTypes.Contains(ev)).Distinct().ToArray();
                     filteredActions = Plugin.Map.ActionTypes.Where(ac => Plugin.Map.UnitActionTypes.Contains(ac)).Distinct().ToArray();
                     break;
                 case Building building:
                     isOnMap = building.IsPrebuilt;
-                    items = Plugin.Map.FilterStructureTriggers().Select(t => t.Name).Distinct().ToArray();
+                    allowedTriggers = Plugin.Map.FilterStructureTriggers().Select(t => t.Name).Distinct().ToHashSet(StringComparer.OrdinalIgnoreCase);
                     filteredEvents = Plugin.Map.EventTypes.Where(ac => Plugin.Map.BuildingEventTypes.Contains(ac)).Distinct().ToArray();
                     filteredActions = Plugin.Map.ActionTypes.Where(ac => Plugin.Map.BuildingActionTypes.Contains(ac)).Distinct().ToArray();
                     break;
                 default:
-                    items = Plugin.Map.Triggers.Select(t => t.Name).Distinct().ToArray();
+                    allowedTriggers = Plugin.Map.Triggers.Select(t => t.Name).Distinct().ToHashSet(StringComparer.OrdinalIgnoreCase);
                     filteredEvents = null;
                     filteredActions = null;
                     break;
             }
-            HashSet<string> allowedTriggers = new HashSet<string>(items);
-            items = Trigger.None.Yield().Concat(Plugin.Map.Triggers.Select(t => t.Name).Where(t => allowedTriggers.Contains(t)).Distinct()).ToArray();
+            // Sort them back into the order they had in the original list.
+            string[] items = Trigger.None.Yield().Concat(Plugin.Map.Triggers.Select(t => t.Name).Where(t => allowedTriggers.Contains(t)).Distinct()).ToArray();
             int selectIndex = selected == null ? 0 : Enumerable.Range(0, items.Length).FirstOrDefault(x => String.Equals(items[x], selected, StringComparison.OrdinalIgnoreCase));
             triggerComboBox.DataSource = items;
             triggerComboBox.Enabled = !isAircraft && isOnMap;

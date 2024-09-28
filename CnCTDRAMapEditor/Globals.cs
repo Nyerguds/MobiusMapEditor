@@ -70,6 +70,7 @@ namespace MobiusEditor
             ReportMissionDetection = Properties.Settings.Default.ReportMissionDetection;
             AllowWallBuildings = !Properties.Settings.Default.OverlayWallsOnly;
             EnforceObjectMaximums = Properties.Settings.Default.EnforceObjectMaximums;
+            EnforceTriggerTypes = Properties.Settings.Default.EnforceTriggerTypes;
             Ignore106Scripting = Properties.Settings.Default.Ignore106Scripting;
             ClassicProducesNoMetaFiles = Properties.Settings.Default.ClassicProducesNoMetaFiles;
             ClassicEncodesNameAsCp437 = Properties.Settings.Default.ClassicEncodesNameAsCp437;
@@ -183,6 +184,7 @@ namespace MobiusEditor
         public static bool ReportMissionDetection { get; private set; }
         public static bool AllowWallBuildings { get; private set; }
         public static bool EnforceObjectMaximums { get; private set; }
+        public static bool EnforceTriggerTypes { get; private set; }
         public static bool Ignore106Scripting { get; private set; }
         public static bool ClassicProducesNoMetaFiles { get; private set; }
         public static bool ConvertRaObsoleteClear { get; private set; }

@@ -521,6 +521,15 @@ namespace MobiusEditor.Properties {
         [global::System.Configuration.ApplicationScopedSettingAttribute()]
         [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
         [global::System.Configuration.DefaultSettingValueAttribute("True")]
+        public bool EnforceTriggerTypes {
+            get {
+                return ((bool)(this["EnforceTriggerTypes"]));
+            }
+        }
+        
+        [global::System.Configuration.ApplicationScopedSettingAttribute()]
+        [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
+        [global::System.Configuration.DefaultSettingValueAttribute("True")]
         public bool Ignore106Scripting {
             get {
                 return ((bool)(this["Ignore106Scripting"]));

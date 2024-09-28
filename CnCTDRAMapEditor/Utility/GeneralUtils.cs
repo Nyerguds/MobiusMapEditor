@@ -652,6 +652,7 @@ namespace MobiusEditor.Utility
         /// <param name="centerThreshold">Threshold percentage of pixels in the center that make the image count as opaque.</param>
         /// <param name="borderThreshold">If center is not deemed opaque enough, threshold percentage of pixels in the outer border that make the image still count as opaque.</param>
         /// <param name="minAlpha">Minimum alpha value to consider a pixel to be opaque.</param>
+        /// <param name="ignoreBlack">Ignore all pure black areas and consider them to be transparent.</param>
         /// <returns></returns>
         public static bool[,][] MakeOpaqueMask(Bitmap image, Size size, int borderPercentage, int centerThreshold, int borderThreshold, int minAlpha, bool ignoreBlack)
         {
