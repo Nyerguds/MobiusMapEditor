@@ -1246,6 +1246,7 @@ namespace MobiusEditor.RedAlert
             // Amount of tile 255 detected outside map bounds.
             int oldClearCount = 0;
             int oldClearOutside = 0;
+            int cellNr = 0;
             using (BinaryReader reader = new BinaryReader(new MemoryStream(data)))
             {
                 for (int y = 0; y < height; ++y)
@@ -1256,7 +1257,7 @@ namespace MobiusEditor.RedAlert
                         TemplateType templateType = templateTypes[typeValue];
                         if (templateType == null && typeValue != 0xFFFF)
                         {
-                            errors.Add(String.Format("Unknown template value {0:X4} at cell [{1},{2}]; clearing.", typeValue, x, y));
+                            errors.Add(String.Format("Unknown template value {0:X4} at cell {1} [{2},{3}]; clearing.", typeValue, cellNr, x, y));
                             modified = true;
                         }
                         else if (templateType != null)
@@ -1277,7 +1278,7 @@ namespace MobiusEditor.RedAlert
                                 }
                                 else if (Globals.FilterTheaterObjects)
                                 {
-                                    errors.Add(String.Format("Template '{0}' at cell [{1},{2}] is not available in the set theater; clearing.", templateType.Name.ToUpper(), x, y));
+                                    errors.Add(String.Format("Template '{0}' at cell {1} [{2},{3}] is not available in the set theater; clearing.", templateType.Name.ToUpper(), cellNr, x, y));
                                     modified = true;
                                     templateType = null;
                                 }
@@ -1294,8 +1295,10 @@ namespace MobiusEditor.RedAlert
                             }
                         }
                         Map.Templates[y, x] = (templateType != null) ? new Template { Type = templateType } : null;
+                        cellNr++;
                     }
                 }
+                cellNr = 0;
                 for (int y = 0; y < height; ++y)
                 {
                     for (int x = 0; x < width; ++x)
@@ -1309,7 +1312,7 @@ namespace MobiusEditor.RedAlert
                             bool tileOk = false;
                             if (iconValue >= templateType.NumIcons)
                             {
-                                errors.Add(String.Format("Template '{0}' at cell [{1},{2}] has an icon set ({3}) that is outside its icons range; clearing.", templateType.Name.ToUpper(), x, y, iconValue));
+                                errors.Add(String.Format("Template '{0}' at cell {1} [{2},{3}] has an icon set ({4}) that is outside its icons range; clearing.", templateType.Name.ToUpper(), cellNr, x, y, iconValue));
                                 modified = true;
                             }
                             else if (!templateType.IsRandom && templateType.IconMask != null && !templateType.IconMask[iconValue / templateType.IconWidth, iconValue % templateType.IconWidth])
@@ -1318,13 +1321,13 @@ namespace MobiusEditor.RedAlert
                                 if (FixCorruptTiles(template, iconValue, out byte newIcon, out string type))
                                 {
                                     tileOk = true;
-                                    errors.Add(String.Format("Template '{0}' at cell [{1},{2}], icon {3} is an illegal {4} tile; fixing.", templateType.Name.ToUpper(), x, y, iconValue, type));
+                                    errors.Add(String.Format("Template '{0}' at cell {1} [{2},{3}], icon {4} is an illegal {5} tile; fixing.", templateType.Name.ToUpper(), cellNr, x, y, iconValue, type));
                                     // Only adapt this after adding the old icon value in the message.
                                     iconValue = newIcon;
                                 }
                                 else
                                 {
-                                    errors.Add(String.Format("Template '{0}' at cell [{1},{2}] has an icon set ({3}) that is not part of its placeable cells; clearing.", templateType.Name.ToUpper(), x, y, iconValue));
+                                    errors.Add(String.Format("Template '{0}' at cell {1} [{2},{3}] has an icon set ({4}) that is not part of its placeable cells; clearing.", templateType.Name.ToUpper(), cellNr, x, y, iconValue));
                                 }
                                 modified = true;
                             }
@@ -1341,6 +1344,7 @@ namespace MobiusEditor.RedAlert
                                 template.Icon = iconValue;
                             }
                         }
+                        cellNr++;
                     }
                 }
             }
@@ -1433,7 +1437,9 @@ namespace MobiusEditor.RedAlert
                 }
                 string obsError = "Use of obsolete version of 'Clear' terrain detected; clearing.";
                 if (!clearIsPassable && border != null && border.Count() > 0)
+                {
                     obsError += " Generating passable areas for possible scripted reinforcements.";
+                }
                 errors.Add(obsError);
             }
 #if DEBUG && false

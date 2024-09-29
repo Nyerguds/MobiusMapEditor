@@ -239,6 +239,7 @@ namespace MobiusEditor.Dialogs
             this.chkBoundsOnly.TabIndex = 7;
             this.chkBoundsOnly.Text = "Only export map area inside bounds";
             this.chkBoundsOnly.UseVisualStyleBackColor = true;
+            this.chkBoundsOnly.CheckedChanged += new System.EventHandler(this.chkBoundsOnly_CheckedChanged);
             // 
             // btnSetCellSize
             // 

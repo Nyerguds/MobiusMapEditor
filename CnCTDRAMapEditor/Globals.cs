@@ -38,6 +38,7 @@ namespace MobiusEditor
             ShowPlacementGrid = Properties.Settings.Default.DefaultShowPlacementGrid;
             OutlineAllCrates = Properties.Settings.Default.DefaultOutlineAllCrates;
             CratesOnTop = Properties.Settings.Default.DefaultCratesOnTop;
+            ExportMultiMapsInBounds = Properties.Settings.Default.DefaultExportMultiInBounds;
             // Fine tuning
             ZoomToBoundsOnLoad = Properties.Settings.Default.ZoomToBoundsOnLoad;
             RememberToolData = Properties.Settings.Default.RememberToolData;
@@ -119,6 +120,7 @@ namespace MobiusEditor
         public static bool ShowPlacementGrid { get; set; }
         public static bool OutlineAllCrates { get; set; }
         public static bool CratesOnTop { get; set; }
+        public static bool ExportMultiMapsInBounds { get; set; }
 
         public static double ExportTileScale
         {

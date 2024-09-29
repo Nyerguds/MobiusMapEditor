@@ -13,7 +13,6 @@
 //   0. You just DO WHAT THE FUCK YOU WANT TO.
 using MobiusEditor.Interface;
 using MobiusEditor.Model;
-using MobiusEditor.Tools;
 using MobiusEditor.Utility;
 using System;
 using System.Drawing;
@@ -65,7 +64,11 @@ namespace MobiusEditor.Dialogs
             txtScale.Text = Globals.ExportTileScale.ToString(CultureInfo.InvariantCulture);
             chkSmooth.Checked = Globals.ExportSmoothScale;
             // For multiplayer maps, default to only exporting the bounds.
-            chkBoundsOnly.Checked = !gamePlugin.Map.BasicSection.SoloMission;
+            if (Globals.ExportMultiMapsInBounds && !gamePlugin.Map.BasicSection.SoloMission)
+            {
+                chkBoundsOnly.Checked = true;
+                layers &= ~MapLayerFlag.Boundaries;
+            }
             SetSizeLabels();
             SetLayers(layers);
             txtScale.Select(0, 0);
@@ -349,6 +352,24 @@ namespace MobiusEditor.Dialogs
             else
             {
                 this.multiThreader.CreateBusyLabel(this, processingLabel);
+            }
+        }
+
+        private void chkBoundsOnly_CheckedChanged(object sender, EventArgs e)
+        {
+            if (!(sender is CheckBox cb) || layersListBox.Items.Count == 0)
+            {
+                return;
+            }
+            bool isChecked = cb.Checked;
+            for (int i = 0; i < indicatorsListBox.Items.Count; ++i)
+            {
+                ListItem<MapLayerFlag> mli = indicatorsListBox.Items[i] as ListItem<MapLayerFlag>;
+                if (mli != null && mli.Value == MapLayerFlag.Boundaries)
+                {
+                    indicatorsListBox.SetSelected(i, !isChecked);
+                    break;
+                }
             }
         }
     }

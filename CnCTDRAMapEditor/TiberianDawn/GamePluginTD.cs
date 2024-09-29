@@ -2297,14 +2297,18 @@ namespace MobiusEditor.TiberianDawn
             List<string> errors = new List<string>();
             Map.Templates.Clear();
             TemplateType[] templateTypes = GetTemplateTypesAsArray();
-            for (int y = 0; y < Map.Metrics.Height; ++y)
+            int width = Map.Metrics.Width;
+            int height = Map.Metrics.Width;
+            int cell = 0;
+            for (int y = 0; y < height; ++y)
             {
-                for (int x = 0; x < Map.Metrics.Width; ++x)
+                for (int x = 0; x < width; ++x)
                 {
                     byte typeValue = reader.ReadByte();
                     byte iconValue = reader.ReadByte();
-                    TemplateType templateType = ChecKTemplateType(templateTypes, typeValue, iconValue, x, y, errors, ref modified);
+                    TemplateType templateType = ChecKTemplateType(templateTypes, typeValue, iconValue, cell, x, y, errors, ref modified);
                     Map.Templates[y, x] = (templateType != null) ? new Template { Type = templateType, Icon = iconValue } : null;
+                    cell++;
                 }
             }
             return errors;
@@ -2343,7 +2347,7 @@ namespace MobiusEditor.TiberianDawn
                 int x = cell % mapWidth;
                 byte typeValue = reader.ReadByte();
                 byte iconValue = reader.ReadByte();
-                TemplateType templateType = ChecKTemplateType(templateTypes, typeValue, iconValue, x, y, errors, ref modified);
+                TemplateType templateType = ChecKTemplateType(templateTypes, typeValue, iconValue, cell, x, y, errors, ref modified);
                 Map.Templates[y,x] = (templateType != null) ? new Template { Type = templateType, Icon = iconValue } : null;
             }
             return errors;
@@ -2359,7 +2363,7 @@ namespace MobiusEditor.TiberianDawn
             return templateTypes;
         }
 
-        protected TemplateType ChecKTemplateType(TemplateType[] templateTypes, byte typeValue, int iconValue, int x, int y, List<string> errors, ref bool modified)
+        protected TemplateType ChecKTemplateType(TemplateType[] templateTypes, byte typeValue, int iconValue, int cell, int x, int y, List<string> errors, ref bool modified)
         {
             // This array is 0x100 long so it never gives errors on byte values.
             TemplateType templateType = templateTypes[typeValue];
@@ -2373,26 +2377,26 @@ namespace MobiusEditor.TiberianDawn
                 }
                 else if (!templateType.ExistsInTheater && Globals.FilterTheaterObjects)
                 {
-                    errors.Add(String.Format("Template '{0}' at cell [{1},{2}] is not available in the set theater; clearing.", templateType.Name.ToUpper(), x, y));
+                    errors.Add(String.Format("Template '{0}' at cell {1} [{2},{3}] is not available in the set theater; clearing.", templateType.Name.ToUpper(), cell, x, y));
                     modified = true;
                     templateType = null;
                 }
                 else if (iconValue >= templateType.NumIcons)
                 {
-                    errors.Add(String.Format("Template '{0}' at cell [{1},{2}] has an icon set ({3}) that is outside its icons range; clearing.", templateType.Name.ToUpper(), x, y, iconValue));
+                    errors.Add(String.Format("Template '{0}' at cell {1} [{2},{3}] has an icon set ({4}) that is outside its icons range; clearing.", templateType.Name.ToUpper(), cell, x, y, iconValue));
                     modified = true;
                     templateType = null;
                 }
                 else if (!templateType.IsRandom && templateType.IconMask != null && !templateType.IconMask[iconValue / templateType.IconWidth, iconValue % templateType.IconWidth])
                 {
-                    errors.Add(String.Format("Template '{0}' at cell [{1},{2}] has an icon set ({3}) that is not part of its placeable cells; clearing.", templateType.Name.ToUpper(), x, y, iconValue));
+                    errors.Add(String.Format("Template '{0}' at cell {1} [{2},{3}] has an icon set ({4}) that is not part of its placeable cells; clearing.", templateType.Name.ToUpper(), cell, x, y, iconValue));
                     modified = true;
                     templateType = null;
                 }
             }
             else if (typeValue != 0xFF)
             {
-                errors.Add(String.Format("Unknown template value {0:X2} at cell [{1},{2}]; clearing.", typeValue, x, y));
+                errors.Add(String.Format("Unknown template value {0:X2} at cell {1} [{2},{3}]; clearing.", typeValue, cell, x, y));
                 modified = true;
             }
             return templateType;
