@@ -5190,16 +5190,16 @@ namespace MobiusEditor.RedAlert
             }
         }
 
-        private void CompressLCWSection(INISection section, byte[] decompressedBytes)
+        private void CompressLCWSection(INISection section, byte[] uncompressedBytes)
         {
             using (MemoryStream stream = new MemoryStream())
             using (BinaryWriter writer = new BinaryWriter(stream))
             {
-                foreach (byte[] decompressedChunk in decompressedBytes.Split(8192))
+                foreach (byte[] uncompressedChunk in uncompressedBytes.Split(8192))
                 {
-                    byte[] compressedChunk = WWCompression.LcwCompress(decompressedChunk);
+                    byte[] compressedChunk = WWCompression.LcwCompress(uncompressedChunk);
                     writer.Write((ushort)compressedChunk.Length);
-                    writer.Write((ushort)decompressedChunk.Length);
+                    writer.Write((ushort)uncompressedChunk.Length);
                     writer.Write(compressedChunk);
                 }
                 writer.Flush();
@@ -5240,9 +5240,10 @@ namespace MobiusEditor.RedAlert
                 {
                     uLength = reader.ReadUInt32();
                 }
-                int length = (int)(uLength & 0x0000FFFF);
+                int outputLength = (int)((uLength >> 16) & 0xFFFF);
+                int length = (int)(uLength & 0xFFFF);
                 readPtr += 4;
-                byte[] dest = new byte[8192];
+                byte[] dest = new byte[outputLength];
                 int readPtr2 = readPtr;
                 int decompressed;
                 try
