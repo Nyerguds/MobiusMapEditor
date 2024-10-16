@@ -205,7 +205,6 @@ namespace MobiusEditor.Utility
                 gameFolders.Add(gi.GameType, gi.ClassicFolderRemasterData);
             }
             MegafileManager mfm = new MegafileManager(Path.Combine(runPath, Globals.MegafilePath), runPath, modPaths, romfis, gameFolders);
-            var megafilesLoaded = true;
             GameInfo[] gameTypeInfo = GameTypeFactory.GetGameInfos();
             HashSet<string> remasterFilesFound = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
             List<string> remasterFilesToLoad = new List<string>();
@@ -221,13 +220,22 @@ namespace MobiusEditor.Utility
                     }
                 }
             }
+            List<string> megFileLoadErrors = new List<string>();
             foreach (string remFile in remasterFilesToLoad)
             {
-                megafilesLoaded &= mfm.LoadArchive(remFile);
+                if (!mfm.LoadArchive(remFile))
+                {
+                    megFileLoadErrors.Add(remFile);
+                }
             }
-            if (!megafilesLoaded)
+            if (megFileLoadErrors.Count > 0)
             {
-                MessageBox.Show("Required data is missing or corrupt; please validate your installation.", "Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
+                StringBuilder msg = new StringBuilder();
+                string arg = megFileLoadErrors.Count == 1 ? String.Empty : "s";
+                msg.Append(String.Format("Required data is missing or corrupt; please validate your installation. The following file{0} could not be opened:\n", arg));
+                string errors = String.Join("\n", megFileLoadErrors.ToArray());
+                msg.Append(errors);
+                MessageBox.Show(msg.ToString(), "Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
                 return false;
             }
             // Classic main.mix and theater files, for rules reading and template land type detection in RA.
@@ -241,7 +249,8 @@ namespace MobiusEditor.Utility
             if (loadErrors.Count > 0)
             {
                 StringBuilder msg = new StringBuilder();
-                msg.Append("Required classic data is missing or corrupt; please validate your installation. The following mix files could not be opened:\n");
+                string arg = loadErrors.Count == 1 ? String.Empty : "s";
+                msg.Append(String.Format("Required classic data is missing or corrupt; please validate your installation. The following mix file{0} could not be opened:\n", arg));
                 string errors = String.Join("\n", loadErrors.ToArray());
                 msg.Append(errors);
                 MessageBox.Show(msg.ToString(), "Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
@@ -438,7 +447,7 @@ namespace MobiusEditor.Utility
         /// <param name="errors">Current list of errors to potentially add more to.</param>
         /// <param name="prefix">Prefix string to put before the filename on the newly added error line.</param>
         /// <param name="fileNames">One or more mix files to check. If multiple are given they are seen as interchangeable; if one exists in <paramref name="loadedFiles"/>, the check passes.</param>
-        public static void TestMixExists(List<string> loadedFiles, List<string> errors, string prefix, params string[] fileNames)
+        public static void TestMixExists(HashSet<string> loadedFiles, List<string> errors, string prefix, params string[] fileNames)
         {
             TestMixExists(loadedFiles, errors, prefix, null, true, fileNames);
         }
@@ -451,7 +460,7 @@ namespace MobiusEditor.Utility
         /// <param name="prefix">Prefix string to put before the filename on the newly added error line.</param>
         /// <param name="toInit">The theater for which the mix archive ahould be checked. Marks in the theater info whether it was found.</param>
         /// <param name="giveError">True to add an error in <paramref name="errors"/> if the file is not present.</param>
-        public static void TestMixExists(List<string> loadedFiles, List<string> errors, string prefix, TheaterType toInit, bool giveError)
+        public static void TestMixExists(HashSet<string> loadedFiles, List<string> errors, string prefix, TheaterType toInit, bool giveError)
         {
             if (toInit == null)
             {
@@ -470,7 +479,7 @@ namespace MobiusEditor.Utility
         /// <param name="toInit">If given, indicates that this mix file is the theater archive of a specific theater. Marks in the theater info whether it was found.</param>
         /// <param name="giveError">True to add an error in <paramref name="errors"/> if the file is not present.</param>
         /// <param name="fileNames">One or more mix files to check. If multiple are given they are seen as interchangeable; if one exists in <paramref name="loadedFiles"/>, the check passes.</param>
-        public static void TestMixExists(List<string> loadedFiles, List<string> errors, string prefix, TheaterType toInit, bool giveError, params string[] fileNames)
+        public static void TestMixExists(HashSet<string> loadedFiles, List<string> errors, string prefix, TheaterType toInit, bool giveError, params string[] fileNames)
         {
             bool anyExist = false;
             foreach (string fileName in fileNames)

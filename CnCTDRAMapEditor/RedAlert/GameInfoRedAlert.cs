@@ -78,7 +78,7 @@ namespace MobiusEditor.RedAlert
             // Needed for theater palettes and the remap settings in palette.cps
             mfm.LoadArchive(GameType.RedAlert, "local.mix", false, false, true, true);
             // Mod addons. Loaded with a special function.
-            mfm.LoadArchives(GameType.RedAlert, "sc*.mix", true);
+            mfm.LoadArchives(GameType.RedAlert, "sc*.mix", true, "scores.mix");
             // Not normally needed, but in the beta this contains palette.cps.
             mfm.LoadArchive(GameType.RedAlert, "general.mix", false, false, true, true);
             // Main graphics archive
@@ -94,7 +94,7 @@ namespace MobiusEditor.RedAlert
             }
             // Check files
             mfm.Reset(GameType.RedAlert, null);
-            List<string> loadedFiles = mfm.ToList();
+            HashSet<string> loadedFiles = mfm.Select(s => Path.GetFileName(s)).ToHashSet(StringComparer.OrdinalIgnoreCase);
             string prefix = ShortName + ": ";
             // Allow loading without expansion files.
             //TestMixExists(loadedFiles, loadErrors, prefix, "expand2.mix");

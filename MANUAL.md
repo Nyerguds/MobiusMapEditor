@@ -208,7 +208,7 @@ An outline will be shown around objects that are partially or fully behind other
 
 Another extra option related to outlines:
 
-* **IgnoreShadowOverlap**: Don't show overlap outlines on objects that are only overlapped by shadows.
+* **IgnoreShadowOverlap**: Don't show overlap outlines on objects that are only overlapped by shadows. This is enabled by default, but can be disabled if you want to increase the visibility of e.g. infantry under trees.
 
 Alpha transparency factors used:
 

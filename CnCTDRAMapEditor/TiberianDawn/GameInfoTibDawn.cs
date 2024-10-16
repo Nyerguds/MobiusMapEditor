@@ -73,7 +73,7 @@ namespace MobiusEditor.TiberianDawn
             mfm.LoadArchive(GameType, "local.mix", false);
             mfm.LoadArchive(GameType, "cclocal.mix", false);
             // Mod addons
-            mfm.LoadArchives(GameType, "sc*.mix", false);
+            mfm.LoadArchives(GameType, "sc*.mix", false, "scores.mix");
             mfm.LoadArchive(GameType, "conquer.mix", false);
             // Theaters
             foreach (TheaterType tdTheater in AllTheaters)
@@ -82,7 +82,7 @@ namespace MobiusEditor.TiberianDawn
             }
             // Check files.
             mfm.Reset(GameType, null);
-            List<string> loadedFiles = mfm.ToList();
+            HashSet<string> loadedFiles = mfm.Select(s => Path.GetFileName(s)).ToHashSet(StringComparer.OrdinalIgnoreCase);
             // Check required files.
             if (!forRemaster)
             {
