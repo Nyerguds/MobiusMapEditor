@@ -3626,6 +3626,8 @@ namespace MobiusEditor.RedAlert
                 ini.Sections.Remove("MapPack");
                 CompressLCWSection(ini.Sections.Add("MapPack"), stream.ToArray());
             }
+            byte? goldToUse = (byte?)Map.OverlayTypes.FirstOrDefault(ovl => ovl.IsTiberiumOrGold)?.ID;
+            byte? gemToUse = (byte?)Map.OverlayTypes.FirstOrDefault(ovl => ovl.IsGem)?.ID;
             using (MemoryStream stream = new MemoryStream())
             {
                 using (BinaryWriter writer = new BinaryWriter(stream, Encoding.UTF8, true))
@@ -3635,7 +3637,17 @@ namespace MobiusEditor.RedAlert
                         Overlay overlay = Map.Overlay[i];
                         if (overlay != null)
                         {
-                            writer.Write((byte)overlay.Type.ID);
+                            byte id = (byte)overlay.Type.ID;
+                            // reduce to single type for better compression
+                            if (overlay.Type.IsTiberiumOrGold && goldToUse.HasValue)
+                            {
+                                id = goldToUse.Value;
+                            }
+                            if (overlay.Type.IsGem && gemToUse.HasValue)
+                            {
+                                id = gemToUse.Value;
+                            }
+                            writer.Write(id);
                         }
                         else
                         {

@@ -312,6 +312,7 @@ namespace MobiusEditor.Tools
             }
             bool autoHandleOutlines = !manuallyHandledLayers.HasFlag(MapLayerFlag.OverlapOutlines);
             bool renderOverlay = layersToRender.HasFlag(MapLayerFlag.Overlay);
+            bool renderAllCrateOutlines = Globals.OutlineAllCrates;
             if (layersToRender.HasFlag(MapLayerFlag.OverlapOutlines) && autoHandleOutlines)
             {
                 if (layersToRender.HasFlag(MapLayerFlag.Buildings) && gameInfo.SupportsMapLayer(MapLayerFlag.Buildings))
@@ -332,7 +333,7 @@ namespace MobiusEditor.Tools
                 }
                 if (renderOverlay)
                 {
-                    if (!Globals.OutlineAllCrates && map.CrateOverlaysAvailable)
+                    if (!renderAllCrateOutlines && map.CrateOverlaysAvailable && !Globals.CratesOnTop)
                     {
                         MapRenderer.RenderAllCrateOutlines(graphics, gameInfo, map, visibleCells, tileSize, tileScale, true);
                     }
@@ -341,7 +342,7 @@ namespace MobiusEditor.Tools
             }
             // Special case: while it's not handled by OverlapOutlines, tools indicating that they handle the OverlapOutlines
             // manually will also paint this, so of all the outlines, it's drawn last.
-            if (renderOverlay && autoHandleOutlines && Globals.OutlineAllCrates && map.CrateOverlaysAvailable)
+            if (renderOverlay && autoHandleOutlines && renderAllCrateOutlines && map.CrateOverlaysAvailable)
             {
                 MapRenderer.RenderAllCrateOutlines(graphics, gameInfo, map, visibleCells, tileSize, tileScale, false);
             }
@@ -418,7 +419,7 @@ namespace MobiusEditor.Tools
                 }
                 if (renderOverlay)
                 {
-                    if (!renderAllCrateOutlines && map.CrateOverlaysAvailable) {
+                    if (!renderAllCrateOutlines && map.CrateOverlaysAvailable && !Globals.CratesOnTop) {
                         MapRenderer.RenderAllCrateOutlines(graphics, gameInfo, map, visibleCells, tileSize, tileScale, true);
                     }
                     MapRenderer.RenderAllSolidOverlayOutlines(graphics, gameInfo, map, visibleCells, tileSize, tileScale, true);

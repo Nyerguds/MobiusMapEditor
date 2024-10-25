@@ -50,6 +50,8 @@ namespace MobiusEditor.Model
         Gross           /**/ = 1 << 10,
         /// <summary>Is a crate.</summary>
         Crate           /**/ = WoodCrate | SteelCrate,
+        /// <summary>Is a resource.</summary>
+        Resource        /**/ = TiberiumOrGold | Gems,
     }
     [DebuggerDisplay("{Name}")]
     public class OverlayType : ICellOccupier, IBrowsableType, ICellOverlapper
