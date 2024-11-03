@@ -30,10 +30,13 @@ namespace MobiusEditor.TiberianDawn
         public override string ShortName => "TD";
         public override string IniName => "TiberianDawn";
         public override string DefaultSaveDirectory => Path.Combine(Globals.RootSaveDirectory, "Tiberian_Dawn");
-        public override string OpenFilter => Constants.FileFilter;
-        public override string SaveFilter => Constants.FileFilter;
+        public override string OpenFilter => "Tiberian Dawn files (*.ini;*.bin)|*.ini;*.bin";
+        public override string SaveFilter => "Tiberian Dawn files (*.ini;*.bin)|*.ini;*.bin";
         public override string DefaultExtension => ".ini";
         public override string DefaultExtensionFromMix => ".ini";
+        public override string DefaultExtensionFromPgm => DefaultExtension;
+        public override Dictionary<FileType, string[]> ExtensionsForTypes =>
+            new Dictionary<FileType, string[]>() { { FileType.INI, new string[] { ".ini" } }, { FileType.BIN, new string[] { ".bin" } }, { FileType.PGM, new string[] { ".pgm", ".meg" } } };
         public override string ModFolder => Path.Combine(Globals.ModDirectory, "Tiberian_Dawn");
         public override string ModIdentifier => "TD";
         public override string ModsToLoad => Properties.Settings.Default.ModsToLoadTD;

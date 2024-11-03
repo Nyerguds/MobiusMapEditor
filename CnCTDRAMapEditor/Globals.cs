@@ -15,8 +15,10 @@
 using MobiusEditor.Interface;
 using MobiusEditor.Utility;
 using System;
+using System.Collections.Generic;
 using System.Drawing;
 using System.IO;
+using System.Linq;
 
 namespace MobiusEditor
 {
@@ -25,6 +27,8 @@ namespace MobiusEditor
         static Globals()
         {
             // Startup options
+            EnabledGames = (Properties.Settings.Default.EnabledGames ?? String.Empty)
+                .Split(',',';').Select(g => g.Trim()).ToHashSet(StringComparer.OrdinalIgnoreCase);
             UseClassicFiles = Properties.Settings.Default.UseClassicFiles;
             EditorLanguage = Properties.Settings.Default.EditorLanguage;
             EnableDpiAwareness = Properties.Settings.Default.EnableDpiAwareness;
@@ -107,6 +111,7 @@ namespace MobiusEditor
         public static int ZOrderFlat = 1;
         public static int ZOrderFloor = 0;
 
+        public static HashSet<string> EnabledGames { get; set; }
         public static bool UseClassicFiles { get; set; }
         public static string EditorLanguage { get; set; }
         public static bool EnableDpiAwareness { get; set; }

@@ -30,10 +30,13 @@ namespace MobiusEditor.RedAlert
         public override string ShortName => "RA";
         public override string IniName => "RedAlert";
         public override string DefaultSaveDirectory => Path.Combine(Globals.RootSaveDirectory, "Red_Alert");
-        public override string SaveFilter => Constants.FileFilter;
-        public override string OpenFilter => Constants.FileFilter;
+        public override string SaveFilter => "Red Alert files (*.mpr;*.ini)|*.mpr;*.ini";
+        public override string OpenFilter => "Red Alert files (*.mpr;*.ini)|*.mpr;*.ini";
         public override string DefaultExtension => ".mpr";
         public override string DefaultExtensionFromMix => ".ini";
+        public override string DefaultExtensionFromPgm => DefaultExtension;
+        public override Dictionary<FileType, string[]> ExtensionsForTypes => 
+            new Dictionary<FileType, string[]>() { { FileType.INI, new string[] { ".ini", ".mpr" } }, { FileType.PGM, new string[] { ".pgm", ".meg" } } };
         public override string ModFolder => Path.Combine(Globals.ModDirectory, "Red_Alert");
         public override string ModIdentifier => "RA";
         public override string ModsToLoad => Properties.Settings.Default.ModsToLoadRA;

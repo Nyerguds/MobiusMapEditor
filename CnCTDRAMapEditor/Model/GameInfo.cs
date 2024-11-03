@@ -55,6 +55,10 @@ namespace MobiusEditor.Model
         public abstract string DefaultExtension { get; }
         /// <summary>Default extension used for maps of this game when they were loaded from inside a .mix file.</summary>
         public abstract string DefaultExtensionFromMix { get; }
+        /// <summary>Default extension used for maps of this game when they were loaded from inside a .pgm file.</summary>
+        public abstract string DefaultExtensionFromPgm { get; }
+        /// <summary>File types and corresponding extensions supported by this game.</summary>
+        public abstract Dictionary<FileType, string[]> ExtensionsForTypes { get; }
         /// <summary>Location to look for mods for this game in the user's Documents folder.</summary>
         public abstract string ModFolder { get; }
         /// <summary>Identifier for this game in mod definition json files.</summary>

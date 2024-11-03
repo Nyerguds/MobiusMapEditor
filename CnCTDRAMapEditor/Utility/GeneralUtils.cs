@@ -76,7 +76,6 @@ namespace MobiusEditor.Utility
                             iniContents = encDOS.GetString(bytes);
                         }
                         break;
-                    case FileType.MEG:
                     case FileType.PGM:
                         using (var megafile = new Megafile(path))
                         {

@@ -200,17 +200,24 @@ namespace MobiusEditor.Utility
         {
             // Initialize megafiles
             Dictionary<GameType, String> gameFolders = new Dictionary<GameType, string>();
-            foreach (GameInfo gi in GameTypeFactory.GetGameInfos())
+            GameInfo[] gameTypeInfo = GameTypeFactory.GetGameInfos();
+            foreach (GameInfo gameInfo in gameTypeInfo)
             {
-                gameFolders.Add(gi.GameType, gi.ClassicFolderRemasterData);
+                if (gameInfo != null)
+                {
+                    gameFolders.Add(gameInfo.GameType, gameInfo.ClassicFolderRemasterData);
+                }
             }
             MegafileManager mfm = new MegafileManager(Path.Combine(runPath, Globals.MegafilePath), runPath, modPaths, romfis, gameFolders);
-            GameInfo[] gameTypeInfo = GameTypeFactory.GetGameInfos();
             HashSet<string> remasterFilesFound = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
             List<string> remasterFilesToLoad = new List<string>();
-            foreach (GameInfo gic in gameTypeInfo)
+            foreach (GameInfo gameInfo in gameTypeInfo)
             {
-                string[] files = gic.RemasterMegFiles;
+                if (gameInfo == null)
+                {
+                    continue;
+                }
+                string[] files = gameInfo.RemasterMegFiles;
                 foreach (string file in files)
                 {
                     if (!remasterFilesFound.Contains(file))
@@ -241,9 +248,12 @@ namespace MobiusEditor.Utility
             // Classic main.mix and theater files, for rules reading and template land type detection in RA.
             List<string> loadErrors = new List<string>();
             List<string> fileLoadErrors = new List<string>();
-            foreach (GameInfo gic in gameTypeInfo)
+            foreach (GameInfo gameInfo in gameTypeInfo)
             {
-                gic.InitClassicFiles(mfm.ClassicFileManager, loadErrors, fileLoadErrors, true);
+                if (gameInfo != null)
+                {
+                    gameInfo.InitClassicFiles(mfm.ClassicFileManager, loadErrors, fileLoadErrors, true);
+                }
             }
             mfm.Reset(GameType.None, null);
             if (loadErrors.Count > 0)
@@ -270,11 +280,14 @@ namespace MobiusEditor.Utility
             TilesetManager tsm = new TilesetManager(mfm, Globals.TilesetsXMLPath, Globals.TexturesPath);
             Globals.TheTilesetManager = tsm;
             Globals.TheShapeCacheManager = new ShapeCacheManager();
-            foreach (GameInfo gic in gameTypeInfo)
+            foreach (GameInfo gameInfo in gameTypeInfo)
             {
-                foreach (TheaterType theater in gic.AllTheaters)
+                if (gameInfo != null)
                 {
-                    theater.IsRemasterTilesetFound = tsm.TilesetExists(theater.MainTileset);
+                    foreach (TheaterType theater in gameInfo.AllTheaters)
+                    {
+                        theater.IsRemasterTilesetFound = tsm.TilesetExists(theater.MainTileset);
+                    }
                 }
             }
             Globals.TheTeamColorManager = new TeamColorManager(mfm);
@@ -350,40 +363,43 @@ namespace MobiusEditor.Utility
             // The system should scan all mix archives for known filenames of other mix archives so it can do recursive searches.
             // Mix files should be given in order or depth, so first give ones that are in the folder, then ones that may occur inside others.
             // The order of load determines the file priority; only the first found occurrence of a file is used.
-            GameType[] gameTypes = GameTypeFactory.GetGameTypes();
-            GameInfo[] gameTypeInfo = new GameInfo[gameTypes.Length];
+            GameInfo[] gameTypeInfo = GameTypeFactory.GetGameInfos();
             Dictionary<GameType, string> gameFolders = new Dictionary<GameType, string>();
-            foreach (GameType gi in gameTypes)
+            foreach (GameInfo gameInfo in gameTypeInfo)
             {
-                GameInfo gic = GameTypeFactory.GetGameInfo(gi);
-                gameTypeInfo[(int)gic.GameType] = gic;
-                string path = gic.ClassicFolder;
-                string pathFull = Path.GetFullPath(Path.Combine(applicationPath, gic.ClassicFolder));
+                if (gameInfo == null)
+                {
+                    continue;
+                }
+                string path = gameInfo.ClassicFolder;
+                string pathFull = Path.GetFullPath(Path.Combine(applicationPath, gameInfo.ClassicFolder));
                 if (!Directory.Exists(pathFull))
                 {
                     // Revert to default.
-                    path = gic.ClassicFolderDefault;
+                    path = gameInfo.ClassicFolderDefault;
                     pathFull = Path.GetFullPath(Path.Combine(applicationPath, path));
                     if (!Directory.Exists(pathFull))
                     {
                         // As last-ditch effort, try to see if applicationPath is the remastered game folder.
-                        pathFull = Path.GetFullPath(Path.Combine(applicationPath, gic.ClassicFolderRemasterData));
+                        pathFull = Path.GetFullPath(Path.Combine(applicationPath, gameInfo.ClassicFolderRemasterData));
                         if (Directory.Exists(pathFull))
                         {
-                            path = gic.ClassicFolderRemasterData;
+                            path = gameInfo.ClassicFolderRemasterData;
                         }
                     }
                 }
-                gameFolders.Add(gi, path);
+                gameFolders.Add(gameInfo.GameType, path);
             }
             // Check files
             MixfileManager mfm = new MixfileManager(applicationPath, romfis, gameFolders, modpaths);
             List<string> loadErrors = new List<string>();
             List<string> fileLoadErrors = new List<string>();
-            foreach (GameType gi in gameTypes)
+            foreach (GameInfo gameInfo in gameTypeInfo)
             {
-                GameInfo gic = gameTypeInfo[(int)gi];
-                gic.InitClassicFiles(mfm, loadErrors, fileLoadErrors, false);
+                if (gameInfo != null)
+                {
+                    gameInfo.InitClassicFiles(mfm, loadErrors, fileLoadErrors, false);
+                }
             }
             mfm.Reset(GameType.None, null);
             if (loadErrors.Count > 0)
@@ -410,17 +426,18 @@ namespace MobiusEditor.Utility
             Globals.TheShapeCacheManager = new ShapeCacheManager();
             Globals.TheTeamColorManager = new TeamRemapManager(mfm);
             Dictionary<GameType, String> gameStringsFiles = new Dictionary<GameType, string>();
-            foreach (GameType gi in gameTypes)
+            foreach (GameInfo gameInfo in gameTypeInfo)
             {
-                GameInfo gic = gameTypeInfo[(int)gi];
-                gameStringsFiles.Add(gic.GameType, gic.ClassicStringsFile);
+                if (gameInfo != null)
+                {
+                    gameStringsFiles.Add(gameInfo.GameType, gameInfo.ClassicStringsFile);
+                }
             }
             GameTextManagerClassic gtm = new GameTextManagerClassic(mfm, gameStringsFiles);
             AddMissingClassicText(gtm);
             Globals.TheGameTextManager = gtm;
             return true;
         }
-
 
         /// <summary>
         /// Loads the mix file for a theater.

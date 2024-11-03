@@ -13,10 +13,7 @@
 // GNU General Public License along with permitted additional restrictions
 // with this program. If not, see https://github.com/electronicarts/CnC_Remastered_Collection
 using MobiusEditor.Model;
-using MobiusEditor.Utility;
 using System;
-using System.Collections.Generic;
-using System.Linq;
 using System.Windows.Forms;
 
 namespace MobiusEditor.Dialogs
@@ -33,6 +30,12 @@ namespace MobiusEditor.Dialogs
         {
             get { return ListItem.GetValueFromListBox<GameType>(lbGames); }
             set { lbGames.SelectedIndex = Array.IndexOf(gameTypes, value); }
+        }
+
+        public GameInfo GameInfo
+        {
+            get { return gameInfos[(int)GameType]; }
+            set { lbGames.SelectedIndex = value == null ? -1 : Array.IndexOf(gameTypes, value.GameType); }
         }
 
         public String Theater
@@ -70,7 +73,11 @@ namespace MobiusEditor.Dialogs
             }
             foreach (GameType gt in this.gameTypes)
             {
-                lbGames.Items.Add(new ListItem<GameType>(gt, this.gameInfos[(int)gt].Name));
+                GameInfo gi = this.gameInfos[(int)gt];
+                if (gi != null)
+                {
+                    lbGames.Items.Add(new ListItem<GameType>(gt, gi.Name));
+                }
             }
             lbGames.SelectedIndex = 0;
             LbGames_SelectedIndexChanged(null, null);

@@ -16,16 +16,14 @@ using MobiusEditor.Model;
 using System;
 using System.Collections.Generic;
 using System.Drawing;
-using System.Linq;
 
 namespace MobiusEditor.Interface
 {
     public enum FileType
     {
-        None,
+        None = 0,
         INI,
         BIN,
-        MEG,
         PGM,
         MIX
     }

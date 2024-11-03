@@ -11,6 +11,7 @@
 //    TERMS AND CONDITIONS FOR COPYING, DISTRIBUTION AND MODIFICATION
 //
 //   0. You just DO WHAT THE FUCK YOU WANT TO.
+using System.Collections.Generic;
 using System.Drawing;
 using System.Linq;
 using MobiusEditor.Interface;
@@ -25,6 +26,11 @@ namespace MobiusEditor.SoleSurvivor
         public override string ShortName => "SS";
         public override string Name => "Sole Survivor";
         public override string IniName => "SoleSurvivor";
+        public override string OpenFilter => "Sole Survivor files (*.ini;*.bin)|*.ini;*.bin";
+        public override string SaveFilter => "Sole Survivor files (*.ini;*.bin)|*.ini;*.bin";
+        public override string DefaultExtensionFromPgm => null;
+        public override Dictionary<FileType, string[]> ExtensionsForTypes =>
+            new Dictionary<FileType, string[]>() { { FileType.INI, new string[] { ".ini" } }, { FileType.BIN, new string[] { ".bin" } } };
         public override string WorkshopTypeId => null;
         public override string[] RemasterMegFiles => new string[] { "CONFIG.MEG", "TEXTURES_COMMON_SRGB.MEG", "TEXTURES_SRGB.MEG", "TEXTURES_TD_SRGB.MEG" };
         public override string ClassicFolder => Properties.Settings.Default.ClassicPathSS;

@@ -102,9 +102,12 @@ namespace MobiusEditor
             Application.SetCompatibleTextRenderingDefault(false);
             Dictionary<GameType, string[]> modPaths = new Dictionary<GameType, string[]>();
             // Check if any mods are allowed to override the default stuff to load.
-            foreach (GameInfo gic in GameTypeFactory.GetGameInfos())
+            foreach (GameInfo gameInfo in GameTypeFactory.GetGameInfos())
             {
-                modPaths.Add(gic.GameType, StartupLoader.GetModPaths(SteamGameId, gic.ModsToLoad, gic.ModFolder, gic.ModIdentifier));
+                if (gameInfo != null)
+                {
+                    modPaths.Add(gameInfo.GameType, StartupLoader.GetModPaths(SteamGameId, gameInfo.ModsToLoad, gameInfo.ModFolder, gameInfo.ModIdentifier));
+                }
             }
             String runPath = StartupLoader.GetRemasterRunPath(SteamGameId, !Globals.UseClassicFiles);
             if (runPath != null)

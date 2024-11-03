@@ -246,17 +246,21 @@ namespace MobiusEditor
             HashSet<string> remasterBaseFolders = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
             Dictionary<GameType, List<string>> classicMixFiles = new Dictionary<GameType, List<string>>();
             Dictionary<GameType, List<string>> remasterMixFiles = new Dictionary<GameType, List<string>>();
-            GameInfo[] games = GameTypeFactory.GetGameInfos();
             String remasterPath = StartupLoader.GetRemasterRunPath(Program.SteamGameId, false);
             if (remasterPath != null)
             {
                 remasterPath = Path.Combine(remasterPath, Globals.MegafilePath);
             }
+            GameInfo[] games = GameTypeFactory.GetGameInfos();
             foreach (GameInfo gameInfo in games)
             {
                 if (CheckAbort())
                 {
                     return null;
+                }
+                if (gameInfo == null)
+                {
+                    continue;
                 }
                 string classicRoot = gameInfo.ClassicFolder;
                 if (!classicBaseFolders.Contains(classicRoot))
@@ -324,7 +328,6 @@ namespace MobiusEditor
                 loadingLabel.Text = "No mix files found.";
                 return;
             }
-            GameInfo[] games = GameTypeFactory.GetGameInfos();
             String remasterPath = StartupLoader.GetRemasterRunPath(Program.SteamGameId, false);
             if (remasterPath != null)
             {
@@ -341,7 +344,6 @@ namespace MobiusEditor
             {
                 return;
             }
-            GameInfo[] games = GameTypeFactory.GetGameInfos();
             ToolStripMenuItem mixMenu = itemToRecycle == null ? new ToolStripMenuItem() : itemToRecycle;
             mixMenu.Text = label;
             mixMenu.Enabled = true;
@@ -353,8 +355,13 @@ namespace MobiusEditor
             {
                 itemToRecycle = null;
             }
+            GameInfo[] games = GameTypeFactory.GetGameInfos();
             foreach (GameInfo gameInfo in games)
             {
+                if (gameInfo == null)
+                {
+                    continue;
+                }
                 string folderRoot = Path.GetFullPath(Path.Combine(baseFolder, forClassic ? gameInfo.ClassicFolder : gameInfo.ClassicFolderRemaster));
                 if (!mixFiles.TryGetValue(gameInfo.GameType, out List<string> mixFilesToAdd))
                 {
@@ -864,15 +871,42 @@ namespace MobiusEditor
         {
             // Always remove the label when showing an Open File dialog.
             SimpleMultiThreading.RemoveBusyLabel(this);
-            List<string> filters = new List<string>
+            GameInfo[] gameTypeInfo = GameTypeFactory.GetGameInfos();
+            List<string> gameFilters = new List<string>();
+            HashSet<string> extensionsCheck = new HashSet<string>();
+            List<string> extensions = new List<string>();
+            foreach (GameInfo gameInfo in gameTypeInfo)
             {
-                "All supported types (*.ini;*.bin;*.mix;*.mpr;*.pgm)|*.ini;*.bin;*.mpr;*.mix;*.pgm",
-                TiberianDawn.Constants.FileFilter,
-                RedAlert.Constants.FileFilter,
+                String filter;
+                if (gameInfo == null || (filter = gameInfo.OpenFilter) == null)
+                {
+                    continue;
+                }
+                gameFilters.Add(filter);
+                if (filter.Contains("|"))
+                {
+                    string[] exts = filter.Split('|')[1].Split(';');
+                    foreach (string ext in exts)
+                    {
+                        if (extensionsCheck.Contains(ext))
+                        {
+                            continue;
+                        }
+                        extensions.Add(ext);
+                        extensionsCheck.Add(ext);
+                    }
+                }
+            }
+            extensions.AddRange(new String[] { "*.mix", "*.pgm" });
+            List<string> filters = new List<string>();
+            filters.Add(String.Format("All supported types ({0})|{0}", String.Join(";", extensions)));
+            filters.AddRange(gameFilters);
+            filters.AddRange(new string[]
+            {
                 "PGM files (*.pgm)|*.pgm",
                 "MIX archives (*.mix)|*.mix",
                 "All files (*.*)|*.*"
-            };
+            });
             string selectedFileName = null;
             ClearActiveTool();
             using (OpenFileDialog ofd = new OpenFileDialog())
@@ -1640,7 +1674,7 @@ namespace MobiusEditor
 
         private void NewFile(bool withImage, string imagePath)
         {
-            GameType gameType = GameType.None;
+            GameInfo gameInfo = null;
             string theater = null;
             bool isMegaMap = false;
             bool isSinglePlay = false;
@@ -1652,12 +1686,11 @@ namespace MobiusEditor
                     RefreshActiveTool(true);
                     return;
                 }
-                gameType = nmd.GameType;
+                gameInfo = nmd.GameInfo;
                 isMegaMap = nmd.MegaMap;
                 isSinglePlay = nmd.SinglePlayer;
                 theater = nmd.Theater;
             }
-            GameInfo gType = GameTypeFactory.GetGameInfo(gameType);
             if (withImage && imagePath == null)
             {
                 using (OpenFileDialog ofd = new OpenFileDialog())
@@ -1672,7 +1705,7 @@ namespace MobiusEditor
                     }
                     imagePath = ofd.FileName;
                 }
-                Size size = isMegaMap ? gType.MapSizeMega : gType.MapSize;
+                Size size = isMegaMap ? gameInfo.MapSizeMega : gameInfo.MapSize;
                 Size imageSize;
                 try
                 {
@@ -1689,7 +1722,7 @@ namespace MobiusEditor
                 // Warn when size doesn't match map size.
                 if (imageSize.Width > size.Width || imageSize.Height > size.Height)
                 {
-                    string mapStr = ((isMegaMap && !gType.MegamapIsOptional) || (!isMegaMap && !gType.MegamapIsDefault)) ? "{0} map"
+                    string mapStr = ((isMegaMap && !gameInfo.MegamapIsOptional) || (!isMegaMap && !gameInfo.MegamapIsDefault)) ? "{0} map"
                         : (isMegaMap ? "{0} megamap" : "small {0} map");
                     const string messageTemplate = "The image you have chosen is {0}larger than the map size. " +
                         "Note that every pixel on the image represents one cell on the map, so for a {2}, the expected image size is {3}×{4}.\n\n" +
@@ -1698,7 +1731,7 @@ namespace MobiusEditor
                         "{1}" + 
                         ".\n\n" +
                         "Are you sure you want to continue?";
-                    object[] parms = { String.Empty, String.Empty, String.Format(mapStr, gType.Name), size.Width, size.Height };
+                    object[] parms = { String.Empty, String.Empty, String.Format(mapStr, gameInfo.Name), size.Width, size.Height };
                     // If either total size is larger than double, or one of the sizes is larger than 3x that dimension, they're Probably Doing It Wrong; give extra info.
                     if ((imageSize.Width > size.Width * 2 && imageSize.Height > size.Height * 2) || imageSize.Width > size.Width * 3 || imageSize.Height > size.Height * 2)
                     {
@@ -1718,7 +1751,7 @@ namespace MobiusEditor
             if (withImage)
                 loading += " from image";
             loadMultiThreader.ExecuteThreaded(
-                () => NewFile(gameType, imagePath, theater, isMegaMap, isSinglePlay, this),
+                () => NewFile(gameInfo, imagePath, theater, isMegaMap, isSinglePlay, this),
                 PostLoad, true,
                 (e, l) => LoadUnloadUi(e, l, loadMultiThreader),
                 loading);
@@ -1758,7 +1791,7 @@ namespace MobiusEditor
                 loadName = fileInfo.FullName;
                 feedbackName = MixPath.GetFileNameReadable(fileName, false, out nameIsId);
             }
-            if (!IdentifyMap(fileName, out FileType fileType, out GameType gameType, out bool isMegaMap, out string theater) && !isMix)
+            if (!IdentifyMap(fileName, out FileType fileType, out GameInfo gameInfo, out bool isMegaMap, out string theater) && !isMix)
             {
                 string extension = Path.GetExtension(loadName).TrimStart('.');
                 // No point in supporting jpeg here; the mapping needs distinct colours without fades.
@@ -1813,12 +1846,11 @@ namespace MobiusEditor
                 RefreshActiveTool(true);
                 return;
             }
-            GameInfo gType = GameTypeFactory.GetGameInfo(gameType);
-            TheaterType[] theaters = gType != null ? gType.AllTheaters : null;
+            TheaterType[] theaters = gameInfo.AllTheaters;
             TheaterType theaterObj = theaters == null ? null : theaters.Where(th => th.Name.Equals(theater, StringComparison.OrdinalIgnoreCase)).FirstOrDefault();
             if (theaterObj == null)
             {
-                MessageBox.Show(this, String.Format("Unknown {0} theater \"{1}\"", gType.Name, theater), "Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
+                MessageBox.Show(this, String.Format("Unknown {0} theater \"{1}\"", gameInfo.Name, theater), "Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
                 RefreshActiveTool(true);
                 return;
             }
@@ -1826,11 +1858,11 @@ namespace MobiusEditor
             {
                 string graphicsMode = Globals.UseClassicFiles ? "Classic" : "Remastered";
                 string message = String.Format("Error loading {0}: No assets found for {1} theater \"{2}\" in {3} graphics mode.",
-                    feedbackName, gType.Name, theaterObj.Name, graphicsMode);
+                    feedbackName, gameInfo.Name, theaterObj.Name, graphicsMode);
                 if (Globals.UseClassicFiles)
                 {
                     message += String.Format("\n\nYou may need to adjust the \"{0}\" setting to point to a game folder containing {1}, or add {1} to the configured folder.",
-                        gType.ClassicFolderSetting, theaterObj.ClassicTileset + ".mix");
+                        gameInfo.ClassicFolderSetting, theaterObj.ClassicTileset + ".mix");
                 }
                 else
                 {
@@ -1841,7 +1873,7 @@ namespace MobiusEditor
                 return;
             }
             loadMultiThreader.ExecuteThreaded(
-                () => LoadFile(fileName, fileType, gType, theater, isMegaMap),
+                () => LoadFile(fileName, fileType, gameInfo, theater, isMegaMap),
                 PostLoad, true,
                 (e, l) => LoadUnloadUi(e, l, loadMultiThreader),
                 "Loading map");
@@ -1851,14 +1883,24 @@ namespace MobiusEditor
         {
             // This part assumes validation is already done.
             FileType fileType = FileType.None;
-            switch (Path.GetExtension(saveFilename).ToLower())
+            FileType[] allTypes = Enum.GetValues(typeof(FileType)).Cast<FileType>().Where(ft => ft != FileType.None).ToArray();
+            Dictionary<FileType, string[]> supported = plugin.GameInfo.ExtensionsForTypes;
+            string ext = Path.GetExtension(saveFilename);
+            foreach (FileType type in allTypes)
             {
-                case ".ini":
-                case ".mpr":
-                    fileType = FileType.INI;
-                    break;
-                case ".bin":
-                    fileType = FileType.BIN;
+                if (!supported.TryGetValue(type, out string[] extensions))
+                {
+                    continue;
+                }
+                foreach (string extension in extensions)
+                {
+                    if (extension.Equals(ext, StringComparison.OrdinalIgnoreCase))
+                    {
+                        fileType = type;
+                        break;
+                    }
+                }
+                if (fileType != FileType.None)
                     break;
             }
             if (fileType == FileType.None)
@@ -1891,10 +1933,12 @@ namespace MobiusEditor
                 "Saving map");
         }
 
-        private bool IdentifyMap(string loadFilename, out FileType fileType, out GameType gameType, out bool isMegaMap, out string theater)
+        private bool IdentifyMap(string loadFilename, out FileType fileType, out GameInfo gameInfo, out bool isMegaMap, out string theater)
         {
             fileType = FileType.None;
-            gameType = GameType.None;
+            GameType gameType = GameType.None;
+            gameInfo = null;
+            GameInfo[] gameInfos = GameTypeFactory.GetGameInfos();
             theater = null;
             isMegaMap = false;
             string fullFilename = loadFilename;
@@ -1918,20 +1962,33 @@ namespace MobiusEditor
             }
             if (fileType != FileType.MIX)
             {
-                switch (Path.GetExtension(loadFilename).ToLower())
+                FileType[] allTypes = Enum.GetValues(typeof(FileType)).Cast<FileType>().Where(ft => ft != FileType.None && ft != FileType.MIX).ToArray();
+                foreach (GameInfo gi in gameInfos)
                 {
-                    case ".ini":
-                    case ".mpr":
-                        fileType = FileType.INI;
-                        break;
-                    case ".bin":
-                        fileType = FileType.BIN;
-                        break;
-                    case ".pgm":
-                        fileType = FileType.PGM;
-                        break;
-                    case ".meg":
-                        fileType = FileType.MEG;
+                    if (gi == null)
+                    {
+                        continue;
+                    }
+                    Dictionary<FileType, string[]> supported = gi.ExtensionsForTypes;
+                    string ext = Path.GetExtension(loadFilename);
+                    foreach (FileType type in allTypes)
+                    {
+                        if (!supported.TryGetValue(type, out string[] extensions))
+                        {
+                            continue;
+                        }
+                        foreach (string extension in extensions)
+                        {
+                            if (extension.Equals(ext, StringComparison.OrdinalIgnoreCase))
+                            {
+                                fileType = type;
+                                break;
+                            }
+                        }
+                        if (fileType != FileType.None)
+                            break;
+                    }
+                    if (fileType != FileType.None)
                         break;
                 }
             }
@@ -1956,6 +2013,11 @@ namespace MobiusEditor
                 }
                 if (iniContents == null)
                 {
+                    // Might expand this to an actual logic on the gameinfo class to detect its map type?
+                    if (!gameInfos.Any(gi => gi != null && gi.ExtensionsForTypes.ContainsKey(FileType.BIN)))
+                    {
+                        return false;
+                    }
                     // Check if it's a classic 64x64 map.
                     Size tdMax = TiberianDawn.Constants.MaxSize;
                     if (filesize == tdMax.Width * tdMax.Height * 2)
@@ -2027,7 +2089,8 @@ namespace MobiusEditor
                 // Not actually used for RA at the moment.
                 isMegaMap = true;
             }
-            return gameType != GameType.None;
+            gameInfo = gameInfos[(int)gameType];
+            return gameInfo != null;
         }
 
         /// <summary>
@@ -2119,7 +2182,7 @@ namespace MobiusEditor
         /// <param name="isSinglePlay">Is singleplayer scenario</param>
         /// <param name="showTarget">The form to use as target for showing messages / dialogs on.</param>
         /// <returns></returns>
-        private static MapLoadInfo NewFile(GameType gameType, string imagePath, string theater, bool isTdMegaMap, bool isSinglePlay, MainForm showTarget)
+        private static MapLoadInfo NewFile(GameInfo gameInfo, string imagePath, string theater, bool isTdMegaMap, bool isSinglePlay, MainForm showTarget)
         {
             int imageWidth = 0;
             int imageHeight = 0;
@@ -2150,8 +2213,7 @@ namespace MobiusEditor
             bool mapLoaded = false;
             try
             {
-                GameInfo gType = GameTypeFactory.GetGameInfo(gameType);
-                plugin = LoadNewPlugin(gType, theater, isTdMegaMap);
+                plugin = LoadNewPlugin(gameInfo, theater, isTdMegaMap);
                 // This initialises the theater
                 plugin.New(theater);
                 mapLoaded = true;
@@ -2359,7 +2421,7 @@ namespace MobiusEditor
                 }
 #if !DEVELOPER
                 // Don't allow re-save as PGM; act as if this is a new map.
-                if (loadInfo.FileType == FileType.PGM || loadInfo.FileType == FileType.MEG)
+                if (loadInfo.FileType == FileType.PGM)
                 {
                     resaveType = FileType.INI;
                     resaveName = null;
@@ -3387,7 +3449,7 @@ namespace MobiusEditor
         private bool PromptSaveMap(Action nextAction, bool onlyAfterSave)
         {
 #if !DEVELOPER
-            if (loadedFileType == FileType.PGM || loadedFileType == FileType.MEG)
+            if (loadedFileType == FileType.PGM)
             {
                 return true;
             }

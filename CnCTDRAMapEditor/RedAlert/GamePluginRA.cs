@@ -661,7 +661,6 @@ namespace MobiusEditor.RedAlert
                             errors.AddRange(LoadINI(ini, tryCheckSingle, false, ref modified));
                         }
                         break;
-                    case FileType.MEG:
                     case FileType.PGM:
                         {
                             using (Megafile megafile = new Megafile(path))
@@ -3162,7 +3161,7 @@ namespace MobiusEditor.RedAlert
             INI ini = new INI();
             List<(string section, string key)> utf8Components = new List<(string section, string key)>();
             utf8Components.AddRange(new[] { ("Steam", null), ("Briefing", "Text"), ("Basic", "Author") });
-            if (!Globals.UseClassicFiles || !Globals.ClassicEncodesNameAsCp437 || fileType == FileType.PGM || fileType == FileType.MEG)
+            if (!Globals.UseClassicFiles || !Globals.ClassicEncodesNameAsCp437 || fileType == FileType.PGM)
             {
                 utf8Components.Add(("Basic", "Name"));
             }
@@ -3203,7 +3202,6 @@ namespace MobiusEditor.RedAlert
                         }
                     }
                     break;
-                case FileType.MEG:
                 case FileType.PGM:
                     SaveINI(ini, fileType, path);
                     using (MemoryStream mprStream = new MemoryStream())
