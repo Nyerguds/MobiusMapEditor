@@ -146,8 +146,8 @@ namespace MobiusEditor
             this.toolsOptionsSafeDraggingMenuItem.Checked = Globals.TileDragProtect;
             this.toolsOptionsRandomizeDragPlaceMenuItem.Checked = Globals.TileDragRandomize;
             this.toolsOptionsPlacementGridMenuItem.Checked = Globals.ShowPlacementGrid;
-            this.toolsOptionsOutlineAllCratesMenuItem.Checked = Globals.OutlineAllCrates;
             this.toolsOptionsCratesOnTopMenuItem.Checked = Globals.CratesOnTop;
+            this.viewExtraIndicatorsCrateOutlinesMenuItem.Checked = Globals.OutlineAllCrates;
 
             // Obey the settings.
             this.mapPanel.SmoothScale = Globals.MapSmoothScale;
@@ -1514,15 +1514,6 @@ namespace MobiusEditor
                 CellMetrics cm = map.Metrics;
                 mapPanel.Invalidate(map, map.Overlay.Select(ov => cm.GetLocation(ov.Cell)).Where(c => c.HasValue).Cast<Point>());
             }
-        }
-
-        private void toolsOptionsOutlineAllCratesMenuItem_Click(object sender, EventArgs e)
-        {
-            if (sender is ToolStripMenuItem tsmi)
-            {
-                Globals.OutlineAllCrates = tsmi.Checked;
-            }
-            mapPanel.Invalidate();
         }
 
         private void ToolsStatsGameObjectsMenuItem_Click(object sender, EventArgs e)
@@ -2917,6 +2908,7 @@ namespace MobiusEditor
             RemoveLayerIfUnchecked(ref layers, viewExtraIndicatorsLandTypesMenuItem.Checked, MapLayerFlag.LandTypes);
             RemoveLayerIfUnchecked(ref layers, viewExtraIndicatorsPlacedObjectsMenuItem.Checked, MapLayerFlag.TechnoOccupancy);
             RemoveLayerIfUnchecked(ref layers, viewExtraIndicatorsWaypointRevealRadiusMenuItem.Checked, MapLayerFlag.WaypointRadius);
+            RemoveLayerIfUnchecked(ref layers, viewExtraIndicatorsCrateOutlinesMenuItem.Checked, MapLayerFlag.CrateOutlines);
             RemoveLayerIfUnchecked(ref layers, viewExtraIndicatorsEffectAreaRadiusMenuItem.Checked, MapLayerFlag.EffectRadius);
             // this will only have an effect if a tool is active.
             ActiveLayers = layers;

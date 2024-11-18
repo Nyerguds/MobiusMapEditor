@@ -312,7 +312,7 @@ namespace MobiusEditor.Tools
             }
             bool autoHandleOutlines = !manuallyHandledLayers.HasFlag(MapLayerFlag.OverlapOutlines);
             bool renderOverlay = layersToRender.HasFlag(MapLayerFlag.Overlay);
-            bool renderAllCrateOutlines = Globals.OutlineAllCrates;
+            bool renderAllCrateOutlines = layersToRender.HasFlag(MapLayerFlag.CrateOutlines);
             if (layersToRender.HasFlag(MapLayerFlag.OverlapOutlines) && autoHandleOutlines)
             {
                 if (layersToRender.HasFlag(MapLayerFlag.Buildings) && gameInfo.SupportsMapLayer(MapLayerFlag.Buildings))
@@ -396,8 +396,8 @@ namespace MobiusEditor.Tools
 
         protected void HandlePaintOutlines(Graphics graphics, Map map, Rectangle visibleCells, Size tileSize, double tileScale, MapLayerFlag layers)
         {
-            bool renderAllCrateOutlines = Globals.OutlineAllCrates;
             bool renderOverlay = layers.HasFlag(MapLayerFlag.Overlay);
+            bool renderAllCrateOutlines = layers.HasFlag(MapLayerFlag.CrateOutlines);
             GameInfo gameInfo = plugin.GameInfo;
             if (layers.HasFlag(MapLayerFlag.OverlapOutlines))
             {

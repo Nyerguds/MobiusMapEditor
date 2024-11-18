@@ -61,16 +61,16 @@ namespace MobiusEditor.Model
         LandTypes       /**/ = 1 << 20,
         TechnoOccupancy /**/ = 1 << 21,
         WaypointRadius  /**/ = 1 << 22,
-        EffectRadius    /**/ = 1 << 23,
+        CrateOutlines   /**/ = 1 << 23,
+        EffectRadius    /**/ = 1 << 24,
 
         OverlayAll = Resources | Walls | Overlay,
         Technos = Terrain | Infantry | Units | Buildings,
         /// <summary>Listing of layers that are hard-painted onto the map image.</summary>
         MapLayers = Template | Terrain | Resources | Walls | Overlay | Smudge | Infantry | Units | Buildings | Waypoints,
         /// <summary>Listing of layers that don't need a full map repaint.</summary>
-        Indicators = Boundaries | MapSymmetry | MapGrid | WaypointsIndic | FootballArea | CellTriggers
-            | TechnoTriggers | BuildingRebuild | BuildingFakes | EffectRadius | WaypointRadius
-            | OverlapOutlines | LandTypes | TechnoOccupancy,
+        Indicators = Boundaries | WaypointsIndic | FootballArea | CellTriggers | TechnoTriggers | BuildingRebuild | BuildingFakes | OverlapOutlines
+            | MapSymmetry | MapGrid | LandTypes | TechnoOccupancy | WaypointRadius | CrateOutlines | EffectRadius,
         All = Int32.MaxValue
     }
 
@@ -165,6 +165,7 @@ namespace MobiusEditor.Model
             "Map terrain types hashing",
             "Object occupancy hashing",
             "Waypoint reveal radiuses",
+            "Forced crate outlines",
             "Jam / gap radiuses",
         };
 
