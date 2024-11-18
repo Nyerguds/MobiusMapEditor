@@ -83,9 +83,9 @@ namespace MobiusEditor.Model
         public abstract string ClassicFolderSetting { get; }
         /// <summary>File name of the classic strings file for this game.</summary>
         public abstract string ClassicStringsFile { get; }
-        /// <summary>Map size for normal maps of this type</summary>
+        /// <summary>Map size for normal maps of this type.</summary>
         public abstract Size MapSize { get; }
-        /// <summary>Map size for megamaps of this type</summary>
+        /// <summary>Map size for megamaps of this type.</summary>
         public abstract Size MapSizeMega { get; }
         /// <summary>Lists all theaters theoretically supported by this type.</summary>
         public abstract TheaterType[] AllTheaters { get; }
@@ -103,6 +103,8 @@ namespace MobiusEditor.Model
         public abstract bool HasSinglePlayer { get; }
         /// <summary>Whether mix files of this game can be in the new mix format</summary>
         public abstract bool CanUseNewMixFormat { get; }
+        /// <summary>Maximum length of the saved ini data for a map of this game.</summary>
+        public abstract long MaxDataSize { get; }
         /// <summary>Maximum amount of triggers that can be added into a map of this game.</summary>
         public abstract int MaxTriggers { get; }
         /// <summary>Maximum amount of teams that can be added into a map of this game.</summary>

@@ -63,8 +63,11 @@ namespace MobiusEditor.Dialogs
                     try { soundPlayer.Dispose(); } catch { /* ignore */ }
                     if (stream != null)
                     {
+                        // Disposing these isn't REALLY necessary; the UnmanagedMemoryStream type returned
+                        // from the Resources is just a wrapper around a bare pointer to a byte array.
                         try { stream.Dispose(); } catch { /* ignore */ }
                     }
+                    soundPlayer = null;
                 }
             }
         }
@@ -72,7 +75,7 @@ namespace MobiusEditor.Dialogs
         private void PlaySound(int clicks)
         {
             StopSound();
-            using (MemoryStream ms = GetClipFromClicks(clicks))
+            using (Stream ms = GetClipFromClicks(clicks))
             {
                 if (ms != null)
                 {
@@ -85,7 +88,7 @@ namespace MobiusEditor.Dialogs
             }
         }
 
-        private MemoryStream GetClipFromClicks(int clicks)
+        private Stream GetClipFromClicks(int clicks)
         {
             // Before reaching maxclicks: take sounds from switch-case, in reverse order.
             if (clicks < maxclicks)
@@ -98,25 +101,16 @@ namespace MobiusEditor.Dialogs
             return GetClip(randomNr);
         }
 
-        private MemoryStream GetClip(int number)
+        private Stream GetClip(int number)
         {
             switch (number)
             {
                 case 0:
-                    return GetMemoryStream(Properties.Resources.Mmg1);
+                    return Properties.Resources.Mmg1;
                 case 1:
-                    return GetMemoryStream(Properties.Resources.Mtiber1);
+                    return Properties.Resources.Mtiber1;
                 default:
-                    return GetMemoryStream(Properties.Resources.Mthanks1);
-            }
-        }
-
-
-        private MemoryStream GetMemoryStream(UnmanagedMemoryStream umm)
-        {
-            using (umm)
-            {
-                return GeneralUtils.CopyToMemoryStream(umm);
+                    return Properties.Resources.Mthanks1;
             }
         }
 

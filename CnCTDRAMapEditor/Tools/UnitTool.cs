@@ -210,6 +210,7 @@ namespace MobiusEditor.Tools
                 return;
             }
             bool origDirtyState = plugin.Dirty;
+            bool origEmptyState = plugin.Empty;
             plugin.Dirty = true;
             void undoAction(UndoRedoEventArgs ev)
             {
@@ -222,7 +223,14 @@ namespace MobiusEditor.Tools
                 ev.MapPanel.Invalidate(ev.Map, unit);
                 if (ev.Plugin != null)
                 {
-                    ev.Plugin.Dirty = origDirtyState;
+                    if (origEmptyState)
+                    {
+                        ev.Plugin.Empty = true;
+                    }
+                    else
+                    {
+                        ev.Plugin.Dirty = origDirtyState;
+                    }
                 }
             }
             void redoAction(UndoRedoEventArgs ev)
@@ -354,6 +362,7 @@ namespace MobiusEditor.Tools
             }
             Point endLocation = finalLocation.Value;
             bool origDirtyState = plugin.Dirty;
+            bool origEmptyState = plugin.Empty;
             plugin.Dirty = true;
             void undoAction(UndoRedoEventArgs ev)
             {
@@ -363,7 +372,14 @@ namespace MobiusEditor.Tools
                 ev.MapPanel.Invalidate(ev.Map, toMove);
                 if (ev.Plugin != null)
                 {
-                    ev.Plugin.Dirty = origDirtyState;
+                    if (origEmptyState)
+                    {
+                        ev.Plugin.Empty = true;
+                    }
+                    else
+                    {
+                        ev.Plugin.Dirty = origDirtyState;
+                    }
                 }
             }
             void redoAction(UndoRedoEventArgs ev)
@@ -432,24 +448,32 @@ namespace MobiusEditor.Tools
             if (map.Technos.Add(location, unit))
             {
                 bool origDirtyState = plugin.Dirty;
+                bool origEmptyState = plugin.Empty;
                 plugin.Dirty = true;
                 mapPanel.Invalidate(map, unit);
-                void undoAction(UndoRedoEventArgs e)
+                void undoAction(UndoRedoEventArgs ev)
                 {
-                    e.MapPanel.Invalidate(e.Map, unit);
-                    e.Map.Technos.Remove(unit);
-                    if (e.Plugin != null)
+                    ev.MapPanel.Invalidate(ev.Map, unit);
+                    ev.Map.Technos.Remove(unit);
+                    if (ev.Plugin != null)
                     {
-                        e.Plugin.Dirty = origDirtyState;
+                        if (origEmptyState)
+                        {
+                            ev.Plugin.Empty = true;
+                        }
+                        else
+                        {
+                            ev.Plugin.Dirty = origDirtyState;
+                        }
                     }
                 }
-                void redoAction(UndoRedoEventArgs e)
+                void redoAction(UndoRedoEventArgs ev)
                 {
-                    e.Map.Technos.Add(location, unit);
-                    e.MapPanel.Invalidate(e.Map, unit);
-                    if (e.Plugin != null)
+                    ev.Map.Technos.Add(location, unit);
+                    ev.MapPanel.Invalidate(ev.Map, unit);
+                    if (ev.Plugin != null)
                     {
-                        e.Plugin.Dirty = true;
+                        ev.Plugin.Dirty = true;
                     }
                 }
                 url.Track(undoAction, redoAction, ToolType.Unit);
@@ -463,23 +487,31 @@ namespace MobiusEditor.Tools
                 mapPanel.Invalidate(map, unit);
                 map.Technos.Remove(unit);
                 bool origDirtyState = plugin.Dirty;
+                bool origEmptyState = plugin.Empty;
                 plugin.Dirty = true;
-                void undoAction(UndoRedoEventArgs e)
+                void undoAction(UndoRedoEventArgs ev)
                 {
-                    e.Map.Technos.Add(location, unit);
-                    e.MapPanel.Invalidate(e.Map, unit);
-                    if (e.Plugin != null)
+                    ev.Map.Technos.Add(location, unit);
+                    ev.MapPanel.Invalidate(ev.Map, unit);
+                    if (ev.Plugin != null)
                     {
-                        e.Plugin.Dirty = origDirtyState;
+                        if (origEmptyState)
+                        {
+                            ev.Plugin.Empty = true;
+                        }
+                        else
+                        {
+                            ev.Plugin.Dirty = origDirtyState;
+                        }
                     }
                 }
-                void redoAction(UndoRedoEventArgs e)
+                void redoAction(UndoRedoEventArgs ev)
                 {
-                    e.MapPanel.Invalidate(e.Map, unit);
-                    e.Map.Technos.Remove(unit);
-                    if (e.Plugin != null)
+                    ev.MapPanel.Invalidate(ev.Map, unit);
+                    ev.Map.Technos.Remove(unit);
+                    if (ev.Plugin != null)
                     {
-                        e.Plugin.Dirty = true;
+                        ev.Plugin.Dirty = true;
                     }
                 }
                 url.Track(undoAction, redoAction, ToolType.Unit);

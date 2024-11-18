@@ -260,39 +260,47 @@ namespace MobiusEditor.Tools
         private void CommitChange()
         {
             bool origDirtyState = plugin.Dirty;
+            bool origEmptyState = plugin.Empty;
             plugin.Dirty = true;
             var undoOverlays2 = new Dictionary<int, Overlay>(undoOverlays);
-            void undoAction(UndoRedoEventArgs e)
+            void undoAction(UndoRedoEventArgs ev)
             {
                 foreach (var kv in undoOverlays2)
                 {
-                    e.Map.Overlay[kv.Key] = kv.Value;
+                    ev.Map.Overlay[kv.Key] = kv.Value;
                 }
-                e.MapPanel.Invalidate(e.Map, undoOverlays2.Keys.Select(k =>
+                ev.MapPanel.Invalidate(ev.Map, undoOverlays2.Keys.Select(k =>
                 {
-                    e.Map.Metrics.GetLocation(k, out Point location);
+                    ev.Map.Metrics.GetLocation(k, out Point location);
                     return Rectangle.Inflate(new Rectangle(location, new Size(1, 1)), 1, 1);
                 }));
-                if (e.Plugin != null)
+                if (ev.Plugin != null)
                 {
-                    e.Plugin.Dirty = origDirtyState;
+                    if (origEmptyState)
+                    {
+                        ev.Plugin.Empty = true;
+                    }
+                    else
+                    {
+                        ev.Plugin.Dirty = origDirtyState;
+                    }
                 }
             }
             var redoOverlays2 = new Dictionary<int, Overlay>(redoOverlays);
-            void redoAction(UndoRedoEventArgs e)
+            void redoAction(UndoRedoEventArgs ev)
             {
                 foreach (var kv in redoOverlays2)
                 {
-                    e.Map.Overlay[kv.Key] = kv.Value;
+                    ev.Map.Overlay[kv.Key] = kv.Value;
                 }
-                e.MapPanel.Invalidate(e.Map, redoOverlays2.Keys.Select(k =>
+                ev.MapPanel.Invalidate(ev.Map, redoOverlays2.Keys.Select(k =>
                 {
-                    e.Map.Metrics.GetLocation(k, out Point location);
+                    ev.Map.Metrics.GetLocation(k, out Point location);
                     return Rectangle.Inflate(new Rectangle(location, new Size(1, 1)), 1, 1);
                 }));
-                if (e.Plugin != null)
+                if (ev.Plugin != null)
                 {
-                    e.Plugin.Dirty = true;
+                    ev.Plugin.Dirty = true;
                 }
             }
             undoOverlays.Clear();

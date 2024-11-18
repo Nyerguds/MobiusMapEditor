@@ -44,6 +44,8 @@ namespace MobiusEditor.Interface
         IFeedBackHandler FeedBackHandler { get; set; }
         /// <summary>True if the currently loaded map was modified.</summary>
         bool Dirty { get; set; }
+        /// <summary>True if the currently loaded map is a pristine empty map.</summary>
+        bool Empty { get; set; }
 
         /// <summary>Initialises this plugin after it has been created, and all resource managers have been reset.</summary>
         IEnumerable<string> Initialize();
@@ -83,20 +85,20 @@ namespace MobiusEditor.Interface
         /// <summary>Save the current map to the given path, with the given file type.</summary>
         /// <param name="path">Path of the map to save.</param>
         /// <param name="fileType">File type of the actual file in the path, so accompanying files can be saved correctly.</param>
-        /// <returns>true if the saving succeeded.</returns>
-        bool Save(string path, FileType fileType);
+        /// <returns>The length of the ini data that was saved, or 0 if the saving didn't succeed.</returns>
+        long Save(string path, FileType fileType);
 
         /// <summary>Save the current map to the given path, with the given file type.</summary>
         /// <param name="path">Path of the map to save.</param>
         /// <param name="fileType">File type of the actual file in the path, so accompanying files can be saved correctly.</param>
         /// <param name="customPreview">Custom preview given to the map.</param>
         /// <param name="dontResavePreview">True to not resave the preview on disc when doing the save operation.</param>
-        /// <returns>true if the saving succeeded.</returns>
-        bool Save(string path, FileType fileType, Bitmap customPreview, bool dontResavePreview);
+        /// <returns>The length of the ini data that was saved, or 0 if the saving didn't succeed.</returns>
+        long Save(string path, FileType fileType, Bitmap customPreview, bool dontResavePreview);
 
         /// <summary>Validate the map to see if there are any blocking errors preventing it from saving.</summary>
         /// <param name="forWarnings">true if this is not the actual map validation, but a check that should return any warnings to show that the user can still choose to ignore.</param>
-        /// <returns>Null if the validation succeeded, else a string containing the problems that occurred..</returns>
+        /// <returns>Null if the validation succeeded, else a string containing the problems that occurred.</returns>
         string Validate(Boolean forWarnings);
 
         /// <summary>Generates an overview of how many items are on the map and how many are allowed, and does a trigger analysis.</summary>

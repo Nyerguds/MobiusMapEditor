@@ -247,7 +247,30 @@ namespace MobiusEditor.TiberianDawn
         public virtual bool Dirty
         {
             get { return isDirty; }
-            set { isDirty = value; feedBackHandler?.UpdateStatus(); }
+            set
+            {
+                isDirty = value;
+                if (value)
+                {
+                    isEmpty = false;
+                }
+                feedBackHandler?.UpdateStatus();
+            }
+        }
+
+        bool isEmpty;
+        public bool Empty
+        {
+            get { return isEmpty; }
+            set
+            {
+                isEmpty = value;
+                if (value)
+                {
+                    isDirty = false;
+                }
+                feedBackHandler?.UpdateStatus();
+            }
         }
 
         protected INISectionCollection extraSections;
@@ -499,6 +522,7 @@ namespace MobiusEditor.TiberianDawn
             Map.Size = Map.Metrics.Size - new Size(2, 2);
             Map.BasicSection.Name = Constants.EmptyMapName;
             UpdateBasePlayerHouse();
+            Empty = true;
         }
 
         public virtual IEnumerable<string> Load(string path, FileType fileType)
@@ -2505,23 +2529,22 @@ namespace MobiusEditor.TiberianDawn
             return errors;
         }
 
-        public virtual bool Save(string path, FileType fileType)
+        public virtual long Save(string path, FileType fileType)
         {
             return Save(path, fileType, null, false);
         }
 
-        public virtual bool Save(string path, FileType fileType, Bitmap customPreview, bool dontResavePreview)
+        public virtual long Save(string path, FileType fileType, Bitmap customPreview, bool dontResavePreview)
         {
             return Save(path, fileType, false, customPreview, dontResavePreview);
         }
 
-        public bool Save(string path, FileType fileType, bool forSole, Bitmap customPreview, bool dontResavePreview)
+        public long Save(string path, FileType fileType, bool forSole, Bitmap customPreview, bool dontResavePreview)
         {
             string errors = Validate(false, forSole);
             if (errors != null)
             {
-                MessageBox.Show(errors, "Validation Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
-                return false;
+                return 0;
             }
             string iniPath = fileType == FileType.INI ? path : Path.ChangeExtension(path, ".ini");
             string binPath = fileType == FileType.BIN ? path : Path.ChangeExtension(path, ".bin");
@@ -2535,6 +2558,7 @@ namespace MobiusEditor.TiberianDawn
             {
                 utf8Components.Add(("Basic", "Name"));
             }
+            long retVal = 0;
             switch (fileType)
             {
                 case FileType.INI:
@@ -2546,6 +2570,7 @@ namespace MobiusEditor.TiberianDawn
                         // Use '\n' in proprocessing for simplicity. WriteMultiEncoding will use full line breaks.
                         string iniText = forSole ? ini.ToString("\n") : FixRoad2Save(ini, "\n");
                         GeneralUtils.WriteMultiEncoding(iniText.Split('\n'), iniWriter, dos437, utf8, utf8Components.ToArray(), linebreak);
+                        retVal = iniStream.Position;
                     }
                     using (FileStream binStream = new FileStream(binPath, FileMode.Create))
                     using (BinaryWriter binWriter = new BinaryWriter(binStream))
@@ -2600,6 +2625,7 @@ namespace MobiusEditor.TiberianDawn
                         string iniText = forSole ? ini.ToString("\n") : FixRoad2Save(ini, "\n");
                         GeneralUtils.WriteMultiEncoding(iniText.Split('\n'), iniWriter, dos437, utf8, utf8Components.ToArray(), linebreak);
                         iniWriter.Flush();
+                        retVal = iniStream.Position;
                         iniStream.Position = 0;
                         if (!isMegaMap)
                         {
@@ -2637,7 +2663,7 @@ namespace MobiusEditor.TiberianDawn
                 default:
                     throw new NotSupportedException();
             }
-            return true;
+            return retVal;
         }
 
         /// <summary>

@@ -201,12 +201,12 @@ namespace MobiusEditor.SoleSurvivor
             base.New(theater);
         }
 
-        public override bool Save(string path, FileType fileType)
+        public override long Save(string path, FileType fileType)
         {
             return Save(path, fileType, null, false);
         }
 
-        public override bool Save(string path, FileType fileType, Bitmap customPreview, bool dontResavePreview)
+        public override long Save(string path, FileType fileType, Bitmap customPreview, bool dontResavePreview)
         {
             return Save(path, fileType, true, customPreview, dontResavePreview);
         }

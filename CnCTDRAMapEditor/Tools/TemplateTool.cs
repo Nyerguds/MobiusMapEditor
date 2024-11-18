@@ -333,10 +333,10 @@ namespace MobiusEditor.Tools
             GeneralUtils.SendMessage(listview.Handle, LVM_SETICONSPACING, IntPtr.Zero, (IntPtr)arg);
         }
 
-        private void Url_UndoRedoDone(object sender, UndoRedoEventArgs e)
+        private void Url_UndoRedoDone(object sender, UndoRedoEventArgs ev)
         {
             // Only update this stuff if the undo/redo event was actually a map change.
-            if (!e.Source.HasFlag(ToolType.Map))
+            if (!ev.Source.HasFlag(ToolType.Map))
             {
                 return;
             }
@@ -1743,43 +1743,51 @@ namespace MobiusEditor.Tools
                     updCells = null;
                 }
                 bool origDirtyState = plugin.Dirty;
+                bool origEmptyState = plugin.Empty;
                 plugin.Dirty = true;
-                void undoAction(UndoRedoEventArgs ure)
+                void undoAction(UndoRedoEventArgs ev)
                 {
-                    ure.Map.Bounds = oldBounds;
+                    ev.Map.Bounds = oldBounds;
                     if (updCells == null)
                     {
-                        ure.MapPanel.Invalidate();
+                        ev.MapPanel.Invalidate();
                     }
                     else
                     {
                         // Tools that paint from a cloned map update this automatically, but not all tools use a cloned map, and undo/redo
                         // actions can happen after switching to a different tool. Also better to just have it correct in the real map.
-                        ure.Map.UpdateResourceOverlays(updCells, true);
-                        ure.MapPanel.Invalidate(ure.Map, updCells);
+                        ev.Map.UpdateResourceOverlays(updCells, true);
+                        ev.MapPanel.Invalidate(ev.Map, updCells);
                     }
-                    if (ure.Plugin != null)
+                    if (ev.Plugin != null)
                     {
-                        ure.Plugin.Dirty = origDirtyState;
+                        if (origEmptyState)
+                        {
+                            ev.Plugin.Empty = true;
+                        }
+                        else
+                        {
+                            ev.Plugin.Dirty = origDirtyState;
+                        }
                     }
                 }
-                void redoAction(UndoRedoEventArgs ure)
+                void redoAction(UndoRedoEventArgs ev)
                 {
-                    ure.Map.Bounds = newBounds;
+                    ev.Map.Bounds = newBounds;
                     if (updCells == null)
                     {
-                        ure.MapPanel.Invalidate();
+                        ev.MapPanel.Invalidate();
                     }
                     else
                     {
                         // Tools that paint from a cloned map update this automatically, but not all tools use a cloned map, and undo/redo
                         // actions can happen after switching to a different tool. Also better to just have it correct in the real map.
-                        ure.Map.UpdateResourceOverlays(updCells, true);
-                        ure.MapPanel.Invalidate(ure.Map, updCells);
+                        ev.Map.UpdateResourceOverlays(updCells, true);
+                        ev.MapPanel.Invalidate(ev.Map, updCells);
                     }
-                    if (ure.Plugin != null)
+                    if (ev.Plugin != null)
                     {
-                        ure.Plugin.Dirty = true;
+                        ev.Plugin.Dirty = true;
                     }
                 }
                 map.Bounds = newBounds;
@@ -1817,30 +1825,38 @@ namespace MobiusEditor.Tools
             }
             Dictionary<int, Template> undoTemplates2 = new Dictionary<int, Template>(undoTemplates);
             bool origDirtyState = plugin.Dirty;
+            bool origEmptyState = plugin.Empty;
             plugin.Dirty = true;
-            void undoAction(UndoRedoEventArgs e)
+            void undoAction(UndoRedoEventArgs ev)
             {
                 foreach (KeyValuePair<int, Template> kv in undoTemplates2)
                 {
-                    e.Map.Templates[kv.Key] = kv.Value;
+                    ev.Map.Templates[kv.Key] = kv.Value;
                 }
-                e.MapPanel.Invalidate(e.Map, undoTemplates2.Keys);
-                if (e.Plugin != null)
+                ev.MapPanel.Invalidate(ev.Map, undoTemplates2.Keys);
+                if (ev.Plugin != null)
                 {
-                    e.Plugin.Dirty = origDirtyState;
+                    if (origEmptyState)
+                    {
+                        ev.Plugin.Empty = true;
+                    }
+                    else
+                    {
+                        ev.Plugin.Dirty = origDirtyState;
+                    }
                 }
             }
             Dictionary<int, Template> redoTemplates2 = new Dictionary<int, Template>(redoTemplates);
-            void redoAction(UndoRedoEventArgs e)
+            void redoAction(UndoRedoEventArgs ev)
             {
                 foreach (KeyValuePair<int, Template> kv in redoTemplates2)
                 {
-                    e.Map.Templates[kv.Key] = kv.Value;
+                    ev.Map.Templates[kv.Key] = kv.Value;
                 }
-                e.MapPanel.Invalidate(e.Map, redoTemplates2.Keys);
-                if (e.Plugin != null)
+                ev.MapPanel.Invalidate(ev.Map, redoTemplates2.Keys);
+                if (ev.Plugin != null)
                 {
-                    e.Plugin.Dirty = true;
+                    ev.Plugin.Dirty = true;
                 }
             }
             undoTemplates.Clear();

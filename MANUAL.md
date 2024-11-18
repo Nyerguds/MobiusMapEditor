@@ -6,7 +6,7 @@
 
 Simply unpack the editor into a new folder on your disk somewhere. On first startup, it will automatically try to detect the folder in which the game is installed, and if it can't find it, it will show a dialog asking you to locate it. Note that this autodetect only works on Steam installations of the game.
 
-If the C&C Remastered Collection is not installed on your PC, you can use the "Continue with classic graphics" button on the dialog to start the editor without the Remastered graphics. To suppress the "Select game path" dialog and instead automatically start with classic graphics, you can edit the config file in a text editor and enable the option to always use classic graphics. (See the "Configuration" section below.)
+If the C&C Remastered Collection is not installed on your PC, you can use the "Continue with classic graphics" button on the dialog to start the editor without the Remastered graphics. To suppress the "Select game path" dialog and instead automatically start with classic graphics, you can edit the config file in a text editor and enable the option to always use classic files. (See the "Configuration" section below.)
 
 ---
 
@@ -87,7 +87,7 @@ The colors for the different land types can be configured in the config file; se
 * Clear: Passable for land units, and can be built on. Normally not shown, except in placement previews, where its default color is white.
 * Beach: Passable, but can't be built on. Its default color is yellow.
 * Rock: Land impassable for all units. Its default color is red.
-* Road: Passable for land units, and can be built on. Units move faster on roads. (Red Alert only)
+* Road: Passable for land units, and can be built on. Units move faster on roads. Its default color is brown. (Red Alert only)
 * Rough: Passable, but can't be built on. Its default color is grayish purple. (Red Alert only)
 * Water: Passable for ships only. Its default color is light blue.
 * River: Water impassable for all units. Its default color is dark blue. (Red Alert only)
@@ -126,8 +126,8 @@ Note that for Red Alert, the editor uses the DOS versions of the infantry sprite
 
 ### General editor options
 
-* **LazyInitSteam**: Enabled by default. The link between the editor and Steam is normally initialised on startup, but that link prevents Steam from running the game while the editor is open. With this option, the link with Steam is only initialised at the moment the map publish function is opened, allowing map makers to more easily switch between the editor and the game to test their what they're making.
-* **EditorLanguage**: This option can change the language the editor loads for the remastered game text to name the objects in the editor by specifying a culture code in a format such as "EN-US". This only works for languages that are supported by the C&C Remaster as in-game language. When set to "Auto", it will attempt to use the system language, or the nearest supported one that matches it. To force the default English language, you can leave the setting empty, or use "Default" or "None". The supported languages of the game are: EN-US, DE-DE, ES-ES, FR-FR, KO-KR, PL-PL, RU-RU, ZH-CN, ZH-TW.
+* **LazyInitSteam**: Enabled by default. The link between the editor and Steam is normally initialised on startup, but that link prevents Steam from running the game while the editor is open. With this option, the link with Steam is only initialised at the moment the map publish function is opened, allowing map makers to more easily switch between the editor and the game to test what they're making.
+* **EditorLanguage**: This option can change the language the editor loads for the remastered game text to name the objects in the editor by specifying a culture code in a format such as "EN-US". It only affects the Remastered mode, so it has no effect when _UseClassicFiles_ is ensabled. Since it uses the existing translation files from the C&C Remaster, it only works for languages that are supported by the Remaster as in-game language. When set to "Auto", it will attempt to use the system language, or the nearest supported one that matches it. To force the default English language, you can leave the setting empty, or use "Default" or "None". The supported languages of the game are: EN-US, DE-DE, ES-ES, FR-FR, KO-KR, PL-PL, RU-RU, ZH-CN, ZH-TW.
 * **CheckUpdatesOnStartup**: Enabled by default. Will make the editor notify users if a new version is available.
 * **EnableDpiAwareness**: Disabled by default. On some machines with high dpi monitors, people might have odd issues where the positioning of the indicators on the map doesn't correctly match the map tiles. If this happens, enabling this option might fix the problem.
 
@@ -153,12 +153,12 @@ Starting from v1.6.0.0, the editor has the ability to open the original games' .
 
 * **DefaultBoundsObstructFill**: Default for the option "Tools" → "Options" → "Flood fill is obstructed by map bounds".  When enabled, and filling map tiles with \[Ctrl\]+\[Shift\]+\[Click\], the map boundary acts as border blocking the fill spread. This applies both inside and outside the border.
 * **DefaultTileDragProtect**: Default for the option "Tools" → "Options" → "Drag-place map tiles without smearing". When placing tiles in map mode, and dragging around the mouse, this option will make sure a new tileset block is only placed after fully leaving the previously-placed blocks inside that one mouse action.
-* **DefaultTileDragRandomize**: Default for the option "Tools" → "Options" → "Randomize drag-placed map tiles". When placing a tile and holding down the mouse to drag more, this will make the subsequently placed tiles randomize between equivalents of the same size.
+* **DefaultTileDragRandomize**: Default for the option "Tools" → "Options" → "Randomize drag-placed map tiles". When placing a tile and holding down the mouse to drag more, this will make the subsequently placed tiles randomize between equivalents of the same size. Note that this does not refer to the randomisable Interior tiles; those do that anyway. It activates on certain cliffs, roads, shores, and rivers.
 * **DefaultShowPlacementGrid**: Default for the option "Tools" → "Options" → "Show grid when placing / moving". This option enables showing the map grid when in placement mode (and/or holding down \[Shift\]) or when dragging a placed down object to a different location.
-* **DefaultOutlineAllCrates**: Default for the option "Tools" → "Options" → "Crate outline indicators show on all crates". When enabled, the crate indicators from the "View" → "Indicators" → "Outlines on overlapped crates" option will show on all crates instead of just those underneath objects or graphics.
 * **DefaultCratesOnTop**: Default for the option "Tools" → "Options" → "Show crates on top of other objects".
 * **DefaultExportScale**: Default scaling multiplier for the size at which an exported image will be generated through "Tools" → "Export As Image". A negative values will set it to smooth scaling. Defaults to -0.5.
 * **DefaultExportScaleClassic**: Default scaling multiplier for exporting images when using classic graphics. Defaults to 1.0.
+* **DefaultOutlineAllCrates**: Default for the option "View" → "Extra Indicators" → "Outlines on crates". When enabled, outlines will be shown on all crates, regardless of whether it is overlapped, or whether the "View" → "Indicators" → "Outlines on overlapped objects" option is enabled.
 
 ### Editor fine tuning:
 
@@ -198,7 +198,9 @@ For the option "Extra indicators" → "Occupied by objects":
 
 Outline colors for unowned objects:
 
-An outline will be shown around objects that are partially or fully behind other objects (or always, in the case of the *DefaultOutlineAllCrates* settings). For owned objects, these outlines are given the color of their owners, but for unowned objects, they are editable here. An outline type can be disabled by adding an alpha factor of 0 in front of the R,G,B color values.
+An outline will be shown around objects that are partially or fully behind other objects. For owned objects, these outlines are given the color of their owners, but for unowned objects, they are editable here. An outline type can be disabled by adding an alpha factor of 0 in front of the R,G,B color values.
+
+Note that crates are always outlined if the "Outlines on crates" option is enabled, regardless of any overlap options or rules.
 
 * **OutlineColorCrateWood**: The outline color for wooden crates. Defaults to brown.
 * **OutlineColorCrateSteel**: The outline color for steel crates. Defaults to silver.

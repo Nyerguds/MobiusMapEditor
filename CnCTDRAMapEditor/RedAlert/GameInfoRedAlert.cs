@@ -59,6 +59,7 @@ namespace MobiusEditor.RedAlert
         public override bool MegamapIsOfficial => true;
         public override bool HasSinglePlayer => true;
         public override bool CanUseNewMixFormat => true;
+        public override long MaxDataSize => Globals.MaxMapSize;
         public override int MaxTriggers => Constants.MaxTriggers;
         public override int MaxTeams => Constants.MaxTeams;
         public override int HitPointsGreenMinimum => 128;

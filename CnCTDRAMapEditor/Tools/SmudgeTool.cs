@@ -175,6 +175,7 @@ namespace MobiusEditor.Tools
                 return;
             }
             bool origDirtyState = plugin.Dirty;
+            bool origEmptyState = plugin.Empty;
             plugin.Dirty = true;
             void undoAction(UndoRedoEventArgs ev)
             {
@@ -182,7 +183,14 @@ namespace MobiusEditor.Tools
                 ev.MapPanel.Invalidate(ev.Map, smudge);
                 if (ev.Plugin != null)
                 {
-                    ev.Plugin.Dirty = origDirtyState;
+                    if (origEmptyState)
+                    {
+                        ev.Plugin.Empty = true;
+                    }
+                    else
+                    {
+                        ev.Plugin.Dirty = origDirtyState;
+                    }
                 }
             }
             void redoAction(UndoRedoEventArgs ev)
@@ -347,28 +355,36 @@ namespace MobiusEditor.Tools
             mapPanel.Invalidate(map, undomap.Keys);
             mapPanel.Invalidate(map, redomap.Keys);
             bool origDirtyState = plugin.Dirty;
+            bool origEmptyState = plugin.Empty;
             plugin.Dirty = true;
-            void undoAction(UndoRedoEventArgs e)
+            void undoAction(UndoRedoEventArgs ev)
             {
-                e.MapPanel.Invalidate(e.Map, undomap.Keys);
+                ev.MapPanel.Invalidate(ev.Map, undomap.Keys);
                 foreach (Point p in undomap.Keys)
                 {
-                    e.Map.Smudge[p] = undomap[p];
+                    ev.Map.Smudge[p] = undomap[p];
                 }
-                if (e.Plugin != null)
+                if (ev.Plugin != null)
                 {
-                    e.Plugin.Dirty = origDirtyState;
+                    if (origEmptyState)
+                    {
+                        ev.Plugin.Empty = true;
+                    }
+                    else
+                    {
+                        ev.Plugin.Dirty = origDirtyState;
+                    }
                 }
             }
-            void redoAction(UndoRedoEventArgs e)
+            void redoAction(UndoRedoEventArgs ev)
             {
                 foreach (Point p in redomap.Keys)
                 {
-                    e.Map.Smudge[p] = redomap[p];
+                    ev.Map.Smudge[p] = redomap[p];
                 }
-                e.MapPanel.Invalidate(e.Map, redomap.Keys); if (e.Plugin != null)
+                ev.MapPanel.Invalidate(ev.Map, redomap.Keys); if (ev.Plugin != null)
                 {
-                    e.Plugin.Dirty = true;
+                    ev.Plugin.Dirty = true;
                 }
             }
             url.Track(undoAction, redoAction, ToolType.Smudge);
@@ -387,30 +403,38 @@ namespace MobiusEditor.Tools
             mapPanel.Invalidate(map, undomap.Keys);
             mapPanel.Invalidate(map, redomap.Keys);
             bool origDirtyState = plugin.Dirty;
+            bool origEmptyState = plugin.Empty;
             plugin.Dirty = true;
             // TODO
-            void undoAction(UndoRedoEventArgs e)
+            void undoAction(UndoRedoEventArgs ev)
             {
                 foreach (Point p in undomap.Keys)
                 {
-                    e.Map.Smudge[p] = undomap[p];
+                    ev.Map.Smudge[p] = undomap[p];
                 }
-                e.MapPanel.Invalidate(e.Map, undomap.Keys);
-                if (e.Plugin != null)
+                ev.MapPanel.Invalidate(ev.Map, undomap.Keys);
+                if (ev.Plugin != null)
                 {
-                    e.Plugin.Dirty = origDirtyState;
+                    if (origEmptyState)
+                    {
+                        ev.Plugin.Empty = true;
+                    }
+                    else
+                    {
+                        ev.Plugin.Dirty = origDirtyState;
+                    }
                 }
             }
-            void redoAction(UndoRedoEventArgs e)
+            void redoAction(UndoRedoEventArgs ev)
             {
-                e.MapPanel.Invalidate(e.Map, redomap.Keys);
+                ev.MapPanel.Invalidate(ev.Map, redomap.Keys);
                 foreach (Point p in redomap.Keys)
                 {
-                    e.Map.Smudge[p] = redomap[p];
+                    ev.Map.Smudge[p] = redomap[p];
                 }
-                if (e.Plugin != null)
+                if (ev.Plugin != null)
                 {
-                    e.Plugin.Dirty = true;
+                    ev.Plugin.Dirty = true;
                 }
             }
             url.Track(undoAction, redoAction, ToolType.Smudge);

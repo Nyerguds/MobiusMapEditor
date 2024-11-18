@@ -77,10 +77,10 @@ namespace MobiusEditor.Tools
             UpdateStatus();
         }
 
-        private void Url_UndoRedoDone(object sender, UndoRedoEventArgs e)
+        private void Url_UndoRedoDone(object sender, UndoRedoEventArgs ev)
         {
             // Only update this stuff if the undo/redo event was actually a waypoint change.
-            if (!e.Source.HasFlag(ToolType.Waypoint))
+            if (!ev.Source.HasFlag(ToolType.Waypoint))
             {
                 return;
             }
@@ -421,29 +421,37 @@ namespace MobiusEditor.Tools
         private void CommitChange(Waypoint waypoint, int? oldCell, int? newCell)
         {
             bool origDirtyState = plugin.Dirty;
+            bool origEmptyState = plugin.Empty;
             plugin.Dirty = true;
-            void undoAction(UndoRedoEventArgs e)
+            void undoAction(UndoRedoEventArgs ev)
             {
                 waypoint.Cell = oldCell;
                 if (newCell.HasValue)
-                    e.MapPanel.Invalidate(e.Map, newCell.Value);
+                    ev.MapPanel.Invalidate(ev.Map, newCell.Value);
                 if (oldCell.HasValue)
-                    e.MapPanel.Invalidate(e.Map, oldCell.Value);
-                if (e.Plugin != null)
+                    ev.MapPanel.Invalidate(ev.Map, oldCell.Value);
+                if (ev.Plugin != null)
                 {
-                    e.Plugin.Dirty = origDirtyState;
+                    if (origEmptyState)
+                    {
+                        ev.Plugin.Empty = true;
+                    }
+                    else
+                    {
+                        ev.Plugin.Dirty = origDirtyState;
+                    }
                 }
             }
-            void redoAction(UndoRedoEventArgs e)
+            void redoAction(UndoRedoEventArgs ev)
             {
                 waypoint.Cell = newCell;
                 if (newCell.HasValue)
-                    e.MapPanel.Invalidate(e.Map, newCell.Value);
+                    ev.MapPanel.Invalidate(ev.Map, newCell.Value);
                 if (oldCell.HasValue)
-                    e.MapPanel.Invalidate(e.Map, oldCell.Value);
-                if (e.Plugin != null)
+                    ev.MapPanel.Invalidate(ev.Map, oldCell.Value);
+                if (ev.Plugin != null)
                 {
-                    e.Plugin.Dirty = true;
+                    ev.Plugin.Dirty = true;
                 }
             }
             Waypoint selected = waypointCombo.SelectedItem as Waypoint;

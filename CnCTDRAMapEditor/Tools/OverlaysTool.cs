@@ -262,39 +262,47 @@ namespace MobiusEditor.Tools
         private void CommitChange()
         {
             bool origDirtyState = plugin.Dirty;
+            bool origEmptyState = plugin.Empty;
             plugin.Dirty = true;
             Dictionary<Int32, Overlay> undoOverlays2 = new Dictionary<int, Overlay>(undoOverlays);
-            void undoAction(UndoRedoEventArgs e)
+            void undoAction(UndoRedoEventArgs ev)
             {
-                foreach (KeyValuePair<Int32, Overlay> kv in undoOverlays2)
+                foreach (KeyValuePair<int, Overlay> kv in undoOverlays2)
                 {
-                    e.Map.Overlay[kv.Key] = kv.Value;
+                    ev.Map.Overlay[kv.Key] = kv.Value;
                 }
-                e.MapPanel.Invalidate(e.Map, undoOverlays2.Keys.Select(k =>
+                ev.MapPanel.Invalidate(ev.Map, undoOverlays2.Keys.Select(k =>
                 {
-                    e.Map.Metrics.GetLocation(k, out Point location);
+                    ev.Map.Metrics.GetLocation(k, out Point location);
                     return Rectangle.Inflate(new Rectangle(location, new Size(1, 1)), 1, 1);
                 }));
-                if (e.Plugin != null)
+                if (ev.Plugin != null)
                 {
-                    e.Plugin.Dirty = origDirtyState;
+                    if (origEmptyState)
+                    {
+                        ev.Plugin.Empty = true;
+                    }
+                    else
+                    {
+                        ev.Plugin.Dirty = origDirtyState;
+                    }
                 }
             }
-            Dictionary<Int32, Overlay> redoOverlays2 = new Dictionary<int, Overlay>(redoOverlays);
-            void redoAction(UndoRedoEventArgs e)
+            Dictionary<int, Overlay> redoOverlays2 = new Dictionary<int, Overlay>(redoOverlays);
+            void redoAction(UndoRedoEventArgs ev)
             {
                 foreach (KeyValuePair<Int32, Overlay> kv in redoOverlays2)
                 {
-                    e.Map.Overlay[kv.Key] = kv.Value;
+                    ev.Map.Overlay[kv.Key] = kv.Value;
                 }
-                e.MapPanel.Invalidate(e.Map, redoOverlays2.Keys.Select(k =>
+                ev.MapPanel.Invalidate(ev.Map, redoOverlays2.Keys.Select(k =>
                 {
-                    e.Map.Metrics.GetLocation(k, out Point location);
+                    ev.Map.Metrics.GetLocation(k, out Point location);
                     return Rectangle.Inflate(new Rectangle(location, new Size(1, 1)), 1, 1);
                 }));
-                if (e.Plugin != null)
+                if (ev.Plugin != null)
                 {
-                    e.Plugin.Dirty = true;
+                    ev.Plugin.Dirty = true;
                 }
             }
             undoOverlays.Clear();

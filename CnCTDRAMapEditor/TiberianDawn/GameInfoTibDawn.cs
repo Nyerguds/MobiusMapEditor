@@ -59,6 +59,7 @@ namespace MobiusEditor.TiberianDawn
         public override bool MegamapIsOfficial => false;
         public override bool HasSinglePlayer => true;
         public override bool CanUseNewMixFormat => false;
+        public override long MaxDataSize => Globals.MaxMapSize;
         public override int MaxTriggers => Constants.MaxTriggers;
         public override int MaxTeams => Constants.MaxTeams;
         public override int HitPointsGreenMinimum => 127;

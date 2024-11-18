@@ -102,6 +102,7 @@ namespace MobiusEditor
 
         private IGamePlugin plugin;
         private FileType loadedFileType;
+        private string loadedFilename;
         private string filename;
         private bool shouldCheckUpdate;
         private bool startedUpdate;
@@ -574,9 +575,10 @@ namespace MobiusEditor
         {
             string mainTitle = Program.ProgramVersionTitle;
             string updating = this.startedUpdate ? " [CHECKING FOR UPDATES]" : String.Empty;
+            string connectedToSteamText = SteamworksUGC.IsInit ? " [Connected to Steam]" : String.Empty;
             if (plugin == null)
             {
-                this.Text = mainTitle + updating;
+                this.Text = mainTitle + updating + connectedToSteamText;
                 return;
             }
             string mapName = plugin.Map.BasicSection.Name;
@@ -599,7 +601,7 @@ namespace MobiusEditor
             {
                 mapShowName = mapFilename;
             }
-            this.Text = String.Format("{0}{1} [{2}] - {3}{4}", mainTitle, updating, gi.Name, mapShowName, plugin != null && plugin.Dirty ? " *" : String.Empty);
+            this.Text = String.Format("{0}{1} [{2}] - {3}{4}{5}", mainTitle, updating, gi.Name, mapShowName, plugin != null && plugin.Dirty ? " *" : String.Empty, connectedToSteamText);
         }
 
         private void SteamUpdateTimer_Tick(object sender, EventArgs e)
@@ -1017,7 +1019,8 @@ namespace MobiusEditor
                 afterSaveDone?.Invoke();
                 return;
             }
-            if (String.IsNullOrEmpty(filename) || MixPath.IsMixPath(filename) || !Directory.Exists(Path.GetDirectoryName(filename)) || loadedFileType == FileType.MIX)
+            if (String.IsNullOrEmpty(filename) || (loadedFilename != null && MixPath.IsMixPath(loadedFilename))
+                || !Directory.Exists(Path.GetDirectoryName(filename)) || loadedFileType == FileType.MIX)
             {
                 SaveAsAction(afterSaveDone, skipValidation);
                 return;
@@ -1274,7 +1277,10 @@ namespace MobiusEditor
                         // Maybe make more advanced logic to check if any bibs changed, and don't clear if not needed?
                         hasChanges = true;
                     }
-                    plugin.Dirty = hasChanges;
+                    if (hasChanges)
+                    {
+                        plugin.Dirty = true;
+                    }
                 }
             }
             // Only do full repaint if changes happened that might need a repaint (bibs, removed units, flags).
@@ -1311,6 +1317,7 @@ namespace MobiusEditor
                     plugin.Map.TeamTypes.AddRange(ttd.TeamTypes.OrderBy(t => t.Name, new ExplorerComparer()).Select(t => t.Clone()));
                     List<TeamType> newTeamTypes = plugin.Map.TeamTypes.ToList();
                     bool origDirtyState = plugin.Dirty;
+                    bool origEmptyState = plugin.Empty;
                     void undoAction(UndoRedoEventArgs ev)
                     {
                         ClearActiveTool();
@@ -1325,7 +1332,14 @@ namespace MobiusEditor
                             ev.Map.Triggers = oldTriggers;
                             ev.Map.TeamTypes.Clear();
                             ev.Map.TeamTypes.AddRange(oldTeamTypes);
-                            ev.Plugin.Dirty = origDirtyState;
+                            if (origEmptyState)
+                            {
+                                ev.Plugin.Empty = true;
+                            }
+                            else
+                            {
+                                ev.Plugin.Dirty = origDirtyState;
+                            }
                         }
                         RefreshActiveTool(true);
                     }
@@ -1370,6 +1384,7 @@ namespace MobiusEditor
                     if (Trigger.CheckForChanges(plugin.Map.Triggers.ToList(), newTriggers))
                     {
                         bool origDirtyState = plugin.Dirty;
+                        bool origEmptyState = plugin.Empty;
                         Dictionary<object, string> undoList;
                         Dictionary<object, string> redoList;
                         Dictionary<CellTrigger, int> cellTriggerLocations;
@@ -1415,7 +1430,14 @@ namespace MobiusEditor
                             if (ev.Plugin != null)
                             {
                                 ev.Map.Triggers = oldTriggers;
-                                ev.Plugin.Dirty = origDirtyState;
+                                if (origEmptyState)
+                                {
+                                    ev.Plugin.Empty = true;
+                                }
+                                else
+                                {
+                                    ev.Plugin.Dirty = origDirtyState;
+                                }
                             }
                             // Repaint map labels
                             ev.MapPanel?.Invalidate();
@@ -1919,7 +1941,7 @@ namespace MobiusEditor
             // Different multithreader, so save prompt can start a map load.
             saveMultiThreader.ExecuteThreaded(
                 () => SaveFile(plugin, saveFilename, fileType, dontResavePreview),
-                (si) => PostSave(si, afterSaveDone), true,
+                (si) => PostSave(si, fileType, afterSaveDone), true,
                 (bl, str) => EnableDisableUi(bl, str, current, saveMultiThreader),
                 "Saving map");
         }
@@ -2316,18 +2338,18 @@ namespace MobiusEditor
             }
         }
 
-        private static (string FileName, bool SavedOk, string error) SaveFile(IGamePlugin plugin, string saveFilename, FileType fileType, bool dontResavePreview)
+        private static (string SaveFileName, long SavedLength, string Error) SaveFile(IGamePlugin plugin, string saveFilename, FileType fileType, bool dontResavePreview)
         {
             try
             {
-                plugin.Save(saveFilename, fileType, null, dontResavePreview);
-                return (saveFilename, true, null);
+                long length = plugin.Save(saveFilename, fileType, null, dontResavePreview);
+                return (saveFilename, length, null);
             }
             catch (Exception ex)
             {
                 string errorMessage = "Error saving map: " + ex.Message;
                 errorMessage += "\n\n" + ex.StackTrace;
-                return (saveFilename, false, errorMessage);
+                return (saveFilename, 0, errorMessage);
             }
         }
 
@@ -2420,6 +2442,7 @@ namespace MobiusEditor
 #endif
                 mapPanel.MapImage = plugin.MapImage;
                 filename = resaveName;
+                loadedFilename = loadInfo.FileName;
                 loadedFileType = resaveType;
                 if (Globals.ZoomToBoundsOnLoad)
                 {
@@ -2456,32 +2479,33 @@ namespace MobiusEditor
             }
         }
 
-        private void PostSave((string FileName, bool SavedOk, string Error) saveInfo, Action afterSaveDone)
+        private void PostSave((string SaveFileName, long SavedLength, string Error) saveInfo, FileType fileType, Action afterSaveDone)
         {
-            var fileInfo = new FileInfo(saveInfo.FileName);
-            if (saveInfo.SavedOk)
+            var fileInfo = new FileInfo(saveInfo.SaveFileName);
+            if (saveInfo.SavedLength == 0)
             {
-                if (fileInfo.Exists && fileInfo.Length > Globals.MaxMapSize)
-                {
-                    MessageBox.Show(this, String.Format("Map file exceeds the maximum size of {0} bytes.", Globals.MaxMapSize), "Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
-                }
-                plugin.Dirty = false;
-                filename = fileInfo.FullName;
-                SetTitle();
-                mru.Add(fileInfo.FullName);
-                if (afterSaveDone != null)
-                {
-                    afterSaveDone.Invoke();
-                }
-                else
-                {
-                    RefreshActiveTool(true);
-                }
+                MessageBox.Show(this, String.Format("Error saving {0}: {1}", saveInfo.SaveFileName, saveInfo.Error, "Error", MessageBoxButtons.OK, MessageBoxIcon.Error));
+                //mru.Remove(fileInfo);
+                RefreshActiveTool(true);
+                return;
+            }
+            long maxDataSize = plugin.GameInfo.MaxDataSize;
+            if (saveInfo.SavedLength > maxDataSize)
+            {
+                MessageBox.Show(this, String.Format("Map file exceeds the maximum size of {0} bytes.", maxDataSize), "Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
+            }
+            plugin.Dirty = false;
+            loadedFilename = fileInfo.FullName;
+            loadedFileType = fileType;
+            filename = fileInfo.FullName;
+            SetTitle();
+            mru.Add(fileInfo.FullName);
+            if (afterSaveDone != null)
+            {
+                afterSaveDone.Invoke();
             }
             else
             {
-                MessageBox.Show(this, String.Format("Error saving {0}: {1}", saveInfo.FileName, saveInfo.Error, "Error", MessageBoxButtons.OK, MessageBoxIcon.Error));
-                //mru.Remove(fileInfo);
                 RefreshActiveTool(true);
             }
         }
@@ -3089,25 +3113,21 @@ namespace MobiusEditor
             {
                 return;
             }
-            if (SteamworksUGC.IsSteamBuild && !SteamworksUGC.IsInit && Properties.Settings.Default.LazyInitSteam)
-            {
-                SteamworksUGC.Init();
-            }
-            if (!SteamworksUGC.IsInit)
-            {
-                MessageBox.Show(this, "Steam interface is not initialized. To enable Workshop publishing, log into Steam and restart the editor.", "Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
-                return;
-            }
             if (plugin.GameInfo.WorkshopTypeId == null)
             {
                 MessageBox.Show(this, plugin.GameInfo.Name + " maps cannot be published to the Steam Workshop; they are not usable by the C&C Remastered Collection.", "Error",
                     MessageBoxButtons.OK, MessageBoxIcon.Error);
                 return;
             }
-            if (MixPath.IsMixPath(filename))
+            if (plugin.Dirty || plugin.Empty || loadedFileType == FileType.MIX || loadedFileType == FileType.PGM || filename == null || !File.Exists(filename))
             {
-                MessageBox.Show(this, "Maps opened from .mix archives need to be resaved to disk before they can be published to the Steam Workshop.", "Error",
-                    MessageBoxButtons.OK, MessageBoxIcon.Error);
+                MessageBox.Show(this, "Map must be saved to disk before publishing.", "Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
+                return;
+            }
+            long maxDataSize = plugin.GameInfo.MaxDataSize;
+            if (new FileInfo(filename).Length > maxDataSize)
+            {
+                MessageBox.Show(this, String.Format("Map file exceeds the maximum size of {0} bytes.", maxDataSize), "Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
                 return;
             }
             if (plugin.Map.Theater.IsModTheater)
@@ -3146,20 +3166,21 @@ namespace MobiusEditor
                     return;
                 }
             }
+            if (SteamworksUGC.IsSteamBuild && !SteamworksUGC.IsInit && Properties.Settings.Default.LazyInitSteam)
+            {
+                SteamworksUGC.Init();
+                SetTitle();
+            }
+            if (!SteamworksUGC.IsInit)
+            {
+                MessageBox.Show(this, "Steam interface is not initialized. To enable Workshop publishing, log into Steam and try again.", "Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
+                return;
+            }
             PromptSaveMap(ShowPublishDialog, false);
         }
 
         private void ShowPublishDialog()
         {
-            if (plugin.Dirty)
-            {
-                MessageBox.Show(this, "Map must be saved before publishing.", "Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
-                return;
-            }
-            if (new FileInfo(filename).Length > Globals.MaxMapSize)
-            {
-                return;
-            }
             ClearActiveTool();
             // Check if we need to save.
             ulong oldId = plugin.Map.SteamSection.PublishedFileId;
@@ -3440,12 +3461,6 @@ namespace MobiusEditor
         /// <returns>false if the action was aborted.</returns>
         private bool PromptSaveMap(Action nextAction, bool onlyAfterSave)
         {
-#if !DEVELOPER
-            if (loadedFileType == FileType.PGM)
-            {
-                return true;
-            }
-#endif
             if (plugin?.Dirty ?? false)
             {
                 ClearActiveTool();

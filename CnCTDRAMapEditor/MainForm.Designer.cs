@@ -109,6 +109,7 @@ namespace MobiusEditor
             this.viewExtraIndicatorsLandTypesMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.viewExtraIndicatorsPlacedObjectsMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.viewExtraIndicatorsWaypointRevealRadiusMenuItem = new System.Windows.Forms.ToolStripMenuItem();
+            this.viewExtraIndicatorsCrateOutlinesMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.viewExtraIndicatorsEffectAreaRadiusMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.viewZoomToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.viewZoomInMenuItem = new System.Windows.Forms.ToolStripMenuItem();
@@ -145,7 +146,6 @@ namespace MobiusEditor
             this.cellTriggersToolStripButton = new MobiusEditor.Controls.ViewToolStripButton();
             this.selectToolStripButton = new MobiusEditor.Controls.ViewToolStripButton();
             this.mapPanel = new MobiusEditor.Controls.MapPanel();
-            this.viewExtraIndicatorsCrateOutlinesMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.mainMenuStrip.SuspendLayout();
             this.mainStatusStrip.SuspendLayout();
             this.mainToolStrip.SuspendLayout();
@@ -726,7 +726,7 @@ namespace MobiusEditor
             this.viewExtraIndicatorsLandTypesMenuItem.Name = "viewExtraIndicatorsLandTypesMenuItem";
             this.viewExtraIndicatorsLandTypesMenuItem.ShortcutKeys = System.Windows.Forms.Keys.F3;
             this.viewExtraIndicatorsLandTypesMenuItem.Size = new System.Drawing.Size(232, 22);
-            this.viewExtraIndicatorsLandTypesMenuItem.Text = "Map land &types";
+            this.viewExtraIndicatorsLandTypesMenuItem.Text = "Map land &types hashing";
             this.viewExtraIndicatorsLandTypesMenuItem.CheckedChanged += new System.EventHandler(this.ViewMenuItem_CheckedChanged);
             // 
             // viewExtraIndicatorsPlacedObjectsMenuItem
@@ -735,7 +735,7 @@ namespace MobiusEditor
             this.viewExtraIndicatorsPlacedObjectsMenuItem.Name = "viewExtraIndicatorsPlacedObjectsMenuItem";
             this.viewExtraIndicatorsPlacedObjectsMenuItem.ShortcutKeys = System.Windows.Forms.Keys.F4;
             this.viewExtraIndicatorsPlacedObjectsMenuItem.Size = new System.Drawing.Size(232, 22);
-            this.viewExtraIndicatorsPlacedObjectsMenuItem.Text = "&Occupied by objects";
+            this.viewExtraIndicatorsPlacedObjectsMenuItem.Text = "&Object occupancy hashing";
             this.viewExtraIndicatorsPlacedObjectsMenuItem.CheckedChanged += new System.EventHandler(this.ViewMenuItem_CheckedChanged);
             // 
             // viewExtraIndicatorsWaypointRevealRadiusMenuItem
@@ -746,6 +746,15 @@ namespace MobiusEditor
             this.viewExtraIndicatorsWaypointRevealRadiusMenuItem.Size = new System.Drawing.Size(232, 22);
             this.viewExtraIndicatorsWaypointRevealRadiusMenuItem.Text = "&Waypoint reveal radiuses";
             this.viewExtraIndicatorsWaypointRevealRadiusMenuItem.CheckedChanged += new System.EventHandler(this.ViewMenuItem_CheckedChanged);
+            // 
+            // viewExtraIndicatorsCrateOutlinesMenuItem
+            // 
+            this.viewExtraIndicatorsCrateOutlinesMenuItem.CheckOnClick = true;
+            this.viewExtraIndicatorsCrateOutlinesMenuItem.Name = "viewExtraIndicatorsCrateOutlinesMenuItem";
+            this.viewExtraIndicatorsCrateOutlinesMenuItem.ShortcutKeys = System.Windows.Forms.Keys.F6;
+            this.viewExtraIndicatorsCrateOutlinesMenuItem.Size = new System.Drawing.Size(232, 22);
+            this.viewExtraIndicatorsCrateOutlinesMenuItem.Text = "Outlines on crates";
+            this.viewExtraIndicatorsCrateOutlinesMenuItem.CheckedChanged += new System.EventHandler(this.ViewMenuItem_CheckedChanged);
             // 
             // viewExtraIndicatorsEffectAreaRadiusMenuItem
             // 
@@ -1086,15 +1095,6 @@ namespace MobiusEditor
             this.mapPanel.DragEnter += new System.Windows.Forms.DragEventHandler(this.MapPanel_DragEnter);
             this.mapPanel.MouseMove += new System.Windows.Forms.MouseEventHandler(this.MapPanel_MouseMove);
             // 
-            // viewExtraIndicatorsCrateOutlinesMenuItem
-            // 
-            this.viewExtraIndicatorsCrateOutlinesMenuItem.CheckOnClick = true;
-            this.viewExtraIndicatorsCrateOutlinesMenuItem.Name = "viewExtraIndicatorsCrateOutlinesMenuItem";
-            this.viewExtraIndicatorsCrateOutlinesMenuItem.ShortcutKeys = System.Windows.Forms.Keys.F6;
-            this.viewExtraIndicatorsCrateOutlinesMenuItem.Size = new System.Drawing.Size(232, 22);
-            this.viewExtraIndicatorsCrateOutlinesMenuItem.Text = "Crate outlines on all crates";
-            this.viewExtraIndicatorsCrateOutlinesMenuItem.CheckedChanged += new System.EventHandler(this.ViewMenuItem_CheckedChanged);
-            // 
             // MainForm
             // 
             this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 13F);
@@ -1203,6 +1203,11 @@ namespace MobiusEditor
         private System.Windows.Forms.ToolStripMenuItem viewExtraIndicatorsToolStripMenuItem;
         private System.Windows.Forms.ToolStripMenuItem viewExtraIndicatorsMapSymmetryMenuItem;
         private System.Windows.Forms.ToolStripMenuItem viewExtraIndicatorsMapGridMenuItem;
+        private System.Windows.Forms.ToolStripMenuItem viewExtraIndicatorsLandTypesMenuItem;
+        private System.Windows.Forms.ToolStripMenuItem viewExtraIndicatorsPlacedObjectsMenuItem;
+        private System.Windows.Forms.ToolStripMenuItem viewExtraIndicatorsWaypointRevealRadiusMenuItem;
+        private System.Windows.Forms.ToolStripMenuItem viewExtraIndicatorsCrateOutlinesMenuItem;
+        private System.Windows.Forms.ToolStripMenuItem viewExtraIndicatorsEffectAreaRadiusMenuItem;
         private System.Windows.Forms.ToolStripMenuItem fileNewFromImageMenuItem;
         private System.Windows.Forms.ToolStripMenuItem optionsToolStripMenuItem;
         private System.Windows.Forms.ToolStripMenuItem toolsOptionsSafeDraggingMenuItem;
@@ -1210,11 +1215,8 @@ namespace MobiusEditor
         private System.Windows.Forms.ToolStripMenuItem toolsOptionsBoundsObstructFillMenuItem;
         private System.Windows.Forms.ToolStripMenuItem toolsOptionsRandomizeDragPlaceMenuItem;
         private System.Windows.Forms.ToolStripMenuItem toolsOptionsCratesOnTopMenuItem;
-        private System.Windows.Forms.ToolStripMenuItem viewExtraIndicatorsEffectAreaRadiusMenuItem;
-        private System.Windows.Forms.ToolStripMenuItem viewExtraIndicatorsWaypointRevealRadiusMenuItem;
         private System.Windows.Forms.ToolStripMenuItem viewIndicatorsMapBoundariesMenuItem;
         private System.Windows.Forms.ToolStripMenuItem viewIndicatorsOutlinesMenuItem;
-        private System.Windows.Forms.ToolStripMenuItem viewExtraIndicatorsLandTypesMenuItem;
         private System.Windows.Forms.ToolStripMenuItem viewZoomToolStripMenuItem;
         private System.Windows.Forms.ToolStripMenuItem viewZoomInMenuItem;
         private System.Windows.Forms.ToolStripMenuItem viewZoomOutMenuItem;
@@ -1225,8 +1227,6 @@ namespace MobiusEditor
         private System.Windows.Forms.ToolStripMenuItem InfoAboutMenuItem;
         private System.Windows.Forms.ToolStripMenuItem InfoCheckForUpdatesMenuItem;
         private System.Windows.Forms.ToolStripMenuItem InfoWebsiteMenuItem;
-        private System.Windows.Forms.ToolStripMenuItem viewExtraIndicatorsPlacedObjectsMenuItem;
-        private System.Windows.Forms.ToolStripMenuItem viewExtraIndicatorsCrateOutlinesMenuItem;
     }
 }
 

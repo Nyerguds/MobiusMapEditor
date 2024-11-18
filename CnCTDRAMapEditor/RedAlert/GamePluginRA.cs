@@ -287,6 +287,25 @@ namespace MobiusEditor.RedAlert
             set
             {
                 isDirty = value;
+                if (value)
+                {
+                    isEmpty = false;
+                }
+                feedBackHandler?.UpdateStatus();
+            }
+        }
+
+        bool isEmpty;
+        public bool Empty
+        {
+            get { return isEmpty; }
+            set
+            {
+                isEmpty = value;
+                if (value)
+                {
+                    isDirty = false;
+                }
                 feedBackHandler?.UpdateStatus();
             }
         }
@@ -636,6 +655,7 @@ namespace MobiusEditor.RedAlert
             }
             finally
             {
+                Empty = true;
                 isLoading = false;
             }
         }
@@ -3142,18 +3162,17 @@ namespace MobiusEditor.RedAlert
             return changed;
         }
 
-        public bool Save(string path, FileType fileType)
+        public long Save(string path, FileType fileType)
         {
             return Save(path, fileType, null, false);
         }
 
-        public bool Save(string path, FileType fileType, Bitmap customPreview, bool dontResavePreview)
+        public long Save(string path, FileType fileType, Bitmap customPreview, bool dontResavePreview)
         {
             string errors = Validate(false);
             if (!String.IsNullOrWhiteSpace(errors))
             {
-                MessageBox.Show(errors, "Validation Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
-                return false;
+                return 0;
             }
             Encoding dos437 = Encoding.GetEncoding(437);
             Encoding utf8 = new UTF8Encoding(false, false);
@@ -3165,6 +3184,7 @@ namespace MobiusEditor.RedAlert
             {
                 utf8Components.Add(("Basic", "Name"));
             }
+            long retval = 0;
             switch (fileType)
             {
                 case FileType.INI:
@@ -3176,6 +3196,7 @@ namespace MobiusEditor.RedAlert
                         string iniText = ini.ToString("\n");
                         // Possibly scan extra ini content for all units/structs/etc with "Name" fields and save them as UTF-8 too? Not sure how the Remaster handles these.
                         GeneralUtils.WriteMultiEncoding(iniText.Split('\n'), mprWriter, dos437, utf8, utf8Components.ToArray(), linebreak);
+                        retval = mprStream.Position;
                     }
                     if (!Map.BasicSection.SoloMission && (!Globals.UseClassicFiles || !Globals.ClassicProducesNoMetaFiles))
                     {
@@ -3213,6 +3234,7 @@ namespace MobiusEditor.RedAlert
                     {
                         string iniText = ini.ToString("\n");
                         GeneralUtils.WriteMultiEncoding(iniText.Split('\n'), mprWriter, dos437, utf8, utf8Components.ToArray(), linebreak);
+                        retval = mprStream.Position;
                         mprStream.Position = 0;
                         if (customPreview != null)
                         {
@@ -3238,7 +3260,7 @@ namespace MobiusEditor.RedAlert
                 default:
                     throw new NotSupportedException();
             }
-            return true;
+            return retval;
         }
 
         private void SaveINI(INI ini, FileType fileType, string fileName)

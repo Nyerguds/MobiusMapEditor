@@ -179,6 +179,7 @@ namespace MobiusEditor.Tools
                 return;
             }
             bool origDirtyState = plugin.Dirty;
+            bool origEmptyState = plugin.Empty;
             plugin.Dirty = true;
             void undoAction(UndoRedoEventArgs ev)
             {
@@ -200,7 +201,14 @@ namespace MobiusEditor.Tools
                 }
                 if (ev.Plugin != null)
                 {
-                    ev.Plugin.Dirty = origDirtyState;
+                    if (origEmptyState)
+                    {
+                        ev.Plugin.Empty = true;
+                    }
+                    else
+                    {
+                        ev.Plugin.Dirty = origDirtyState;
+                    }
                 }
             }
             void redoAction(UndoRedoEventArgs ev)
@@ -373,6 +381,7 @@ namespace MobiusEditor.Tools
                 return;
             }
             bool origDirtyState = plugin.Dirty;
+            bool origEmptyState = plugin.Empty;
             plugin.Dirty = true;
             Point endLocation = finalLocation.Value;
             void undoAction(UndoRedoEventArgs ev)
@@ -408,7 +417,14 @@ namespace MobiusEditor.Tools
                 //ev.MapPanel.Invalidate(ev.Map, toMove);
                 if (ev.Plugin != null)
                 {
-                    ev.Plugin.Dirty = origDirtyState;
+                    if (origEmptyState)
+                    {
+                        ev.Plugin.Empty = true;
+                    }
+                    else
+                    {
+                        ev.Plugin.Dirty = origDirtyState;
+                    }
                 }
             }
             void redoAction(UndoRedoEventArgs ev)
@@ -613,11 +629,12 @@ namespace MobiusEditor.Tools
                 }
                 InvalidateBuildingArea(mapPanel, map, building);
                 bool origDirtyState = plugin.Dirty;
+                bool origEmptyState = plugin.Empty;
                 plugin.Dirty = true;
-                void undoAction(UndoRedoEventArgs e)
+                void undoAction(UndoRedoEventArgs ev)
                 {
-                    InvalidateBuildingArea(e.MapPanel, e.Map, building);
-                    e.Map.Buildings.Remove(building);
+                    InvalidateBuildingArea(ev.MapPanel, ev.Map, building);
+                    ev.Map.Buildings.Remove(building);
                     if (eatenOverlay != null)
                     {
                         map.Overlay[location] = eatenOverlay;
@@ -626,11 +643,11 @@ namespace MobiusEditor.Tools
                     {
                         foreach (Point p in eatenSmudge.Keys)
                         {
-                            Smudge oldSmudge = e.Map.Smudge[p];
+                            Smudge oldSmudge = ev.Map.Smudge[p];
                             if (oldSmudge == null || !oldSmudge.Type.IsAutoBib)
                             {
                                 // DO NOT REMOVE THE POINTS FROM "eatenSmudge": the undo might be done again in the future.
-                                e.Map.Smudge[p] = eatenSmudge[p];
+                                ev.Map.Smudge[p] = eatenSmudge[p];
                             }
                         }
                     }
@@ -643,18 +660,25 @@ namespace MobiusEditor.Tools
                             if (building != bld)
                             {
                                 bld.BasePriority = buildingPrioritiesOld[i];
-                                InvalidateBuildingArea(e.MapPanel, e.Map, bld);
+                                InvalidateBuildingArea(ev.MapPanel, ev.Map, bld);
                             }
                         }
                     }
-                    if (e.Plugin != null)
+                    if (ev.Plugin != null)
                     {
-                        e.Plugin.Dirty = origDirtyState;
+                        if (origEmptyState)
+                        {
+                            ev.Plugin.Empty = true;
+                        }
+                        else
+                        {
+                            ev.Plugin.Dirty = origDirtyState;
+                        }
                     }
                 }
-                void redoAction(UndoRedoEventArgs e)
+                void redoAction(UndoRedoEventArgs ev)
                 {
-                    e.Map.Buildings.Add(location, building);
+                    ev.Map.Buildings.Add(location, building);
                     if (eatenOverlay != null)
                     {
                         map.Overlay[location] = null;
@@ -665,13 +689,13 @@ namespace MobiusEditor.Tools
                         {
                             Building bld = baseBuildings[i];
                             bld.BasePriority = buildingPrioritiesNew[i];
-                            InvalidateBuildingArea(e.MapPanel, e.Map, bld);
+                            InvalidateBuildingArea(ev.MapPanel, ev.Map, bld);
                         }
                     }
-                    InvalidateBuildingArea(e.MapPanel, e.Map, building);
-                    if (e.Plugin != null)
+                    InvalidateBuildingArea(ev.MapPanel, ev.Map, building);
+                    if (ev.Plugin != null)
                     {
-                        e.Plugin.Dirty = true;
+                        ev.Plugin.Dirty = true;
                     }
                 }
                 url.Track(undoAction, redoAction, ToolType.Building);
@@ -748,42 +772,50 @@ namespace MobiusEditor.Tools
                     }
                 }
                 bool origDirtyState = plugin.Dirty;
+                bool origEmptyState = plugin.Empty;
                 plugin.Dirty = true;
-                void undoAction(UndoRedoEventArgs e)
+                void undoAction(UndoRedoEventArgs ev)
                 {
-                    e.Map.Buildings.Add(actualPoint, building);
+                    ev.Map.Buildings.Add(actualPoint, building);
                     if (baseBuildings != null && buildingPrioritiesOld != null && baseBuildings.Length == buildingPrioritiesOld.Length)
                     {
                         for (Int32 i = 0; i < baseBuildings.Length; ++i)
                         {
                             Building bld = baseBuildings[i];
                             bld.BasePriority = buildingPrioritiesOld[i];
-                            InvalidateBuildingArea(e.MapPanel, e.Map, bld);
+                            InvalidateBuildingArea(ev.MapPanel, ev.Map, bld);
                         }
                     }
-                    e.MapPanel.Invalidate(e.Map, building);
-                    if (e.Plugin != null)
+                    ev.MapPanel.Invalidate(ev.Map, building);
+                    if (ev.Plugin != null)
                     {
-                        e.Plugin.Dirty = origDirtyState;
+                        if (origEmptyState)
+                        {
+                            ev.Plugin.Empty = true;
+                        }
+                        else
+                        {
+                            ev.Plugin.Dirty = origDirtyState;
+                        }
                     }
                 }
-                void redoAction(UndoRedoEventArgs e)
+                void redoAction(UndoRedoEventArgs ev)
                 {
-                    InvalidateBuildingArea(e.MapPanel, e.Map, building);
-                    e.Map.Buildings.Remove(building);
-                    SmudgeTool.RestoreNearbySmudge(e.Map, bibPoints, null);
+                    InvalidateBuildingArea(ev.MapPanel, ev.Map, building);
+                    ev.Map.Buildings.Remove(building);
+                    SmudgeTool.RestoreNearbySmudge(ev.Map, bibPoints, null);
                     if (baseBuildings != null)
                     {
                         for (Int32 i = 0; i < baseBuildings.Length; ++i)
                         {
                             Building bld = baseBuildings[i];
                             bld.BasePriority = i;
-                            InvalidateBuildingArea(e.MapPanel, e.Map, bld);
+                            InvalidateBuildingArea(ev.MapPanel, ev.Map, bld);
                         }
                     }
-                    if (e.Plugin != null)
+                    if (ev.Plugin != null)
                     {
-                        e.Plugin.Dirty = true;
+                        ev.Plugin.Dirty = true;
                     }
                 }
                 url.Track(undoAction, redoAction, ToolType.Building);

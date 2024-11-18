@@ -211,33 +211,51 @@ namespace MobiusEditor.Dialogs
             plugin.Map.SteamSection.Title = txtTitle.Text;
             plugin.Map.SteamSection.Description = GeneralUtils.ReplaceLinebreaks(txtDescription.Text, '@');
             plugin.Map.SteamSection.VisibilityAsEnum = ListItem.GetValueFromComboBox<ERemoteStoragePublishedFileVisibility>(cmbVisibility);
-            Directory.CreateDirectory(PublishTempDirectory);
-            foreach (var file in new DirectoryInfo(PublishTempDirectory).EnumerateFiles())
+            string workFolder = PublishTempDirectory;
+            Directory.CreateDirectory(workFolder);
+            foreach (var file in new DirectoryInfo(workFolder).EnumerateFiles())
             {
                 file.Delete();
             }
-            var pgmPath = Path.Combine(PublishTempDirectory, "MAPDATA.PGM");
-            multiThreader.ExecuteThreaded(() => SavePgm(PublishTempDirectory, pgmPath), SaveDone, true, EnableControls, "Saving map");
+            var pgmPath = Path.Combine(workFolder, "MAPDATA.PGM");
+            multiThreader.ExecuteThreaded(() => SavePgm(workFolder, pgmPath), (err) => SaveDone(workFolder, err), true, EnableControls, "Saving map");
         }
 
         private string SavePgm(string tempPath, string pgmPath)
         {
             try
             {
-                plugin.Save(pgmPath, FileType.PGM, txtPreview.Tag as Bitmap, false);
+                String errors = plugin.Validate(false);
+                if (!String.IsNullOrWhiteSpace(errors))
+                {
+                    return errors.Split('\n')[0];
+                }
+                long dataSize = plugin.Save(pgmPath, FileType.PGM, txtPreview.Tag as Bitmap, false);
+                if (dataSize == 0 || dataSize > plugin.GameInfo.MaxDataSize)
+                {
+                    try
+                    {
+                        if (File.Exists(pgmPath))
+                        {
+                            File.Delete(pgmPath);
+                        }
+                    }
+                    catch { /* ignore */ }
+                    return dataSize == 0 ? string.Empty : "Map file size too large.";
+                }
             }
-            catch
+            catch (Exception ex)
             {
-                return null;
+                return ex.Message;
             }
-            return tempPath;
+            return null;
         }
 
-        private void SaveDone(String sendPath)
+        private void SaveDone(string sendPath, string errorMessage)
         {
-            if (sendPath == null)
+            if (sendPath == null || errorMessage != null)
             {
-                lblStatus.Text = "Save failed.";
+                lblStatus.Text = "Save failed" + (String.IsNullOrEmpty(errorMessage) ? "." : (": " + errorMessage));
                 return;
             }
             var tags = new List<string>();

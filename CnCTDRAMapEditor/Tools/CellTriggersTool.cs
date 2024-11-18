@@ -96,14 +96,14 @@ namespace MobiusEditor.Tools
             this.triggerComboBox.SelectedIndexChanged += this.TriggerCombo_SelectedIndexChanged;
         }
 
-        private void Url_UndoRedoDone(object sender, UndoRedoEventArgs e)
+        private void Url_UndoRedoDone(object sender, UndoRedoEventArgs ev)
         {
-            if ((e.Source & (ToolType.Infantry | ToolType.Unit | ToolType.Building)) != ToolType.None)
+            if ((ev.Source & (ToolType.Infantry | ToolType.Unit | ToolType.Building)) != ToolType.None)
             {
                 // Moving units and buildings around can affect blobs, since they might be attached to the triggers.
                 UpdateBlobsList(null, null);
             }
-            else if ((e.Source & ToolType.CellTrigger) != ToolType.None)
+            else if ((ev.Source & ToolType.CellTrigger) != ToolType.None)
             {
                 // Can't know for sure which one updated, so update them all.
                 UpdateDataSource();
@@ -424,39 +424,47 @@ namespace MobiusEditor.Tools
         private void CommitChange()
         {
             bool origDirtyState = plugin.Dirty;
+            bool origEmptyState = plugin.Empty;
             plugin.Dirty = true;
             var undoCellTriggers2 = new Dictionary<int, CellTrigger>(undoCellTriggers);
             string selected = triggerComboBox.SelectedItem as string ?? String.Empty;
             UpdateBlobsList(null, selected);
-            void undoAction(UndoRedoEventArgs e)
+            void undoAction(UndoRedoEventArgs ev)
             {
-                List<Trigger> valid = e.Map.FilterCellTriggers().ToList();
+                List<Trigger> valid = ev.Map.FilterCellTriggers().ToList();
                 foreach (var kv in undoCellTriggers2)
                 {
                     CellTrigger cellTrig = kv.Value;
                     bool isValid = cellTrig == null || valid.Any(t => t.Name.Equals(cellTrig.Trigger, StringComparison.InvariantCultureIgnoreCase));
-                    e.Map.CellTriggers[kv.Key] = isValid ? cellTrig : null;
-                    e.MapPanel.Invalidate(map, kv.Key);
+                    ev.Map.CellTriggers[kv.Key] = isValid ? cellTrig : null;
+                    ev.MapPanel.Invalidate(map, kv.Key);
                 }
-                if (e.Plugin != null)
+                if (ev.Plugin != null)
                 {
-                    e.Plugin.Dirty = origDirtyState;
+                    if (origEmptyState)
+                    {
+                        ev.Plugin.Empty = true;
+                    }
+                    else
+                    {
+                        ev.Plugin.Dirty = origDirtyState;
+                    }
                 }
             }
             var redoCellTriggers2 = new Dictionary<int, CellTrigger>(redoCellTriggers);
-            void redoAction(UndoRedoEventArgs e)
+            void redoAction(UndoRedoEventArgs ev)
             {
-                List<Trigger> valid = e.Map.FilterCellTriggers().ToList();
+                List<Trigger> valid = ev.Map.FilterCellTriggers().ToList();
                 foreach (var kv in redoCellTriggers2)
                 {
                     CellTrigger cellTrig = kv.Value;
                     bool isValid = cellTrig == null || valid.Any(t => t.Name.Equals(cellTrig.Trigger, StringComparison.InvariantCultureIgnoreCase));
-                    e.Map.CellTriggers[kv.Key] = isValid ? cellTrig : null;
-                    e.MapPanel.Invalidate(map, kv.Key);
+                    ev.Map.CellTriggers[kv.Key] = isValid ? cellTrig : null;
+                    ev.MapPanel.Invalidate(map, kv.Key);
                 }
-                if (e.Plugin != null)
+                if (ev.Plugin != null)
                 {
-                    e.Plugin.Dirty = true;
+                    ev.Plugin.Dirty = true;
                 }
             }
             undoCellTriggers.Clear();

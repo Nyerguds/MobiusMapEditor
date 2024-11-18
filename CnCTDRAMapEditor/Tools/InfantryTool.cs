@@ -213,6 +213,7 @@ namespace MobiusEditor.Tools
                 return;
             }
             bool origDirtyState = plugin.Dirty;
+            bool origEmptyState = plugin.Empty;
             plugin.Dirty = true;
             void undoAction(UndoRedoEventArgs ev)
             {
@@ -225,7 +226,14 @@ namespace MobiusEditor.Tools
                 ev.MapPanel.Invalidate(ev.Map, infantry.InfantryGroup);
                 if (ev.Plugin != null)
                 {
-                    ev.Plugin.Dirty = origDirtyState;
+                    if (origEmptyState)
+                    {
+                        ev.Plugin.Empty = true;
+                    }
+                    else
+                    {
+                        ev.Plugin.Dirty = origDirtyState;
+                    }
                 }
             }
             void redoAction(UndoRedoEventArgs ev)
@@ -418,6 +426,7 @@ namespace MobiusEditor.Tools
                 return;
             }
             bool origDirtyState = plugin.Dirty;
+            bool origEmptyState = plugin.Empty;
             plugin.Dirty = true;
             Point endLocation = finalLocation.Value;
             void undoAction(UndoRedoEventArgs ev)
@@ -450,7 +459,14 @@ namespace MobiusEditor.Tools
                 }
                 if (ev.Plugin != null)
                 {
-                    ev.Plugin.Dirty = origDirtyState;
+                    if (origEmptyState)
+                    {
+                        ev.Plugin.Empty = true;
+                    }
+                    else
+                    {
+                        ev.Plugin.Dirty = origDirtyState;
+                    }
                 }
             }
             void redoAction(UndoRedoEventArgs ev)
@@ -539,6 +555,7 @@ namespace MobiusEditor.Tools
                     infantry.InfantryGroup = infantryGroup;
                     mapPanel.Invalidate(map, infantryGroup);
                     bool origDirtyState = plugin.Dirty;
+                    bool origEmptyState = plugin.Empty;
                     plugin.Dirty = true;
                     void undoAction(UndoRedoEventArgs ev)
                     {
@@ -554,7 +571,14 @@ namespace MobiusEditor.Tools
                         }
                         if (ev.Plugin != null)
                         {
-                            ev.Plugin.Dirty = origDirtyState;
+                            if (origEmptyState)
+                            {
+                                ev.Plugin.Empty = true;
+                            }
+                            else
+                            {
+                                ev.Plugin.Dirty = origDirtyState;
+                            }
                         }
                     }
                     void redoAction(UndoRedoEventArgs ev)
@@ -607,6 +631,7 @@ namespace MobiusEditor.Tools
                     map.Technos.Remove(infantryGroup);
                 }
                 bool origDirtyState = plugin.Dirty;
+                bool origEmptyState = plugin.Empty;
                 plugin.Dirty = true;
                 void undoAction(UndoRedoEventArgs ev)
                 {
@@ -625,7 +650,14 @@ namespace MobiusEditor.Tools
                     }
                     if (ev.Plugin != null)
                     {
-                        ev.Plugin.Dirty = origDirtyState;
+                        if (origEmptyState)
+                        {
+                            ev.Plugin.Empty = true;
+                        }
+                        else
+                        {
+                            ev.Plugin.Dirty = origDirtyState;
+                        }
                     }
                 }
                 void redoAction(UndoRedoEventArgs ev)
