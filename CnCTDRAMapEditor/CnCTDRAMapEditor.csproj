@@ -524,6 +524,7 @@
     <Compile Include="SoleSurvivor\HouseTypes.cs" />
     <Compile Include="TiberianDawn\HouseTypes.cs" />
     <Compile Include="TiberianDawn\BuildingTypes.cs" />
+    <Compile Include="TiberianDawn\MapCellN64.cs" />
     <Compile Include="TiberianDawn\MissionTypes.cs" />
     <Compile Include="TiberianDawn\OverlayTypes.cs" />
     <Compile Include="TiberianDawn\SmudgeTypes.cs" />
@@ -822,6 +823,8 @@
     <None Include="Classic\mixcontent_td.ini">
       <CopyToOutputDirectory>Always</CopyToOutputDirectory>
     </None>
+    <None Include="Resources\n64_th_desert.nms" />
+    <None Include="Resources\n64_th_temperate.nms" />
     <None Include="Resources\UI_CustomMissionPreviewDefault.png" />
     <Content Include="License.txt">
       <CopyToOutputDirectory>Always</CopyToOutputDirectory>

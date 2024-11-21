@@ -22,10 +22,10 @@ namespace MobiusEditor.Interface
     public enum FileType
     {
         None = 0,
-        INI,
-        BIN,
-        PGM,
-        MIX
+        INI, // ini file
+        BIN, // bin file
+        PGM, // Petroglyph map archive in big format
+        MIX  // Map selected from inside a mix file; should contain the ini and possibly bin parts behind a '?'.
     }
 
     public interface IGamePlugin : IDisposable

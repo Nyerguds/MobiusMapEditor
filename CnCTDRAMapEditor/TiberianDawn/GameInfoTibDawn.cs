@@ -36,7 +36,7 @@ namespace MobiusEditor.TiberianDawn
         public override string DefaultExtensionFromMix => ".ini";
         public override string DefaultExtensionFromPgm => DefaultExtension;
         public override Dictionary<FileType, string[]> ExtensionsForTypes =>
-            new Dictionary<FileType, string[]>() { { FileType.INI, new string[] { ".ini" } }, { FileType.BIN, new string[] { ".bin" } }, { FileType.PGM, new string[] { ".pgm", ".meg" } } };
+            new Dictionary<FileType, string[]>() { { FileType.INI, new string[] { ".ini" } }, { FileType.BIN, new string[] { ".bin", ".map" } }, { FileType.PGM, new string[] { ".pgm", ".meg" } } };
         public override string ModFolder => Path.Combine(Globals.ModDirectory, "Tiberian_Dawn");
         public override string ModIdentifier => "TD";
         public override string ModsToLoad => Properties.Settings.Default.ModsToLoadTD;
