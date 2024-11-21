@@ -39,13 +39,13 @@
       <Value Profile="(Default)">False</Value>
     </Setting>
     <Setting Name="ModsToLoadTD" Type="System.String" Scope="Application">
-      <Value Profile="(Default)">2844969675;GraphicsFixesTD</Value>
+      <Value Profile="(Default)"></Value>
     </Setting>
     <Setting Name="ModsToLoadRA" Type="System.String" Scope="Application">
-      <Value Profile="(Default)">2978875641;GraphicsFixesRA</Value>
+      <Value Profile="(Default)"></Value>
     </Setting>
     <Setting Name="ModsToLoadSS" Type="System.String" Scope="Application">
-      <Value Profile="(Default)">2844969675;GraphicsFixesTD</Value>
+      <Value Profile="(Default)"></Value>
     </Setting>
     <Setting Name="MixContentInfoFile" Type="System.String" Scope="Application">
       <Value Profile="(Default)">Classic\mixcontent.ini</Value>
