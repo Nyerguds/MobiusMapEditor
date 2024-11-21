@@ -637,13 +637,9 @@ namespace MobiusEditor.TiberianDawn
             {
                 fileContents = binReader.ReadAllBytes();
             }
-            CellGrid<Template> templates;
             List<string> err = new List<string>();
             bool mod = modified;
-            using (MemoryStream ms = new MemoryStream(fileContents))
-            {
-                templates = ReadBinFromStream(ms, filename, err, ref mod);
-            }
+            CellGrid<Template> templates = ReadBinData(fileContents, filename, err, ref mod);            
             if (checkN64 && fileContents.Length == binLen)
             {
                 CellGrid<Template> templatesN64;
@@ -651,31 +647,21 @@ namespace MobiusEditor.TiberianDawn
                 bool modN64 = modified;
                 int normalType = 0;
                 int n64Type = 0;
-                using (MemoryStream ms = new MemoryStream(fileContents))
-                using (BinaryReader mapReader = new BinaryReader(ms, Encoding.UTF8, true))
+                for (int i = 0; i < binLen; i += 2)
                 {
-                    int index = 0;
-                    while (index < binLen)
+                    short val = (short)(fileContents[i] | (fileContents[i + 1] << 8));
+                    if (val == -1)
                     {
-                        short val = mapReader.ReadInt16();
-                        if (val == -1)
-                        {
-                            n64Type++;
-                        }
-                        else if (val == 0xFF)
-                        {
-                            normalType++;
-                        }
-                        index += 2;
+                        n64Type++;
+                    }
+                    else if (val == 0xFF)
+                    {
+                        normalType++;
                     }
                 }
                 if (normalType == 0 && n64Type > 0)
                 {
-                    using (MemoryStream ms = new MemoryStream(fileContents))
-                    {
-                        templatesN64 = ReadN64MapFromStream(ms, filename, errN64, ref modN64);
-                    }
-
+                    templatesN64 = ReadN64MapData(fileContents, filename, errN64, ref modN64);
                     // Went better than identifying PC format; use this one.
                     if (errN64.Count < err.Count)
                     {
@@ -697,13 +683,14 @@ namespace MobiusEditor.TiberianDawn
             }
         }
 
-        private CellGrid<Template> ReadBinFromStream(Stream stream, string filename, List<string> errors, ref bool modified)
+        private CellGrid<Template> ReadBinData(Byte[] mapData, string filename, List<string> errors, ref bool modified)
         {
             CellGrid<Template> templates = new CellGrid<Template>(Map.Metrics);
             // don't close stream after read; that's the responsibility of the calling code.
-            using (BinaryReader binReader = new BinaryReader(stream, Encoding.UTF8, true))
+            using (MemoryStream ms = new MemoryStream(mapData))
+            using (BinaryReader binReader = new BinaryReader(ms, Encoding.UTF8, true))
             {
-                long mapLen = binReader.BaseStream.Length;
+                long mapLen = mapData.Length;
                 if ((!isMegaMap && mapLen == 0x2000) || (isMegaMap && mapLen % 4 == 0))
                 {
                     errors.AddRange(!isMegaMap ? LoadBinaryClassic(binReader, templates, ref modified) : LoadBinaryMega(binReader, ref modified));
@@ -718,14 +705,14 @@ namespace MobiusEditor.TiberianDawn
             return templates;
         }
 
-        private CellGrid<Template> ReadN64MapFromStream(Stream stream, string filename, List<string> errors, ref bool modified)
+        private CellGrid<Template> ReadN64MapData(byte[] mapData, string filename, List<string> errors, ref bool modified)
         {
             CellGrid<Template> templates = new CellGrid<Template>(Map.Metrics);
-            long mapLen = stream.Length;
+            long mapLen = mapData.Length;
             const int binLen = 0x2000;
             if (mapLen != binLen)
             {
-                errors.Add(String.Format("'{0}' does not have the correct size for a N64 " + this.GameInfo.Name + " .bin file.", filename));
+                errors.Add(String.Format("'{0}' does not have the correct size for a N64 " + this.GameInfo.Name + " .map file.", filename));
                 modified = true;
                 Map.Templates.Clear();
             }
@@ -733,33 +720,29 @@ namespace MobiusEditor.TiberianDawn
             Dictionary<int, MapCellN64> mapping = isDesert ? MapCellN64.DESERT_MAPPING : MapCellN64.TEMPERATE_MAPPING;
             string mappingName = isDesert ? TheaterTypes.Desert.Name : TheaterTypes.Temperate.Name;
             byte[] buffer = new byte[binLen];
-            // don't close stream after read; that's the responsibility of the calling code.
-            int index = 0;
             MapCellN64 defVal = new MapCellN64(0xFF, 0x00);
-            using (BinaryReader mapReader = new BinaryReader(stream, Encoding.UTF8, true))
+            for (int i = 0; i < binLen; i += 2)
             {
-                while (index < binLen)
+                byte val1 = mapData[i];
+                byte val2 = mapData[i + 1];
+                // N64 big-endian combining.
+                int val = val1 << 8 | val2;
+                MapCellN64 cellVal;
+                if (val == 0xFFFF)
                 {
-                    byte val1 = mapReader.ReadByte();
-                    byte val2 = mapReader.ReadByte();
-                    int val = val1 << 8 | val2;
-                    MapCellN64 cellVal;
-                    if (val == 0xFFFF)
+                    cellVal = defVal;
+                }
+                else
+                {
+                    bool gotValue = mapping.TryGetValue(val, out cellVal);
+                    if (!gotValue)
                     {
+                        errors.Add(String.Format("No mapping found for value {0} in N64 mapping table for {1} Theater.", val.ToString("X4"), mappingName));
                         cellVal = defVal;
                     }
-                    else
-                    {
-                        bool gotValue = mapping.TryGetValue(val, out cellVal);
-                        if (!gotValue)
-                        {
-                            errors.Add(String.Format("No mapping found for value {0} in N64 mapping table for {1} Theater.", val.ToString("X4"), mappingName));
-                            cellVal = defVal;
-                        }
-                    }
-                    buffer[index++] = cellVal.HighByte;
-                    buffer[index++] = cellVal.LowByte;
                 }
+                buffer[i] = cellVal.HighByte;
+                buffer[i + 1] = cellVal.LowByte;
             }
             using (MemoryStream ms = new MemoryStream(buffer))
             using (BinaryReader binReader = new BinaryReader(ms, Encoding.UTF8, true))
