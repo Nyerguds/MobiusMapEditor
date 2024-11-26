@@ -66,7 +66,7 @@ namespace MobiusEditor.TiberianDawn
         public override int HitPointsYellowMinimum => 63;
         public override OverlayTypeFlag OverlayIconType => OverlayTypeFlag.Crate;
 
-        public override IGamePlugin CreatePlugin(Boolean mapImage, Boolean megaMap) => new GamePluginTD(mapImage, megaMap);
+        public override IGamePlugin CreatePlugin(bool mapImage, bool megaMap) => new GamePluginTD(mapImage, megaMap);
 
         public override void InitClassicFiles(MixfileManager mfm, List<string> loadErrors, List<string> fileLoadErrors, bool forRemaster)
         {

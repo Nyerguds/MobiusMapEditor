@@ -168,7 +168,7 @@ namespace MobiusEditor.Utility
                 string[][] theaterInfos = GetTheaterInfo(gameSection, GameKeyTheaters, true);
                 string[][] modTheaterInfos = GetTheaterInfo(gameSection, GameKeyModTheaters, false);
                 string hasher = gameSection.TryGetValue(GameKeyHasher);
-                if (hasher == null)
+                if (String.IsNullOrEmpty(hasher))
                 {
                     errors.Add("No hash method defined for game definition \"" + gameString + "\"; skipping game.");
                     continue;
@@ -651,7 +651,7 @@ namespace MobiusEditor.Utility
             foreach (HashMethod hasher in HashMethod.GetRegisteredMethods())
             {
                 wrongHasher = false;
-                // Check if there's an xcc filenames database.
+                // Check if there's an RAMIX filenames database. These databases can contain a custom description.
                 foreach (uint fileId in filesList)
                 {
                     MixEntry[] entries = mixFile.GetFullFileInfo(fileId);

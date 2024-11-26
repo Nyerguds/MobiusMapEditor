@@ -53,7 +53,7 @@ namespace MobiusEditor.Model
         Frames32Full        /**/ = 1 << 1,
         /// <summary>Specifies that this rotation is simplified to 16 frames. Generally used for RA boats/aircraft.</summary>
         Frames16Simple      /**/ = 1 << 2,
-        /// <summary>Specifies that this rotation is 16 frames, but saved as 8-frame because it is symmetrical and thus the second half of the frames is the same.</summary>
+        /// <summary>Specifies that this rotation is 16 frames, but saved as 8-frame because it is front-to-back symmetrical and thus the second half of the frames is the same.</summary>
         Frames16Symmetrical /**/ = 1 << 3,
         /// <summary>Specifies that this rotation is cardinal drections only; 8 frames. Generally used for walkers.</summary>
         Frames08Cardinal    /**/ = 1 << 4,

@@ -506,7 +506,6 @@ namespace MobiusEditor.Tools
             {
                 return;
             }
-            // Add placement mode dummy in extra slot provided for this purpose on cloned maps.
             int selectedIndex = waypointCombo.SelectedIndex;
             if (selectedIndex == -1)
             {
@@ -518,6 +517,7 @@ namespace MobiusEditor.Tools
             {
                 return;
             }
+            // Add placement mode dummy in extra slot provided for this purpose on cloned maps. This if-check should always pass.
             if (previewMap.Waypoints.Length == map.Waypoints.Length + 1)
             {
                 selectedIndex = map.Waypoints.Length;

@@ -53,9 +53,14 @@ namespace MobiusEditor.Utility
         private TheaterType theater;
         private Color[] currentlyLoadedPalette;
         private Color[] currentlyLoadedPaletteBare;
+        private Color[] currentlyLoadedPaletteOrig;
 
+        /// <summary>Currently loaded colour palette, with the background color set to transparent, and the shadow color replaced by 50% opacity black.</summary>
         public Color[] CurrentlyLoadedPalette => currentlyLoadedPalette.ToArray();
+        /// <summary>Currently loaded colour palette, with the background color set to transparent, but without correction of thev shadow color.</summary>
         public Color[] CurrentlyLoadedPaletteBare => currentlyLoadedPaletteBare.ToArray();
+        /// <summary>Currently loaded colour palette, exactly as it was loaded from the files.</summary>
+        public Color[] CurrentlyLoadedPaletteOrig => currentlyLoadedPaletteOrig.ToArray();
 
         public TilesetManagerClassic(IArchiveManager archiveManager)
         {
@@ -86,15 +91,17 @@ namespace MobiusEditor.Utility
             this.theater = theater;
             Color[] pal = TeamRemapManager.GetPaletteForTheater(this.archiveManager, theater);
             int palLength = 0x100;
+            this.currentlyLoadedPaletteOrig = new Color[0x100];
             this.currentlyLoadedPaletteBare = new Color[0x100];
             this.currentlyLoadedPalette = new Color[0x100];
             for (int i = 0; i < pal.Length && i < palLength; ++i)
             {
-                this.currentlyLoadedPalette[i] = pal[i];
+                this.currentlyLoadedPaletteOrig[i] = pal[i];
                 this.currentlyLoadedPaletteBare[i] = pal[i];
+                this.currentlyLoadedPalette[i] = pal[i];
             }
-            ApplySpecialColors(this.currentlyLoadedPalette, true, true);
             ApplySpecialColors(this.currentlyLoadedPaletteBare, true, false);
+            ApplySpecialColors(this.currentlyLoadedPalette, true, true);
         }
 
         protected void ApplySpecialColors(Color[] colors, bool adjustTrans, bool adjustShadow)

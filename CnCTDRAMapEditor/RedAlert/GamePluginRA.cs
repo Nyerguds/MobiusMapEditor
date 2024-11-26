@@ -2338,7 +2338,7 @@ namespace MobiusEditor.RedAlert
                     Type = buildingType,
                     House = basePlayer,
                     Strength = 256,
-                    Direction = DirectionTypes.North,
+                    Direction = Map.BuildingDirectionTypes.FirstOrDefault(),
                     BasePriority = curPriorityVal++,
                     IsPrebuilt = false
                 });

@@ -48,6 +48,7 @@ namespace MobiusEditor.Interface
         bool Empty { get; set; }
 
         /// <summary>Initialises this plugin after it has been created, and all resource managers have been reset.</summary>
+        /// <returns>A list of errors that occurred during the initialisation.</returns>
         IEnumerable<string> Initialize();
 
         /// <summary>Get any unmanaged sections from the mission file so they can be edited by the user.</summary>

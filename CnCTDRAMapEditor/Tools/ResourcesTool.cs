@@ -226,11 +226,12 @@ namespace MobiusEditor.Tools
                 }
                 if (map.Metrics.GetCell(subLocation, out int cell))
                 {
-                    if (map.Overlay[cell] == null)
+                    Overlay cur = map.Overlay[cell];
+                    if (cur == null || Map.IsIgnorableOverlay(cur))
                     {
                         if (!undoOverlays.ContainsKey(cell))
                         {
-                            undoOverlays[cell] = map.Overlay[cell];
+                            undoOverlays[cell] = cur;
                         }
                         Overlay overlay = new Overlay { Type = resourceType, Icon = 0 };
                         map.Overlay[cell] = overlay;
@@ -247,6 +248,7 @@ namespace MobiusEditor.Tools
         {
             Rectangle rectangle = new Rectangle(location, new Size(1, 1));
             rectangle.Inflate(navigationWidget.MouseoverSize.Width / 2, navigationWidget.MouseoverSize.Height / 2);
+            HashSet<Point> removed = new HashSet<Point>();
             foreach (Point subLocation in rectangle.Points())
             {
                 if (map.Metrics.GetCell(subLocation, out int cell))
@@ -259,10 +261,12 @@ namespace MobiusEditor.Tools
                         }
                         map.Overlay[cell] = null;
                         redoOverlays[cell] = null;
+                        removed.Add(subLocation);
                     }
                 }
             }
             rectangle.Inflate(1, 1);
+            //map.UpdateConcreteOverlays(new HashSet<Point>(rectangle.Points()));
             mapPanel.Invalidate(map, rectangle);
             Update();
         }

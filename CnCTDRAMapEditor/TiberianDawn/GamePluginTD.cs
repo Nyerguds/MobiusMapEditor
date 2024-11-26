@@ -2062,7 +2062,7 @@ namespace MobiusEditor.TiberianDawn
                     Type = buildingType,
                     House = HouseTypes.None,
                     Strength = 256,
-                    Direction = DirectionTypes.North,
+                    Direction = Map.BuildingDirectionTypes.FirstOrDefault(),
                     BasePriority = curPriorityVal++,
                     IsPrebuilt = false
                 };

@@ -1958,10 +1958,6 @@ namespace MobiusEditor.Model
             {
                 this.Buildings.Add(e.Location, e.Value);
             }
-            if (e.Value?.Type.IsConcrete ?? false)
-            {
-                //this.UpdateConcreteOverlays(Rectangle.Inflate(new Rectangle(e.Location, new Size(1, 1)), 1, 1).Points().ToHashSet());
-            }
             if (this.updating)
             {
                 return;
@@ -1972,29 +1968,30 @@ namespace MobiusEditor.Model
                 {
                     continue;
                 }
-                MapLayerFlag layer;
+                List<MapLayerFlag> layers = new List<MapLayerFlag>();
                 if (overlay.Type.IsResource)
                 {
-                    layer = MapLayerFlag.Resources;
+                    layers.Add(MapLayerFlag.Resources);
+                    layers.Add(MapLayerFlag.Overlay);
                 }
                 else if (overlay.Type.IsWall)
                 {
-                    layer = MapLayerFlag.Walls;
+                    layers.Add(MapLayerFlag.Walls);
+                    layers.Add(MapLayerFlag.Overlay);
                 }
                 else if (overlay.Type.IsConcrete)
                 {
-                    layer = MapLayerFlag.Overlay;
+                    layers.Add(MapLayerFlag.Overlay);
                 }
-                else
+                foreach (MapLayerFlag layer in layers)
                 {
-                    continue;
+                    if (!this.invalidateLayers.TryGetValue(layer, out ISet<Point> locations))
+                    {
+                        locations = new HashSet<Point>();
+                        this.invalidateLayers[layer] = locations;
+                    }
+                    locations.UnionWith(Rectangle.Inflate(new Rectangle(e.Location, new Size(1, 1)), 1, 1).Points());
                 }
-                if (!this.invalidateLayers.TryGetValue(layer, out ISet<Point> locations))
-                {
-                    locations = new HashSet<Point>();
-                    this.invalidateLayers[layer] = locations;
-                }
-                locations.UnionWith(Rectangle.Inflate(new Rectangle(e.Location, new Size(1, 1)), 1, 1).Points());
             }
             if (this.updateCount == 0)
             {

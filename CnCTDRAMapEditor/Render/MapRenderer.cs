@@ -403,55 +403,23 @@ namespace MobiusEditor.Render
                     RenderOverlay(gameInfo, topLeft, map.Bounds, tileSize, tileScale, overlay, false).Item2(graphics);
                 }
             }
-
             if ((layers & MapLayerFlag.Waypoints) != MapLayerFlag.None)
             {
-                // todo avoid overlapping waypoints of the same type?
                 Dictionary<int, int> flagOverlapPoints = new Dictionary<int, int>();
+                HashSet<int> flagPoints = null;
                 HashSet<int> handledPoints = new HashSet<int>();
                 ITeamColor[] flagColors = map.FlagColors;
                 bool soloMission = map.BasicSection.SoloMission;
                 bool previewIsFlag = map.Waypoints.Where(w => w.IsPreview && Waypoint.GetMpIdFromFlag(w.Flag) != -1).Any();
-                int lastFlag = -1;
                 float wpAlpha = 0.5f;
                 if (!soloMission)
                 {
-                    int firstFlag = -1;
-                    for (int i = 0; i < map.Waypoints.Length; i++)
-                    {
-                        Waypoint waypoint = map.Waypoints[i];
-                        if (waypoint.IsPreview)
-                        {
-                            continue;
-                        }
-                        int mpId = Waypoint.GetMpIdFromFlag(map.Waypoints[i].Flag);
-                        if (mpId != -1)
-                        {
-                            if (firstFlag == -1)
-                            {
-                                firstFlag = i;
-                            }
-                            lastFlag = i;
-                        }
-                    }
-                    // This logic is kind of dirty; it relies on all flag points being in consecutive order. But without that, the preview logic doesn't work.
-                    for (int i = 0; i < firstFlag; i++)
-                    {
-                        Waypoint waypoint = map.Waypoints[i];
-                        if (!waypoint.Point.HasValue || (locations != null && !locations.Contains(waypoint.Point.Value))
-                            || !map.Metrics.GetCell(waypoint.Point.Value, out int cell) || handledPoints.Contains(cell))
-                        {
-                            continue;
-                        }
-                        handledPoints.Add(cell);
-                        RenderWaypoint(gameInfo, soloMission, tileSize, flagColors, waypoint, wpAlpha, 0, cacheManager).Item2(graphics);
-                    }
-                    RenderWaypointFlags(graphics, gameInfo, map, map.Metrics.Bounds, tileSize, cacheManager);
+                    flagPoints = RenderWaypointFlags(graphics, gameInfo, map, map.Metrics.Bounds, tileSize, cacheManager);
                 }
-                for (int i = lastFlag + 1; i < map.Waypoints.Length; i++)
+                for (int i = 0; i < map.Waypoints.Length; ++i)
                 {
                     Waypoint waypoint = map.Waypoints[i];
-                    if (!waypoint.Point.HasValue || (locations != null && !locations.Contains(waypoint.Point.Value))
+                    if ((flagPoints != null && flagPoints.Contains(i)) || !waypoint.Point.HasValue || (locations != null && !locations.Contains(waypoint.Point.Value))
                         || !map.Metrics.GetCell(waypoint.Point.Value, out int cell) || handledPoints.Contains(cell))
                     {
                         continue;
@@ -920,6 +888,7 @@ namespace MobiusEditor.Render
             else if (frameUsage.HasFlag(FrameUsage.Frames16Symmetrical))
             {
                 // Special case for 16-frame rotation saved as 8-frame because it is symmetrical and thus the second half of the frames is the same.
+                // This is normally not used or units, but exists for the turret of the mobile gap generator.
                 icon = (BodyShape[Facing32[unit.Direction.ID]] / 2) & 0x07;
                 bodyFrames = 8;
             }
@@ -939,7 +908,7 @@ namespace MobiusEditor.Render
                 // Skip three-step damaged frames. In practice this will just go to the east-facing ones though.
                 bodyFrames *= 3;
             }
-            // Special logic for APC-types with unload frames.
+            // Special logic for carrier types with unload frames.
             if ((frameUsage & FrameUsage.HasUnloadFrames) != FrameUsage.None)
             {
                 if (unit.Type.IsAircraft)
@@ -990,38 +959,39 @@ namespace MobiusEditor.Render
                 string turretName = unit.Type.Turret ?? unit.Type.Name;
                 string turret2Name = unit.Type.HasDoubleTurret ? unit.Type.SecondTurret ?? unit.Type.Turret ?? unit.Type.Name : null;
                 int turret1Icon = 0;
-                int turret2Icon = 0;
+                int turret2Icon = -1;
                 if ((turrUsage & FrameUsage.Frames01Single) != FrameUsage.None)
                 {
                     turret1Icon = 0;
-                    turret2Icon = 0;
                 }
                 else if ((turrUsage & FrameUsage.Frames08Cardinal) != FrameUsage.None)
                 {
                     // Never used for a turret, but whatever.
                     turret1Icon = ((BodyShape[Facing32[unit.Direction.ID]] + 2) / 4) & 0x07;
-                    turret2Icon = turret1Icon;
                 }
                 else if ((turrUsage & FrameUsage.Frames16Simple) != FrameUsage.None)
                 {
                     turret1Icon = BodyShape[Facing16[unit.Direction.ID] * 2] / 2;
-                    turret2Icon = turret1Icon;
                 }
                 else if ((turrUsage & FrameUsage.Frames16Symmetrical) != FrameUsage.None)
                 {
-                    // Special case for 16-frame rotation saved as 8-frame because it is symmetrical and thus the second half of the frames is the same (MGG)
+                    // Special case for 16-frame rotation saved as 8-frame because it is symmetrical and thus the second half of the frames is the same.
+                    // This is normally not used or units, but exists for the turret of the mobile gap generator.
                     turret1Icon = (BodyShape[Facing32[unit.Direction.ID]] / 2) & 7;
-                    turret2Icon = turret1Icon;
                 }
                 else if ((turrUsage & FrameUsage.Frames32Full) != FrameUsage.None)
                 {
                     turret1Icon = BodyShape[Facing32[unit.Direction.ID]];
-                    turret2Icon = turret1Icon;
                 }
                 else if ((turrUsage & FrameUsage.Rotor) != FrameUsage.None)
                 {
                     turret1Icon = (unit.Direction.ID >> 5) % 2 == 1 ? 9 : 5;
                     turret2Icon = (unit.Direction.ID >> 5) % 2 == 1 ? 8 : 4;
+                }
+                // If not explicitly set, default to the same as turret 1.
+                if (turret2Icon == -1)
+                {
+                    turret2Icon = turret1Icon;
                 }
                 // If same as body name, add body frames.
                 turret1Icon = unit.Type.Name.Equals(turretName, StringComparison.OrdinalIgnoreCase) ? bodyFrames + turret1Icon : turret1Icon;
@@ -1164,6 +1134,7 @@ namespace MobiusEditor.Render
                 // Always paint flags as opaque.
                 //transparencyModifier = 1.0f;
             }
+            // Offset is not part of this id; even though the painted result looks different, the original fetched image remains the same.
             string id = "waypoint_" + tileGraphics + "_icn" + icon + "_x" + sizeMultiplier + "_mpid" + mpId;
             image = cacheManager.GetImage(id);
             if (image == null)
@@ -1813,26 +1784,38 @@ namespace MobiusEditor.Render
             }
         }
 
-        public static void RenderWaypointFlags(Graphics graphics, GameInfo gameInfo, Map map, Rectangle visibleCells, Size tileSize, ShapeCacheManager cacheManager)
+        /// <summary>
+        /// Renders the flag waypoints
+        /// </summary>
+        /// <param name="graphics">Graphics object to render to.</param>
+        /// <param name="gameInfo">GameInfo of the current plygin's game type</param>
+        /// <param name="map">Map to read waypoints, metrics and flag colors from.</param>
+        /// <param name="visibleCells">Visible cells to render.</param>
+        /// <param name="tileSize">Tile size.</param>
+        /// <param name="cacheManager">Cache manager, if applicable.</param>
+        /// <returns>The indices of all detected flag waypoints.</returns>
+        public static HashSet<int> RenderWaypointFlags(Graphics graphics, GameInfo gameInfo, Map map, Rectangle visibleCells, Size tileSize, ShapeCacheManager cacheManager)
         {
-            // Re-render flags on top of football areas.
             List<Waypoint> flagWayPoints = new List<Waypoint>();
+            HashSet<int> foundFlags = new HashSet<int>();
             Dictionary<int, int> flagOverlapMpCheck = new Dictionary<int, int>();
             Dictionary<Waypoint, int> flagOffsets = new Dictionary<Waypoint, int>();
             // Get all waypoints. Ignore the preview if it is on the same cell as the same actual waypoint.
             // Preview waypoint is always only one, and added at the end, so a sequential run always works.
-            foreach (Waypoint waypoint in map.Waypoints)
+            for (int i = 0; i < map.Waypoints.Length; ++i)
             {
+                Waypoint waypoint = map.Waypoints[i];
                 int mpId = Waypoint.GetMpIdFromFlag(waypoint.Flag);
-                if (waypoint.Point.HasValue && mpId >= 0 && visibleCells.Contains(waypoint.Point.Value)
-                    && map.Metrics.GetCell(waypoint.Point.Value, out int cell))
+                if (waypoint.Point.HasValue && mpId >= 0 && map.Metrics.GetCell(waypoint.Point.Value, out int cell))
                 {
                     bool alreadyExists = flagOverlapMpCheck.TryGetValue(mpId, out int mpCell) && cell == mpCell;
-                    if (!alreadyExists)
+                    if (!alreadyExists && visibleCells.Contains(waypoint.Point.Value))
                     {
                         flagWayPoints.Add(waypoint);
                         flagOverlapMpCheck[mpId] = cell;
                     }
+                    // Added regardless of "already exists" checks
+                    foundFlags.Add(i);
                 }
             }
             // Create offsets if multiple flags are on the same cell.
@@ -1860,6 +1843,7 @@ namespace MobiusEditor.Render
                 flagOffsets.TryGetValue(wp, out int offset);
                 RenderWaypoint(gameInfo, false, tileSize, flagColors, wp, wp.IsPreview ? Globals.PreviewAlphaFloat : 1.0f, offset, cacheManager).Item2(graphics);
             }
+            return foundFlags;
         }
 
         public static void RenderAllFakeBuildingLabels(Graphics graphics, GameInfo gameInfo, Map map, Rectangle visibleCells, Size tileSize)
