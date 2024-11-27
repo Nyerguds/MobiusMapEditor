@@ -1917,6 +1917,18 @@ namespace MobiusEditor.TiberianDawn
                     modified = true;
                     continue;
                 }
+                // Do this here, before House or Trigger, since those get ignored if it's a wall type.
+                if (buildingType.IsWall && !Globals.AllowWallBuildings)
+                {
+                    OverlayType wall = Map.OverlayTypes.Where(t => t.Equals(kvp.Value)).FirstOrDefault();
+                    if (wall != null)
+                    {
+                        errors.Add(string.Format("Structure '{0}' on cell '{1}' is a wall type. It will be treated as wall, not as building.", buildingType.Name, cell));
+                        Map.Overlay[cell] = new Overlay() { Type = wall, Icon = 0 };
+                        modified = true;
+                        continue;
+                    }
+                }
                 int dirValue;
                 if (!int.TryParse(tokens[4], out dirValue))
                 {

@@ -135,7 +135,6 @@ namespace MobiusEditor.Model
             {
                 return string.Equals(this.Name, str, StringComparison.OrdinalIgnoreCase);
             }
-
             return base.Equals(obj);
         }
 
@@ -169,11 +168,7 @@ namespace MobiusEditor.Model
             using (Graphics g = Graphics.FromImage(th))
             {
                 int tilenr = this.ForceTileNr == -1 ? 0 : this.ForceTileNr;
-                Overlay mockOverlay = new Overlay()
-                {
-                    Type = this,
-                    Icon = tilenr,
-                };
+                Overlay mockOverlay = new Overlay() { Type = this, Icon = tilenr };
                 MapRenderer.SetRenderSettings(g, Globals.PreviewSmoothScale);
                 MapRenderer.RenderOverlay(gameInfo, Point.Empty, null, Globals.PreviewTileSize, Globals.PreviewTileScale, mockOverlay, false).Item2(g);
             }

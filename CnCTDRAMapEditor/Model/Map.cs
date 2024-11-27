@@ -680,10 +680,8 @@ namespace MobiusEditor.Model
             }
             if (this.invalidateLayers.TryGetValue(MapLayerFlag.Walls, out locations))
             {
-                this.UpdateWallOverlays(locations);
-            }
-            if (Globals.AllowWallBuildings && this.invalidateLayers.TryGetValue(MapLayerFlag.Buildings, out locations))
-            {
+                // Not sure if needed; Buildings_OccupierAdded and Buildings_OccupierRemoved take care of this, since
+                // adding a wall overlay triggers adding it to the buildings too.
                 this.UpdateWallOverlays(locations);
             }
             if (this.invalidateLayers.TryGetValue(MapLayerFlag.Overlay, out locations))
@@ -1431,6 +1429,7 @@ namespace MobiusEditor.Model
                 map.Buildings.Add(location, building);
             }
             map.TeamTypes.AddRange(this.TeamTypes);
+            // Global update of all things that need updating like wall connections and resource density and such.
             map.EndUpdate();
             return map;
         }
@@ -2045,7 +2044,6 @@ namespace MobiusEditor.Model
             }
             if (e.Occupier is Building building)
             {
-                //this.Technos.Add(e.Location, e.Occupier, building.Type.BaseOccupyMask);
                 this.AddBibs(e.Location, building);
                 if (building.Type.IsWall)
                 {
@@ -2053,10 +2051,6 @@ namespace MobiusEditor.Model
                     toRefresh.Inflate(1, 1);
                     this.UpdateWallOverlays(toRefresh.Points().ToHashSet());
                 }
-            }
-            else
-            {
-                //this.Technos.Add(e.Location, e.Occupier);
             }
         }
 

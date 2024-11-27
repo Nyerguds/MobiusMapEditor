@@ -266,7 +266,6 @@ namespace MobiusEditor.Tools
                 }
             }
             rectangle.Inflate(1, 1);
-            //map.UpdateConcreteOverlays(new HashSet<Point>(rectangle.Points()));
             mapPanel.Invalidate(map, rectangle);
             Update();
         }
