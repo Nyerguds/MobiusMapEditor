@@ -642,9 +642,6 @@ namespace MobiusEditor.TiberianDawn
             CellGrid<Template> templates = ReadBinData(fileContents, filename, err, ref mod);            
             if (checkN64 && fileContents.Length == binLen)
             {
-                CellGrid<Template> templatesN64;
-                List<string> errN64 = new List<string>();
-                bool modN64 = modified;
                 int normalType = 0;
                 int n64Type = 0;
                 for (int i = 0; i < binLen; i += 2)
@@ -661,9 +658,11 @@ namespace MobiusEditor.TiberianDawn
                 }
                 if (normalType == 0 && n64Type > 0)
                 {
-                    templatesN64 = ReadN64MapData(fileContents, filename, errN64, ref modN64);
+                    List<string> errN64 = new List<string>();
+                    bool modN64 = modified;
+                    CellGrid<Template> templatesN64 = ReadN64MapData(fileContents, filename, errN64, ref modN64);
                     // Went better than identifying PC format; use this one.
-                    if (errN64.Count < err.Count)
+                    if (templatesN64 != null && errN64.Count < err.Count)
                     {
                         templates = templatesN64;
                         err = errN64;
@@ -691,15 +690,18 @@ namespace MobiusEditor.TiberianDawn
             using (BinaryReader binReader = new BinaryReader(ms, Encoding.UTF8, true))
             {
                 long mapLen = mapData.Length;
-                if ((!isMegaMap && mapLen == 0x2000) || (isMegaMap && mapLen % 4 == 0))
+                if (!isMegaMap && mapLen == 0x2000)
                 {
-                    errors.AddRange(!isMegaMap ? LoadBinaryClassic(binReader, templates, ref modified) : LoadBinaryMega(binReader, ref modified));
+                    errors.AddRange(LoadBinaryClassic(binReader, templates, ref modified));
+                }
+                else if (isMegaMap && mapLen % 4 == 0)
+                {
+                    errors.AddRange(LoadBinaryMega(binReader, templates, ref modified));
                 }
                 else
                 {
                     errors.Add(String.Format("'{0}' does not have the correct size for a " + this.GameInfo.Name + " .bin file.", filename));
                     modified = true;
-                    templates.Clear();
                 }
             }
             return templates;
@@ -714,7 +716,7 @@ namespace MobiusEditor.TiberianDawn
             {
                 errors.Add(String.Format("'{0}' does not have the correct size for a N64 " + this.GameInfo.Name + " .map file.", filename));
                 modified = true;
-                Map.Templates.Clear();
+                return null;
             }
             bool isDesert = TheaterTypes.Desert.Name.Equals(Map.Theater?.Name, StringComparison.OrdinalIgnoreCase);
             Dictionary<int, MapCellN64> mapping = isDesert ? MapCellN64.DESERT_MAPPING : MapCellN64.TEMPERATE_MAPPING;
@@ -2457,10 +2459,10 @@ namespace MobiusEditor.TiberianDawn
             return errors;
         }
 
-        protected IEnumerable<string> LoadBinaryMega(BinaryReader reader, ref bool modified)
+        protected IEnumerable<string> LoadBinaryMega(BinaryReader reader, CellGrid<Template> target, ref bool modified)
         {
             List<string> errors = new List<string>();
-            Map.Templates.Clear();
+            target.Clear();
             TemplateType[] templateTypes = GetTemplateTypesAsArray();
             long dataLen = reader.BaseStream.Length;
             int mapLen = Map.Metrics.Length;
@@ -2491,7 +2493,7 @@ namespace MobiusEditor.TiberianDawn
                 byte typeValue = reader.ReadByte();
                 byte iconValue = reader.ReadByte();
                 TemplateType templateType = ChecKTemplateType(templateTypes, typeValue, iconValue, cell, x, y, errors, ref modified);
-                Map.Templates[y,x] = (templateType != null) ? new Template { Type = templateType, Icon = iconValue } : null;
+                target[y,x] = (templateType != null) ? new Template { Type = templateType, Icon = iconValue } : null;
             }
             return errors;
         }
