@@ -678,12 +678,13 @@ Released on 22 Sep 2024 at 15:00 GMT
 Unreleased
 
 * Added the ability to choose which games to load with the "EnabledGames" setting, to allow the editor to be bundled with specific games without requiring the files of others.
-* Fixed bug that prevented overlap outlines from working on terrain objects with an extra cell that only contained shadow.
+* Fixed bug that prevented Tiberian Dawn and Sole Survivor maps from opening from the .bin file.
+* Fixed bug that prevented overlap outlines from working on terrain objects that had any cells that only contained shadow.
 * Added a new overlap detection logic for objects of the Terrain, Building and Overlay types that only gives them an outline if at least 50% of their non-shadow graphics (as determined by infantry sub-positions) are considered overlapped.
 * Fixed bug that occasionally showed building priority as "0" on preview buildings if they showed an overlap outline.
 * Added option "IgnoreShadowOverlap" to not draw overlap outlines on objects that are only overlapped by shadows.
 * Added option "EnforceTriggerTypes" that can be disabled to allow any triggers on any object types. This is mainly for research purposes.
-* Fixed bug that when the option to show crates on top is enabled, they were still outlined by the "outlines on overlapped objects" function.
+* Fixed bug that when the option to show crates on top is enabled, they were still outlined by the "outlines on overlapped objects" function, despite never being overlapped.
 * Removed randomness from RA resources on save, to optimise compression of the OverlayPack section. Both the editor and the game re-apply it on load anyway.
 * Fixed bug where opening and confirming the map setting without making any changes would clear the map's "modified" status.
 * Fixed crash when publishing a freshly made new map.
