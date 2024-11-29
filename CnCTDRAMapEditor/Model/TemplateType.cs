@@ -91,6 +91,8 @@ namespace MobiusEditor.Model
         private bool extraTilesFoundOn1x1;
         public bool IsRandom => (this.extraTilesFoundOn1x1 || (this.Flag & TemplateTypeFlag.RandomCell) != TemplateTypeFlag.None)
                                     && this.IconWidth == 1 && this.IconHeight == 1;
+        public bool IsGroup => (this.Flag & TemplateTypeFlag.Group) == TemplateTypeFlag.Group;
+        public bool IsGrouped => (this.Flag & TemplateTypeFlag.IsGrouped) == TemplateTypeFlag.IsGrouped;
 
         /// <summary>
         /// On template types with the 'Group' flag, this needs to contains the list of all the tiles that are part of the group.
@@ -106,7 +108,7 @@ namespace MobiusEditor.Model
         public Point EquivalentOffset { get; private set; } = Point.Empty;
 
         /// <summary>
-        /// Creates a TemplateType object.
+        /// Creates a TemplateType object. Not public, since the real constructor should always be the one with the default land type mapping.
         /// </summary>
         /// <param name="id">Numeric id in the game map data.</param>
         /// <param name="name">Name of the associated graphics.</param>
@@ -115,7 +117,7 @@ namespace MobiusEditor.Model
         /// <param name="landsDefault">Defaults for the terrain types for each cell. See <see cref="LandTypesMapping"/> for the characters to use.</param>
         /// <param name="flag">Indicates special terrain types.</param>
         /// <param name="maskOverrides">Overrides the shape for different theaters. An empty string is used as default.</param>
-        public TemplateType(ushort id, string name, int iconWidth, int iconHeight, string landsDefault, TemplateTypeFlag flag, Dictionary<string, bool[,]> maskOverrides)
+        private TemplateType(ushort id, string name, int iconWidth, int iconHeight, string landsDefault, TemplateTypeFlag flag, Dictionary<string, bool[,]> maskOverrides)
         {
             ID = id;
             Name = name;
@@ -207,6 +209,17 @@ namespace MobiusEditor.Model
         }
 
         /// <summary>
+        /// Creates a TemplateType object as 1x1 containing multiple tiles.
+        /// </summary>
+        /// <param name="id">Numeric id in the game map data.</param>
+        /// <param name="name">Name of the associated graphics.</param>
+        /// <param name="landType">Land type to apply to all cells of this template type.</param>
+        public TemplateType(ushort id, string name, char landType)
+            : this(id, name, 1, 1, landType.ToString(), TemplateTypeFlag.RandomCell, null)
+        {
+        }
+
+        /// <summary>
         /// Creates a TemplateType object as 1x1 containing multiple tiles. If specified, can be used as "group" of other 1x1 tiles.
         /// </summary>
         /// <param name="id">Numeric id in the game map data.</param>
@@ -215,7 +228,7 @@ namespace MobiusEditor.Model
         /// <param name="asGroup">True to create this tile as group for containing other 1x1 types. Needs 'containedTiles' to be filled in.</param>
         /// <param name="containedTiles">The tiles contained in this group entry.</param>
         public TemplateType(ushort id, string name, String landsDefault, bool asGroup, string[] containedTiles)
-            : this(id, name, 1, 1, landsDefault, asGroup ? TemplateTypeFlag.Group : TemplateTypeFlag.RandomCell)
+            : this(id, name, 1, 1, landsDefault, asGroup ? TemplateTypeFlag.Group : TemplateTypeFlag.RandomCell, null)
         {
             if (asGroup)
             {
@@ -224,7 +237,7 @@ namespace MobiusEditor.Model
         }
 
         /// <summary>
-        /// Creates a TemplateType object.
+        /// Creates a TemplateType object that has a list of equivalent tiles.
         /// </summary>
         /// <param name="id">Numeric id in the game map data.</param>
         /// <param name="name">Name of the associated graphics.</param>
@@ -239,7 +252,7 @@ namespace MobiusEditor.Model
         }
 
         /// <summary>
-        /// Creates a TemplateType object.
+        /// Creates a TemplateType object that has a list of equivalent tiles.
         /// </summary>
         /// <param name="id">Numeric id in the game map data.</param>
         /// <param name="name">Name of the associated graphics.</param>

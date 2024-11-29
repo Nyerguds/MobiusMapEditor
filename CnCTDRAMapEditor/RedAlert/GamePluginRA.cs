@@ -505,7 +505,7 @@ namespace MobiusEditor.RedAlert
 
         public static bool CheckForRAMap(INI contents)
         {
-            return INITools.CheckForIniInfo(contents, "MapPack");
+            return INITools.CheckForIniInfo(contents, "MapPack") && INITools.CheckForIniInfo(contents, "Basic", "NewINIFormat", "3");
         }
 
         static GamePluginRA()
@@ -1238,7 +1238,7 @@ namespace MobiusEditor.RedAlert
                 return;
             }
             Map.Templates.Clear();
-            byte[] data = DecompressLCWSection(mapPackSection, 3, errors, ref modified);
+            byte[] data = INITools.DecompressLCWSection(mapPackSection, Map.Metrics, 3, errors, ref modified);
             if (data == null)
             {
                 return;
@@ -1246,11 +1246,7 @@ namespace MobiusEditor.RedAlert
             int width = Map.Metrics.Width;
             int height = Map.Metrics.Height;
             // Dump into array, so no lookups are needed.
-            TemplateType[] templateTypes = new TemplateType[0x10000];
-            foreach (TemplateType tt in Map.TemplateTypes)
-            {
-                templateTypes[tt.ID] = tt;
-            }
+            TemplateType[] templateTypes = Map.GetMapTemplateTypes();
             // Amount of tile 255 detected outside map bounds.
             int oldClearCount = 0;
             int oldClearOutside = 0;
@@ -1262,44 +1258,47 @@ namespace MobiusEditor.RedAlert
                     for (int x = 0; x < width; ++x)
                     {
                         ushort typeValue = reader.ReadUInt16();
-                        TemplateType templateType = templateTypes[typeValue];
-                        if (templateType == null && typeValue != 0xFFFF)
+                        TemplateType templateType = typeValue >= templateTypes.Length ? null : templateTypes[typeValue];
+                        if (templateType == null)
                         {
-                            errors.Add(String.Format("Unknown template value {0:X4} at cell {1} [{2},{3}]; clearing.", typeValue, cellNr, x, y));
-                            modified = true;
-                        }
-                        else if (templateType != null)
-                        {
-                            if (templateType.Flag.HasFlag(TemplateTypeFlag.Clear) || templateType.Flag.HasFlag(TemplateTypeFlag.Group))
+                            if (typeValue != 0xFFFF)
                             {
-                                // No explicitly set Clear terrain allowed. Also no explicitly set versions allowed of the "group" dummy entries.
+                                errors.Add(String.Format("Unknown template value {0:X4} at cell {1} [{2},{3}]; clearing.", typeValue, cellNr, x, y));
+                                modified = true;
+                            }
+                            Map.Templates[y, x] = null;
+                            cellNr++;
+                            continue;
+                        }
+                        if (templateType.Flag.HasFlag(TemplateTypeFlag.Clear) || templateType.Flag.HasFlag(TemplateTypeFlag.Group))
+                        {
+                            // No explicitly set Clear terrain allowed. Also no explicitly set versions allowed of the "group" dummy entries.
+                            templateType = null;
+                        }
+                        else if (!templateType.ExistsInTheater)
+                        {
+                            if (typeValue == 255)
+                            {
+                                if (Globals.ConvertRaObsoleteClear)
+                                {
+                                    oldClearCount++;
+                                }
+                            }
+                            else if (Globals.FilterTheaterObjects)
+                            {
+                                errors.Add(String.Format("Template '{0}' at cell {1} [{2},{3}] is not available in the set theater; clearing.", templateType.Name.ToUpper(), cellNr, x, y));
+                                modified = true;
                                 templateType = null;
                             }
-                            else if (!templateType.ExistsInTheater)
+                        }
+                        else if (Globals.ConvertRaObsoleteClear && typeValue == 255)
+                        {
+                            // If this point is reached, 255 is allowed, meaning we're in Interior theater.
+                            // Count the amount of tiles outside the map bounds, for the 80% check.
+                            oldClearCount++;
+                            if (!Map.Bounds.Contains(x, y))
                             {
-                                if (typeValue == 255)
-                                {
-                                    if (Globals.ConvertRaObsoleteClear)
-                                    {
-                                        oldClearCount++;
-                                    }
-                                }
-                                else if (Globals.FilterTheaterObjects)
-                                {
-                                    errors.Add(String.Format("Template '{0}' at cell {1} [{2},{3}] is not available in the set theater; clearing.", templateType.Name.ToUpper(), cellNr, x, y));
-                                    modified = true;
-                                    templateType = null;
-                                }
-                            }
-                            else if (Globals.ConvertRaObsoleteClear && typeValue == 255)
-                            {
-                                // If this point is reached, 255 is allowed, meaning we're in Interior theater.
-                                // Count the amount of tiles outside the map bounds, for the 80% check.
-                                oldClearCount++;
-                                if (!Map.Bounds.Contains(x, y))
-                                {
-                                    oldClearOutside++;
-                                }
+                                oldClearOutside++;
                             }
                         }
                         Map.Templates[y, x] = (templateType != null) ? new Template { Type = templateType } : null;
@@ -1357,7 +1356,7 @@ namespace MobiusEditor.RedAlert
                 }
             }
             // On theaters where tile 255 is an existing tile, test if more than 80% of the area outside the map is tile 255.
-            bool tileFFValidForTheater = templateTypes[0xFF]?.ExistsInTheater ?? false;
+            bool tileFFValidForTheater = templateTypes.Length > 0xFF && (templateTypes[0xFF]?.ExistsInTheater ?? false);
             if (oldClearCount > 0 && (!tileFFValidForTheater || oldClearOutside > (width * height - Map.Bounds.Width * Map.Bounds.Height) * 8 / 10))
             {
                 TemplateType clear = Map.TemplateTypes.Where(tt => tt.Flag.HasFlag(TemplateTypeFlag.Clear)).FirstOrDefault();
@@ -1369,7 +1368,13 @@ namespace MobiusEditor.RedAlert
                 if (!clearIsPassable)
                 {
                     // Don't bother doing this if clear terrain is passable; then this data is never used.
-                    clearFallBack = Map.TemplateTypes.Where(tt => tt.ExistsInTheater && tt.IconWidth == 1 && tt.IconHeight == 1 && tt.LandTypes[0] == LandType.Clear).FirstOrDefault();
+                    clearFallBack = Map.TemplateTypes.Where(tt => tt.ExistsInTheater && tt.IconWidth == 1 && tt.IconHeight == 1
+                        && tt.LandTypes[0] == LandType.Clear && (tt.Flag & TemplateTypeFlag.DefaultFill) == TemplateTypeFlag.DefaultFill).FirstOrDefault();
+                    if (clearFallBack == null)
+                    {
+                        clearFallBack = Map.TemplateTypes.Where(tt => tt.ExistsInTheater && tt.IconWidth == 1 && tt.IconHeight == 1
+                            && tt.LandTypes[0] == LandType.Clear).FirstOrDefault();
+                    }
                     Rectangle mapBounds = Map.Bounds;
                     Rectangle mapBorderBounds = mapBounds;
                     Rectangle mapFullBounds = Map.Metrics.Bounds;
@@ -2473,7 +2478,7 @@ namespace MobiusEditor.RedAlert
                 return;
             }
             Map.Overlay.Clear();
-            byte[] data = DecompressLCWSection(overlayPackSection, 1, errors, ref modified);
+            byte[] data = INITools.DecompressLCWSection(overlayPackSection, Map.Metrics, 1, errors, ref modified);
             if (data == null)
             {
                 return;
@@ -3614,45 +3619,7 @@ namespace MobiusEditor.RedAlert
                 }
             }
             SaveIniBriefing(ini);
-            using (MemoryStream stream = new MemoryStream())
-            {
-                using (BinaryWriter writer = new BinaryWriter(stream, Encoding.UTF8, true))
-                {
-                    for (int y = 0; y < Map.Metrics.Height; ++y)
-                    {
-                        for (int x = 0; x < Map.Metrics.Width; ++x)
-                        {
-                            Template template = Map.Templates[y, x];
-                            if (template != null && (template.Type.Flag & TemplateTypeFlag.Clear) == 0)
-                            {
-                                writer.Write((ushort)template.Type.ID);
-                            }
-                            else
-                            {
-                                writer.Write(ushort.MaxValue);
-                            }
-                        }
-                    }
-                    for (int y = 0; y < Map.Metrics.Height; ++y)
-                    {
-                        for (int x = 0; x < Map.Metrics.Width; ++x)
-                        {
-                            Template template = Map.Templates[y, x];
-                            if (template != null && (template.Type.Flag & TemplateTypeFlag.Clear) == 0)
-                            {
-                                writer.Write((byte)template.Icon);
-                            }
-                            else
-                            {
-                                writer.Write((byte)0);
-                            }
-                        }
-                    }
-                }
-                stream.Flush();
-                ini.Sections.Remove("MapPack");
-                CompressLCWSection(ini.Sections.Add("MapPack"), stream.ToArray());
-            }
+            SaveMapPack(ini);
             byte? goldToUse = (byte?)Map.OverlayTypes.FirstOrDefault(ovl => ovl.IsTiberiumOrGold)?.ID;
             byte? gemToUse = (byte?)Map.OverlayTypes.FirstOrDefault(ovl => ovl.IsGem)?.ID;
             using (MemoryStream stream = new MemoryStream())
@@ -3684,7 +3651,7 @@ namespace MobiusEditor.RedAlert
                 }
                 stream.Flush();
                 ini.Sections.Remove("OverlayPack");
-                CompressLCWSection(ini.Sections.Add("OverlayPack"), stream.ToArray());
+                INITools.CompressLCWSection(ini.Sections.Add("OverlayPack"), stream.ToArray());
             }
         }
 
@@ -3780,6 +3747,49 @@ namespace MobiusEditor.RedAlert
                 }
             }
             return briefingSection;
+        }
+
+        private void SaveMapPack(INI ini)
+        {
+            using (MemoryStream stream = new MemoryStream())
+            {
+                using (BinaryWriter writer = new BinaryWriter(stream, Encoding.UTF8, true))
+                {
+                    for (int y = 0; y < Map.Metrics.Height; ++y)
+                    {
+                        for (int x = 0; x < Map.Metrics.Width; ++x)
+                        {
+                            Template template = Map.Templates[y, x];
+                            if (template != null && (template.Type.Flag & TemplateTypeFlag.Clear) == 0)
+                            {
+                                writer.Write((ushort)template.Type.ID);
+                            }
+                            else
+                            {
+                                writer.Write(ushort.MaxValue);
+                            }
+                        }
+                    }
+                    for (int y = 0; y < Map.Metrics.Height; ++y)
+                    {
+                        for (int x = 0; x < Map.Metrics.Width; ++x)
+                        {
+                            Template template = Map.Templates[y, x];
+                            if (template != null && (template.Type.Flag & TemplateTypeFlag.Clear) == 0)
+                            {
+                                writer.Write((byte)template.Icon);
+                            }
+                            else
+                            {
+                                writer.Write((byte)0);
+                            }
+                        }
+                    }
+                }
+                stream.Flush();
+                ini.Sections.Remove("MapPack");
+                INITools.CompressLCWSection(ini.Sections.Add("MapPack"), stream.ToArray());
+            }
         }
 
         private void SaveMapPreview(Stream stream, bool renderAll)
@@ -5226,85 +5236,6 @@ namespace MobiusEditor.RedAlert
                     building.House = basePlayer;
                 }
             }
-        }
-
-        private void CompressLCWSection(INISection section, byte[] uncompressedBytes)
-        {
-            using (MemoryStream stream = new MemoryStream())
-            using (BinaryWriter writer = new BinaryWriter(stream))
-            {
-                foreach (byte[] uncompressedChunk in uncompressedBytes.Split(8192))
-                {
-                    byte[] compressedChunk = WWCompression.LcwCompress(uncompressedChunk);
-                    writer.Write((ushort)compressedChunk.Length);
-                    writer.Write((ushort)uncompressedChunk.Length);
-                    writer.Write(compressedChunk);
-                }
-                writer.Flush();
-                stream.Position = 0;
-                string[] values = Convert.ToBase64String(stream.ToArray()).Split(70).ToArray();
-                for (int i = 0; i < values.Length; ++i)
-                {
-                    section[(i + 1).ToString()] = values[i];
-                }
-            }
-        }
-
-        private byte[] DecompressLCWSection(INISection section, int bytesPerCell, List<string> errors, ref bool modified)
-        {
-            StringBuilder sb = new StringBuilder();
-            foreach (KeyValuePair<string, string> kvp in section)
-            {
-                sb.Append(kvp.Value);
-            }
-            byte[] compressedBytes;
-            try
-            {
-                compressedBytes = Convert.FromBase64String(sb.ToString());
-            }
-            catch (FormatException)
-            {
-                errors.Add("Failed to unpack [" + section.Name + "] from Base64.");
-                modified = true;
-                return null;
-            }
-            int readPtr = 0;
-            int writePtr = 0;
-            byte[] decompressedBytes = new byte[Map.Metrics.Width * Map.Metrics.Height * bytesPerCell];
-            while ((readPtr + 4) <= compressedBytes.Length)
-            {
-                uint uLength;
-                using (BinaryReader reader = new BinaryReader(new MemoryStream(compressedBytes, readPtr, 4)))
-                {
-                    uLength = reader.ReadUInt32();
-                }
-                int outputLength = (int)((uLength >> 16) & 0xFFFF);
-                int length = (int)(uLength & 0xFFFF);
-                readPtr += 4;
-                byte[] dest = new byte[outputLength];
-                int readPtr2 = readPtr;
-                int decompressed;
-                try
-                {
-                    decompressed = WWCompression.LcwDecompress(compressedBytes, ref readPtr2, dest, 0);
-                }
-                catch
-                {
-                    errors.Add("Error decompressing ["+ section.Name + "].");
-                    modified = true;
-                    return decompressedBytes;
-                }
-                if (writePtr + decompressed > decompressedBytes.Length)
-                {
-                    errors.Add("Failed to decompress [" + section.Name + "]: data exceeds map size.");
-                    modified = true;
-                    return decompressedBytes;
-                }
-                Array.Copy(dest, 0, decompressedBytes, writePtr, decompressed);
-                readPtr += length;
-                writePtr += decompressed;
-            }
-            return decompressedBytes;
         }
 
         #region IDisposable Support

@@ -135,7 +135,7 @@ namespace MobiusEditor.Utility
         }
 
         /// <summary>
-        /// Returns the mix path as a UI-viewable string, with " -&gt; " arrows indicating the internal hierarchy, and any IDs
+        /// Returns the mix path as a UI-viewable string, with " → " arrows indicating the internal hierarchy, and any IDs
         /// enclosed in square brackets. As final component, it returns the first found filename in the filename parts of the mix path block.
         /// </summary>
         /// <param name="path">Mix file path block, in the format "x:\path\mixfile.mix;submix1.mix;submix2.mix?file.ini;file.bin"</param>
@@ -148,7 +148,7 @@ namespace MobiusEditor.Utility
         }
 
         /// <summary>
-        /// Returns the mix path as a UI-viewable string, with " -&gt; " arrows indicating the internal hierarchy, and any IDs
+        /// Returns the mix path as a UI-viewable string, with " → " arrows indicating the internal hierarchy, and any IDs
         /// enclosed in square brackets. As final component, it returns the first found filename in the filename parts of the mix path block.
         /// </summary>
         /// <param name="path">Mix file path block, in the format "x:\path\mixfile.mix;submix1.mix;submix2.mix?file.ini;file.bin"</param>

@@ -692,3 +692,4 @@ Unreleased
 * The editor title now explicitly shows when the editor is connected to Steam.
 * The editor will now only connect to Steam after performing all the required map validations.
 * Added the ability to open the Nintendo 64 map type for Tiberian Dawn.
+* When removing the obsolete old "clear" terrain in RA interior maps, the generated open areas for allowing reinforcements now use the default dark floor type, rather than the first-found passable 1x1 tile.

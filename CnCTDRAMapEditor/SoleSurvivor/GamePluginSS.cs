@@ -248,7 +248,7 @@ namespace MobiusEditor.SoleSurvivor
                 SaveIniStructures(ini);
                 SaveIniAircraft(ini);
             }
-            SaveINITerrain(ini);
+            SaveIniTerrain(ini);
             SaveIniOverlay(ini);
             if (overlayBackup != null)
             {

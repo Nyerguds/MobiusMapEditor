@@ -266,6 +266,24 @@ namespace MobiusEditor.Model
 
         public readonly List<TemplateType> TemplateTypes;
 
+        /// <summary>Returns the template types that can actually exist in map data, excluding group dummies.</summary>
+        /// <returns>An array of template types where each object is at the index of its own ID.</returns>
+        public TemplateType[] GetMapTemplateTypes()
+        {
+            List<TemplateType> valids = TemplateTypes.Where(tt => !tt.IsGroup).ToList();
+            if (valids.Count == 0)
+            {
+                return new TemplateType[0];
+            }
+            int size = valids.Max(tt => tt.ID) + 1;
+            TemplateType[] templateTypes = new TemplateType[size];
+            foreach (TemplateType tt in valids)
+            {
+                templateTypes[tt.ID] = tt;
+            }
+            return templateTypes;
+        }
+
         public HashSet<LandType> UsedLandTypes = new HashSet<LandType>();
 
         public readonly List<TerrainType> TerrainTypes;

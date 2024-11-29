@@ -14,7 +14,9 @@
 using MobiusEditor.Model;
 using System;
 using System.Collections.Generic;
+using System.IO;
 using System.Linq;
+using System.Text;
 
 namespace MobiusEditor.Utility
 {
@@ -207,7 +209,85 @@ namespace MobiusEditor.Utility
                 if (basicSection.Keys.Count() == 0)
                     ini.Sections.Remove(name);
             }
+        }
 
+        public static byte[] DecompressLCWSection(INISection section, CellMetrics metrics, int bytesPerCell, List<string> errors, ref bool modified)
+        {
+            StringBuilder sb = new StringBuilder();
+            foreach (KeyValuePair<string, string> kvp in section)
+            {
+                sb.Append(kvp.Value);
+            }
+            byte[] compressedBytes;
+            try
+            {
+                compressedBytes = Convert.FromBase64String(sb.ToString());
+            }
+            catch (FormatException)
+            {
+                errors.Add("Failed to unpack [" + section.Name + "] from Base64.");
+                modified = true;
+                return null;
+            }
+            int readPtr = 0;
+            int writePtr = 0;
+            byte[] decompressedBytes = new byte[metrics.Width * metrics.Height * bytesPerCell];
+            while ((readPtr + 4) <= compressedBytes.Length)
+            {
+                uint uLength;
+                using (BinaryReader reader = new BinaryReader(new MemoryStream(compressedBytes, readPtr, 4)))
+                {
+                    uLength = reader.ReadUInt32();
+                }
+                int outputLength = (int)((uLength >> 16) & 0xFFFF);
+                int length = (int)(uLength & 0xFFFF);
+                readPtr += 4;
+                byte[] dest = new byte[outputLength];
+                int readPtr2 = readPtr;
+                int decompressed;
+                try
+                {
+                    decompressed = WWCompression.LcwDecompress(compressedBytes, ref readPtr2, dest, 0);
+                }
+                catch
+                {
+                    errors.Add("Error decompressing [" + section.Name + "].");
+                    modified = true;
+                    return decompressedBytes;
+                }
+                if (writePtr + decompressed > decompressedBytes.Length)
+                {
+                    errors.Add("Failed to decompress [" + section.Name + "]: data exceeds map size.");
+                    modified = true;
+                    return decompressedBytes;
+                }
+                Array.Copy(dest, 0, decompressedBytes, writePtr, decompressed);
+                readPtr += length;
+                writePtr += decompressed;
+            }
+            return decompressedBytes;
+        }
+
+        public static void CompressLCWSection(INISection section, byte[] uncompressedBytes)
+        {
+            using (MemoryStream stream = new MemoryStream())
+            using (BinaryWriter writer = new BinaryWriter(stream))
+            {
+                foreach (byte[] uncompressedChunk in uncompressedBytes.Split(8192))
+                {
+                    byte[] compressedChunk = WWCompression.LcwCompress(uncompressedChunk);
+                    writer.Write((ushort)compressedChunk.Length);
+                    writer.Write((ushort)uncompressedChunk.Length);
+                    writer.Write(compressedChunk);
+                }
+                writer.Flush();
+                stream.Position = 0;
+                string[] values = Convert.ToBase64String(stream.ToArray()).Split(70).ToArray();
+                for (int i = 0; i < values.Length; ++i)
+                {
+                    section[(i + 1).ToString()] = values[i];
+                }
+            }
         }
     }
 }

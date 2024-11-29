@@ -535,7 +535,9 @@ namespace MobiusEditor.TiberianDawn
             List<string> errors = new List<string>();
             bool modified = false;
             bool tryCheckSingle = false;
+            bool gotMapPack = false;
             byte[] iniBytes;
+            byte[] binBytes;
             switch (fileType)
             {
                 case FileType.INI:
@@ -559,8 +561,15 @@ namespace MobiusEditor.TiberianDawn
                     errors.AddRange(LoadINI(ini, tryCheckSingle, false, ref modified));
                     if (!File.Exists(binPath))
                     {
-                        errors.Add(String.Format("No .bin file found for file '{0}'. Using empty map.", Path.GetFileName(path)));
-                        Map.Templates.Clear();
+                        if (INITools.CheckForIniInfo(ini, "MapPack"))
+                        {
+                            ReadMapFromIni(ini, errors, ref modified);
+                        }
+                        else
+                        {
+                            errors.Add(String.Format("No .bin file found for file '{0}'. Using empty map.", Path.GetFileName(path)));
+                            Map.Templates.Clear();
+                        }
                     }
                     else
                     {
@@ -575,47 +584,73 @@ namespace MobiusEditor.TiberianDawn
                     {
                         string iniFileName = megafile.Where(p => Path.GetExtension(p).ToLower() == ".ini").FirstOrDefault();
                         string binFileName = megafile.Where(p => Path.GetExtension(p).ToLower() == ".bin").FirstOrDefault();
-                        if (iniFileName == null || binFileName == null)
+                        if (iniFileName == null)
                         {
-                            throw new ApplicationException("Cannot find the necessary files inside the " + Path.GetFileName(path) + " archive.");
+                            errors.Add("Cannot find the necessary files inside the " + Path.GetFileName(path) + " archive.");
                         }
+                        gotMapPack = false;
                         using (Stream iniStream = megafile.OpenFile(iniFileName))
-                        using (Stream binStream = megafile.OpenFile(binFileName))
                         {
                             iniBytes = iniStream.ReadAllBytes();
                             ParseIniContent(ini, iniBytes, forSole);
+                            if (binFileName == null)
+                            {
+                                gotMapPack = INITools.CheckForIniInfo(ini, "MapPack");
+                                if (!gotMapPack)
+                                {
+                                    errors.Add(String.Format("No .bin file found for file '{0}' inside the archive '{1}'. Using empty map.",
+                                        iniFileName, Path.GetFileName(path)));
+                                }
+                            }
                             errors.AddRange(LoadINI(ini, false, false, ref modified));
-                            ReadMapFromStream(binStream, Path.GetFileName(binFileName), errors, ref modified, false);
+                            if (gotMapPack)
+                            {
+                                ReadMapFromIni(ini, errors, ref modified);
+                            }
+                        }
+                        if (!gotMapPack)
+                        {
+                            using (Stream binStream = megafile.OpenFile(binFileName))
+                            {
+                                ReadMapFromStream(binStream, Path.GetFileName(binFileName), errors, ref modified, false);
+                            }
                         }
                     }
                     break;
                 case FileType.MIX:
                     // uses combined path of "c:\mixfile.mix;submix1.mix;submix2.mix?file.ini;file.bin"
                     // If bin is missing its filename is simply empty or missing.
-                    MixPath.GetComponentsViewable(path, out string[] mixParts, out string[] filenameParts);
+                    string mixAlone = path.Split('?')[0];
+                    string mixViewable = MixPath.GetFileNameReadable(mixAlone, true, null, out _);
+                    gotMapPack = false;
                     iniBytes = MixPath.ReadFile(path, FileType.INI, out MixEntry iniFileEntry);
                     if (iniBytes == null)
                     {
                         // todo maybe allow this to open a map only?
-                        throw new ApplicationException("Cannot find the necessary files inside the archive " + Path.GetFileName(mixParts[0]) + ".");
+                        throw new ApplicationException("Cannot find the necessary files inside the archive " + mixViewable + ".");
                     }
                     ParseIniContent(ini, iniBytes, forSole);
                     tryCheckSingle = !forSole && (iniFileEntry.Name == null || singlePlayRegex.IsMatch(Path.GetFileNameWithoutExtension(iniFileEntry.Name)));
                     errors.AddRange(LoadINI(ini, tryCheckSingle, true, ref modified));
-                    using (MixFile mainMix = MixPath.OpenMixPath(path, FileType.BIN, out MixFile contentMix, out MixEntry fileEntry))
+                    binBytes = MixPath.ReadFile(path, FileType.BIN, out MixEntry binFileEntry);
+                    if (binBytes == null)
                     {
-                        if (mainMix != null)
+                        if (INITools.CheckForIniInfo(ini, "MapPack"))
                         {
-                            using (Stream binStream = contentMix.OpenFile(fileEntry))
-                            {
-                                ReadMapFromStream(binStream, fileEntry.Name ?? fileEntry.IdString, errors, ref modified, false);
-                            }
+                            ReadMapFromIni(ini, errors, ref modified);
                         }
                         else
                         {
-                            errors.Add(String.Format("No .bin file found for file '{0}'. Using empty map.", iniFileEntry.Name ?? iniFileEntry.IdString));
-                            modified = true;
+                            errors.Add(String.Format("No .bin file found for file '{0}' inside the archive '{1}'. Using empty map.",
+                                        iniFileEntry.Name, mixViewable));
                             Map.Templates.Clear();
+                        }
+                    }
+                    else
+                    {
+                        using (MemoryStream ms = new MemoryStream(binBytes))
+                        {
+                            ReadMapFromStream(ms, binFileEntry.Name, errors, ref modified, false);
                         }
                     }
                     break;
@@ -682,7 +717,22 @@ namespace MobiusEditor.TiberianDawn
             }
         }
 
-        private CellGrid<Template> ReadBinData(Byte[] mapData, string filename, List<string> errors, ref bool modified)
+        private void ReadMapFromIni(INI ini, List<string> errors, ref bool modified)
+        {
+            CellGrid<Template> templates = new CellGrid<Template>(Map.Metrics);
+            IEnumerable<string> err = LoadMapPack(ini, templates, ref modified);
+            errors.AddRange(err);
+            Map.Templates.Clear();
+            for (int y = 0; y < Map.Metrics.Height; ++y)
+            {
+                for (int x = 0; x < Map.Metrics.Width; ++x)
+                {
+                    Map.Templates[y, x] = templates[y, x];
+                }
+            }
+        }
+
+        private CellGrid<Template> ReadBinData(byte[] mapData, string filename, List<string> errors, ref bool modified)
         {
             CellGrid<Template> templates = new CellGrid<Template>(Map.Metrics);
             // don't close stream after read; that's the responsibility of the calling code.
@@ -2472,11 +2522,55 @@ namespace MobiusEditor.TiberianDawn
             }
         }
 
+        protected IEnumerable<string> LoadMapPack(INI ini, CellGrid<Template> target, ref bool modified)
+        {
+            List<string> errors = new List<string>();
+            target.Clear();
+            TemplateType[] templateTypes = Map.GetMapTemplateTypes();
+            INISection mapPackSection = ini.Sections.Extract("MapPack");
+            if (mapPackSection == null)
+            {
+                errors.Add("Section \"[MapPack]\" not found!");
+                return errors;
+            }
+            Map.Templates.Clear();
+            const int typeSize = 2;
+            const int iconSize = 1;
+            byte[] data = INITools.DecompressLCWSection(mapPackSection, Map.Metrics, typeSize + iconSize, errors, ref modified);
+            if (data == null)
+            {
+                return errors;
+            }
+            int width = Map.Metrics.Width;
+            int height = Map.Metrics.Height;
+            int indexType = 0;
+            int indexIcon = width * height * typeSize;
+            int cell = 0;
+            for (int y = 0; y < width; ++y)
+            {
+                for (int x = 0; x < width; ++x)
+                {
+                    int typeValue = data[indexType] + (data[indexType + 1] << 8);
+                    if (typeValue == 0xFFFF)
+                    {
+                        typeValue = 0xFF;
+                    }
+                    indexType += typeSize;
+                    int iconValue = data[indexIcon];
+                    indexIcon += iconSize;
+                    TemplateType templateType = ChecKTemplateType(templateTypes, typeValue, iconValue, cell, x, y, errors, ref modified);
+                    target[y, x] = (templateType != null) ? new Template { Type = templateType, Icon = iconValue } : null;
+                    cell++;
+                }
+            }
+            return errors;
+        }
+
         protected IEnumerable<string> LoadBinaryClassic(BinaryReader reader, CellGrid<Template> target, ref bool modified)
         {
             List<string> errors = new List<string>();
             target.Clear();
-            TemplateType[] templateTypes = GetTemplateTypesAsArray();
+            TemplateType[] templateTypes = Map.GetMapTemplateTypes();
             int width = Map.Metrics.Width;
             int height = Map.Metrics.Width;
             int cell = 0;
@@ -2498,7 +2592,7 @@ namespace MobiusEditor.TiberianDawn
         {
             List<string> errors = new List<string>();
             target.Clear();
-            TemplateType[] templateTypes = GetTemplateTypesAsArray();
+            TemplateType[] templateTypes = Map.GetMapTemplateTypes();
             long dataLen = reader.BaseStream.Length;
             int mapLen = Map.Metrics.Length;
             int mapWidth = Map.Metrics.Width;
@@ -2533,51 +2627,43 @@ namespace MobiusEditor.TiberianDawn
             return errors;
         }
 
-        protected TemplateType[] GetTemplateTypesAsArray()
+        protected TemplateType ChecKTemplateType(TemplateType[] templateTypes, int typeValue, int iconValue, int cell, int x, int y, List<string> errors, ref bool modified)
         {
-            TemplateType[] templateTypes = new TemplateType[0x100];
-            foreach (TemplateType tt in Map.TemplateTypes)
+            // Ignore clear terrain
+            if (typeValue == 0xFF)
             {
-                templateTypes[tt.ID] = tt;
+                return null;
             }
-            return templateTypes;
-        }
-
-        protected TemplateType ChecKTemplateType(TemplateType[] templateTypes, byte typeValue, int iconValue, int cell, int x, int y, List<string> errors, ref bool modified)
-        {
-            // This array is 0x100 long so it never gives errors on byte values.
-            TemplateType templateType = templateTypes[typeValue];
             // Prevent loading of illegal tiles.
-            if (templateType != null)
-            {
-                if (templateType.Flag.HasFlag(TemplateTypeFlag.Clear) || templateType.Flag.HasFlag(TemplateTypeFlag.Group))
-                {
-                    // No explicitly set Clear terrain allowed. Also no explicitly set versions allowed of the "group" dummy entries.
-                    templateType = null;
-                }
-                else if (!templateType.ExistsInTheater && Globals.FilterTheaterObjects)
-                {
-                    errors.Add(String.Format("Template '{0}' at cell {1} [{2},{3}] is not available in the set theater; clearing.", templateType.Name.ToUpper(), cell, x, y));
-                    modified = true;
-                    templateType = null;
-                }
-                else if (iconValue >= templateType.NumIcons)
-                {
-                    errors.Add(String.Format("Template '{0}' at cell {1} [{2},{3}] has an icon set ({4}) that is outside its icons range; clearing.", templateType.Name.ToUpper(), cell, x, y, iconValue));
-                    modified = true;
-                    templateType = null;
-                }
-                else if (!templateType.IsRandom && templateType.IconMask != null && !templateType.IconMask[iconValue / templateType.IconWidth, iconValue % templateType.IconWidth])
-                {
-                    errors.Add(String.Format("Template '{0}' at cell {1} [{2},{3}] has an icon set ({4}) that is not part of its placeable cells; clearing.", templateType.Name.ToUpper(), cell, x, y, iconValue));
-                    modified = true;
-                    templateType = null;
-                }
-            }
-            else if (typeValue != 0xFF)
+            TemplateType templateType = typeValue >= templateTypes.Length ? null : templateTypes[typeValue];
+            if (templateType == null)
             {
                 errors.Add(String.Format("Unknown template value {0:X2} at cell {1} [{2},{3}]; clearing.", typeValue, cell, x, y));
                 modified = true;
+                return null;
+            }
+            if (templateType.Flag.HasFlag(TemplateTypeFlag.Clear) || templateType.Flag.HasFlag(TemplateTypeFlag.Group))
+            {
+                // No explicitly set Clear terrain allowed. Also no explicitly set versions allowed of the "group" dummy entries.
+                templateType = null;
+            }
+            else if (!templateType.ExistsInTheater && Globals.FilterTheaterObjects)
+            {
+                errors.Add(String.Format("Template '{0}' at cell {1} [{2},{3}] is not available in the set theater; clearing.", templateType.Name.ToUpper(), cell, x, y));
+                modified = true;
+                templateType = null;
+            }
+            else if (iconValue >= templateType.NumIcons)
+            {
+                errors.Add(String.Format("Template '{0}' at cell {1} [{2},{3}] has an icon set ({4}) that is outside its icons range; clearing.", templateType.Name.ToUpper(), cell, x, y, iconValue));
+                modified = true;
+                templateType = null;
+            }
+            else if (!templateType.IsRandom && templateType.IconMask != null && !templateType.IconMask[iconValue / templateType.IconWidth, iconValue % templateType.IconWidth])
+            {
+                errors.Add(String.Format("Template '{0}' at cell {1} [{2},{3}] has an icon set ({4}) that is not part of its placeable cells; clearing.", templateType.Name.ToUpper(), cell, x, y, iconValue));
+                modified = true;
+                templateType = null;
             }
             return templateType;
         }
@@ -2895,7 +2981,9 @@ namespace MobiusEditor.TiberianDawn
             SaveIniHouses(ini);
             SaveIniOverlay(ini);
             SaveIniSmudge(ini);
-            SaveINITerrain(ini);
+            SaveIniTerrain(ini);
+            // Experimental; will need proper save types to enable this.
+            // SaveMapPack(ini);
         }
 
         protected INISection SaveIniBasic(INI ini, string fileName)
@@ -3033,6 +3121,49 @@ namespace MobiusEditor.TiberianDawn
                 }
             }
             return briefingSection;
+        }
+
+        private void SaveMapPack(INI ini)
+        {
+            using (MemoryStream stream = new MemoryStream())
+            {
+                using (BinaryWriter writer = new BinaryWriter(stream, Encoding.UTF8, true))
+                {
+                    for (int y = 0; y < Map.Metrics.Height; ++y)
+                    {
+                        for (int x = 0; x < Map.Metrics.Width; ++x)
+                        {
+                            Template template = Map.Templates[y, x];
+                            if (template != null && (template.Type.Flag & TemplateTypeFlag.Clear) == 0)
+                            {
+                                writer.Write((ushort)template.Type.ID);
+                            }
+                            else
+                            {
+                                writer.Write(ushort.MaxValue);
+                            }
+                        }
+                    }
+                    for (int y = 0; y < Map.Metrics.Height; ++y)
+                    {
+                        for (int x = 0; x < Map.Metrics.Width; ++x)
+                        {
+                            Template template = Map.Templates[y, x];
+                            if (template != null && (template.Type.Flag & TemplateTypeFlag.Clear) == 0)
+                            {
+                                writer.Write((byte)template.Icon);
+                            }
+                            else
+                            {
+                                writer.Write((byte)0);
+                            }
+                        }
+                    }
+                }
+                stream.Flush();
+                ini.Sections.Remove("MapPack");
+                INITools.CompressLCWSection(ini.Sections.Add("MapPack"), stream.ToArray());
+            }
         }
 
         protected INISection SaveIniCellTriggers(INI ini, bool omitEmpty)
@@ -3347,7 +3478,7 @@ namespace MobiusEditor.TiberianDawn
             return smudgeSection;
         }
 
-        protected INISection SaveINITerrain(INI ini)
+        protected INISection SaveIniTerrain(INI ini)
         {
             INISection terrainSection = ini.Sections.Add("Terrain");
             foreach (var (location, terrain) in Map.Technos.OfType<Terrain>().OrderBy(t => Map.Metrics.GetCell(t.Location)))
