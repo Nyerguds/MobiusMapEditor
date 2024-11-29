@@ -719,32 +719,31 @@ namespace MobiusEditor.TiberianDawn
                 return null;
             }
             bool isDesert = TheaterTypes.Desert.Name.Equals(Map.Theater?.Name, StringComparison.OrdinalIgnoreCase);
-            Dictionary<int, MapCellN64> mapping = isDesert ? MapCellN64.DESERT_MAPPING : MapCellN64.TEMPERATE_MAPPING;
+            Dictionary<int, ushort> mapping = isDesert ? N64MapConverter.DESERT_MAPPING : N64MapConverter.TEMPERATE_MAPPING;
             string mappingName = isDesert ? TheaterTypes.Desert.Name : TheaterTypes.Temperate.Name;
             byte[] buffer = new byte[binLen];
-            MapCellN64 defVal = new MapCellN64(0xFF, 0x00);
+            const ushort defVal = 0xFF00;
             for (int i = 0; i < binLen; i += 2)
             {
                 byte val1 = mapData[i];
                 byte val2 = mapData[i + 1];
                 // N64 big-endian combining.
-                int val = val1 << 8 | val2;
-                MapCellN64 cellVal;
-                if (val == 0xFFFF)
+                int n64Val = val1 << 8 | val2;
+                ushort pcVal;
+                if (n64Val == 0xFFFF)
                 {
-                    cellVal = defVal;
+                    pcVal = defVal;
                 }
                 else
                 {
-                    bool gotValue = mapping.TryGetValue(val, out cellVal);
-                    if (!gotValue)
+                    if (!mapping.TryGetValue(n64Val, out pcVal))
                     {
-                        errors.Add(String.Format("No mapping found for value {0} in N64 mapping table for {1} Theater.", val.ToString("X4"), mappingName));
-                        cellVal = defVal;
+                        errors.Add(String.Format("No mapping found for value {0} in N64 mapping table for {1} Theater.", n64Val.ToString("X4"), mappingName));
+                        pcVal = defVal;
                     }
                 }
-                buffer[i] = cellVal.HighByte;
-                buffer[i + 1] = cellVal.LowByte;
+                buffer[i] = (byte)((pcVal >> 8) & 0xFF);
+                buffer[i + 1] = (byte)(pcVal & 0xFF);
             }
             using (MemoryStream ms = new MemoryStream(buffer))
             using (BinaryReader binReader = new BinaryReader(ms, Encoding.UTF8, true))
@@ -779,65 +778,65 @@ namespace MobiusEditor.TiberianDawn
             }
             ini.Parse(iniText);
             // Specific support for DOS-437 file but with some specific sections in UTF-8.
-            if (iniTextUtf8 != null)
+            if (iniTextUtf8 == null)
             {
-                INI utf8Ini = new INI();
-                utf8Ini.Parse(iniTextUtf8);
-                // Steam section
-                INISection steamSectionUtf8 = utf8Ini.Sections["Steam"];
-                if (steamSectionUtf8 != null)
+                return;
+            }
+            INI utf8Ini = new INI();
+            utf8Ini.Parse(iniTextUtf8);
+            // Steam section
+            INISection steamSectionUtf8 = utf8Ini.Sections["Steam"];
+            if (steamSectionUtf8 != null)
+            {
+                if (!ini.Sections.Replace(steamSectionUtf8))
                 {
-                    if (!ini.Sections.Replace(steamSectionUtf8))
-                    {
-                        ini.Sections.Add(steamSectionUtf8);
-                    }
+                    ini.Sections.Add(steamSectionUtf8);
                 }
-                // Name and author from Basic section
-                INISection basicSectionUtf8 = utf8Ini.Sections["Basic"];
-                INISection basicSectionDos = ini.Sections["Basic"];
-                if (basicSectionUtf8 != null && basicSectionDos != null)
+            }
+            // Name and author from Basic section
+            INISection basicSectionUtf8 = utf8Ini.Sections["Basic"];
+            INISection basicSectionDos = ini.Sections["Basic"];
+            if (basicSectionUtf8 != null && basicSectionDos != null)
+            {
+                if (basicSectionUtf8.Keys.Contains("Name") && !basicSectionUtf8.Keys["Name"].Contains('\uFFFD'))
                 {
-                    if (basicSectionUtf8.Keys.Contains("Name") && !basicSectionUtf8.Keys["Name"].Contains('\uFFFD'))
-                    {
-                        basicSectionDos.Keys["Name"] = basicSectionUtf8.Keys["Name"];
-                    }
-                    if (basicSectionUtf8.Keys.Contains("Author") && !basicSectionUtf8.Keys["Author"].Contains('\uFFFD'))
-                    {
-                        basicSectionDos.Keys["Author"] = basicSectionUtf8.Keys["Author"];
-                    }
+                    basicSectionDos.Keys["Name"] = basicSectionUtf8.Keys["Name"];
                 }
-                // Remastered one-line "Text" briefing from [Briefing] section.
-                INISection briefSectionUtf8 = utf8Ini.Sections["Briefing"];
-                INISection briefSectionDos = ini.Sections["Briefing"];
-                // Use UTF-8 briefing if present. Restore content behind semicolon cut off as 'comment'.
-                if (briefSectionUtf8 != null && briefSectionDos != null)
+                if (basicSectionUtf8.Keys.Contains("Author") && !basicSectionUtf8.Keys["Author"].Contains('\uFFFD'))
                 {
-                    if (briefSectionUtf8.Keys.Contains("Text"))
-                    {
-                        string comment = briefSectionUtf8.GetComment("Text");
-                        string briefing = briefSectionUtf8.Keys["Text"];
-                        if (comment != null)
-                        {
-                            briefing = briefing + comment;
-                        }
-                        briefSectionDos.Keys["Text"] = briefing;
-                    }
-                    else
-                    {
-                        int line = 1;
-                        string lineStr = line.ToString();
-                        while (briefSectionDos.Contains(lineStr))
-                        {
-                            string comment = briefSectionDos.GetComment(lineStr);
-                            if (comment != null)
-                            {
-                                briefSectionDos[lineStr] = briefSectionDos[lineStr] + comment;
-                            }
-                            line++;
-                            lineStr = line.ToString();
-                        }
-                    }
+                    basicSectionDos.Keys["Author"] = basicSectionUtf8.Keys["Author"];
                 }
+            }
+            // Remastered one-line "Text" briefing from [Briefing] section.
+            INISection briefSectionUtf8 = utf8Ini.Sections["Briefing"];
+            INISection briefSectionDos = ini.Sections["Briefing"];
+            // Use UTF-8 briefing if present. Restore content behind semicolon cut off as 'comment'.
+            if (briefSectionUtf8 == null || briefSectionDos == null)
+            {
+                return;
+            }
+            if (briefSectionUtf8.Keys.Contains("Text"))
+            {
+                string comment = briefSectionUtf8.GetComment("Text");
+                string briefing = briefSectionUtf8.Keys["Text"];
+                if (comment != null)
+                {
+                    briefing = briefing + comment;
+                }
+                briefSectionDos.Keys["Text"] = briefing;
+                return;
+            }
+            int line = 1;
+            string lineStr = line.ToString();
+            while (briefSectionDos.Contains(lineStr))
+            {
+                string comment = briefSectionDos.GetComment(lineStr);
+                if (comment != null)
+                {
+                    briefSectionDos[lineStr] = briefSectionDos[lineStr] + comment;
+                }
+                line++;
+                lineStr = line.ToString();
             }
         }
 
@@ -1206,62 +1205,58 @@ namespace MobiusEditor.TiberianDawn
                     for (int i = missionsIndex; i < missionsIndexMax; ++i)
                     {
                         string[] missionTokens = tokens[i].Split(':');
-                        if (missionTokens.Length == 2)
-                        {
-                            // fix mission case sensitivity issues.
-                            TeamMission mission;
-                            teamMissionTypes.TryGetValue(missionTokens[0], out mission);
-                            if (mission != null)
-                            {
-                                string argError = null;
-                                string argStr = missionTokens[1];
-                                if (!Int32.TryParse(argStr, out int arg))
-                                {
-                                    argError = string.Format("Team '{0}', orders index {1} ('{2}') has a non-numeric value '{3}'. Reverting to 0.", kvp.Key, i, mission.Mission, argStr);
-                                }
-                                else if (mission.ArgType == TeamMissionArgType.Time && arg < 0)
-                                {
-                                    argError = string.Format("Team '{0}', orders index {1} ('{2}') has a bad value '{3}' for a Time argument. Reverting to 0.", kvp.Key, i, mission.Mission, argStr);
-                                }
-                                else if (mission.ArgType == TeamMissionArgType.Waypoint && (arg < -1 || arg > Map.Waypoints.Length))
-                                {
-                                    argError = string.Format("Team '{0}', orders index {1} ('{2}') has a bad value '{3}' for a Waypoint argument. Reverting to 0.", kvp.Key, i, mission.Mission, argStr);
-                                }
-                                else if (mission.ArgType == TeamMissionArgType.OptionsList && (arg < 0 || arg > mission.DropdownOptions.Max(vl => vl.Value))) // Not actually used in TD.
-                                {
-                                    argError = string.Format("Team '{0}', orders index {1} ('{2}') has a bad value '{3}' for the available options. Reverting to 0.", kvp.Key, i, mission.Mission, argStr);
-                                }
-                                else if (mission.ArgType == TeamMissionArgType.MapCell && (arg < 0 || arg >= Map.Metrics.Length))
-                                {
-                                    argError = string.Format("Team '{0}', orders index {1} ('{2}') has a bad value '{3}' for a Cell argument. Reverting to 0.", kvp.Key, i, mission.Mission, argStr);
-                                }
-                                else if (mission.ArgType == TeamMissionArgType.MissionNumber && (arg < 0 || arg > missionsMax))
-                                {
-                                    argError = string.Format("Team '{0}', orders index {1} ('{2}') has a bad value '{3}' for an orders index argument. Reverting to 0.", kvp.Key, i, mission.Mission, argStr);
-                                }
-                                else if (mission.ArgType == TeamMissionArgType.Tarcom && arg < 0)
-                                {
-                                    argError = string.Format("Team '{0}', orders index {1} ('{2}') has a bad value '{3}' for a Tarcom argument. Reverting to 0.", kvp.Key, i, mission.Mission, argStr);
-                                }
-                                if (argError != null)
-                                {
-                                    errors.Add(argError);
-                                    modified = true;
-                                    arg = 0;
-                                }
-                                teamType.Missions.Add(new TeamTypeMission { Mission = mission, Argument = arg });
-                            }
-                            else
-                            {
-                                errors.Add(string.Format("Team '{0}' references unknown orders '{1}'. Orders ignored.", kvp.Key, missionTokens[0]));
-                                modified = true;
-                            }
-                        }
-                        else
+                        if (missionTokens.Length != 2)
                         {
                             errors.Add(string.Format("Team '{0}' has wrong number of tokens for orders index {1} (has {2}, expecting 2).", kvp.Key, i, missionTokens.Length));
                             modified = true;
+                            continue;
                         }
+                        // fix mission case sensitivity issues.
+                        TeamMission mission;
+                        teamMissionTypes.TryGetValue(missionTokens[0], out mission);
+                        if (mission == null)
+                        {
+                            errors.Add(string.Format("Team '{0}' references unknown orders '{1}'. Orders ignored.", kvp.Key, missionTokens[0]));
+                            modified = true;
+                            continue;
+                        }
+                        string argError = null;
+                        string argStr = missionTokens[1];
+                        if (!Int32.TryParse(argStr, out int arg))
+                        {
+                            argError = string.Format("Team '{0}', orders index {1} ('{2}') has a non-numeric value '{3}'. Reverting to 0.", kvp.Key, i, mission.Mission, argStr);
+                        }
+                        else if (mission.ArgType == TeamMissionArgType.Time && arg < 0)
+                        {
+                            argError = string.Format("Team '{0}', orders index {1} ('{2}') has a bad value '{3}' for a Time argument. Reverting to 0.", kvp.Key, i, mission.Mission, argStr);
+                        }
+                        else if (mission.ArgType == TeamMissionArgType.Waypoint && (arg < -1 || arg > Map.Waypoints.Length))
+                        {
+                            argError = string.Format("Team '{0}', orders index {1} ('{2}') has a bad value '{3}' for a Waypoint argument. Reverting to 0.", kvp.Key, i, mission.Mission, argStr);
+                        }
+                        else if (mission.ArgType == TeamMissionArgType.OptionsList && (arg < 0 || arg > mission.DropdownOptions.Max(vl => vl.Value))) // Not actually used in TD.
+                        {
+                            argError = string.Format("Team '{0}', orders index {1} ('{2}') has a bad value '{3}' for the available options. Reverting to 0.", kvp.Key, i, mission.Mission, argStr);
+                        }
+                        else if (mission.ArgType == TeamMissionArgType.MapCell && (arg < 0 || arg >= Map.Metrics.Length))
+                        {
+                            argError = string.Format("Team '{0}', orders index {1} ('{2}') has a bad value '{3}' for a Cell argument. Reverting to 0.", kvp.Key, i, mission.Mission, argStr);
+                        }
+                        else if (mission.ArgType == TeamMissionArgType.MissionNumber && (arg < 0 || arg > missionsMax))
+                        {
+                            argError = string.Format("Team '{0}', orders index {1} ('{2}') has a bad value '{3}' for an orders index argument. Reverting to 0.", kvp.Key, i, mission.Mission, argStr);
+                        }
+                        else if (mission.ArgType == TeamMissionArgType.Tarcom && arg < 0)
+                        {
+                            argError = string.Format("Team '{0}', orders index {1} ('{2}') has a bad value '{3}' for a Tarcom argument. Reverting to 0.", kvp.Key, i, mission.Mission, argStr);
+                        }
+                        if (argError != null)
+                        {
+                            errors.Add(argError);
+                            modified = true;
+                            arg = 0;
+                        }
+                        teamType.Missions.Add(new TeamTypeMission { Mission = mission, Argument = arg });
                     }
                     if (numMissions > Globals.MaxTeamMissions)
                     {
@@ -1520,28 +1515,24 @@ namespace MobiusEditor.TiberianDawn
                     if (techno is Building building)
                     {
                         errors.Add(string.Format("Infantry '{0}' overlaps structure '{1}' in cell {2}; skipping.", infantryType.Name, building.Type.Name, cell));
-                        modified = true;
                     }
                     else if (techno is Overlay overlay)
                     {
                         errors.Add(string.Format("Infantry '{0}' overlaps overlay '{1}' in cell {2}; skipping.", infantryType.Name, overlay.Type.Name, cell));
-                        modified = true;
                     }
                     else if (techno is Terrain terrain)
                     {
                         errors.Add(string.Format("Infantry '{0}' overlaps terrain '{1}' in cell {2}; skipping.", infantryType.Name, terrain.Type.Name, cell));
-                        modified = true;
                     }
                     else if (techno is Unit unit)
                     {
                         errors.Add(string.Format("Infantry '{0}' overlaps unit '{1}' in cell {2}; skipping.", infantryType.Name, unit.Type.Name, cell));
-                        modified = true;
                     }
                     else
                     {
                         errors.Add(string.Format("Infantry '{0}' overlaps unknown techno in cell {1}; skipping.", infantryType.Name, cell));
-                        modified = true;
                     }
+                    modified = true;
                     continue;
                 }
                 int stoppingPos;
@@ -1557,12 +1548,26 @@ namespace MobiusEditor.TiberianDawn
                     modified = true;
                     break;
                 }
+                if (strength < 1 || strength > 256)
+                {
+                    int newStrength = strength.Restrict(1, 256);
+                    errors.Add(string.Format("Strength for infantry '{0}' on cell {1}, sub-position {2} has illegal value {3}; corrected to {4}.", infantryType.Name, cell, stoppingPos, strength, newStrength));
+                    strength = newStrength;
+                    modified = true;
+                }
                 int dirValue;
                 if (!int.TryParse(tokens[6], out dirValue))
                 {
                     errors.Add(string.Format("Direction for infantry '{0}' on cell {1}, sub-position {2} cannot be parsed; value: '{3}'; skipping.", infantryType.Name, cell, stoppingPos, tokens[6]));
                     modified = true;
                     continue;
+                }
+                DirectionType dirType;
+                if (!DirectionType.TryGetDirectionType(dirValue, Map.UnitDirectionTypes, out dirType))
+                {
+                    errors.Add(string.Format("Direction for infantry '{0}', value {1}, cannot be matched to an accepted value. Reverting to {2} ({3}).",
+                        infantryType.Name, dirValue, dirType.ID, dirType.Name));
+                    modified = true;
                 }
                 if (infantryGroup.Infantry[stoppingPos] != null)
                 {
@@ -1592,7 +1597,7 @@ namespace MobiusEditor.TiberianDawn
                     Type = infantryType,
                     House = Map.HouseTypes.Where(t => t.Equals(tokens[0])).FirstOrDefault(),
                     Strength = strength,
-                    Direction = DirectionType.GetDirectionType(dirValue, Map.UnitDirectionTypes),
+                    Direction = dirType,
                     Mission = Map.MissionTypes.Where(t => t.Equals(tokens[5])).FirstOrDefault() ?? Map.GetDefaultMission(infantryType),
                     Trigger = tokens[7]
                 };
@@ -1660,6 +1665,13 @@ namespace MobiusEditor.TiberianDawn
                     modified = true;
                     continue;
                 }
+                if (strength < 1 || strength > 256)
+                {
+                    int newStrength = strength.Restrict(1, 256);
+                    errors.Add(string.Format("Strength for unit '{0}' on cell {1} has illegal value {2}; corrected to {3}.", unitType.Name, cell, strength, newStrength));
+                    strength = newStrength;
+                    modified = true;
+                }
                 int dirValue;
                 if (!int.TryParse(tokens[4], out dirValue))
                 {
@@ -1667,12 +1679,19 @@ namespace MobiusEditor.TiberianDawn
                     modified = true;
                     continue;
                 }
+                DirectionType dirType;
+                if (!DirectionType.TryGetDirectionType(dirValue, Map.UnitDirectionTypes, out dirType))
+                {
+                    errors.Add(string.Format("Direction for unit '{0}', value {1}, cannot be matched to an accepted value. Reverting to {2} ({3}).",
+                        unitType.Name, dirValue, dirType.ID, dirType.Name));
+                    modified = true;
+                }
                 Unit newUnit = new Unit()
                 {
                     Type = unitType,
                     House = Map.HouseTypes.Where(t => t.Equals(tokens[0])).FirstOrDefault(),
                     Strength = strength,
-                    Direction = DirectionType.GetDirectionType(dirValue, Map.UnitDirectionTypes),
+                    Direction = dirType,
                     Mission = Map.MissionTypes.Where(t => t.Equals(tokens[5], StringComparison.InvariantCultureIgnoreCase)).FirstOrDefault() ?? Map.GetDefaultMission(unitType),
                 };
                 if (newUnit.House == null)
@@ -1693,33 +1712,28 @@ namespace MobiusEditor.TiberianDawn
                     if (techno is Building building)
                     {
                         errors.Add(string.Format("Unit '{0}' overlaps structure '{1}' in cell {2}; skipping.", unitType.Name, building.Type.Name, cell));
-                        modified = true;
                     }
                     else if (techno is Overlay overlay)
                     {
                         errors.Add(string.Format("Unit '{0}' overlaps overlay '{1}' in cell {2}; skipping.", unitType.Name, overlay.Type.Name, cell));
-                        modified = true;
                     }
                     else if (techno is Terrain terrain)
                     {
                         errors.Add(string.Format("Unit '{0}' overlaps terrain '{1}' in cell {2}; skipping.", unitType.Name, terrain.Type.Name, cell));
-                        modified = true;
                     }
                     else if (techno is InfantryGroup infantry)
                     {
                         errors.Add(string.Format("Unit '{0}' overlaps infantry in cell {1}; skipping.", unitType.Name, cell));
-                        modified = true;
                     }
                     else if (techno is Unit unit)
                     {
                         errors.Add(string.Format("Unit '{0}' overlaps unit '{1}' in cell {2}; skipping.", unitType.Name, unit.Type.Name, cell));
-                        modified = true;
                     }
                     else
                     {
                         errors.Add(string.Format("Unit '{0}' overlaps unknown techno in cell {1}; skipping.", unitType.Name, cell));
-                        modified = true;
                     }
+                    modified = true;
                     continue;
                 }
                 if (!caseTrigs.ContainsKey(tokens[6]))
@@ -1801,6 +1815,13 @@ namespace MobiusEditor.TiberianDawn
                     modified = true;
                     continue;
                 }
+                if (strength < 1 || strength > 256)
+                {
+                    int newStrength = strength.Restrict(1, 256);
+                    errors.Add(string.Format("Strength for aircraft '{0}' on cell {1} has illegal value {2}; corrected to {3}.", aircraftType.Name, cell, strength, newStrength));
+                    strength = newStrength;
+                    modified = true;
+                }
                 int dirValue;
                 if (!int.TryParse(tokens[4], out dirValue))
                 {
@@ -1808,12 +1829,19 @@ namespace MobiusEditor.TiberianDawn
                     modified = true;
                     continue;
                 }
+                DirectionType dirType;
+                if (!DirectionType.TryGetDirectionType(dirValue, Map.UnitDirectionTypes, out dirType))
+                {
+                    errors.Add(string.Format("Direction for aircraft '{0}', value {1}, cannot be matched to an accepted value. Reverting to {2} ({3}).",
+                        aircraftType.Name, dirValue, dirType.ID, dirType.Name));
+                    modified = true;
+                }
                 Unit newUnit = new Unit()
                 {
                     Type = aircraftType,
                     House = Map.HouseTypes.Where(t => t.Equals(tokens[0])).FirstOrDefault(),
                     Strength = strength,
-                    Direction = DirectionType.GetDirectionType(dirValue, Map.UnitDirectionTypes),
+                    Direction = dirType,
                     Mission = Map.MissionTypes.Where(t => t.Equals(tokens[5])).FirstOrDefault() ?? Map.GetDefaultMission(aircraftType)
                 };
                 if (newUnit.House == null)
@@ -1829,33 +1857,28 @@ namespace MobiusEditor.TiberianDawn
                     if (techno is Building building)
                     {
                         errors.Add(string.Format("Aircraft '{0}' overlaps structure '{1}' in cell {2}; skipping.", aircraftType.Name, building.Type.Name, cell));
-                        modified = true;
                     }
                     else if (techno is Overlay overlay)
                     {
                         errors.Add(string.Format("Aircraft '{0}' overlaps overlay '{1}' in cell {2}; skipping.", aircraftType.Name, overlay.Type.Name, cell));
-                        modified = true;
                     }
                     else if (techno is Terrain terrain)
                     {
                         errors.Add(string.Format("Aircraft '{0}' overlaps terrain '{1}' in cell {2}; skipping.", aircraftType.Name, terrain.Type.Name, cell));
-                        modified = true;
                     }
                     else if (techno is InfantryGroup infantry)
                     {
                         errors.Add(string.Format("Aircraft '{0}' overlaps infantry in cell {1}; skipping.", aircraftType.Name, cell));
-                        modified = true;
                     }
                     else if (techno is Unit unit)
                     {
                         errors.Add(string.Format("Aircraft '{0}' overlaps unit '{1}' in cell {2}; skipping.", aircraftType.Name, unit.Type.Name, cell));
-                        modified = true;
                     }
                     else
                     {
                         errors.Add(string.Format("Aircraft '{0}' overlaps unknown techno in cell {1}; skipping.", aircraftType.Name, cell));
-                        modified = true;
                     }
+                    modified = true;
                 }
             }
         }
@@ -1919,6 +1942,13 @@ namespace MobiusEditor.TiberianDawn
                     modified = true;
                     continue;
                 }
+                if (strength < 1 || strength > 256)
+                {
+                    int newStrength = strength.Restrict(1, 256);
+                    errors.Add(string.Format("Strength for structure '{0}' on cell {1} has illegal value {2}; corrected to {3}.", buildingType.Name, cell, strength, newStrength));
+                    strength = newStrength;
+                    modified = true;
+                }
                 // Do this here, before House or Trigger, since those get ignored if it's a wall type.
                 if (buildingType.IsWall && !Globals.AllowWallBuildings)
                 {
@@ -1938,12 +1968,19 @@ namespace MobiusEditor.TiberianDawn
                     modified = true;
                     continue;
                 }
+                DirectionType dirType;
+                if (!DirectionType.TryGetDirectionType(dirValue, Map.BuildingDirectionTypes, out dirType))
+                {
+                    errors.Add(string.Format("Direction for structure '{0}', value {1}, cannot be matched to an accepted value. Reverting to {2} ({3}).",
+                        buildingType.Name, dirValue, dirType.ID, dirType.Name));
+                    modified = true;
+                }
                 Building newBld = new Building()
                 {
                     Type = buildingType,
                     House = Map.HouseTypes.Where(t => t.Equals(tokens[0])).FirstOrDefault(),
                     Strength = strength,
-                    Direction = DirectionType.GetDirectionType(dirValue, Map.BuildingDirectionTypes),
+                    Direction = dirType,
                 };
                 if (newBld.House == null)
                 {
@@ -2268,18 +2305,16 @@ namespace MobiusEditor.TiberianDawn
                     if (techno is Building building)
                     {
                         errors.Add(string.Format("{0} '{1}' overlaps structure '{2}' at cell {3}; skipping.", desc, overlayType.Name, building.Type.Name, cell));
-                        modified = true;
                     }
                     else if (techno is Overlay ovl)
                     {
                         errors.Add(string.Format("{0} '{1}' overlaps overlay '{2}' at cell {3}; skipping.", desc, overlayType.Name, ovl.Type.Name, cell));
-                        modified = true;
                     }
                     else
                     {
                         errors.Add(string.Format("{0} '{1}' overlaps unknown techno in cell {2}; skipping.", desc, overlayType.Name, cell));
-                        modified = true;
                     }
+                    modified = true;
                     continue;
                 }
                 Map.Overlay[cell] = new Overlay { Type = overlayType, Icon = 0 };

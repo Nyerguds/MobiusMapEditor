@@ -866,7 +866,7 @@ namespace MobiusEditor.Utility
                     sb.Append(lineBreak);
                     continue;
                 }
-                else if (c == '\\')
+                if (c == '\\')
                 {
                     // Skip escape character.
                     i++;

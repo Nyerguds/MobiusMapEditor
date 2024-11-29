@@ -524,7 +524,7 @@
     <Compile Include="SoleSurvivor\HouseTypes.cs" />
     <Compile Include="TiberianDawn\HouseTypes.cs" />
     <Compile Include="TiberianDawn\BuildingTypes.cs" />
-    <Compile Include="TiberianDawn\MapCellN64.cs" />
+    <Compile Include="TiberianDawn\N64MapConverter.cs" />
     <Compile Include="TiberianDawn\MissionTypes.cs" />
     <Compile Include="TiberianDawn\OverlayTypes.cs" />
     <Compile Include="TiberianDawn\SmudgeTypes.cs" />

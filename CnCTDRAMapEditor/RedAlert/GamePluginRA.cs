@@ -24,7 +24,6 @@ using System.IO;
 using System.Linq;
 using System.Text;
 using System.Text.RegularExpressions;
-using System.Windows.Forms;
 using TGASharpLib;
 
 namespace MobiusEditor.RedAlert
@@ -985,31 +984,27 @@ namespace MobiusEditor.RedAlert
                     for (int i = classesIndex; i < classesIndexMax; ++i)
                     {
                         string[] classTokens = tokens[i].Split(':');
-                        if (classTokens.Length == 2)
-                        {
-                            ITechnoType type = fullTechnoTypes.Where(t => t.Equals(classTokens[0])).FirstOrDefault();
-                            byte count = byte.Parse(classTokens[1]);
-                            if (type != null)
-                            {
-                                if (!Map.BasicSection.ExpansionEnabled && type.IsExpansionOnly)
-                                {
-                                    errors.Add(string.Format("Team '{0}' contains expansion unit '{1}', but expansion units are not enabled; enabling expansion units.", kvp.Key, type.Name));
-                                    Map.BasicSection.ExpansionEnabled = true;
-                                    modified = true;
-                                }
-                                teamType.Classes.Add(new TeamTypeClass { Type = type, Count = count });
-                            }
-                            else
-                            {
-                                errors.Add(string.Format("Team '{0}' references unknown class '{1}'.", kvp.Key, classTokens[0]));
-                                modified = true;
-                            }
-                        }
-                        else
+                        if (classTokens.Length != 2)
                         {
                             errors.Add(string.Format("Team '{0}' has wrong number of tokens for class index {1} (expecting 2).", kvp.Key, i));
                             modified = true;
+                            continue;
                         }
+                        ITechnoType type = fullTechnoTypes.Where(t => t.Equals(classTokens[0])).FirstOrDefault();
+                        byte count = byte.Parse(classTokens[1]);
+                        if (type == null)
+                        {
+                            errors.Add(string.Format("Team '{0}' references unknown class '{1}'.", kvp.Key, classTokens[0]));
+                            modified = true;
+                            continue;
+                        }
+                        if (!Map.BasicSection.ExpansionEnabled && type.IsExpansionOnly)
+                        {
+                            errors.Add(string.Format("Team '{0}' contains expansion unit '{1}', but expansion units are not enabled; enabling expansion units.", kvp.Key, type.Name));
+                            Map.BasicSection.ExpansionEnabled = true;
+                            modified = true;
+                        }
+                        teamType.Classes.Add(new TeamTypeClass { Type = type, Count = count });
                     }
                     if (numClasses > Globals.MaxTeamClasses)
                     {
@@ -1024,61 +1019,57 @@ namespace MobiusEditor.RedAlert
                     for (int i = missionsIndex; i < missionsIndexMax; ++i)
                     {
                         string[] missionTokens = tokens[i].Split(':');
-                        if (missionTokens.Length == 2)
-                        {
-                            TeamMission mission = indexToType(Map.TeamMissionTypes, missionTokens[0], true);
-                            if (mission != null)
-                            {
-                                string argError = null;
-                                string argStr = missionTokens[1];
-                                if (!Int32.TryParse(argStr, out int arg))
-                                {
-                                    argError = string.Format("Team '{0}', orders index {1} ('{2}') has a non-numeric value '{3}'. Reverting to 0.", kvp.Key, i, mission.Mission, argStr);
-                                }
-                                else if (mission.ArgType == TeamMissionArgType.Time && arg < 0)
-                                {
-                                    argError = string.Format("Team '{0}', orders index {1} ('{2}') has a bad value '{3}' for a Time argument. Reverting to 0.", kvp.Key, i, mission.Mission, argStr);
-                                }
-                                else if (mission.ArgType == TeamMissionArgType.Waypoint && (arg < -1 || arg > Map.Waypoints.Length))
-                                {
-                                    argError = string.Format("Team '{0}', orders index {1} ('{2}') has a bad value '{3}' for a Waypoint argument. Reverting to 0.", kvp.Key, i, mission.Mission, argStr);
-                                }
-                                else if (mission.ArgType == TeamMissionArgType.OptionsList && (arg < 0 || arg > mission.DropdownOptions.Max(vl => vl.Value)))
-                                {
-                                    argError = string.Format("Team '{0}', orders index {1} ('{2}') has a bad value '{3}' for the available options. Reverting to 0.", kvp.Key, i, mission.Mission, argStr);
-                                }
-                                else if (mission.ArgType == TeamMissionArgType.MapCell && (arg < 0 || arg >= Map.Metrics.Length))
-                                {
-                                    argError = string.Format("Team '{0}', orders index {1} ('{2}') has a bad value '{3}' for a Cell argument. Reverting to 0.", kvp.Key, i, mission.Mission, argStr);
-                                }
-                                else if (mission.ArgType == TeamMissionArgType.MissionNumber && (arg < 0 || arg > missionsMax))
-                                {
-                                    argError = string.Format("Team '{0}', orders index {1} ('{2}') has a bad value '{3}' for an orders index argument. Reverting to 0.", kvp.Key, i, mission.Mission, argStr);
-                                }
-                                else if (mission.ArgType == TeamMissionArgType.Tarcom && arg < 0)
-                                {
-                                    argError = string.Format("Team '{0}', orders index {1} ('{2}') has a bad value '{3}' for a Tarcom argument. Reverting to 0.", kvp.Key, i, mission.Mission, argStr);
-                                }
-                                // Note: globals are deliberately NOT checked here; the CheckTriggersGlobals logic takes care of checking that.
-                                if (argError != null)
-                                {
-                                    errors.Add(argError);
-                                    modified = true;
-                                    arg = 0;
-                                }
-                                teamType.Missions.Add(new TeamTypeMission { Mission = mission, Argument = arg });
-                            }
-                            else
-                            {
-                                errors.Add(string.Format("Team '{0}' references unknown orders id '{1}'.", kvp.Key, missionTokens[0]));
-                                modified = true;
-                            }
-                        }
-                        else
+                        if (missionTokens.Length != 2)
                         {
                             errors.Add(string.Format("Team '{0}' has wrong number of tokens for orders index {1} (expecting 2).", kvp.Key, i));
                             modified = true;
+                            continue;
                         }
+                        TeamMission mission = indexToType(Map.TeamMissionTypes, missionTokens[0], true);
+                        if (mission == null)
+                        {
+                            errors.Add(string.Format("Team '{0}' references unknown orders id '{1}'.", kvp.Key, missionTokens[0]));
+                            modified = true;
+                            continue;
+                        }
+                        string argError = null;
+                        string argStr = missionTokens[1];
+                        if (!Int32.TryParse(argStr, out int arg))
+                        {
+                            argError = string.Format("Team '{0}', orders index {1} ('{2}') has a non-numeric value '{3}'. Reverting to 0.", kvp.Key, i, mission.Mission, argStr);
+                        }
+                        else if (mission.ArgType == TeamMissionArgType.Time && arg < 0)
+                        {
+                            argError = string.Format("Team '{0}', orders index {1} ('{2}') has a bad value '{3}' for a Time argument. Reverting to 0.", kvp.Key, i, mission.Mission, argStr);
+                        }
+                        else if (mission.ArgType == TeamMissionArgType.Waypoint && (arg < -1 || arg > Map.Waypoints.Length))
+                        {
+                            argError = string.Format("Team '{0}', orders index {1} ('{2}') has a bad value '{3}' for a Waypoint argument. Reverting to 0.", kvp.Key, i, mission.Mission, argStr);
+                        }
+                        else if (mission.ArgType == TeamMissionArgType.OptionsList && (arg < 0 || arg > mission.DropdownOptions.Max(vl => vl.Value)))
+                        {
+                            argError = string.Format("Team '{0}', orders index {1} ('{2}') has a bad value '{3}' for the available options. Reverting to 0.", kvp.Key, i, mission.Mission, argStr);
+                        }
+                        else if (mission.ArgType == TeamMissionArgType.MapCell && (arg < 0 || arg >= Map.Metrics.Length))
+                        {
+                            argError = string.Format("Team '{0}', orders index {1} ('{2}') has a bad value '{3}' for a Cell argument. Reverting to 0.", kvp.Key, i, mission.Mission, argStr);
+                        }
+                        else if (mission.ArgType == TeamMissionArgType.MissionNumber && (arg < 0 || arg > missionsMax))
+                        {
+                            argError = string.Format("Team '{0}', orders index {1} ('{2}') has a bad value '{3}' for an orders index argument. Reverting to 0.", kvp.Key, i, mission.Mission, argStr);
+                        }
+                        else if (mission.ArgType == TeamMissionArgType.Tarcom && arg < 0)
+                        {
+                            argError = string.Format("Team '{0}', orders index {1} ('{2}') has a bad value '{3}' for a Tarcom argument. Reverting to 0.", kvp.Key, i, mission.Mission, argStr);
+                        }
+                        // Note: globals are deliberately NOT checked here; the CheckTriggersGlobals logic takes care of checking that.
+                        if (argError != null)
+                        {
+                            errors.Add(argError);
+                            modified = true;
+                            arg = 0;
+                        }
+                        teamType.Missions.Add(new TeamTypeMission { Mission = mission, Argument = arg });
                     }
                     if (numMissions > Globals.MaxTeamMissions)
                     {
@@ -1188,53 +1179,51 @@ namespace MobiusEditor.RedAlert
                 try
                 {
                     string[] tokens = kvp.Value.Split(',');
-                    if (tokens.Length == 18)
-                    {
-                        if (kvp.Key.Length > 4)
-                        {
-                            errors.Add(string.Format("Trigger '{0}' has a name that is longer than 4 characters. This will not be corrected by the loading process, but should be addressed, since it can make the triggers fail to link correctly to objects and cell triggers, and might even crash the game.", kvp.Key));
-                        }
-                        Trigger trigger = new Trigger { Name = kvp.Key };
-                        trigger.PersistentType = (TriggerPersistentType)int.Parse(tokens[0]);
-                        int houseId = sbyte.Parse(tokens[1]);
-                        trigger.House = houseId == -1 ? House.None : Map.HouseTypes.Where(t => t.Equals(houseId)).FirstOrDefault()?.Name;
-                        if (trigger.House == null)
-                        {
-                            errors.Add(string.Format("Trigger '{0}' has unknown house ID '{1}'; clearing to '{2}'.", kvp.Key, tokens[1], House.None));
-                            modified = true;
-                            trigger.House = House.None;
-                        }
-                        trigger.EventControl = (TriggerMultiStyleType)int.Parse(tokens[2]);
-                        trigger.Event1.EventType = indexToType(Map.EventTypes, tokens[4], false);
-                        trigger.Event1.Team = tokens[5];
-                        trigger.Event1.Data = long.Parse(tokens[6]);
-                        trigger.Event2.EventType = indexToType(Map.EventTypes, tokens[7], false);
-                        trigger.Event2.Team = tokens[8];
-                        trigger.Event2.Data = long.Parse(tokens[9]);
-                        trigger.Action1.ActionType = indexToType(Map.ActionTypes, tokens[10], false);
-                        trigger.Action1.Team = tokens[11];
-                        trigger.Action1.Trigger = tokens[12];
-                        trigger.Action1.Data = long.Parse(tokens[13]);
-                        trigger.Action2.ActionType = indexToType(Map.ActionTypes, tokens[14], false);
-                        trigger.Action2.Team = tokens[15];
-                        trigger.Action2.Trigger = tokens[16];
-                        trigger.Action2.Data = long.Parse(tokens[17]);
-                        // Fix up data caused by union usage in the legacy game
-                        fixEvent(trigger.Event1, kvp.Key, 1);
-                        fixEvent(trigger.Event2, kvp.Key, 2);
-                        fixAction(trigger.Action1);
-                        fixAction(trigger.Action2);
-                        triggers.Add(trigger);
-                    }
-                    else
+                    if (tokens.Length != 18)
                     {
                         errors.Add(string.Format("Trigger '{0}' has too few tokens (expecting 18).", kvp.Key));
                         modified = true;
+                        continue;
                     }
+                    if (kvp.Key.Length > 4)
+                    {
+                        errors.Add(string.Format("Trigger '{0}' has a name that is longer than 4 characters. This will not be corrected by the loading process, but should be addressed, since it can make the triggers fail to link correctly to objects and cell triggers, and might even crash the game.", kvp.Key));
+                    }
+                    Trigger trigger = new Trigger { Name = kvp.Key };
+                    trigger.PersistentType = (TriggerPersistentType)int.Parse(tokens[0]);
+                    int houseId = sbyte.Parse(tokens[1]);
+                    trigger.House = houseId == -1 ? House.None : Map.HouseTypes.Where(t => t.Equals(houseId)).FirstOrDefault()?.Name;
+                    if (trigger.House == null)
+                    {
+                        errors.Add(string.Format("Trigger '{0}' has unknown house ID '{1}'; clearing to '{2}'.", kvp.Key, tokens[1], House.None));
+                        modified = true;
+                        trigger.House = House.None;
+                    }
+                    trigger.EventControl = (TriggerMultiStyleType)int.Parse(tokens[2]);
+                    trigger.Event1.EventType = indexToType(Map.EventTypes, tokens[4], false);
+                    trigger.Event1.Team = tokens[5];
+                    trigger.Event1.Data = long.Parse(tokens[6]);
+                    trigger.Event2.EventType = indexToType(Map.EventTypes, tokens[7], false);
+                    trigger.Event2.Team = tokens[8];
+                    trigger.Event2.Data = long.Parse(tokens[9]);
+                    trigger.Action1.ActionType = indexToType(Map.ActionTypes, tokens[10], false);
+                    trigger.Action1.Team = tokens[11];
+                    trigger.Action1.Trigger = tokens[12];
+                    trigger.Action1.Data = long.Parse(tokens[13]);
+                    trigger.Action2.ActionType = indexToType(Map.ActionTypes, tokens[14], false);
+                    trigger.Action2.Team = tokens[15];
+                    trigger.Action2.Trigger = tokens[16];
+                    trigger.Action2.Data = long.Parse(tokens[17]);
+                    // Fix up data caused by union usage in the legacy game
+                    fixEvent(trigger.Event1, kvp.Key, 1);
+                    fixEvent(trigger.Event2, kvp.Key, 2);
+                    fixAction(trigger.Action1);
+                    fixAction(trigger.Action2);
+                    triggers.Add(trigger);
                 }
                 catch (Exception ex)
                 {
-                    errors.Add(string.Format("Trigger '{0}' has curErrors and can't be parsed: {1}.", kvp.Key, ex.Message));
+                    errors.Add(string.Format("Trigger '{0}' has errors and can't be parsed: {1}.", kvp.Key, ex.Message));
                     modified = true;
                 }
             }
@@ -1438,20 +1427,20 @@ namespace MobiusEditor.RedAlert
                     for (int x = 0; x < width; ++x)
                     {
                         Template cell = Map.Templates[y, x];
-                        if (cell != null && cell.Type.ID == 255)
+                        if (cell == null || cell.Type.ID != 255)
                         {
-                            if (clearIsPassable || !border.Contains(new Point(x, y)) || clearFallBack == null)
-                            {
-                                Map.Templates[y, x] = null;
-                                modified = true;
-                            }
-                            else
-                            {
-                                // Retain passable cells on any potential entrance points of the map.
-                                Map.Templates[y, x] = new Template() { Type = clearFallBack, Icon = 0 };
-                                modified = true;
-                            }
+                            continue;
                         }
+                        if (clearIsPassable || !border.Contains(new Point(x, y)) || clearFallBack == null)
+                        {
+                            Map.Templates[y, x] = null;
+                        }
+                        else
+                        {
+                            // Retain passable cells on any potential entrance points of the map.
+                            Map.Templates[y, x] = new Template() { Type = clearFallBack, Icon = 0 };
+                        }
+                        modified = true;
                     }
                 }
                 string obsError = "Use of obsolete version of 'Clear' terrain detected; clearing.";
@@ -1502,54 +1491,50 @@ namespace MobiusEditor.RedAlert
                     continue;
                 }
                 string[] tokens = kvp.Value.Split(',');
-                if (tokens.Length == 3)
-                {
-                    // Craters other than cr1 don't work right in the game. Replace them by stage-0 cr1.
-                    bool badCrater = Globals.ConvertCraters && SmudgeTypes.BadCraters.IsMatch(tokens[0]);
-                    SmudgeType smudgeType = badCrater ? SmudgeTypes.Crater1 : Map.SmudgeTypes.Where(t => t.Equals(tokens[0]) && !t.IsAutoBib).FirstOrDefault();
-                    if (smudgeType != null)
-                    {
-                        if (Globals.FilterTheaterObjects && !smudgeType.ExistsInTheater)
-                        {
-                            errors.Add(string.Format("Smudge '{0}' is not available in the set theater; skipping.", smudgeType.Name));
-                            modified = true;
-                            continue;
-                        }
-                        if (badCrater)
-                        {
-                            errors.Add(string.Format("Smudge '{0}' does not function correctly in maps. Correcting to '{1}'.", tokens[0], smudgeType.Name));
-                            modified = true;
-                        }
-                        int icon = 0;
-                        if (smudgeType.Icons > 1 && int.TryParse(tokens[2], out icon))
-                            icon = Math.Max(0, Math.Min(smudgeType.Icons - 1, icon));
-                        bool multiCell = smudgeType.IsMultiCell;
-                        if (Map.Metrics.GetLocation(cell, out Point location))
-                        {
-                            int placeIcon = 0;
-                            Size size = smudgeType.Size;
-                            Point placeLocation = location;
-                            for (int y = 0; y < size.Height; ++y)
-                            {
-                                for (int x = 0; x < size.Width; ++x)
-                                {
-                                    placeLocation.X = location.X + x;
-                                    Map.Smudge[placeLocation] = new Smudge(smudgeType, multiCell ? placeIcon++ : icon);
-                                }
-                                placeLocation.Y++;
-                            }
-                        }
-                    }
-                    else
-                    {
-                        errors.Add(string.Format("Smudge '{0}' references unknown smudge.", tokens[0]));
-                        modified = true;
-                    }
-                }
-                else
+                if (tokens.Length != 3)
                 {
                     errors.Add(string.Format("Smudge on cell '{0}' has wrong number of tokens (expecting 3).", kvp.Key));
                     modified = true;
+                    continue;
+                }
+                // Craters other than cr1 don't work right in the game. Replace them by stage-0 cr1.
+                bool badCrater = Globals.ConvertCraters && SmudgeTypes.BadCraters.IsMatch(tokens[0]);
+                SmudgeType smudgeType = badCrater ? SmudgeTypes.Crater1 : Map.SmudgeTypes.Where(t => t.Equals(tokens[0]) && !t.IsAutoBib).FirstOrDefault();
+                if (smudgeType == null)
+                {
+                    errors.Add(string.Format("Smudge '{0}' references unknown smudge.", tokens[0]));
+                    modified = true;
+                    continue;
+                }
+                if (Globals.FilterTheaterObjects && !smudgeType.ExistsInTheater)
+                {
+                    errors.Add(string.Format("Smudge '{0}' is not available in the set theater; skipping.", smudgeType.Name));
+                    modified = true;
+                    continue;
+                }
+                if (badCrater)
+                {
+                    errors.Add(string.Format("Smudge '{0}' does not function correctly in maps. Correcting to '{1}'.", tokens[0], smudgeType.Name));
+                    modified = true;
+                }
+                int icon = 0;
+                if (smudgeType.Icons > 1 && int.TryParse(tokens[2], out icon))
+                    icon = Math.Max(0, Math.Min(smudgeType.Icons - 1, icon));
+                bool multiCell = smudgeType.IsMultiCell;
+                if (Map.Metrics.GetLocation(cell, out Point location))
+                {
+                    int placeIcon = 0;
+                    Size size = smudgeType.Size;
+                    Point placeLocation = location;
+                    for (int y = 0; y < size.Height; ++y)
+                    {
+                        for (int x = 0; x < size.Width; ++x)
+                        {
+                            placeLocation.X = location.X + x;
+                            Map.Smudge[placeLocation] = new Smudge(smudgeType, multiCell ? placeIcon++ : icon);
+                        }
+                        placeLocation.Y++;
+                    }
                 }
             }
         }
@@ -1564,133 +1549,137 @@ namespace MobiusEditor.RedAlert
             foreach (KeyValuePair<string, string> kvp in unitsSection)
             {
                 string[] tokens = kvp.Value.Split(',');
-                if (tokens.Length == 7)
-                {
-                    UnitType unitType = Map.AllUnitTypes.Where(t => t.IsGroundUnit && t.Equals(tokens[1])).FirstOrDefault();
-                    if (unitType == null)
-                    {
-                        errors.Add(string.Format("Unit '{0}' references unknown unit.", tokens[1]));
-                        modified = true;
-                        continue;
-                    }
-                    if (!Map.BasicSection.ExpansionEnabled && unitType.IsExpansionOnly)
-                    {
-                        errors.Add(string.Format("Expansion unit '{0}' encountered, but expansion units are not enabled; enabling expansion units.", unitType.Name));
-                        modified = true;
-                        Map.BasicSection.ExpansionEnabled = Map.BasicSection.ExpansionEnabled = true;
-                    }
-                    int strength;
-                    if (!int.TryParse(tokens[2], out strength))
-                    {
-                        errors.Add(string.Format("Strength for unit '{0}' cannot be parsed; value: '{1}'; skipping.", unitType.Name, tokens[2]));
-                        modified = true;
-                        continue;
-                    }
-                    int cell;
-                    if (!int.TryParse(tokens[3], out cell))
-                    {
-                        errors.Add(string.Format("Cell for unit '{0}' cannot be parsed; value: '{1}'; skipping.", unitType.Name, tokens[3]));
-                        modified = true;
-                        continue;
-                    }
-                    int dirValue;
-                    if (!int.TryParse(tokens[4], out dirValue))
-                    {
-                        errors.Add(string.Format("Direction for unit '{0}' cannot be parsed; value: '{1}'; skipping.", unitType.Name, tokens[4]));
-                        modified = true;
-                        continue;
-                    }
-                    Unit newUnit = new Unit()
-                    {
-                        Type = unitType,
-                        House = Map.HouseTypes.Where(t => t.Equals(tokens[0])).FirstOrDefault(),
-                        Strength = strength,
-                        Direction = DirectionType.GetDirectionType(dirValue, Map.UnitDirectionTypes),
-                        Mission = Map.MissionTypes.Where(t => t.Equals(tokens[5])).FirstOrDefault() ?? Map.GetDefaultMission(unitType),
-                    };
-                    if (newUnit.House == null)
-                    {
-                        HouseType defHouse;
-                        if ("ITALY".Equals(tokens[0], StringComparison.OrdinalIgnoreCase))
-                        {
-                            defHouse = HouseTypes.Ukraine;
-                            errors.Add(string.Format("Unit '{0}' on cell {1} has obsolete house '{2}'; substituting with '{3}'.", newUnit.Type.Name, cell, tokens[0], defHouse.Name));
-                        }
-                        else
-                        {
-                            defHouse = Map.HouseTypes.First();
-                            errors.Add(string.Format("Unit '{0}' on cell {1} references unknown house '{2}'; clearing to '{3}'.", newUnit.Type.Name, cell, tokens[0], defHouse.Name));
-                        }
-                        modified = true;
-                        newUnit.House = defHouse;
-                    }
-                    if (Map.Technos.Add(cell, newUnit))
-                    {
-                        if (!caseTrigs.ContainsKey(tokens[6]))
-                        {
-                            errors.Add(string.Format("Unit '{0}' on cell {1} links to unknown trigger '{1}'; clearing trigger.", unitType.Name, cell, tokens[6]));
-                            modified = true;
-                            newUnit.Trigger = Trigger.None;
-                        }
-                        else if (!checkUnitTrigs.Contains(tokens[6]))
-                        {
-                            errors.Add(string.Format("Unit '{0}' on cell {1} links to trigger '{1}' which does not contain an event or action applicable to units; clearing trigger.", unitType.Name, cell, tokens[6]));
-                            modified = true;
-                            newUnit.Trigger = Trigger.None;
-                        }
-                        else
-                        {
-                            // Adapt to same case
-                            newUnit.Trigger = caseTrigs[tokens[6]];
-                        }
-                    }
-                    else
-                    {
-                        ICellOccupier techno = Map.Technos[cell];
-                        if (techno is Building building)
-                        {
-                            errors.Add(string.Format("Unit '{0}' overlaps structure '{1}' in cell {2}; skipping.", unitType.Name, building.Type.Name, cell));
-                            modified = true;
-                        }
-                        else if (techno is Overlay overlay)
-                        {
-                            errors.Add(string.Format("Unit '{0}' overlaps overlay '{1}' in cell {2}; skipping.", unitType.Name, overlay.Type.Name, cell));
-                            modified = true;
-                        }
-                        else if (techno is Terrain terrain)
-                        {
-                            errors.Add(string.Format("Unit '{0}' overlaps terrain '{1}' in cell {2}; skipping.", unitType.Name, terrain.Type.Name, cell));
-                            modified = true;
-                        }
-                        else if (techno is InfantryGroup infantry)
-                        {
-                            errors.Add(string.Format("Unit '{0}' overlaps infantry in cell {1}; skipping.", unitType.Name, cell));
-                            modified = true;
-                        }
-                        else if (techno is Unit unit)
-                        {
-                            errors.Add(string.Format("Unit '{0}' overlaps unit '{1}' in cell {2}; skipping.", unitType.Name, unit.Type.Name, cell));
-                            modified = true;
-                        }
-                        else
-                        {
-                            errors.Add(string.Format("Unit '{0}' overlaps unknown techno in cell {1}; skipping.", unitType.Name, cell));
-                            modified = true;
-                        }
-                    }
-                }
-                else
+                if (tokens.Length != 7)
                 {
                     if (tokens.Length < 2)
                     {
                         errors.Add(string.Format("Unit entry '{0}' has wrong number of tokens (expecting 7).", kvp.Key));
-                        modified = true;
                     }
                     else
                     {
                         errors.Add(string.Format("Unit '{0}' has wrong number of tokens (expecting 7).", tokens[1]));
-                        modified = true;
                     }
+                    modified = true;
+                    continue;
+                }
+                UnitType unitType = Map.AllUnitTypes.Where(t => t.IsGroundUnit && t.Equals(tokens[1])).FirstOrDefault();
+                if (unitType == null)
+                {
+                    errors.Add(string.Format("Unit '{0}' references unknown unit.", tokens[1]));
+                    modified = true;
+                    continue;
+                }
+                if (!Map.BasicSection.ExpansionEnabled && unitType.IsExpansionOnly)
+                {
+                    errors.Add(string.Format("Expansion unit '{0}' encountered, but expansion units are not enabled; enabling expansion units.", unitType.Name));
+                    modified = true;
+                    Map.BasicSection.ExpansionEnabled = Map.BasicSection.ExpansionEnabled = true;
+                }
+                int strength;
+                if (!int.TryParse(tokens[2], out strength))
+                {
+                    errors.Add(string.Format("Strength for unit '{0}' cannot be parsed; value: '{1}'; skipping.", unitType.Name, tokens[2]));
+                    modified = true;
+                    continue;
+                }
+                int cell;
+                if (!int.TryParse(tokens[3], out cell))
+                {
+                    errors.Add(string.Format("Cell for unit '{0}' cannot be parsed; value: '{1}'; skipping.", unitType.Name, tokens[3]));
+                    modified = true;
+                    continue;
+                }
+                if (strength < 1 || strength > 256)
+                {
+                    int newStrength = strength.Restrict(1, 256);
+                    errors.Add(string.Format("Strength for unit '{0}' on cell {1} has illegal value {2}; corrected to {3}.", unitType.Name, cell, strength, newStrength));
+                    strength = newStrength;
+                    modified = true;
+                }
+                int dirValue;
+                if (!int.TryParse(tokens[4], out dirValue))
+                {
+                    errors.Add(string.Format("Direction for unit '{0}' cannot be parsed; value: '{1}'; skipping.", unitType.Name, tokens[4]));
+                    modified = true;
+                    continue;
+                }
+                DirectionType dirType;
+                if (!DirectionType.TryGetDirectionType(dirValue, Map.UnitDirectionTypes, out dirType))
+                {
+                    errors.Add(string.Format("Direction for unit '{0}' on cell {1}, value {2}, cannot be matched to an accepted value. Reverting to {3} ({4}).",
+                        unitType.Name, cell, dirValue, dirType.ID, dirType.Name));
+                    modified = true;
+                }
+                Unit newUnit = new Unit()
+                {
+                    Type = unitType,
+                    House = Map.HouseTypes.Where(t => t.Equals(tokens[0])).FirstOrDefault(),
+                    Strength = strength,
+                    Direction = dirType,
+                    Mission = Map.MissionTypes.Where(t => t.Equals(tokens[5])).FirstOrDefault() ?? Map.GetDefaultMission(unitType),
+                };
+                if (newUnit.House == null)
+                {
+                    HouseType defHouse;
+                    if ("ITALY".Equals(tokens[0], StringComparison.OrdinalIgnoreCase))
+                    {
+                        defHouse = HouseTypes.Ukraine;
+                        errors.Add(string.Format("Unit '{0}' on cell {1} has obsolete house '{2}'; substituting with '{3}'.", newUnit.Type.Name, cell, tokens[0], defHouse.Name));
+                    }
+                    else
+                    {
+                        defHouse = Map.HouseTypes.First();
+                        errors.Add(string.Format("Unit '{0}' on cell {1} references unknown house '{2}'; clearing to '{3}'.", newUnit.Type.Name, cell, tokens[0], defHouse.Name));
+                    }
+                    modified = true;
+                    newUnit.House = defHouse;
+                }
+                if (!Map.Technos.Add(cell, newUnit))
+                {
+                    ICellOccupier techno = Map.Technos[cell];
+                    if (techno is Building building)
+                    {
+                        errors.Add(string.Format("Unit '{0}' overlaps structure '{1}' in cell {2}; skipping.", unitType.Name, building.Type.Name, cell));
+                    }
+                    else if (techno is Overlay overlay)
+                    {
+                        errors.Add(string.Format("Unit '{0}' overlaps overlay '{1}' in cell {2}; skipping.", unitType.Name, overlay.Type.Name, cell));
+                    }
+                    else if (techno is Terrain terrain)
+                    {
+                        errors.Add(string.Format("Unit '{0}' overlaps terrain '{1}' in cell {2}; skipping.", unitType.Name, terrain.Type.Name, cell));
+                    }
+                    else if (techno is InfantryGroup infantry)
+                    {
+                        errors.Add(string.Format("Unit '{0}' overlaps infantry in cell {1}; skipping.", unitType.Name, cell));
+                    }
+                    else if (techno is Unit unit)
+                    {
+                        errors.Add(string.Format("Unit '{0}' overlaps unit '{1}' in cell {2}; skipping.", unitType.Name, unit.Type.Name, cell));
+                    }
+                    else
+                    {
+                        errors.Add(string.Format("Unit '{0}' overlaps unknown techno in cell {1}; skipping.", unitType.Name, cell));
+                    }
+                    modified = true;
+                    continue;
+                }
+                if (!caseTrigs.ContainsKey(tokens[6]))
+                {
+                    errors.Add(string.Format("Unit '{0}' on cell {1} links to unknown trigger '{1}'; clearing trigger.", unitType.Name, cell, tokens[6]));
+                    modified = true;
+                    newUnit.Trigger = Trigger.None;
+                }
+                else if (!checkUnitTrigs.Contains(tokens[6]))
+                {
+                    errors.Add(string.Format("Unit '{0}' on cell {1} links to trigger '{1}' which does not contain an event or action applicable to units; clearing trigger.", unitType.Name, cell, tokens[6]));
+                    modified = true;
+                    newUnit.Trigger = Trigger.None;
+                }
+                else
+                {
+                    // Adapt to same case
+                    newUnit.Trigger = caseTrigs[tokens[6]];
                 }
             }
         }
@@ -1715,113 +1704,119 @@ namespace MobiusEditor.RedAlert
             foreach (KeyValuePair<string, string> kvp in aircraftSection)
             {
                 string[] tokens = kvp.Value.Split(',');
-                if (tokens.Length == 6)
-                {
-                    UnitType aircraftType = Map.AllUnitTypes.Where(t => t.IsAircraft && t.Equals(tokens[1])).FirstOrDefault();
-                    if (aircraftType == null)
-                    {
-                        errors.Add(string.Format("Aircraft '{0}' references unknown aircraft.", tokens[1]));
-                        modified = true;
-                        continue;
-                    }
-                    if (!Map.BasicSection.ExpansionEnabled && aircraftType.IsExpansionOnly)
-                    {
-                        errors.Add(string.Format("Expansion aircraft '{0}' encountered, but expansion units are not enabled; enabling expansion units.", aircraftType.Name));
-                        modified = true;
-                        Map.BasicSection.ExpansionEnabled = true;
-                    }
-                    int strength;
-                    if (!int.TryParse(tokens[2], out strength))
-                    {
-                        errors.Add(string.Format("Strength for aircraft '{0}' cannot be parsed; value: '{1}'; skipping.", aircraftType.Name, tokens[2]));
-                        modified = true;
-                        continue;
-                    }
-                    int cell;
-                    if (!int.TryParse(tokens[3], out cell))
-                    {
-                        errors.Add(string.Format("Cell for aircraft '{0}' cannot be parsed; value: '{1}'; skipping.", aircraftType.Name, tokens[3]));
-                        modified = true;
-                        continue;
-                    }
-                    int dirValue;
-                    if (!int.TryParse(tokens[4], out dirValue))
-                    {
-                        errors.Add(string.Format("Direction for aircraft '{0}' cannot be parsed; value: '{1}'; skipping.", aircraftType.Name, tokens[4]));
-                        modified = true;
-                        continue;
-                    }
-                    Unit newUnit = new Unit()
-                    {
-                        Type = aircraftType,
-                        House = Map.HouseTypes.Where(t => t.Equals(tokens[0])).FirstOrDefault(),
-                        Strength = strength,
-                        Direction = DirectionType.GetDirectionType(dirValue, Map.UnitDirectionTypes),
-                        Mission = Map.MissionTypes.Where(t => t.Equals(tokens[5])).FirstOrDefault() ?? Map.GetDefaultMission(aircraftType)
-                    };
-                    if (newUnit.House == null)
-                    {
-                        HouseType defHouse;
-                        if ("ITALY".Equals(tokens[0], StringComparison.OrdinalIgnoreCase))
-                        {
-                            defHouse = HouseTypes.Ukraine;
-                            errors.Add(string.Format("Aircraft '{0}' on cell {1} has obsolete house '{2}'; substituting with '{3}'.", newUnit.Type.Name, cell, tokens[0], defHouse.Name));
-                        }
-                        else
-                        {
-                            defHouse = Map.HouseTypes.First();
-                            errors.Add(string.Format("Aircraft '{0}' on cell {1} references unknown house '{2}'; clearing to '{3}'.", newUnit.Type.Name, cell, tokens[0], defHouse.Name));
-                        }
-                        modified = true;
-                        newUnit.House = defHouse;
-                    }
-                    if (!Map.Technos.Add(cell, newUnit))
-                    {
-                        ICellOccupier techno = Map.Technos[cell];
-                        if (techno is Building building)
-                        {
-                            errors.Add(string.Format("Aircraft '{0}' overlaps structure '{1}' in cell {2}; skipping.", aircraftType.Name, building.Type.Name, cell));
-                            modified = true;
-                        }
-                        else if (techno is Overlay overlay)
-                        {
-                            errors.Add(string.Format("Aircraft '{0}' overlaps overlay '{1}' in cell {2}; skipping.", aircraftType.Name, overlay.Type.Name, cell));
-                            modified = true;
-                        }
-                        else if (techno is Terrain terrain)
-                        {
-                            errors.Add(string.Format("Aircraft '{0}' overlaps terrain '{1}' in cell {2}; skipping.", aircraftType.Name, terrain.Type.Name, cell));
-                            modified = true;
-                        }
-                        else if (techno is InfantryGroup infantry)
-                        {
-                            errors.Add(string.Format("Aircraft '{0}' overlaps infantry in cell {1}; skipping.", aircraftType.Name, cell));
-                            modified = true;
-                        }
-                        else if (techno is Unit unit)
-                        {
-                            errors.Add(string.Format("Aircraft '{0}' overlaps unit '{1}' in cell {2}; skipping.", aircraftType.Name, unit.Type.Name, cell));
-                            modified = true;
-                        }
-                        else
-                        {
-                            errors.Add(string.Format("Aircraft '{0}' overlaps unknown techno in cell {1}; skipping.", aircraftType.Name, cell));
-                            modified = true;
-                        }
-                    }
-                }
-                else
+                if (tokens.Length != 6)
                 {
                     if (tokens.Length < 2)
                     {
                         errors.Add(string.Format("Aircraft entry '{0}' has wrong number of tokens (expecting 6).", kvp.Key));
-                        modified = true;
                     }
                     else
                     {
                         errors.Add(string.Format("Aircraft '{0}' has wrong number of tokens (expecting 6).", tokens[1]));
-                        modified = true;
                     }
+                    modified = true;
+                    continue;
+                }
+                UnitType aircraftType = Map.AllUnitTypes.Where(t => t.IsAircraft && t.Equals(tokens[1])).FirstOrDefault();
+                if (aircraftType == null)
+                {
+                    errors.Add(string.Format("Aircraft '{0}' references unknown aircraft.", tokens[1]));
+                    modified = true;
+                    continue;
+                }
+                if (!Map.BasicSection.ExpansionEnabled && aircraftType.IsExpansionOnly)
+                {
+                    errors.Add(string.Format("Expansion aircraft '{0}' encountered, but expansion units are not enabled; enabling expansion units.", aircraftType.Name));
+                    modified = true;
+                    Map.BasicSection.ExpansionEnabled = true;
+                }
+                int strength;
+                if (!int.TryParse(tokens[2], out strength))
+                {
+                    errors.Add(string.Format("Strength for aircraft '{0}' cannot be parsed; value: '{1}'; skipping.", aircraftType.Name, tokens[2]));
+                    modified = true;
+                    continue;
+                }
+                int cell;
+                if (!int.TryParse(tokens[3], out cell))
+                {
+                    errors.Add(string.Format("Cell for aircraft '{0}' cannot be parsed; value: '{1}'; skipping.", aircraftType.Name, tokens[3]));
+                    modified = true;
+                    continue;
+                }
+                if (strength < 1 || strength > 256)
+                {
+                    int newStrength = strength.Restrict(1, 256);
+                    errors.Add(string.Format("Strength for aircraft '{0}' on cell {1} has illegal value {2}; corrected to {3}.", aircraftType.Name, cell, strength, newStrength));
+                    strength = newStrength;
+                    modified = true;
+                }
+                int dirValue;
+                if (!int.TryParse(tokens[4], out dirValue))
+                {
+                    errors.Add(string.Format("Direction for aircraft '{0}' cannot be parsed; value: '{1}'; skipping.", aircraftType.Name, tokens[4]));
+                    modified = true;
+                    continue;
+                }
+                DirectionType dirType;
+                if (!DirectionType.TryGetDirectionType(dirValue, Map.UnitDirectionTypes, out dirType))
+                {
+                    errors.Add(string.Format("Direction for aircraft '{0}', value {1}, cannot be matched to an accepted value. Reverting to {2} ({3}).",
+                        aircraftType.Name, dirValue, dirType.ID, dirType.Name));
+                    modified = true;
+                }
+                Unit newUnit = new Unit()
+                {
+                    Type = aircraftType,
+                    House = Map.HouseTypes.Where(t => t.Equals(tokens[0])).FirstOrDefault(),
+                    Strength = strength,
+                    Direction = dirType,
+                    Mission = Map.MissionTypes.Where(t => t.Equals(tokens[5])).FirstOrDefault() ?? Map.GetDefaultMission(aircraftType)
+                };
+                if (newUnit.House == null)
+                {
+                    HouseType defHouse;
+                    if ("ITALY".Equals(tokens[0], StringComparison.OrdinalIgnoreCase))
+                    {
+                        defHouse = HouseTypes.Ukraine;
+                        errors.Add(string.Format("Aircraft '{0}' on cell {1} has obsolete house '{2}'; substituting with '{3}'.", newUnit.Type.Name, cell, tokens[0], defHouse.Name));
+                    }
+                    else
+                    {
+                        defHouse = Map.HouseTypes.First();
+                        errors.Add(string.Format("Aircraft '{0}' on cell {1} references unknown house '{2}'; clearing to '{3}'.", newUnit.Type.Name, cell, tokens[0], defHouse.Name));
+                    }
+                    modified = true;
+                    newUnit.House = defHouse;
+                }
+                if (!Map.Technos.Add(cell, newUnit))
+                {
+                    ICellOccupier techno = Map.Technos[cell];
+                    if (techno is Building building)
+                    {
+                        errors.Add(string.Format("Aircraft '{0}' overlaps structure '{1}' in cell {2}; skipping.", aircraftType.Name, building.Type.Name, cell));
+                    }
+                    else if (techno is Overlay overlay)
+                    {
+                        errors.Add(string.Format("Aircraft '{0}' overlaps overlay '{1}' in cell {2}; skipping.", aircraftType.Name, overlay.Type.Name, cell));
+                    }
+                    else if (techno is Terrain terrain)
+                    {
+                        errors.Add(string.Format("Aircraft '{0}' overlaps terrain '{1}' in cell {2}; skipping.", aircraftType.Name, terrain.Type.Name, cell));
+                    }
+                    else if (techno is InfantryGroup infantry)
+                    {
+                        errors.Add(string.Format("Aircraft '{0}' overlaps infantry in cell {1}; skipping.", aircraftType.Name, cell));
+                    }
+                    else if (techno is Unit unit)
+                    {
+                        errors.Add(string.Format("Aircraft '{0}' overlaps unit '{1}' in cell {2}; skipping.", aircraftType.Name, unit.Type.Name, cell));
+                    }
+                    else
+                    {
+                        errors.Add(string.Format("Aircraft '{0}' overlaps unknown techno in cell {1}; skipping.", aircraftType.Name, cell));
+                    }
+                    modified = true;
                 }
             }
         }
@@ -1836,133 +1831,137 @@ namespace MobiusEditor.RedAlert
             foreach (KeyValuePair<string, string> kvp in shipsSection)
             {
                 string[] tokens = kvp.Value.Split(',');
-                if (tokens.Length == 7)
-                {
-                    UnitType vesselType = Map.AllUnitTypes.Where(t => t.IsVessel && t.Equals(tokens[1])).FirstOrDefault();
-                    if (vesselType == null)
-                    {
-                        errors.Add(string.Format("Ship '{0}' references unknown ship.", tokens[1]));
-                        modified = true;
-                        continue;
-                    }
-                    if (!Map.BasicSection.ExpansionEnabled && vesselType.IsExpansionOnly)
-                    {
-                        errors.Add(string.Format("Expansion ship '{0}' encountered, but expansion units are not enabled; enabling expansion units.", vesselType.Name));
-                        modified = true;
-                        Map.BasicSection.ExpansionEnabled = true;
-                    }
-                    int strength;
-                    if (!int.TryParse(tokens[2], out strength))
-                    {
-                        errors.Add(string.Format("Strength for ship '{0}' cannot be parsed; value: '{1}'; skipping.", vesselType.Name, tokens[2]));
-                        modified = true;
-                        continue;
-                    }
-                    int cell;
-                    if (!int.TryParse(tokens[3], out cell))
-                    {
-                        errors.Add(string.Format("Cell for ship '{0}' cannot be parsed; value: '{1}'; skipping.", vesselType.Name, tokens[3]));
-                        modified = true;
-                        continue;
-                    }
-                    int dirValue;
-                    if (!int.TryParse(tokens[4], out dirValue))
-                    {
-                        errors.Add(string.Format("Direction for ship '{0}' cannot be parsed; value: '{1}'; skipping.", vesselType.Name, tokens[4]));
-                        modified = true;
-                        continue;
-                    }
-                    Unit newShip = new Unit()
-                    {
-                        Type = vesselType,
-                        House = Map.HouseTypes.Where(t => t.Equals(tokens[0])).FirstOrDefault(),
-                        Strength = strength,
-                        Direction = DirectionType.GetDirectionType(dirValue, Map.UnitDirectionTypes),
-                        Mission = Map.MissionTypes.Where(t => t.Equals(tokens[5])).FirstOrDefault() ?? Map.GetDefaultMission(vesselType),
-                    };
-                    if (newShip.House == null)
-                    {
-                        HouseType defHouse;
-                        if ("ITALY".Equals(tokens[0], StringComparison.OrdinalIgnoreCase))
-                        {
-                            defHouse = HouseTypes.Ukraine;
-                            errors.Add(string.Format("Ship '{0}' on cell {1} has obsolete house '{2}'; substituting with '{3}'.", newShip.Type.Name, cell, tokens[0], defHouse.Name));
-                        }
-                        else
-                        {
-                            defHouse = Map.HouseTypes.First();
-                            errors.Add(string.Format("Ship '{0}' on cell {1} references unknown house '{2}'; clearing to '{3}'.", newShip.Type.Name, cell, tokens[0], defHouse.Name));
-                        }
-                        modified = true;
-                        newShip.House = defHouse;
-                    }
-                    if (Map.Technos.Add(cell, newShip))
-                    {
-                        if (!caseTrigs.ContainsKey(tokens[6]))
-                        {
-                            errors.Add(string.Format("Ship '{0}' on cell {1} links to unknown trigger '{2}'; clearing trigger.", vesselType.Name, cell, tokens[6]));
-                            modified = true;
-                            newShip.Trigger = Trigger.None;
-                        }
-                        else if (!checkUnitTrigs.Contains(tokens[6]))
-                        {
-                            errors.Add(string.Format("Ship '{0}' on cell {1} links to trigger '{2}' which does not contain an event or action applicable to ships; clearing trigger.", vesselType.Name, cell, tokens[6]));
-                            modified = true;
-                            newShip.Trigger = Trigger.None;
-                        }
-                        else
-                        {
-                            // Adapt to same case
-                            newShip.Trigger = caseTrigs[tokens[6]];
-                        }
-                    }
-                    else
-                    {
-                        ICellOccupier techno = Map.Technos[cell];
-                        if (techno is Building building)
-                        {
-                            errors.Add(string.Format("Ship '{0}' overlaps structure '{1}' in cell {2}; skipping.", vesselType.Name, building.Type.Name, cell));
-                            modified = true;
-                        }
-                        else if (techno is Overlay overlay)
-                        {
-                            errors.Add(string.Format("Ship '{0}' overlaps overlay '{1}' in cell {2}; skipping.", vesselType.Name, overlay.Type.Name, cell));
-                            modified = true;
-                        }
-                        else if (techno is Terrain terrain)
-                        {
-                            errors.Add(string.Format("Ship '{0}' overlaps terrain '{1}' in cell {2}; skipping.", vesselType.Name, terrain.Type.Name, cell));
-                            modified = true;
-                        }
-                        else if (techno is InfantryGroup infantry)
-                        {
-                            errors.Add(string.Format("Ship '{0}' overlaps infantry in cell {1}; skipping.", vesselType.Name, cell));
-                            modified = true;
-                        }
-                        else if (techno is Unit unit)
-                        {
-                            errors.Add(string.Format("Ship '{0}' overlaps unit '{1}' in cell {2}; skipping.", vesselType.Name, unit.Type.Name, cell));
-                            modified = true;
-                        }
-                        else
-                        {
-                            errors.Add(string.Format("Ship '{0}' overlaps unknown techno in cell {1}; skipping.", vesselType.Name, cell));
-                            modified = true;
-                        }
-                    }
-                }
-                else
+                if (tokens.Length != 7)
                 {
                     if (tokens.Length < 2)
                     {
                         errors.Add(string.Format("Ship entry '{0}' has wrong number of tokens (expecting 7).", kvp.Key));
-                        modified = true;
                     }
                     else
                     {
                         errors.Add(string.Format("Ship '{0}' has wrong number of tokens (expecting 7).", tokens[1]));
-                        modified = true;
                     }
+                    modified = true;
+                    continue;
+                }
+                UnitType vesselType = Map.AllUnitTypes.Where(t => t.IsVessel && t.Equals(tokens[1])).FirstOrDefault();
+                if (vesselType == null)
+                {
+                    errors.Add(string.Format("Ship '{0}' references unknown ship.", tokens[1]));
+                    modified = true;
+                    continue;
+                }
+                if (!Map.BasicSection.ExpansionEnabled && vesselType.IsExpansionOnly)
+                {
+                    errors.Add(string.Format("Expansion ship '{0}' encountered, but expansion units are not enabled; enabling expansion units.", vesselType.Name));
+                    modified = true;
+                    Map.BasicSection.ExpansionEnabled = true;
+                }
+                int strength;
+                if (!int.TryParse(tokens[2], out strength))
+                {
+                    errors.Add(string.Format("Strength for ship '{0}' cannot be parsed; value: '{1}'; skipping.", vesselType.Name, tokens[2]));
+                    modified = true;
+                    continue;
+                }
+                int cell;
+                if (!int.TryParse(tokens[3], out cell))
+                {
+                    errors.Add(string.Format("Cell for ship '{0}' cannot be parsed; value: '{1}'; skipping.", vesselType.Name, tokens[3]));
+                    modified = true;
+                    continue;
+                }
+                if (strength < 1 || strength > 256)
+                {
+                    int newStrength = strength.Restrict(1, 256);
+                    errors.Add(string.Format("Strength for ship '{0}' on cell {1} has illegal value {2}; corrected to {3}.", vesselType.Name, cell, strength, newStrength));
+                    strength = newStrength;
+                    modified = true;
+                }
+                int dirValue;
+                if (!int.TryParse(tokens[4], out dirValue))
+                {
+                    errors.Add(string.Format("Direction for ship '{0}' cannot be parsed; value: '{1}'; skipping.", vesselType.Name, tokens[4]));
+                    modified = true;
+                    continue;
+                }
+                DirectionType dirType;
+                if (!DirectionType.TryGetDirectionType(dirValue, Map.UnitDirectionTypes, out dirType))
+                {
+                    errors.Add(string.Format("Direction for ship '{0}', value {1}, cannot be matched to an accepted value. Reverting to {2} ({3}).",
+                        vesselType.Name, dirValue, dirType.ID, dirType.Name));
+                    modified = true;
+                }
+                Unit newShip = new Unit()
+                {
+                    Type = vesselType,
+                    House = Map.HouseTypes.Where(t => t.Equals(tokens[0])).FirstOrDefault(),
+                    Strength = strength,
+                    Direction = dirType,
+                    Mission = Map.MissionTypes.Where(t => t.Equals(tokens[5])).FirstOrDefault() ?? Map.GetDefaultMission(vesselType),
+                };
+                if (newShip.House == null)
+                {
+                    HouseType defHouse;
+                    if ("ITALY".Equals(tokens[0], StringComparison.OrdinalIgnoreCase))
+                    {
+                        defHouse = HouseTypes.Ukraine;
+                        errors.Add(string.Format("Ship '{0}' on cell {1} has obsolete house '{2}'; substituting with '{3}'.", newShip.Type.Name, cell, tokens[0], defHouse.Name));
+                    }
+                    else
+                    {
+                        defHouse = Map.HouseTypes.First();
+                        errors.Add(string.Format("Ship '{0}' on cell {1} references unknown house '{2}'; clearing to '{3}'.", newShip.Type.Name, cell, tokens[0], defHouse.Name));
+                    }
+                    modified = true;
+                    newShip.House = defHouse;
+                }
+                if (!Map.Technos.Add(cell, newShip))
+                {
+                    ICellOccupier techno = Map.Technos[cell];
+                    if (techno is Building building)
+                    {
+                        errors.Add(string.Format("Ship '{0}' overlaps structure '{1}' in cell {2}; skipping.", vesselType.Name, building.Type.Name, cell));
+                    }
+                    else if (techno is Overlay overlay)
+                    {
+                        errors.Add(string.Format("Ship '{0}' overlaps overlay '{1}' in cell {2}; skipping.", vesselType.Name, overlay.Type.Name, cell));
+                    }
+                    else if (techno is Terrain terrain)
+                    {
+                        errors.Add(string.Format("Ship '{0}' overlaps terrain '{1}' in cell {2}; skipping.", vesselType.Name, terrain.Type.Name, cell));
+                    }
+                    else if (techno is InfantryGroup infantry)
+                    {
+                        errors.Add(string.Format("Ship '{0}' overlaps infantry in cell {1}; skipping.", vesselType.Name, cell));
+                    }
+                    else if (techno is Unit unit)
+                    {
+                        errors.Add(string.Format("Ship '{0}' overlaps unit '{1}' in cell {2}; skipping.", vesselType.Name, unit.Type.Name, cell));
+                    }
+                    else
+                    {
+                        errors.Add(string.Format("Ship '{0}' overlaps unknown techno in cell {1}; skipping.", vesselType.Name, cell));
+                    }
+                    modified = true;
+                    continue;
+                }
+                if (!caseTrigs.ContainsKey(tokens[6]))
+                {
+                    errors.Add(string.Format("Ship '{0}' on cell {1} links to unknown trigger '{2}'; clearing trigger.", vesselType.Name, cell, tokens[6]));
+                    modified = true;
+                    newShip.Trigger = Trigger.None;
+                }
+                else if (!checkUnitTrigs.Contains(tokens[6]))
+                {
+                    errors.Add(string.Format("Ship '{0}' on cell {1} links to trigger '{2}' which does not contain an event or action applicable to ships; clearing trigger.", vesselType.Name, cell, tokens[6]));
+                    modified = true;
+                    newShip.Trigger = Trigger.None;
+                }
+                else
+                {
+                    // Adapt to same case
+                    newShip.Trigger = caseTrigs[tokens[6]];
                 }
             }
         }
@@ -1977,159 +1976,160 @@ namespace MobiusEditor.RedAlert
             foreach (KeyValuePair<string, string> kvp in infantrySection)
             {
                 string[] tokens = kvp.Value.Split(',');
-                if (tokens.Length == 8)
-                {
-                    InfantryType infantryType = Map.AllInfantryTypes.Where(t => t.Equals(tokens[1])).FirstOrDefault();
-                    if (infantryType == null)
-                    {
-                        errors.Add(string.Format("Infantry '{0}' references unknown infantry.", tokens[1]));
-                        modified = true;
-                        continue;
-                    }
-                    if (!Map.BasicSection.ExpansionEnabled && infantryType.IsExpansionOnly)
-                    {
-                        errors.Add(string.Format("Expansion infantry unit '{0}' encountered, but expansion units are not enabled; enabling expansion units.", infantryType.Name));
-                        modified = true;
-                        Map.BasicSection.ExpansionEnabled = true;
-                    }
-                    int strength;
-                    if (!int.TryParse(tokens[2], out strength))
-                    {
-                        errors.Add(string.Format("Strength for infantry '{0}' cannot be parsed; value: '{1}'; skipping.", infantryType.Name, tokens[2]));
-                        modified = true;
-                        continue;
-                    }
-                    int cell;
-                    if (!int.TryParse(tokens[3], out cell))
-                    {
-                        errors.Add(string.Format("Cell for infantry '{0}' cannot be parsed; value: '{1}'; skipping.", infantryType.Name, tokens[3]));
-                        modified = true;
-                        continue;
-                    }
-                    InfantryGroup infantryGroup = Map.Technos[cell] as InfantryGroup;
-                    if ((infantryGroup == null) && (Map.Technos[cell] == null))
-                    {
-                        infantryGroup = new InfantryGroup();
-                        Map.Technos.Add(cell, infantryGroup);
-                    }
-                    if (infantryGroup != null)
-                    {
-                        int stoppingPos;
-                        if (!int.TryParse(tokens[4], out stoppingPos))
-                        {
-                            errors.Add(string.Format("Sub-position for infantry '{0}' on cell {1} cannot be parsed; value: '{2}'; skipping.", infantryType.Name, cell, tokens[4]));
-                            modified = true;
-                            continue;
-                        }
-                        if (stoppingPos < Globals.NumInfantryStops)
-                        {
-                            int dirValue;
-                            if (!int.TryParse(tokens[6], out dirValue))
-                            {
-                                errors.Add(string.Format("Direction for infantry '{0}' on cell {1}, sub-position {2} cannot be parsed; value: '{3}'; skipping.", infantryType.Name, cell, stoppingPos, tokens[6]));
-                                modified = true;
-                                continue;
-                            }
-                            if (infantryGroup.Infantry[stoppingPos] == null)
-                            {
-                                if (!caseTrigs.ContainsKey(tokens[7]))
-                                {
-                                    errors.Add(string.Format("Infantry '{0}' on cell {1}, sub-position {2}  links to unknown trigger '{3}'; clearing trigger.", infantryType.Name, cell, stoppingPos, tokens[7]));
-                                    modified = true;
-                                    tokens[7] = Trigger.None;
-                                }
-                                else if (!checkUnitTrigs.Contains(tokens[7]))
-                                {
-                                    errors.Add(string.Format("Infantry '{0}' on cell {1}, sub-position {2}  links to trigger '{3}' which does not contain an event or action applicable to infantry; clearing trigger.", infantryType.Name, cell, stoppingPos, tokens[7]));
-                                    modified = true;
-                                    tokens[7] = Trigger.None;
-                                }
-                                else
-                                {
-                                    // Adapt to same case
-                                    tokens[7] = caseTrigs[tokens[7]];
-                                }
-                                Infantry inf = new Infantry(infantryGroup)
-                                {
-                                    Type = infantryType,
-                                    House = Map.HouseTypes.Where(t => t.Equals(tokens[0])).FirstOrDefault(),
-                                    Strength = strength,
-                                    Direction = DirectionType.GetDirectionType(dirValue, Map.UnitDirectionTypes),
-                                    Mission = Map.MissionTypes.Where(t => t.Equals(tokens[5])).FirstOrDefault() ?? Map.GetDefaultMission(infantryType),
-                                    Trigger = tokens[7]
-                                };
-                                infantryGroup.Infantry[stoppingPos] = inf;
-                                if (inf.House == null)
-                                {
-                                    HouseType defHouse;
-                                    if ("ITALY".Equals(tokens[0], StringComparison.OrdinalIgnoreCase))
-                                    {
-                                        defHouse = HouseTypes.Ukraine;
-                                        errors.Add(string.Format("Infantry '{0}' on cell {1}, sub-position {2} has obsolete house '{3}'; substituting with '{4}'.", inf.Type.Name, cell, stoppingPos, tokens[0], defHouse.Name));
-                                    }
-                                    else
-                                    {
-                                        defHouse = Map.HouseTypes.First();
-                                        errors.Add(string.Format("Infantry '{0}' on cell {1}, sub-position {2} references unknown house '{3}'; clearing to '{4}'.", inf.Type.Name, cell, stoppingPos, tokens[0], defHouse.Name));
-                                    }
-                                    modified = true;
-                                    inf.House = defHouse;
-                                }
-                            }
-                            else
-                            {
-                                errors.Add(string.Format("Infantry '{0}' overlaps another infantry at position {1} in cell {2}; skipping.", infantryType.Name, stoppingPos, cell));
-                                modified = true;
-                            }
-                        }
-                        else
-                        {
-                            errors.Add(string.Format("Infantry '{0}' has invalid position {1} in cell {2}; skipping.", infantryType.Name, stoppingPos, cell));
-                            modified = true;
-                        }
-                    }
-                    else
-                    {
-                        ICellOccupier techno = Map.Technos[cell];
-                        if (techno is Building building)
-                        {
-                            errors.Add(string.Format("Infantry '{0}' overlaps structure '{1}' in cell {2}; skipping.", infantryType.Name, building.Type.Name, cell));
-                            modified = true;
-                        }
-                        else if (techno is Overlay overlay)
-                        {
-                            errors.Add(string.Format("Infantry '{0}' overlaps overlay '{1}' in cell {2}; skipping.", infantryType.Name, overlay.Type.Name, cell));
-                            modified = true;
-                        }
-                        else if (techno is Terrain terrain)
-                        {
-                            errors.Add(string.Format("Infantry '{0}' overlaps terrain '{1}' in cell {2}; skipping.", infantryType.Name, terrain.Type.Name, cell));
-                            modified = true;
-                        }
-                        else if (techno is Unit unit)
-                        {
-                            errors.Add(string.Format("Infantry '{0}' overlaps unit '{1}' in cell {2}; skipping.", infantryType.Name, unit.Type.Name, cell));
-                            modified = true;
-                        }
-                        else
-                        {
-                            errors.Add(string.Format("Infantry '{0}' overlaps unknown techno in cell {1}; skipping.", infantryType.Name, cell));
-                            modified = true;
-                        }
-                    }
-                }
-                else
+                if (tokens.Length != 8)
                 {
                     if (tokens.Length < 2)
                     {
                         errors.Add(string.Format("Infantry entry '{0}' has wrong number of tokens (expecting 8).", kvp.Key));
-                        modified = true;
                     }
                     else
                     {
                         errors.Add(string.Format("Infantry '{0}' has wrong number of tokens (expecting 8).", tokens[1]));
-                        modified = true;
                     }
+                    modified = true;
+                    continue;
+                }
+                InfantryType infantryType = Map.AllInfantryTypes.Where(t => t.Equals(tokens[1])).FirstOrDefault();
+                if (infantryType == null)
+                {
+                    errors.Add(string.Format("Infantry '{0}' references unknown infantry.", tokens[1]));
+                    modified = true;
+                    continue;
+                }
+                if (!Map.BasicSection.ExpansionEnabled && infantryType.IsExpansionOnly)
+                {
+                    errors.Add(string.Format("Expansion infantry unit '{0}' encountered, but expansion units are not enabled; enabling expansion units.", infantryType.Name));
+                    modified = true;
+                    Map.BasicSection.ExpansionEnabled = true;
+                }
+                int strength;
+                if (!int.TryParse(tokens[2], out strength))
+                {
+                    errors.Add(string.Format("Strength for infantry '{0}' cannot be parsed; value: '{1}'; skipping.", infantryType.Name, tokens[2]));
+                    modified = true;
+                    continue;
+                }
+                int cell;
+                if (!int.TryParse(tokens[3], out cell))
+                {
+                    errors.Add(string.Format("Cell for infantry '{0}' cannot be parsed; value: '{1}'; skipping.", infantryType.Name, tokens[3]));
+                    modified = true;
+                    continue;
+                }
+                InfantryGroup infantryGroup = Map.Technos[cell] as InfantryGroup;
+                if ((infantryGroup == null) && (Map.Technos[cell] == null))
+                {
+                    infantryGroup = new InfantryGroup();
+                    Map.Technos.Add(cell, infantryGroup);
+                }
+                if (infantryGroup == null)
+                {
+                    ICellOccupier techno = Map.Technos[cell];
+                    if (techno is Building building)
+                    {
+                        errors.Add(string.Format("Infantry '{0}' overlaps structure '{1}' in cell {2}; skipping.", infantryType.Name, building.Type.Name, cell));
+                    }
+                    else if (techno is Overlay overlay)
+                    {
+                        errors.Add(string.Format("Infantry '{0}' overlaps overlay '{1}' in cell {2}; skipping.", infantryType.Name, overlay.Type.Name, cell));
+                    }
+                    else if (techno is Terrain terrain)
+                    {
+                        errors.Add(string.Format("Infantry '{0}' overlaps terrain '{1}' in cell {2}; skipping.", infantryType.Name, terrain.Type.Name, cell));
+                    }
+                    else if (techno is Unit unit)
+                    {
+                        errors.Add(string.Format("Infantry '{0}' overlaps unit '{1}' in cell {2}; skipping.", infantryType.Name, unit.Type.Name, cell));
+                    }
+                    else
+                    {
+                        errors.Add(string.Format("Infantry '{0}' overlaps unknown techno in cell {1}; skipping.", infantryType.Name, cell));
+                    }
+                    modified = true;
+                    continue;
+                }
+                int stoppingPos;
+                if (!int.TryParse(tokens[4], out stoppingPos))
+                {
+                    errors.Add(string.Format("Sub-position for infantry '{0}' on cell {1} cannot be parsed; value: '{2}'; skipping.", infantryType.Name, cell, tokens[4]));
+                    modified = true;
+                    continue;
+                }
+                if (stoppingPos >= Globals.NumInfantryStops)
+                {
+                    errors.Add(string.Format("Infantry '{0}' has invalid position {1} in cell {2}; skipping.", infantryType.Name, stoppingPos, cell));
+                    modified = true;
+                    continue;
+                }
+                if (strength < 1 || strength > 256)
+                {
+                    int newStrength = strength.Restrict(1, 256);
+                    errors.Add(string.Format("Strength for infantry '{0}' on cell {1}, sub-position {2} has illegal value {3}; corrected to {4}.", infantryType.Name, cell, stoppingPos, strength, newStrength));
+                    strength = newStrength;
+                    modified = true;
+                }
+                int dirValue;
+                if (!int.TryParse(tokens[6], out dirValue))
+                {
+                    errors.Add(string.Format("Direction for infantry '{0}' on cell {1}, sub-position {2} cannot be parsed; value: '{3}'; skipping.", infantryType.Name, cell, stoppingPos, tokens[6]));
+                    modified = true;
+                    continue;
+                }
+                DirectionType dirType;
+                if (!DirectionType.TryGetDirectionType(dirValue, Map.UnitDirectionTypes, out dirType))
+                {
+                    errors.Add(string.Format("Direction for infantry '{0}', value {1}, cannot be matched to an accepted value. Reverting to {2} ({3}).",
+                        infantryType.Name, dirValue, dirType.ID, dirType.Name));
+                    modified = true;
+                }
+                if (infantryGroup.Infantry[stoppingPos] != null)
+                {
+                    errors.Add(string.Format("Infantry '{0}' overlaps another infantry at position {1} in cell {2}; skipping.", infantryType.Name, stoppingPos, cell));
+                    modified = true;
+                    continue;
+                }
+                if (!caseTrigs.ContainsKey(tokens[7]))
+                {
+                    errors.Add(string.Format("Infantry '{0}' on cell {1}, sub-position {2} links to unknown trigger '{3}'; clearing trigger.", infantryType.Name, cell, stoppingPos, tokens[7]));
+                    modified = true;
+                    tokens[7] = Trigger.None;
+                }
+                else if (!checkUnitTrigs.Contains(tokens[7]))
+                {
+                    errors.Add(string.Format("Infantry '{0}' on cell {1}, sub-position {2} links to trigger '{3}' which does not contain an event or action applicable to infantry; clearing trigger.", infantryType.Name, cell, stoppingPos, tokens[7]));
+                    modified = true;
+                    tokens[7] = Trigger.None;
+                }
+                else
+                {
+                    // Adapt to same case
+                    tokens[7] = caseTrigs[tokens[7]];
+                }
+                Infantry inf = new Infantry(infantryGroup)
+                {
+                    Type = infantryType,
+                    House = Map.HouseTypes.Where(t => t.Equals(tokens[0])).FirstOrDefault(),
+                    Strength = strength,
+                    Direction = dirType,
+                    Mission = Map.MissionTypes.Where(t => t.Equals(tokens[5])).FirstOrDefault() ?? Map.GetDefaultMission(infantryType),
+                    Trigger = tokens[7]
+                };
+                infantryGroup.Infantry[stoppingPos] = inf;
+                if (inf.House == null)
+                {
+                    HouseType defHouse;
+                    if ("ITALY".Equals(tokens[0], StringComparison.OrdinalIgnoreCase))
+                    {
+                        defHouse = HouseTypes.Ukraine;
+                        errors.Add(string.Format("Infantry '{0}' on cell {1}, sub-position {2} has obsolete house '{3}'; substituting with '{4}'.", inf.Type.Name, cell, stoppingPos, tokens[0], defHouse.Name));
+                    }
+                    else
+                    {
+                        defHouse = Map.HouseTypes.First();
+                        errors.Add(string.Format("Infantry '{0}' on cell {1}, sub-position {2} references unknown house '{3}'; clearing to '{4}'.", inf.Type.Name, cell, stoppingPos, tokens[0], defHouse.Name));
+                    }
+                    modified = true;
+                    inf.House = defHouse;
                 }
             }
         }
@@ -2149,13 +2149,12 @@ namespace MobiusEditor.RedAlert
                     if (tokens.Length < 2)
                     {
                         errors.Add(string.Format("Structure entry '{0}' has wrong number of tokens (expecting 6).", kvp.Key));
-                        modified = true;
                     }
                     else
                     {
                         errors.Add(string.Format("Structure '{0}' has wrong number of tokens (expecting 6).", tokens[1]));
-                        modified = true;
                     }
+                    modified = true;
                     continue;
                 }
                 BuildingType buildingType = Map.BuildingTypes.Where(t => t.Equals(tokens[1])).FirstOrDefault();
@@ -2185,6 +2184,13 @@ namespace MobiusEditor.RedAlert
                     modified = true;
                     continue;
                 }
+                if (strength < 1 || strength > 256)
+                {
+                    int newStrength = strength.Restrict(1, 256);
+                    errors.Add(string.Format("Strength for structure '{0}' on cell {1} has illegal value {2}; corrected to {3}.", buildingType.Name, cell, strength, newStrength));
+                    strength = newStrength;
+                    modified = true;
+                }
                 // Do this here, before House or Trigger, since those get ignored if it's a wall type.
                 if (buildingType.IsWall && !Globals.AllowWallBuildings)
                 {
@@ -2204,6 +2210,13 @@ namespace MobiusEditor.RedAlert
                     modified = true;
                     continue;
                 }
+                DirectionType dirType;
+                if (!DirectionType.TryGetDirectionType(dirValue, Map.BuildingDirectionTypes, out dirType))
+                {
+                    errors.Add(string.Format("Direction for structure '{0}', value {1}, cannot be matched to an accepted value. Reverting to {2} ({3}).",
+                        buildingType.Name, dirValue, dirType.ID, dirType.Name));
+                    modified = true;
+                }
                 bool sellable = (tokens.Length > 6) && int.TryParse(tokens[6], out int sell) && sell != 0;
                 bool rebuild = (tokens.Length > 7) && int.TryParse(tokens[7], out int rebld) && rebld != 0;
                 Building newBld = new Building()
@@ -2211,7 +2224,7 @@ namespace MobiusEditor.RedAlert
                     Type = buildingType,
                     House = Map.HouseTypes.Where(t => t.Equals(tokens[0])).FirstOrDefault(),
                     Strength = strength,
-                    Direction = DirectionType.GetDirectionType(dirValue, Map.BuildingDirectionTypes),
+                    Direction = dirType,
                     Sellable = sellable,
                     Rebuild = rebuild
                 };
@@ -2220,7 +2233,7 @@ namespace MobiusEditor.RedAlert
                     HouseType defHouse;
                     if ("ITALY".Equals(tokens[0], StringComparison.OrdinalIgnoreCase))
                     {
-                        defHouse = RedAlert.HouseTypes.Ukraine;
+                        defHouse = HouseTypes.Ukraine;
                         errors.Add(string.Format("Structure '{0}' on cell {1} has obsolete house '{2}'; substituting with '{3}'.", buildingType.Name, cell, tokens[0], defHouse.Name));
                     }
                     else
@@ -2398,65 +2411,55 @@ namespace MobiusEditor.RedAlert
                 }
                 string name = kvp.Value.Split(',')[0];
                 TerrainType terrainType = Map.TerrainTypes.Where(t => t.Equals(name)).FirstOrDefault();
-                if (terrainType != null)
-                {
-                    if (Globals.FilterTheaterObjects && !terrainType.ExistsInTheater)
-                    {
-                        errors.Add(string.Format("Terrain '{0}' is not available in the set theater; skipping.", terrainType.Name));
-                        modified = true;
-                        continue;
-                    }
-                    Terrain newTerr = new Terrain
-                    {
-                        Type = terrainType,
-                        Trigger = Trigger.None
-                    };
-                    if (!Map.Technos.Add(cell, newTerr))
-                    {
-                        ICellOccupier techno = Map.FindBlockingObject(cell, terrainType, out int blockingCell, out int placementCell);
-                        string reportCell = blockingCell == -1 ? "<unknown>" : blockingCell.ToString();
-                        if (techno is Building building)
-                        {
-                            errors.Add(string.Format("Terrain '{0}' on cell {1} overlaps structure '{2}' placed on cell {3} at cell {4}; skipping.", terrainType.Name, cell, building.Type.Name, placementCell, reportCell));
-                            modified = true;
-                        }
-                        else if (techno is Overlay overlay)
-                        {
-                            errors.Add(string.Format("Terrain '{0}' on cell {1} overlaps overlay '{2}' at cell {3}; skipping.", terrainType.Name, cell, overlay.Type.Name, reportCell));
-                            modified = true;
-                        }
-                        else if (techno is Terrain terrain)
-                        {
-                            errors.Add(string.Format("Terrain '{0}' on cell {1} overlaps terrain '{2}' placed on cell {3} at cell {4}; skipping.", terrainType.Name, cell, terrain.Type.Name, placementCell, reportCell));
-                            modified = true;
-                        }
-                        else if (techno is InfantryGroup infantry)
-                        {
-                            errors.Add(string.Format("Terrain '{0}' on cell {1} overlaps infantry at cell {2}; skipping.", terrainType.Name, cell, reportCell));
-                            modified = true;
-                        }
-                        else if (techno is Unit unit)
-                        {
-                            errors.Add(string.Format("Terrain '{0}' on cell {1} overlaps unit '{2}' at cell {3}; skipping.", terrainType.Name, cell, unit.Type.Name, reportCell));
-                            modified = true;
-                        }
-                        else
-                        {
-                            if (blockingCell != -1)
-                            {
-                                errors.Add(string.Format("Terrain '{0}' placed on cell {1} overlaps unknown techno at cell {2}; skipping.", terrainType.Name, cell, blockingCell));
-                                modified = true;
-                            }
-                            else
-                            {
-                                errors.Add(string.Format("Terrain '{0}' placed on cell {1} crosses outside the map bounds; skipping.", terrainType.Name, cell));
-                            }
-                        }
-                    }
-                }
-                else
+                if (terrainType == null)
                 {
                     errors.Add(string.Format("Terrain '{0}' references unknown terrain.", name));
+                    modified = true;
+                    continue;
+                }
+                if (Globals.FilterTheaterObjects && !terrainType.ExistsInTheater)
+                {
+                    errors.Add(string.Format("Terrain '{0}' is not available in the set theater; skipping.", terrainType.Name));
+                    modified = true;
+                    continue;
+                }
+                Terrain newTerr = new Terrain
+                {
+                    Type = terrainType,
+                    Trigger = Trigger.None
+                };
+                if (!Map.Technos.Add(cell, newTerr))
+                {
+                    ICellOccupier techno = Map.FindBlockingObject(cell, terrainType, out int blockingCell, out int placementCell);
+                    string reportCell = blockingCell == -1 ? "<unknown>" : blockingCell.ToString();
+                    if (techno is Building building)
+                    {
+                        errors.Add(string.Format("Terrain '{0}' on cell {1} overlaps structure '{2}' placed on cell {3} at cell {4}; skipping.", terrainType.Name, cell, building.Type.Name, placementCell, reportCell));
+                    }
+                    else if (techno is Overlay overlay)
+                    {
+                        errors.Add(string.Format("Terrain '{0}' on cell {1} overlaps overlay '{2}' at cell {3}; skipping.", terrainType.Name, cell, overlay.Type.Name, reportCell));
+                    }
+                    else if (techno is Terrain terrain)
+                    {
+                        errors.Add(string.Format("Terrain '{0}' on cell {1} overlaps terrain '{2}' placed on cell {3} at cell {4}; skipping.", terrainType.Name, cell, terrain.Type.Name, placementCell, reportCell));
+                    }
+                    else if (techno is InfantryGroup infantry)
+                    {
+                        errors.Add(string.Format("Terrain '{0}' on cell {1} overlaps infantry at cell {2}; skipping.", terrainType.Name, cell, reportCell));
+                    }
+                    else if (techno is Unit unit)
+                    {
+                        errors.Add(string.Format("Terrain '{0}' on cell {1} overlaps unit '{2}' at cell {3}; skipping.", terrainType.Name, cell, unit.Type.Name, reportCell));
+                    }
+                    else if (blockingCell != -1)
+                    {
+                        errors.Add(string.Format("Terrain '{0}' placed on cell {1} overlaps unknown techno at cell {2}; skipping.", terrainType.Name, cell, blockingCell));
+                    }
+                    else
+                    {
+                        errors.Add(string.Format("Terrain '{0}' placed on cell {1} crosses outside the map bounds; skipping.", terrainType.Name, cell));
+                    }
                     modified = true;
                 }
             }
@@ -2492,13 +2495,12 @@ namespace MobiusEditor.RedAlert
                     if (point.Y == 0 || point.Y == lastLine)
                     {
                         errors.Add(string.Format("Overlay can not be placed on the first and last lines of the map. Cell: '{0}', Id: '{1}' (unknown); skipping.", i, overlayId));
-                        modified = true;
                     }
                     else
                     {
                         errors.Add(string.Format("Overlay ID {0} references unknown overlay.", overlayId));
-                        modified = true;
                     }
+                    modified = true;
                     continue;
                 }
                 if (point.Y == 0 || point.Y == lastLine)
@@ -2519,13 +2521,12 @@ namespace MobiusEditor.RedAlert
                     if (techno is Building building)
                     {
                         errors.Add(string.Format("{0} '{1}' overlaps structure '{2}' at cell {3}; skipping.", desc, overlayType.Name, building.Type.Name, i));
-                        modified = true;
                     }
                     else
                     {
                         errors.Add(string.Format("{0} '{1}' overlaps unknown techno in cell {2}; skipping.", desc, overlayType.Name, i));
-                        modified = true;
                     }
+                    modified = true;
                     continue;
                 }
                 Map.Overlay[i] = new Overlay { Type = overlayType, Icon = 0 };
@@ -2566,8 +2567,9 @@ namespace MobiusEditor.RedAlert
                         errors.Add(string.Format("Waypoint {0} out of range (expecting between {1} and {2}).", waypoint, 0, Map.Waypoints.Length - 1));
                         modified = true;
                     }
+                    continue;
                 }
-                else if (!Map.Metrics.Contains(cell))
+                if (!Map.Metrics.Contains(cell))
                 {
                     Map.Waypoints[waypoint].Cell = null;
                     // don't bother reporting illegal-but-empty entries.
@@ -2576,11 +2578,9 @@ namespace MobiusEditor.RedAlert
                         errors.Add(string.Format("Waypoint {0} cell value {1} out of range (expecting between {2} and {3}).", waypoint, cell, 0, Map.Metrics.Length - 1));
                         modified = true;
                     }
+                    continue;
                 }
-                else
-                {
-                    Map.Waypoints[waypoint].Cell = cell;
-                }
+                Map.Waypoints[waypoint].Cell = cell;
             }
         }
 
@@ -2593,36 +2593,31 @@ namespace MobiusEditor.RedAlert
             }
             foreach (KeyValuePair<string, string> kvp in cellTriggersSection)
             {
-                if (int.TryParse(kvp.Key, out int cell))
-                {
-                    if (Map.Metrics.Contains(cell))
-                    {
-                        if (!caseTrigs.ContainsKey(kvp.Value))
-                        {
-                            errors.Add(string.Format("Cell trigger {0} links to unknown trigger '{1}'; skipping.", cell, kvp.Value));
-                            modified = true;
-                        }
-                        else if (!checkCellTrigs.Contains(kvp.Value))
-                        {
-                            errors.Add(string.Format("Cell trigger {0} links to trigger '{1}' which does not contain a placeable event; skipping.", cell, kvp.Value));
-                            modified = true;
-                        }
-                        else
-                        {
-                            Map.CellTriggers[cell] = new CellTrigger(caseTrigs[kvp.Value]);
-                        }
-                    }
-                    else
-                    {
-                        errors.Add(string.Format("Cell trigger {0} outside map bounds; skipping.", cell));
-                        modified = true;
-                    }
-                }
-                else
+                if (!int.TryParse(kvp.Key, out int cell))
                 {
                     errors.Add(string.Format("Invalid cell trigger '{0}' (expecting integer).", kvp.Key));
                     modified = true;
+                    continue;
                 }
+                if (!Map.Metrics.Contains(cell))
+                {
+                    errors.Add(string.Format("Cell trigger {0} outside map bounds; skipping.", cell));
+                    modified = true;
+                    continue;
+                }
+                if (!caseTrigs.ContainsKey(kvp.Value))
+                {
+                    errors.Add(string.Format("Cell trigger {0} links to unknown trigger '{1}'; skipping.", cell, kvp.Value));
+                    modified = true;
+                    continue;
+                }
+                if (!checkCellTrigs.Contains(kvp.Value))
+                {
+                    errors.Add(string.Format("Cell trigger {0} links to trigger '{1}' which does not contain a placeable event; skipping.", cell, kvp.Value));
+                    modified = true;
+                    continue;
+                }
+                Map.CellTriggers[cell] = new CellTrigger(caseTrigs[kvp.Value]);
             }
         }
 
@@ -4196,7 +4191,6 @@ namespace MobiusEditor.RedAlert
                 {
                     foreach (Trigger tr in Map.Triggers)
                     {
-                        // "else if" is just to not check all; if it's on one then it's already added anyway.
                         if ((tr.Event1.Team == teamName &&
                                 tr.Event1.EventType == EventTypes.TEVENT_LEAVES_MAP) ||
                             (tr.Event2.Team == teamName && tr.EventControl != TriggerMultiStyleType.Only &&

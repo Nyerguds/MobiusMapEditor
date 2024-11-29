@@ -282,10 +282,7 @@ namespace MobiusEditor.Dialogs
                     mappingsIcons.Remove(col);
                     continue;
                 }
-                else
-                {
-                    lstMappings.Items.Add(entry);
-                }
+                lstMappings.Items.Add(entry);
             }
             if (indexToSelect != -1)
             {

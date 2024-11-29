@@ -570,10 +570,7 @@ namespace MobiusEditor.Model
                                 // Don't bother.
                                 continue;
                             }
-                            else
-                            {
-                                found = true;
-                            }
+                            found = true;
                         }
                         // Fetch dummy if definitely in bounds, first cell of a random one, or dummy is forced.
                         bool success = Globals.TheTilesetManager.GetTileData(nameToFetch, iconToFetch, out Tile tile, tryDummy, false);

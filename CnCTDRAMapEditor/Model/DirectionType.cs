@@ -70,17 +70,62 @@ namespace MobiusEditor.Model
             return Name;
         }
 
-        public static DirectionType GetDirectionType(int value, IEnumerable<DirectionType> directions)
+        /// <summary>
+        /// Tries to match a given value to the ID of one of the DirectionType objects in the list.
+        /// If it fails, <paramref name="output"/> will contain the item with the lowest ID from <paramref name="directions"/>,
+        /// so it always results in a valid object.
+        /// </summary>
+        /// <param name="value">Value to match to an ID.</param>
+        /// <param name="directions">Valid directions to pick from.</param>
+        /// <param name="output">The found match, or, if it failed, the lowest-ID item from <paramref name="directions"/>.</param>
+        /// <returns>True if the matching succeeded, false if the default value was returned.</returns>
+        public static bool TryGetDirectionType(int value, IEnumerable<DirectionType> directions, out DirectionType output)
         {
             IEnumerable<DirectionType> sortedDirections = directions.OrderBy(d => d.ID);
+            DirectionType foundType = null;
             foreach (DirectionType dirType in sortedDirections)
             {
                 if (dirType.ID >= value)
                 {
-                    return dirType;
+                    foundType = dirType;
                 }
             }
-            return sortedDirections.FirstOrDefault();
+            output = foundType ?? sortedDirections.FirstOrDefault();
+            return foundType != null;
         }
+
+        /// <summary>
+        /// Tries to match a given value to the ID of one of the DirectionType objects in the list.
+        /// If it fails, <paramref name="output"/> will contain the given <paramref name="defaultVal"/>.
+        /// </summary>
+        /// <param name="value">Value to match to an ID.</param>
+        /// <param name="directions">Valid directions to pick from.</param>
+        /// <param name="defaultVal"></param>
+        /// <param name="output">The found match, or, if it failed, <paramref name="defaultVal"/>.</param>
+        /// <returns>True if the matching succeeded, false if the default value was returned.</returns>
+        public static bool TryGetDirectionType(int value, IEnumerable<DirectionType> directions, DirectionType defaultVal, out DirectionType output)
+        {
+            bool found = TryGetDirectionType(value, directions, out output);
+            if (!found)
+            {
+                output = defaultVal;
+            }
+            return found;
+        }
+
+        /// <summary>
+        /// Tries to match a given value to the ID of one of the DirectionType objects in the list.
+        /// If it fails, it returns the item with the lowest ID from <paramref name="directions"/>,
+        /// so it always results in a valid object.
+        /// </summary>
+        /// <param name="value">Value to match to an ID.</param>
+        /// <param name="directions">Valid directions to pick from.</param>
+        /// <returns>True if the matching succeeded, false if the default value was returned.</returns>
+        public static DirectionType GetDirectionType(int value, IEnumerable<DirectionType> directions)
+        {
+            TryGetDirectionType(value, directions, out DirectionType output);
+            return output;
+        }
+
     }
 }
