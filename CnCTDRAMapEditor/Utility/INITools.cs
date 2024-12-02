@@ -268,7 +268,7 @@ namespace MobiusEditor.Utility
             return decompressedBytes;
         }
 
-        public static void CompressLCWSection(INISection section, byte[] uncompressedBytes)
+        public static INISection CompressLCWSection(INISection section, byte[] uncompressedBytes)
         {
             using (MemoryStream stream = new MemoryStream())
             using (BinaryWriter writer = new BinaryWriter(stream))
@@ -288,6 +288,7 @@ namespace MobiusEditor.Utility
                     section[(i + 1).ToString()] = values[i];
                 }
             }
+            return section;
         }
     }
 }

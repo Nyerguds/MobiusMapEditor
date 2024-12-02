@@ -3123,46 +3123,43 @@ namespace MobiusEditor.TiberianDawn
             return briefingSection;
         }
 
-        private void SaveMapPack(INI ini)
+        private INISection SaveMapPack(INI ini)
         {
             using (MemoryStream stream = new MemoryStream())
+            using (BinaryWriter writer = new BinaryWriter(stream, Encoding.UTF8, true))
             {
-                using (BinaryWriter writer = new BinaryWriter(stream, Encoding.UTF8, true))
+                for (int y = 0; y < Map.Metrics.Height; ++y)
                 {
-                    for (int y = 0; y < Map.Metrics.Height; ++y)
+                    for (int x = 0; x < Map.Metrics.Width; ++x)
                     {
-                        for (int x = 0; x < Map.Metrics.Width; ++x)
+                        Template template = Map.Templates[y, x];
+                        if (template != null && (template.Type.Flag & TemplateTypeFlag.Clear) == TemplateTypeFlag.None)
                         {
-                            Template template = Map.Templates[y, x];
-                            if (template != null && (template.Type.Flag & TemplateTypeFlag.Clear) == 0)
-                            {
-                                writer.Write((ushort)template.Type.ID);
-                            }
-                            else
-                            {
-                                writer.Write(ushort.MaxValue);
-                            }
+                            writer.Write((ushort)template.Type.ID);
                         }
-                    }
-                    for (int y = 0; y < Map.Metrics.Height; ++y)
-                    {
-                        for (int x = 0; x < Map.Metrics.Width; ++x)
+                        else
                         {
-                            Template template = Map.Templates[y, x];
-                            if (template != null && (template.Type.Flag & TemplateTypeFlag.Clear) == 0)
-                            {
-                                writer.Write((byte)template.Icon);
-                            }
-                            else
-                            {
-                                writer.Write((byte)0);
-                            }
+                            writer.Write(ushort.MaxValue);
                         }
                     }
                 }
-                stream.Flush();
+                for (int y = 0; y < Map.Metrics.Height; ++y)
+                {
+                    for (int x = 0; x < Map.Metrics.Width; ++x)
+                    {
+                        Template template = Map.Templates[y, x];
+                        if (template != null && (template.Type.Flag & TemplateTypeFlag.Clear) == TemplateTypeFlag.None)
+                        {
+                            writer.Write((byte)template.Icon);
+                        }
+                        else
+                        {
+                            writer.Write((byte)0);
+                        }
+                    }
+                }
                 ini.Sections.Remove("MapPack");
-                INITools.CompressLCWSection(ini.Sections.Add("MapPack"), stream.ToArray());
+                return INITools.CompressLCWSection(ini.Sections.Add("MapPack"), stream.ToArray());
             }
         }
 
