@@ -3523,22 +3523,28 @@ namespace MobiusEditor
             {
                 Globals.TheTilesetManager.GetTileData(template.Name, template.GetIconIndex(template.GetFirstValidIcon()), out templateTile);
             }
-            SmudgeType smudge = plugin.Map.SmudgeTypes.Where(sm => !sm.IsAutoBib && sm.Size.Width == 1 && sm.Size.Height == 1 && sm.Thumbnail != null
+            List<SmudgeType> smudges = plugin.Map.SmudgeTypes.Where(sm => !sm.IsAutoBib && sm.Size.Width == 1 && sm.Size.Height == 1 && sm.Thumbnail != null
                 && (!Globals.FilterTheaterObjects || sm.ExistsInTheater))
-                .OrderBy(sm => sm.Icons).ThenBy(sm => sm.ID).FirstOrDefault();
-            OverlayType overlay = plugin.Map.OverlayTypes.Where(ov => (ov.Flag & plugin.GameInfo.OverlayIconType) != OverlayTypeFlag.None && ov.Thumbnail != null
+                .OrderBy(sm => sm.Icons).ThenBy(sm => sm.ID).ToList();
+            SmudgeType smudge = smudges.FirstOrDefault(sm => sm.ExistsInTheater) ?? smudges.FirstOrDefault();
+            List<OverlayType> overlays = plugin.Map.OverlayTypes.Where(ov => (ov.Flag & plugin.GameInfo.OverlayIconType) != OverlayTypeFlag.None && ov.Thumbnail != null
                 && (!Globals.FilterTheaterObjects || ov.ExistsInTheater))
-                .OrderBy(ov => ov.ID).FirstOrDefault();
-            TerrainType terrain = plugin.Map.TerrainTypes.Where(tr => tr.Thumbnail != null && !Globals.FilterTheaterObjects || tr.ExistsInTheater)
-                .OrderBy(tr => tr.ID).FirstOrDefault();
-            InfantryType infantry = plugin.Map.InfantryTypes.FirstOrDefault();
+                .OrderBy(ov => ov.ID).ToList();
+            OverlayType overlay = overlays.FirstOrDefault(ov => ov.ExistsInTheater) ?? overlays.FirstOrDefault();
+            List<TerrainType> terrains = plugin.Map.TerrainTypes.Where(tr => tr.Thumbnail != null && !Globals.FilterTheaterObjects || tr.ExistsInTheater)
+                .OrderBy(tr => tr.ID).ToList();
+            TerrainType terrain = terrains.FirstOrDefault(tr => tr.ExistsInTheater) ?? terrains.FirstOrDefault(tr => tr.GraphicsFound) ?? terrains.FirstOrDefault();
+            InfantryType infantry = plugin.Map.InfantryTypes.FirstOrDefault(tr => tr.GraphicsFound) ?? plugin.Map.InfantryTypes.FirstOrDefault();
             UnitType unit = plugin.Map.UnitTypes.FirstOrDefault();
-            BuildingType building = plugin.Map.BuildingTypes.Where(bl => bl.Size.Width == 2 && bl.Size.Height == 2
-                                        && (!Globals.FilterTheaterObjects || !bl.IsTheaterDependent || bl.ExistsInTheater)).OrderBy(bl => bl.ID).FirstOrDefault();
-            OverlayType resource = plugin.Map.OverlayTypes.Where(ov => ov.Flag.HasFlag(OverlayTypeFlag.TiberiumOrGold)
-                                        && (!Globals.FilterTheaterObjects || ov.ExistsInTheater)).OrderBy(ov => ov.ID).FirstOrDefault();
-            OverlayType wall = plugin.Map.OverlayTypes.Where(ov => ov.Flag.HasFlag(OverlayTypeFlag.Wall)
-                                        && (!Globals.FilterTheaterObjects || ov.ExistsInTheater)).OrderBy(ov => ov.ID).FirstOrDefault();
+            List<BuildingType> buildings = plugin.Map.BuildingTypes.Where(bl => bl.Size.Width == 2 && bl.Size.Height == 2
+                                        && (!Globals.FilterTheaterObjects || !bl.IsTheaterDependent || bl.ExistsInTheater)).OrderBy(bl => bl.ID).ToList();
+            BuildingType building = buildings.FirstOrDefault(bl => !bl.IsTheaterDependent || bl.ExistsInTheater) ?? buildings.FirstOrDefault(bl => bl.GraphicsFound) ?? buildings.FirstOrDefault();
+            List<OverlayType> resources = plugin.Map.OverlayTypes.Where(ov => ov.Flag.HasFlag(OverlayTypeFlag.TiberiumOrGold)
+                                        && (!Globals.FilterTheaterObjects || ov.ExistsInTheater)).OrderBy(ov => ov.ID).ToList();
+            OverlayType resource = resources.FirstOrDefault(ov => ov.ExistsInTheater) ?? resources.FirstOrDefault();
+            List<OverlayType> walls = plugin.Map.OverlayTypes.Where(ov => ov.Flag.HasFlag(OverlayTypeFlag.Wall)
+                                        && (!Globals.FilterTheaterObjects || ov.ExistsInTheater)).OrderBy(ov => ov.ID).ToList();
+            OverlayType wall = walls.FirstOrDefault(ov => ov.ExistsInTheater) ?? walls.FirstOrDefault();
             LoadNewIcon(mapToolStripButton, templateTile?.Image, plugin, 0);
             LoadNewIcon(smudgeToolStripButton, smudge?.Thumbnail, plugin, 1);
             //LoadNewIcon(overlayToolStripButton, overlayTile?.Image, plugin, 2);

@@ -56,19 +56,19 @@ namespace MobiusEditor.Model
         {
             get
             {
-                if (!this.IsTheaterDependent || this.ExistsInTheater)
+                if (!IsTheaterDependent || ExistsInTheater)
                 {
-                    return this.DisplayName;
+                    return DisplayName;
                 }
                 else
                 {
-                    return this.DisplayName + " (different theater)";
+                    return DisplayName + " (different theater)";
                 }
             }
         }
 
         public BuildingTypeFlag Flag { get; private set; }
-        public String GraphicsSource { get; private set; }
+        public string GraphicsSource { get; private set; }
         public int FrameOffset { get; private set; }
         public int PowerUsage { get; set; }
         public int PowerProduction { get; set; }
@@ -84,24 +84,24 @@ namespace MobiusEditor.Model
         public Size Size => BaseOccupyMask.GetDimensions();
         public bool HasBib
         {
-            get { return this.Flag.HasFlag(BuildingTypeFlag.Bib); }
+            get { return Flag.HasFlag(BuildingTypeFlag.Bib); }
             set
             {
                 // Bibs are only supported for widths 2 to 4
-                if (value && this.Size.Width >= 2 && this.Size.Width <= 4)
+                if (value && Size.Width >= 2 && Size.Width <= 4)
                 {
-                    this.Flag |= BuildingTypeFlag.Bib;
+                    Flag |= BuildingTypeFlag.Bib;
                 }
                 else
                 {
-                    this.Flag &= ~BuildingTypeFlag.Bib;
+                    Flag &= ~BuildingTypeFlag.Bib;
                 }
-                this.RecalculateBibs();
+                RecalculateBibs();
             }
         }
 
         public string OwnerHouse { get; private set; }
-        public bool IsTheaterDependent => this.Flag.HasFlag(BuildingTypeFlag.TheaterDependent);
+        public bool IsTheaterDependent => Flag.HasFlag(BuildingTypeFlag.TheaterDependent);
         public string FactoryOverlay { get; private set; }
         public Bitmap Thumbnail { get; set; }
         public bool ExistsInTheater { get; set; }
@@ -111,11 +111,12 @@ namespace MobiusEditor.Model
         public bool IsHarvester => false;
         public bool IsExpansionOnly => false;
 
-        public bool IsFake => this.Flag.HasFlag(BuildingTypeFlag.Fake);
-        public bool HasTurret => this.Flag.HasFlag(BuildingTypeFlag.Turret);
-        public bool IsSingleFrame => this.Flag.HasFlag(BuildingTypeFlag.SingleFrame);
-        public bool CanRemap => !this.Flag.HasFlag(BuildingTypeFlag.NoRemap);
-        public bool IsWall => this.Flag.HasFlag(BuildingTypeFlag.Wall);
+        public bool IsFake => Flag.HasFlag(BuildingTypeFlag.Fake);
+        public bool HasTurret => Flag.HasFlag(BuildingTypeFlag.Turret);
+        public bool IsSingleFrame => Flag.HasFlag(BuildingTypeFlag.SingleFrame);
+        public bool CanRemap => !Flag.HasFlag(BuildingTypeFlag.NoRemap);
+        public bool IsWall => Flag.HasFlag(BuildingTypeFlag.Wall);
+        public bool GraphicsFound { get; private set; }
         /// <summary>
         /// Value for Z-sorting; can be used to make buildings specifically show as "flatter" than others so pieces sticking out at the top don't overlap objects on these cells.
         /// </summary>
@@ -124,22 +125,22 @@ namespace MobiusEditor.Model
 
         public BuildingType(int id, string name, string textId, int powerProd, int powerUse, int storage, bool capturable, int width, int height, string occupyMask, string ownerHouse, string factoryOverlay, int frameOffset, String graphicsSource, BuildingTypeFlag flag, int zOrder)
         {
-            this.ID = id;
-            this.Flag = flag;
-            this.FrameOffset = frameOffset;
-            this.Name = name;
-            this.GraphicsSource = graphicsSource ?? name;
-            this.nameId = textId;
-            this.PowerProduction = powerProd;
-            this.PowerUsage = powerUse;
-            this.Storage = storage;
-            this.Capturable = capturable;
-            this.BaseOccupyMask = GeneralUtils.GetMaskFromString(width, height, occupyMask, '0', ' ');
-            this.OwnerHouse = ownerHouse;
-            this.FactoryOverlay = factoryOverlay;
-            this.ZOrder = zOrder;
+            ID = id;
+            Flag = flag;
+            FrameOffset = frameOffset;
+            Name = name;
+            GraphicsSource = graphicsSource ?? name;
+            nameId = textId;
+            PowerProduction = powerProd;
+            PowerUsage = powerUse;
+            Storage = storage;
+            Capturable = capturable;
+            BaseOccupyMask = GeneralUtils.GetMaskFromString(width, height, occupyMask, '0', ' ');
+            OwnerHouse = ownerHouse;
+            FactoryOverlay = factoryOverlay;
+            ZOrder = zOrder;
             // Check on width and disable if needed. This also calls RecalculateBibs.
-            this.HasBib = this.HasBib;
+            HasBib = HasBib;
         }
 
         public BuildingType(int id, string name, string textId, int powerProd, int powerUse, int storage, bool capturable, int width, int height, string occupyMask, string ownerHouse, string factoryOverlay, int frameOffset, String graphicsSource, BuildingTypeFlag flag)
@@ -194,40 +195,40 @@ namespace MobiusEditor.Model
 
         private void RecalculateBibs()
         {
-            int maskY = this.BaseOccupyMask.GetLength(0);
-            int maskX = this.BaseOccupyMask.GetLength(1);
-            if (this.HasBib)
+            int maskY = BaseOccupyMask.GetLength(0);
+            int maskX = BaseOccupyMask.GetLength(1);
+            if (HasBib)
             {
-                this.OccupyMask = new bool[maskY + 1, maskX];
+                OccupyMask = new bool[maskY + 1, maskX];
                 for (int y = 0; y < maskY; ++y)
                 {
                     for (int x = 0; x < maskX; ++x)
                     {
-                        this.OccupyMask[y, x] = this.BaseOccupyMask[y, x];
+                        OccupyMask[y, x] = BaseOccupyMask[y, x];
                     }
                 }
                 if (Globals.BlockingBibs)
                 {
                     for (int x = 0; x < maskX; ++x)
                     {
-                        this.OccupyMask[maskY, x] = true;
-                        this.OccupyMask[maskY - 1, x] = true;
+                        OccupyMask[maskY, x] = true;
+                        OccupyMask[maskY - 1, x] = true;
                     }
                 }
             }
             else
             {
-                this.OccupyMask = this.BaseOccupyMask;
+                OccupyMask = BaseOccupyMask;
             }
         }
 
         public BuildingType Clone()
         {
             // Get original dimensions, and mask in string form.
-            int baseMaskY = this.BaseOccupyMask.GetLength(0);
-            int baseMaskX = this.BaseOccupyMask.GetLength(1);
-            string occupyMask = GeneralUtils.GetStringFromMask(this.BaseOccupyMask, '1', '0', ' ');
-            BuildingType newBld = new BuildingType(this.ID, this.Name, this.nameId, this.PowerProduction, this.PowerUsage, this.Storage, this.Capturable, baseMaskX, baseMaskY, occupyMask, this.OwnerHouse, this.FactoryOverlay, this.FrameOffset, this.GraphicsSource, this.Flag, this.ZOrder);
+            int baseMaskY = BaseOccupyMask.GetLength(0);
+            int baseMaskX = BaseOccupyMask.GetLength(1);
+            string occupyMask = GeneralUtils.GetStringFromMask(BaseOccupyMask, '1', '0', ' ');
+            BuildingType newBld = new BuildingType(ID, Name, nameId, PowerProduction, PowerUsage, Storage, Capturable, baseMaskX, baseMaskY, occupyMask, OwnerHouse, FactoryOverlay, FrameOffset, GraphicsSource, Flag, ZOrder);
             return newBld;
         }
 
@@ -239,45 +240,45 @@ namespace MobiusEditor.Model
             }
             else if (obj is sbyte sb)
             {
-                return this.ID == sb;
+                return ID == sb;
             }
             else if (obj is byte b)
             {
-                return this.ID == b;
+                return ID == b;
             }
             else if (obj is int i)
             {
-                return this.ID == i;
+                return ID == i;
             }
             else if (obj is string)
             {
-                return string.Equals(this.Name, obj as string, StringComparison.OrdinalIgnoreCase);
+                return string.Equals(Name, obj as string, StringComparison.OrdinalIgnoreCase);
             }
             return base.Equals(obj);
         }
 
         public override int GetHashCode()
         {
-            return this.ID.GetHashCode();
+            return ID.GetHashCode();
         }
 
         public override string ToString()
         {
-            return (this.Name ?? String.Empty).ToUpperInvariant();
+            return (Name ?? String.Empty).ToUpperInvariant();
         }
 
         public void InitDisplayName()
         {
-            this.DisplayName = !String.IsNullOrEmpty(this.nameId) && !String.IsNullOrEmpty(Globals.TheGameTextManager[this.nameId])
-                ? Globals.TheGameTextManager[this.nameId] + " (" + this.Name.ToUpperInvariant() + ")"
-                : this.Name.ToUpperInvariant();
+            DisplayName = !String.IsNullOrEmpty(nameId) && !String.IsNullOrEmpty(Globals.TheGameTextManager[nameId])
+                ? Globals.TheGameTextManager[nameId] + " (" + Name.ToUpperInvariant() + ")"
+                : Name.ToUpperInvariant();
         }
 
         public void Init(GameInfo gameInfo, HouseType house, DirectionType direction)
         {
-            this.InitDisplayName();
-            this.ExistsInTheater = Globals.TheTilesetManager.TileExists(this.GraphicsSource);
-            Bitmap oldImage = this.Thumbnail;
+            InitDisplayName();
+            ExistsInTheater = Globals.TheTilesetManager.TileExists(GraphicsSource);
+            Bitmap oldImage = Thumbnail;
             Building mockBuilding = new Building()
             {
                 Type = this,
@@ -288,28 +289,29 @@ namespace MobiusEditor.Model
             RenderInfo render = MapRenderer.RenderBuilding(gameInfo, null, Point.Empty, Globals.PreviewTileSize, Globals.PreviewTileScale, mockBuilding, false);
             if (render.RenderedObject != null)
             {
-                Bitmap th = new Bitmap(this.Size.Width * Globals.PreviewTileSize.Width, this.Size.Height * Globals.PreviewTileSize.Height);
+                Bitmap th = new Bitmap(Size.Width * Globals.PreviewTileSize.Width, Size.Height * Globals.PreviewTileSize.Height);
                 th.SetResolution(96, 96);
                 using (Graphics g = Graphics.FromImage(th))
                 {
                     MapRenderer.SetRenderSettings(g, Globals.PreviewSmoothScale);
                     render.RenderAction(g);
-                    if (this.IsFake)
+                    if (IsFake)
                     {
                         Size previewSize = mockBuilding.OccupyMask.GetDimensions();
                         Rectangle visibleBounds = new Rectangle(Point.Empty, previewSize);
                         MapRenderer.RenderAllFakeBuildingLabels(g, gameInfo, (Point.Empty, mockBuilding).Yield(), visibleBounds, Globals.PreviewTileSize);
                     }
+                    GraphicsFound = !render.IsDummy;
                 }
-                this.Thumbnail = th;
+                Thumbnail = th;
                 // calculate the areas of this that can overlap other objects (include shadow)
-                this.OverlapMask = GeneralUtils.MakeOpaqueMask(th, this.Size, 25, 10, 20, 0x10, false);
+                OverlapMask = GeneralUtils.MakeOpaqueMask(th, Size, 25, 10, 20, 0x10, false);
                 // calculate the areas of this that need to be overlapped to consider this covered (exclude shadow)
-                this.ContentMask = GeneralUtils.MakeOpaqueMask(th, this.Size, 25, 10, 20, 0xE0, !Globals.UseClassicFiles);
+                ContentMask = GeneralUtils.MakeOpaqueMask(th, Size, 25, 10, 20, 0xE0, !Globals.UseClassicFiles);
             }
             else
             {
-                this.Thumbnail = null;
+                Thumbnail = null;
             }
             if (oldImage != null)
             {
@@ -320,9 +322,9 @@ namespace MobiusEditor.Model
 
         public void Reset()
         {
-            this.ExistsInTheater = false;
-            Bitmap oldImage = this.Thumbnail;
-            this.Thumbnail = null;
+            ExistsInTheater = false;
+            Bitmap oldImage = Thumbnail;
+            Thumbnail = null;
             if (oldImage != null)
             {
                 try { oldImage.Dispose(); }

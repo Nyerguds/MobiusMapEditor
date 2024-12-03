@@ -33,5 +33,7 @@ namespace MobiusEditor.Interface
         bool IsExpansionOnly { get; }
         /// <summary>True if this techno type adapts to its house colors.</summary>
         bool CanRemap { get; }
+        /// <summary>True if graphics for this object could be loaded on init.</summary>
+        bool GraphicsFound { get; }
     }
 }

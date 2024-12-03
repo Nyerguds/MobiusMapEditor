@@ -52,6 +52,7 @@ namespace MobiusEditor.Utility
                 try { cachedImages[i].Dispose(); }
                 catch { /* Ignore */ }
             }
+            processedMissingTexture = false;
         }
 
         public (Bitmap, Rectangle) GetTexture(string filename, ITeamColor teamColor, bool generateFallback)

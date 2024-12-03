@@ -55,7 +55,7 @@ namespace MobiusEditor.Model
         Frames16Simple      /**/ = 1 << 2,
         /// <summary>Specifies that this rotation is 16 frames, but saved as 8-frame because it is front-to-back symmetrical and thus the second half of the frames is the same.</summary>
         Frames16Symmetrical /**/ = 1 << 3,
-        /// <summary>Specifies that this rotation is cardinal drections only; 8 frames. Generally used for walkers.</summary>
+        /// <summary>Specifies that this rotation is cardinal and intercardinal directions only; 8 frames. Generally used for walkers.</summary>
         Frames08Cardinal    /**/ = 1 << 4,
         /// <summary>Specifies that this unit or turret only shows a single frame.</summary>
         Frames01Single      /**/ = 1 << 5,
@@ -106,7 +106,7 @@ namespace MobiusEditor.Model
         public override bool IsGroundUnit => false;
         public override bool IsAircraft => true;
         public override bool IsVessel => false;
-        public override bool IsFixedWing => this.Flag.HasFlag(UnitTypeFlag.IsFixedWing);
+        public override bool IsFixedWing => Flag.HasFlag(UnitTypeFlag.IsFixedWing);
 
         public AircraftType(int id, string name, string textId, string ownerHouse, FrameUsage bodyFrameUsage, FrameUsage turrFrameUsage, string turret, string turret2, int turrOffset, int turretY, UnitTypeFlag flags)
             : base(id, name, textId, ownerHouse, bodyFrameUsage, turrFrameUsage, turret, turret2, turrOffset, turretY, flags)
@@ -169,70 +169,71 @@ namespace MobiusEditor.Model
         public abstract bool IsAircraft { get; }
         public abstract bool IsVessel { get; }
         public abstract bool IsFixedWing { get; }
-        public bool HasTurret => this.Flag.HasFlag(UnitTypeFlag.HasTurret);
-        public bool HasDoubleTurret => this.Flag.HasFlag(UnitTypeFlag.HasDoubleTurret);
-        public bool IsArmed => this.Flag.HasFlag(UnitTypeFlag.IsArmed);
-        public bool IsHarvester => this.Flag.HasFlag(UnitTypeFlag.IsHarvester);
-        public bool IsExpansionOnly => this.Flag.HasFlag(UnitTypeFlag.IsExpansionUnit);
-        public bool CanRemap => !this.Flag.HasFlag(UnitTypeFlag.NoRemap);
+        public bool HasTurret => Flag.HasFlag(UnitTypeFlag.HasTurret);
+        public bool HasDoubleTurret => Flag.HasFlag(UnitTypeFlag.HasDoubleTurret);
+        public bool IsArmed => Flag.HasFlag(UnitTypeFlag.IsArmed);
+        public bool IsHarvester => Flag.HasFlag(UnitTypeFlag.IsHarvester);
+        public bool IsExpansionOnly => Flag.HasFlag(UnitTypeFlag.IsExpansionUnit);
+        public bool CanRemap => !Flag.HasFlag(UnitTypeFlag.NoRemap);
+        public bool GraphicsFound { get; private set; }
         private string nameId;
 
         public Bitmap Thumbnail { get; set; }
 
         public UnitType(int id, string name, string textId, string ownerHouse, FrameUsage bodyFrameUsage, FrameUsage turrFrameUsage, string turret, string turret2, int turrOffset, int turretY, UnitTypeFlag flags)
         {
-            this.ID = id;
-            this.Name = name;
-            this.nameId = textId;
-            this.OwnerHouse = ownerHouse;
+            ID = id;
+            Name = name;
+            nameId = textId;
+            OwnerHouse = ownerHouse;
             bool hasTurret = flags.HasFlag(UnitTypeFlag.HasTurret);
-            this.Turret = hasTurret ? turret : null;
-            this.SecondTurret = hasTurret && flags.HasFlag(UnitTypeFlag.HasDoubleTurret) ? turret2 : null;
-            this.TurretOffset = turrOffset;
-            this.TurretY = turretY;
-            this.Flag = flags;
-            this.BodyFrameUsage = bodyFrameUsage;
-            this.TurretFrameUsage = turrFrameUsage;
+            Turret = hasTurret ? turret : null;
+            SecondTurret = hasTurret && flags.HasFlag(UnitTypeFlag.HasDoubleTurret) ? turret2 : null;
+            TurretOffset = turrOffset;
+            TurretY = turretY;
+            Flag = flags;
+            BodyFrameUsage = bodyFrameUsage;
+            TurretFrameUsage = turrFrameUsage;
         }
 
         public override bool Equals(object obj)
         {
             if (obj is UnitType unit)
             {
-                return ReferenceEquals(this, obj) || string.Equals(this.Name, unit.Name, StringComparison.OrdinalIgnoreCase) && this.ID == unit.ID;
+                return ReferenceEquals(this, obj) || string.Equals(Name, unit.Name, StringComparison.OrdinalIgnoreCase) && ID == unit.ID;
             }
             else if (obj is sbyte)
             {
-                return this.ID == (sbyte)obj;
+                return ID == (sbyte)obj;
             }
             else if (obj is string)
             {
-                return string.Equals(this.Name, obj as string, StringComparison.OrdinalIgnoreCase);
+                return string.Equals(Name, obj as string, StringComparison.OrdinalIgnoreCase);
             }
             return base.Equals(obj);
         }
 
         public override int GetHashCode()
         {
-            return this.ID.GetHashCode();
+            return ID.GetHashCode();
         }
 
         public override string ToString()
         {
-            return this.Name;
+            return Name;
         }
 
         public void InitDisplayName()
         {
-            this.DisplayName = !String.IsNullOrEmpty(this.nameId) && !String.IsNullOrEmpty(Globals.TheGameTextManager[this.nameId])
-                ? Globals.TheGameTextManager[this.nameId] + " (" + this.Name.ToUpperInvariant() + ")"
-                : this.Name.ToUpperInvariant();
+            DisplayName = !String.IsNullOrEmpty(nameId) && !String.IsNullOrEmpty(Globals.TheGameTextManager[nameId])
+                ? Globals.TheGameTextManager[nameId] + " (" + Name.ToUpperInvariant() + ")"
+                : Name.ToUpperInvariant();
         }
 
         public void Init(GameInfo gameInfo, HouseType house, DirectionType direction)
         {
             InitDisplayName();
-            Bitmap oldImage = this.Thumbnail;
+            Bitmap oldImage = Thumbnail;
             Unit mockUnit = new Unit()
             {
                 Type = this,
@@ -255,13 +256,14 @@ namespace MobiusEditor.Model
                     {
                         render.RenderAction(g);
                     }
+                    GraphicsFound = !render.IsDummy;
                 }
                 using (Graphics g2 = Graphics.FromImage(unitThumbnail))
                 {
                     g2.DrawImage(bigThumbnail, new Point(-Globals.PreviewTileWidth / 2, -Globals.PreviewTileHeight / 2));
                 }
             }
-            this.Thumbnail = unitThumbnail;
+            Thumbnail = unitThumbnail;
             if (oldImage != null)
             {
                 try { oldImage.Dispose(); }
@@ -270,8 +272,8 @@ namespace MobiusEditor.Model
         }
         public void Reset()
         {
-            Bitmap oldImage = this.Thumbnail;
-            this.Thumbnail = null;
+            Bitmap oldImage = Thumbnail;
+            Thumbnail = null;
             if (oldImage != null)
             {
                 try { oldImage.Dispose(); }

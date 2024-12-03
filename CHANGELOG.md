@@ -693,3 +693,5 @@ Unreleased
 * The editor will now only connect to Steam after performing all the required map validations.
 * Added the ability to open the Nintendo 64 map type for Tiberian Dawn.
 * When removing the obsolete old "clear" terrain in RA interior maps, the generated open areas for allowing reinforcements now use the default dark floor type, rather than the first-found passable 1x1 tile.
+* When FilterTheaterObjects is disabled, the icons in the top bar will now still prefer an existing object to show as example.
+* Fixed bug that made the fallback dummy texture not show correctly after loading a second map where it is used.

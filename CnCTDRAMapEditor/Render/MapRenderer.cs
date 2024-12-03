@@ -37,21 +37,19 @@ namespace MobiusEditor.Render
         public Action<Graphics> RenderAction { get; private set; }
         public int ZOrder { get; private set; }
         public ITechno RenderedObject { get; private set; }
-        public bool IsRendered { get; set; }
-        public bool isMock { get; set; }
+        public bool IsDummy { get; set; }
 
-        public RenderInfo(Point renderPosition, Action<Graphics> paintAction, int zOrder, ITechno paintedObject, bool isMock)
+        public RenderInfo(Point renderPosition, Action<Graphics> paintAction, int zOrder, ITechno paintedObject, bool isDummy)
         {
             this.RenderBasePoint = renderPosition;
             this.RenderAction = paintAction;
             this.ZOrder = zOrder;
             this.RenderedObject = paintedObject;
-            this.isMock = isMock;
-            this.IsRendered = false;
+            this.IsDummy = isDummy;
         }
 
-        public RenderInfo(Point renderPosition, Action<Graphics> paintAction, ITechno paintedObject, bool isMock)
-            :this(renderPosition, paintAction, Globals.ZOrderDefault, paintedObject, isMock)
+        public RenderInfo(Point renderPosition, Action<Graphics> paintAction, ITechno paintedObject, bool isDummy)
+            :this(renderPosition, paintAction, Globals.ZOrderDefault, paintedObject, isDummy)
         {
         }
     }
