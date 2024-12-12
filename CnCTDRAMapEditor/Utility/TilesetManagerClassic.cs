@@ -149,10 +149,15 @@ namespace MobiusEditor.Utility
             return index;
         }
 
-        public bool GetTeamColorTileData(string name, int shape, ITeamColor teamColor, out Tile tile, bool generateFallback, bool onlyIfDefined, bool withShadow, string remapGraphicsSource, byte[] remapTable, bool clearCachedVersion)
+        public bool GetTeamColorTileData(string name, int shape, ITeamColor teamColor, out Tile tile, bool generateFallback, bool onlyIfDefined, bool withShadow, string remapGraphicsSource, byte[] remapTable, bool clearCachedVersion, Dictionary<byte, Color> remapAdjust)
         {
             tile = null;
             string teamColorName = teamColor == null ? String.Empty : (teamColor.Name ?? String.Empty);
+            if (remapAdjust != null && remapAdjust.Keys.Count > 0)
+            {
+                string keys = String.Join(",", remapAdjust.Keys.OrderBy(b => b).Select(b => b + "->" + ((uint)remapAdjust[b].ToArgb()).ToString("X8")).ToArray());
+                teamColorName += " [" + keys + "]";
+            }
             Dictionary<int, ShapeFrameData> shapeFile;
             ShapeFrameData shapeFrame;
             bool cached = tileData.TryGetValue(name, out shapeFile);
@@ -209,39 +214,39 @@ namespace MobiusEditor.Utility
                 }
             }
             // Remaps the tile, and takes care of caching it and possibly generating dummies.
-            tile = this.RemapShapeFile(shapeFile, shape, teamColor, generateFallback, withShadow, out shapeFrame);
+            tile = this.RemapShapeFile(shapeFile, shape, teamColor, teamColorName, generateFallback, withShadow, remapAdjust, out shapeFrame);
             // shapeFrame is ALWAYS filled in if tile isn't null;
             return tile != null && !shapeFrame.IsDummy;
         }
 
         public bool GetTeamColorTileData(string name, int shape, ITeamColor teamColor, out Tile tile, bool generateFallback, bool onlyIfDefined, string remapGraphicsSource, byte[] remapTable)
         {
-            return GetTeamColorTileData(name, shape, teamColor, out tile, generateFallback, onlyIfDefined, true, remapGraphicsSource, remapTable, false);
+            return GetTeamColorTileData(name, shape, teamColor, out tile, generateFallback, onlyIfDefined, true, remapGraphicsSource, remapTable, false, null);
         }
 
         public bool GetTeamColorTileData(string name, int shape, ITeamColor teamColor, out Tile tile, bool generateFallback, bool onlyIfDefined)
         {
-            return GetTeamColorTileData(name, shape, teamColor, out tile, generateFallback, onlyIfDefined, true, null, null, false);
+            return GetTeamColorTileData(name, shape, teamColor, out tile, generateFallback, onlyIfDefined, true, null, null, false, null);
         }
 
         public bool GetTileData(string name, int shape, out Tile tile, bool generateFallback, bool onlyIfDefined)
         {
-            return GetTeamColorTileData(name, shape, null, out tile, generateFallback, onlyIfDefined, true, null, null, false);
+            return GetTeamColorTileData(name, shape, null, out tile, generateFallback, onlyIfDefined, true, null, null, false, null);
         }
 
         public bool GetTeamColorTileData(string name, int shape, ITeamColor teamColor, out Tile tile)
         {
-            return GetTeamColorTileData(name, shape, teamColor, out tile, false, false, true, null, null, false);
+            return GetTeamColorTileData(name, shape, teamColor, out tile, false, false, true, null, null, false, null);
         }
 
         public bool GetTeamColorTileData(string name, int shape, ITeamColor teamColor, bool ignoreShadow, out Tile tile)
         {
-            return GetTeamColorTileData(name, shape, teamColor, out tile, false, false, !ignoreShadow, null, null, false);
+            return GetTeamColorTileData(name, shape, teamColor, out tile, false, false, !ignoreShadow, null, null, false, null);
         }
 
         public bool GetTileData(string name, int shape, out Tile tile)
         {
-            return GetTeamColorTileData(name, shape, null, out tile, false, false, true, null, null, false);
+            return GetTeamColorTileData(name, shape, null, out tile, false, false, true, null, null, false, null);
         }
 
         public int GetTileDataLength(string name)
@@ -476,9 +481,9 @@ namespace MobiusEditor.Utility
             return shapeFile;
         }
 
-        private Tile RemapShapeFile(Dictionary<int, ShapeFrameData> shapeFile, int shape, ITeamColor teamColor, bool generateFallback, bool withShadow, out ShapeFrameData shapeFrame)
+        private Tile RemapShapeFile(Dictionary<int, ShapeFrameData> shapeFile, int shape, ITeamColor teamColor, string teamColorName, bool generateFallback, bool withShadow,
+            Dictionary<byte, Color> remapAdjust, out ShapeFrameData shapeFrame)
         {
-            string teamColorName = teamColor == null ? String.Empty : teamColor.Name;
             if (!withShadow)
             {
                 teamColorName += " no-shadow";
@@ -521,8 +526,25 @@ namespace MobiusEditor.Utility
                     }
                 }
             }
-            Color[] pal = withShadow ? currentlyLoadedPalette : currentlyLoadedPaletteBare;
-            if (shapeFrame.IsDummy)
+            Color[] pal;
+            if (!shapeFrame.IsDummy)
+            {
+                if (remapAdjust == null)
+                {
+                    pal = withShadow ? currentlyLoadedPalette : currentlyLoadedPaletteBare;
+                }
+                else
+                {
+                    Color[] palBase = withShadow ? currentlyLoadedPalette : currentlyLoadedPaletteBare;
+                    pal = new Color[palBase.Length];
+                    Array.Copy(palBase, 0, pal, 0, pal.Length);
+                    foreach (byte b in remapAdjust.Keys)
+                    {
+                        pal[b] = remapAdjust[b];
+                    }
+                }
+            }
+            else
             {
                 // Make gray colors semitransparent on dummy graphics.
                 pal = new Color[currentlyLoadedPalette.Length];

@@ -162,7 +162,7 @@ namespace MobiusEditor.Model
         /// <returns>True if the given name is considered empty by this game type.</returns>
         public abstract bool MapNameIsEmpty(string name);
         /// <summary>Retrieves classic font info from this game to use for the requested role.</summary>
-        public abstract string GetClassicFontInfo(ClassicFont font, TilesetManagerClassic tsmc, TeamRemapManager trm, Color textColor, out bool crop, out TeamRemap remap);
+        public abstract string GetClassicFontInfo(ClassicFont font, TilesetManagerClassic tsmc, TeamRemapManager trm, Color textColor, out bool crop, out TeamRemap remap, out Dictionary<byte, Color> remapAdjust);
         #endregion
 
         #region protected functions
@@ -177,8 +177,9 @@ namespace MobiusEditor.Model
         /// <param name="clearIndices">Indices on the graphics that need to be cleared to transparent (index 0).</param>
         /// <returns>A TeamRemap object for the given color.</returns>
         /// <remarks>The generated remap is cached in the TeamRemapManager.</remarks>
-        protected TeamRemap GetClassicFontRemapSimple(string fontName, TilesetManagerClassic tsmc, TeamRemapManager trm, Color textColor, params int[] clearIndices)
+        protected TeamRemap GetClassicFontRemapSimple(string fontName, TilesetManagerClassic tsmc, TeamRemapManager trm, Color textColor, out Dictionary<byte, Color> remapAdjust, params int[] clearIndices)
         {
+            remapAdjust = null;
             if (fontName == null)
             {
                 return null;
@@ -193,6 +194,8 @@ namespace MobiusEditor.Model
                 return fontRemap;
             }
             int color = tsmc.GetClosestColorIndex(textColor, true);
+            remapAdjust = new Dictionary<byte, Color>();
+            remapAdjust.Add((byte)color, textColor);
             // Extremely simple: all indices except 0 remap to the given colour.
             byte[] remapIndices = 0.Yield().Concat(Enumerable.Repeat(color, 15)).Select(b => (byte)b).ToArray();
             if (indicesFiltered.Count > 0)
@@ -202,7 +205,7 @@ namespace MobiusEditor.Model
                     remapIndices[index] = 0;
                 }
             }
-            fontRemap = new TeamRemap(remapName, 0, 0, 0, remapIndices);
+            fontRemap = new TeamRemap(remapName, (byte)color, (byte)color, 0, remapIndices);
             trm.AddTeamColor(fontRemap);
             return fontRemap;
         }

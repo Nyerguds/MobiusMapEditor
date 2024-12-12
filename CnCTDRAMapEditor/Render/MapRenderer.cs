@@ -1860,10 +1860,13 @@ namespace MobiusEditor.Render
             };
             string classicFont = null;
             bool cropClassicFont = false;
+            TilesetManagerClassic tsmc = null;
             TeamRemap remapClassicFont = null;
-            if (Globals.TheTilesetManager is TilesetManagerClassic tsmc && Globals.TheTeamColorManager is TeamRemapManager trm)
+            Dictionary<byte, Color> remapAdjust = null;
+            if (Globals.TheTilesetManager is TilesetManagerClassic tsm && Globals.TheTeamColorManager is TeamRemapManager trm)
             {
-                classicFont = gameInfo.GetClassicFontInfo(ClassicFont.CellTriggers, tsmc, trm, textColor, out cropClassicFont, out remapClassicFont);
+                classicFont = gameInfo.GetClassicFontInfo(ClassicFont.CellTriggers, tsm, trm, textColor, out cropClassicFont, out remapClassicFont, out remapAdjust);
+                tsmc = tsm;
             }
             string fakeText = Globals.TheGameTextManager["TEXT_UI_FAKE"];
             double tileScaleHor = tileSize.Width / 128.0;
@@ -1918,7 +1921,7 @@ namespace MobiusEditor.Render
                             using (Graphics bmgr = Graphics.FromImage(fkBm))
                             {
                                 int[] indices = Encoding.ASCII.GetBytes(fakeText).Select(x => (int)x).ToArray();
-                                using (Bitmap txt = RenderTextFromSprite(classicFont, remapClassicFont, Size.Empty, indices, false, cropClassicFont))
+                                using (Bitmap txt = RenderTextFromSprite(tsmc, classicFont, remapClassicFont, remapAdjust, Size.Empty, indices, false, cropClassicFont))
                                 {
                                     int frameWidth = Math.Min(txt.Width + 2, buildingBoundsClassic.Width);
                                     int frameHeight = Math.Min(txt.Height + 2, buildingBoundsClassic.Height);
@@ -1950,10 +1953,14 @@ namespace MobiusEditor.Render
             };
             string classicFont = null;
             bool cropClassicFont = false;
+            TilesetManagerClassic tsmc = null;
             TeamRemap remapClassicFont = null;
-            if (Globals.TheTilesetManager is TilesetManagerClassic tsmc && Globals.TheTeamColorManager is TeamRemapManager trm)
+            Dictionary<byte, Color> remapAdjust = null;
+
+            if (Globals.TheTilesetManager is TilesetManagerClassic tsm && Globals.TheTeamColorManager is TeamRemapManager trm)
             {
-                classicFont = gameInfo.GetClassicFontInfo(ClassicFont.CellTriggers, tsmc, trm, textColor, out cropClassicFont, out remapClassicFont);
+                classicFont = gameInfo.GetClassicFontInfo(ClassicFont.CellTriggers, tsm, trm, textColor, out cropClassicFont, out remapClassicFont, out remapAdjust);
+                tsmc = tsm;
             }
             foreach ((Point topLeft, Building building) in buildings)
             {
@@ -1996,7 +2003,7 @@ namespace MobiusEditor.Render
                             using (Graphics bmgr = Graphics.FromImage(priBm))
                             {
                                 int[] indices = Encoding.ASCII.GetBytes(priText).Select(x => (int)x).ToArray();
-                                using (Bitmap txt = RenderTextFromSprite(classicFont, remapClassicFont, Size.Empty, indices, false, cropClassicFont))
+                                using (Bitmap txt = RenderTextFromSprite(tsmc, classicFont, remapClassicFont, remapAdjust, Size.Empty, indices, false, cropClassicFont))
                                 {
                                     int textOffsetX = (buildingBounds.Width - txt.Width) / 2;
                                     int textOffsetY = (buildingBounds.Height - txt.Height - 1);
@@ -2031,12 +2038,16 @@ namespace MobiusEditor.Render
             bool cropClassicFontLarge = false;
             string classicFontSmall = null;
             bool cropClassicFontSmall = false;
+            TilesetManagerClassic tsmc = null;
             TeamRemap remapClassicFontLarge = null;
             TeamRemap remapClassicFontSmall = null;
-            if (Globals.TheTilesetManager is TilesetManagerClassic tsmc && Globals.TheTeamColorManager is TeamRemapManager trm)
+            Dictionary<byte, Color> remapAdjustLarge = null;
+            Dictionary<byte, Color> remapAdjustSmall = null;
+            if (Globals.TheTilesetManager is TilesetManagerClassic tsm && Globals.TheTeamColorManager is TeamRemapManager trm)
             {
-                classicFontLarge = gameInfo.GetClassicFontInfo(ClassicFont.TechnoTriggers, tsmc, trm, color, out cropClassicFontLarge, out remapClassicFontLarge);
-                classicFontSmall = gameInfo.GetClassicFontInfo(ClassicFont.TechnoTriggersSmall, tsmc, trm, color, out cropClassicFontSmall, out remapClassicFontSmall);
+                classicFontLarge = gameInfo.GetClassicFontInfo(ClassicFont.TechnoTriggers, tsm, trm, color, out cropClassicFontLarge, out remapClassicFontLarge, out remapAdjustLarge);
+                classicFontSmall = gameInfo.GetClassicFontInfo(ClassicFont.TechnoTriggersSmall, tsm, trm, color, out cropClassicFontSmall, out remapClassicFontSmall, out remapAdjustSmall);
+                tsmc = tsm;
             }
             double tileScaleHor = tileSize.Width / 128.0;
             float borderSize = Math.Max(0.5f, tileSize.Width / 60.0f);
@@ -2154,6 +2165,7 @@ namespace MobiusEditor.Render
                 string classicFont = isLarge ? classicFontLarge : classicFontSmall;
                 bool cropClassicFont = isLarge ? cropClassicFontLarge : cropClassicFontSmall;
                 TeamRemap remapClassicFont = isLarge ? remapClassicFontLarge : remapClassicFontSmall;
+                Dictionary<byte, Color> remapAdjust = isLarge ? remapAdjustLarge : remapAdjustSmall;
                 Color alphaColor = Color.FromArgb(alpha.Restrict(0,255), color);
                 if (classicFont == null)
                 {
@@ -2179,7 +2191,7 @@ namespace MobiusEditor.Render
                     int[] indices = Encoding.ASCII.GetBytes(trigger).Select(x => (int)x).ToArray();
                     using (SolidBrush technoTriggerBackgroundBrush = new SolidBrush(Color.FromArgb(96, Color.Black)))
                     using (Pen technoTriggerPen = new Pen(color, 1))
-                    using (Bitmap txt = RenderTextFromSprite(classicFont, remapClassicFont, Size.Empty, indices, false, cropClassicFont))
+                    using (Bitmap txt = RenderTextFromSprite(tsmc, classicFont, remapClassicFont, remapAdjust, Size.Empty, indices, false, cropClassicFont))
                     using (Bitmap txt2 = new Bitmap(txt.Width + 4, txt.Height + 4))
                     using (ImageAttributes imageAttributes = new ImageAttributes())
                     {
@@ -2208,17 +2220,20 @@ namespace MobiusEditor.Render
             HashSet<Waypoint> specifiedWaypoints = specified.ToHashSet();
 
             Waypoint[] toPaint = excludeSpecified ? map.Waypoints : specified;
+            TilesetManagerClassic tsmc = null;
             string classicFontShort = null;
             bool cropClassicFontShort = false;
             TeamRemap remapClassicFontShort = null;
+            Dictionary<byte, Color> remapAdjustShort = null;
             string classicFontLong = null;
             bool cropClassicFontLong = false;
             TeamRemap remapClassicFontLong = null;
-
-            if (Globals.TheTilesetManager is TilesetManagerClassic tsmc && Globals.TheTeamColorManager is TeamRemapManager trm)
+            Dictionary<byte, Color> remapAdjustLong = null;
+            if (Globals.TheTilesetManager is TilesetManagerClassic tsm && Globals.TheTeamColorManager is TeamRemapManager trm)
             {
-                classicFontShort = gameInfo.GetClassicFontInfo(ClassicFont.Waypoints, tsmc, trm, textColor, out cropClassicFontShort, out remapClassicFontShort);
-                classicFontLong = gameInfo.GetClassicFontInfo(ClassicFont.WaypointsLong, tsmc, trm, textColor, out cropClassicFontLong, out remapClassicFontLong);
+                classicFontShort = gameInfo.GetClassicFontInfo(ClassicFont.Waypoints, tsm, trm, textColor, out cropClassicFontShort, out remapClassicFontShort, out remapAdjustShort);
+                classicFontLong = gameInfo.GetClassicFontInfo(ClassicFont.WaypointsLong, tsm, trm, textColor, out cropClassicFontLong, out remapClassicFontLong, out remapAdjustLong);
+                tsmc = tsm;
             }
             foreach (Waypoint waypoint in toPaint)
             {
@@ -2233,6 +2248,7 @@ namespace MobiusEditor.Render
                 string classicFont = isLong ? classicFontLong : classicFontShort;
                 bool cropClassicFont = isLong ? cropClassicFontLong : cropClassicFontShort;
                 TeamRemap remapClassicFont = isLong ? remapClassicFontLong : remapClassicFontShort;
+                Dictionary<byte, Color> remapAdjust = isLong ? remapAdjustLong : remapAdjustShort;
                 if (classicFont != null && isLong)
                 {
                     wpText = waypoint.ShortName;
@@ -2271,7 +2287,7 @@ namespace MobiusEditor.Render
                             wpBm = new Bitmap(tileSize.Width, tileSize.Height);
                             int[] indices = Encoding.ASCII.GetBytes(wpText).Select(x => (int)x).ToArray();
                             using (Graphics bmgr = Graphics.FromImage(wpBm))
-                            using (Bitmap txt = RenderTextFromSprite(classicFont, remapClassicFont, Size.Empty, indices, false, cropClassicFont))
+                            using (Bitmap txt = RenderTextFromSprite(tsmc, classicFont, remapClassicFont, remapAdjust, Size.Empty, indices, false, cropClassicFont))
                             {
                                 int textOffsetX = (tileSize.Width - txt.Width) / 2;
                                 int textOffsetY = (tileSize.Height - txt.Height) / 2;
@@ -2509,10 +2525,13 @@ namespace MobiusEditor.Render
         {
             string classicFont = null;
             bool cropClassicFont = false;
+            TilesetManagerClassic tsmc = null;
             TeamRemap remapClassicFont = null;
-            if (Globals.TheTilesetManager is TilesetManagerClassic tsmc && Globals.TheTeamColorManager is TeamRemapManager trm)
+            Dictionary<byte, Color> remapAdjust = null;
+            if (Globals.TheTilesetManager is TilesetManagerClassic tsm && Globals.TheTeamColorManager is TeamRemapManager trm)
             {
-                classicFont = gameInfo.GetClassicFontInfo(ClassicFont.CellTriggers, tsmc, trm, textColor, out cropClassicFont, out remapClassicFont);
+                classicFont = gameInfo.GetClassicFontInfo(ClassicFont.CellTriggers, tsm, trm, textColor, out cropClassicFont, out remapClassicFont, out remapAdjust);
+                tsmc = tsm;
             }
             // For bounds, add one more cell to get all borders showing.
             Rectangle boundRenderCells = visibleCells;
@@ -2627,7 +2646,7 @@ namespace MobiusEditor.Render
                                         using (ImageAttributes imageAttributes = new ImageAttributes())
                                         {
                                             imageAttributes.SetColorMatrix(GetColorMatrix(isPreview ? previewAdjustColor : adjustColor, 1.0f, 1.0f));
-                                            using (Bitmap txt = RenderTextFromSprite(classicFont, remapClassicFont, tileBounds.Size, indices, false, cropClassicFont))
+                                            using (Bitmap txt = RenderTextFromSprite(tsmc, classicFont, remapClassicFont, remapAdjust, tileBounds.Size, indices, false, cropClassicFont))
                                             {
                                                 Rectangle paintBounds = new Rectangle(Point.Empty, tileSize);
                                                 textGr.DrawImage(txt, textBounds, 0, 0, tileBounds.Width, tileBounds.Height, GraphicsUnit.Pixel, imageAttributes);
@@ -3139,7 +3158,8 @@ namespace MobiusEditor.Render
                 Math.Max(1, (int)Math.Round(newSize.Width * scaleFactorX)), Math.Max(1, (int)Math.Round(newSize.Height * scaleFactorY)));
         }
 
-        private static Bitmap RenderTextFromSprite(string fontsprite, TeamRemap remap, Size bounds, int[] shapes, bool wrap, bool cropSpacingToOne)
+        private static Bitmap RenderTextFromSprite(TilesetManagerClassic tsmc, string fontsprite, TeamRemap remap, Dictionary<byte, Color> remapAdjust,
+            Size bounds, int[] shapes, bool wrap, bool cropSpacingToOne)
         {
             int nrOfChars = shapes.Length;
             if (nrOfChars == 0)
@@ -3158,7 +3178,7 @@ namespace MobiusEditor.Render
             for (int i = 0; i < nrOfChars; ++i)
             {
                 int charIndex = shapes[i];
-                if (Globals.TheTilesetManager.GetTeamColorTileData(fontsprite, charIndex, remap, true, out Tile character))
+                if (tsmc.GetTeamColorTileData(fontsprite, charIndex, remap, out Tile character, false, false, false, null, null, false, remapAdjust))
                 {
                     if (character.Image == null)
                     {
