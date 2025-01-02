@@ -23,6 +23,7 @@ using System.Drawing;
 using System.Drawing.Imaging;
 using System.IO;
 using System.Linq;
+using System.Text;
 
 namespace MobiusEditor.Utility
 {
@@ -149,15 +150,20 @@ namespace MobiusEditor.Utility
             return index;
         }
 
-        public bool GetTeamColorTileData(string name, int shape, ITeamColor teamColor, out Tile tile, bool generateFallback, bool onlyIfDefined, bool withShadow, string remapGraphicsSource, byte[] remapTable, bool clearCachedVersion, Dictionary<byte, Color> remapAdjust)
+        public bool GetTeamColorTileData(string name, int shape, ITeamColor teamColor, out Tile tile, bool generateFallback, bool onlyIfDefined, bool withShadow, string remapGraphicsSource, byte[] remapTable, bool clearCachedVersion)
+        {
+            return GetTeamColorTileData(name, shape, teamColor, out tile, generateFallback, onlyIfDefined, withShadow, remapGraphicsSource, remapTable, clearCachedVersion, null);
+        }
+
+        public bool GetTeamColorTileData(string name, int shape, out Tile tile, bool generateFallback, bool onlyIfDefined, Color[] customPalette)
+        {
+            return GetTeamColorTileData(name, shape, null, out tile, generateFallback, onlyIfDefined, false, null, null, false, customPalette);
+        }
+
+        private bool GetTeamColorTileData(string name, int shape, ITeamColor teamColor, out Tile tile, bool generateFallback, bool onlyIfDefined, bool withShadow, string remapGraphicsSource, byte[] remapTable, bool clearCachedVersion, Color[] customPalette)
         {
             tile = null;
             string teamColorName = teamColor == null ? String.Empty : (teamColor.Name ?? String.Empty);
-            if (remapAdjust != null && remapAdjust.Keys.Count > 0)
-            {
-                string keys = String.Join(",", remapAdjust.Keys.OrderBy(b => b).Select(b => b + "->" + ((uint)remapAdjust[b].ToArgb()).ToString("X8")).ToArray());
-                teamColorName += " [" + keys + "]";
-            }
             Dictionary<int, ShapeFrameData> shapeFile;
             ShapeFrameData shapeFrame;
             bool cached = tileData.TryGetValue(name, out shapeFile);
@@ -214,39 +220,39 @@ namespace MobiusEditor.Utility
                 }
             }
             // Remaps the tile, and takes care of caching it and possibly generating dummies.
-            tile = this.RemapShapeFile(shapeFile, shape, teamColor, teamColorName, generateFallback, withShadow, remapAdjust, out shapeFrame);
+            tile = this.RemapShapeFile(shapeFile, shape, teamColor, teamColorName, generateFallback, withShadow, customPalette, out shapeFrame);
             // shapeFrame is ALWAYS filled in if tile isn't null;
             return tile != null && !shapeFrame.IsDummy;
         }
 
         public bool GetTeamColorTileData(string name, int shape, ITeamColor teamColor, out Tile tile, bool generateFallback, bool onlyIfDefined, string remapGraphicsSource, byte[] remapTable)
         {
-            return GetTeamColorTileData(name, shape, teamColor, out tile, generateFallback, onlyIfDefined, true, remapGraphicsSource, remapTable, false, null);
+            return GetTeamColorTileData(name, shape, teamColor, out tile, generateFallback, onlyIfDefined, true, remapGraphicsSource, remapTable, false);
         }
 
         public bool GetTeamColorTileData(string name, int shape, ITeamColor teamColor, out Tile tile, bool generateFallback, bool onlyIfDefined)
         {
-            return GetTeamColorTileData(name, shape, teamColor, out tile, generateFallback, onlyIfDefined, true, null, null, false, null);
+            return GetTeamColorTileData(name, shape, teamColor, out tile, generateFallback, onlyIfDefined, true, null, null, false);
         }
 
         public bool GetTileData(string name, int shape, out Tile tile, bool generateFallback, bool onlyIfDefined)
         {
-            return GetTeamColorTileData(name, shape, null, out tile, generateFallback, onlyIfDefined, true, null, null, false, null);
+            return GetTeamColorTileData(name, shape, null, out tile, generateFallback, onlyIfDefined, true, null, null, false);
         }
 
         public bool GetTeamColorTileData(string name, int shape, ITeamColor teamColor, out Tile tile)
         {
-            return GetTeamColorTileData(name, shape, teamColor, out tile, false, false, true, null, null, false, null);
+            return GetTeamColorTileData(name, shape, teamColor, out tile, false, false, true, null, null, false);
         }
 
         public bool GetTeamColorTileData(string name, int shape, ITeamColor teamColor, bool ignoreShadow, out Tile tile)
         {
-            return GetTeamColorTileData(name, shape, teamColor, out tile, false, false, !ignoreShadow, null, null, false, null);
+            return GetTeamColorTileData(name, shape, teamColor, out tile, false, false, !ignoreShadow, null, null, false);
         }
 
         public bool GetTileData(string name, int shape, out Tile tile)
         {
-            return GetTeamColorTileData(name, shape, null, out tile, false, false, true, null, null, false, null);
+            return GetTeamColorTileData(name, shape, null, out tile, false, false, true, null, null, false);
         }
 
         public int GetTileDataLength(string name)
@@ -482,12 +488,43 @@ namespace MobiusEditor.Utility
         }
 
         private Tile RemapShapeFile(Dictionary<int, ShapeFrameData> shapeFile, int shape, ITeamColor teamColor, string teamColorName, bool generateFallback, bool withShadow,
-            Dictionary<byte, Color> remapAdjust, out ShapeFrameData shapeFrame)
+            Color[] customPalette, out ShapeFrameData shapeFrame)
         {
-            if (!withShadow)
+            int[] transparentCols = new int[] { 0 };
+            // Special case: if a custom palette is given, append it to the team color name.
+            if (customPalette != null)
             {
-                teamColorName += " no-shadow";
+                List<int> empty = new List<int>();
+                List<String> cols = new List<String>();
+                for (int i = 0; i < customPalette.Length; ++i)
+                {
+                    uint col = (uint)customPalette[i].ToArgb();
+                    byte alpha = (byte)((col >> 24) & 0xFF);
+                    bool opaque = alpha == 0xFF;
+                    if (alpha == 0)
+                    {
+                        empty.Add(i);
+                    }
+                    if (col != 0)
+                    {
+                        cols.Add(i.ToString("X2") + ":" + (opaque ? (col & 0xFFFFFF).ToString("X6") : col.ToString("X8")));
+                    }
+                }
+                if (teamColorName.Length > 0)
+                {
+                    teamColorName += " ";
+                }
+                teamColorName += "pal[" + String.Join(",", cols.ToArray()) + "]";
+                transparentCols = empty.ToArray();
             }
+            else if (!withShadow)
+            {
+                if (teamColorName.Length > 0)
+                {
+                    teamColorName += " ";
+                }
+                teamColorName += "no-shadow";
+            }            
             if (!shapeFile.TryGetValue(shape, out shapeFrame)
                 || shapeFrame.FrameData == null || shapeFrame.FrameData.Length == 0
                 || shapeFrame.Width == 0 || shapeFrame.Height == 0)
@@ -507,42 +544,38 @@ namespace MobiusEditor.Utility
             int width = shapeFrame.Width;
             int height = shapeFrame.Height;
             byte[] data = shapeFrame.FrameData;
-            Rectangle opaqueBounds = ImageUtils.CalculateOpaqueBounds8bpp(data, width, height, width, 0);
+            Rectangle opaqueBounds = ImageUtils.CalculateOpaqueBounds8bpp(data, width, height, width, transparentCols);
             if (teamColor != null && !String.IsNullOrEmpty(teamColorName) && !shapeFrame.IsDummy)
             {
                 // Finally, the actual remapping!
                 byte[] dataRemap = new byte[data.Length];
                 Array.Copy(data, 0, dataRemap, 0, data.Length);
                 teamColor.ApplyToImage(dataRemap, width, height, 1, width, opaqueBounds);
-                data = dataRemap;
                 // If opaque bounds might have changed due to remapping, recalculate bounds.
-                if (teamColor.RemapTable != null && teamColor.RemapTable.Length > 1)
+                if (teamColor.RemapTable != null)
                 {
-                    int maxIndex = Math.Min(teamColor.RemapTable.Length, data.Max());
-                    // To include index "1", we need 1 more item after skipping 0. So maxIndex needs to be used without adjustment.
-                    if (teamColor.RemapTable.Skip(1).Take(maxIndex).Any(i => i == 0))
+                    bool transparencyChanged = false;
+                    for (int i = 0; i < teamColor.RemapTable.Length; ++i)
                     {
-                        opaqueBounds = ImageUtils.CalculateOpaqueBounds8bpp(data, width, height, width, 0);
+                        byte remap = teamColor.RemapTable[i];
+                        // Check if the remapping changed any colour indices to transparent ones.
+                        if (remap != i && transparentCols.Contains(remap))
+                        {
+                            transparencyChanged = true;
+                            break;
+                        }
+                    }
+                    if (transparencyChanged)
+                    {
+                        opaqueBounds = ImageUtils.CalculateOpaqueBounds8bpp(dataRemap, width, height, width, transparentCols);
                     }
                 }
+                data = dataRemap;
             }
             Color[] pal;
             if (!shapeFrame.IsDummy)
             {
-                if (remapAdjust == null)
-                {
-                    pal = withShadow ? currentlyLoadedPalette : currentlyLoadedPaletteBare;
-                }
-                else
-                {
-                    Color[] palBase = withShadow ? currentlyLoadedPalette : currentlyLoadedPaletteBare;
-                    pal = new Color[palBase.Length];
-                    Array.Copy(palBase, 0, pal, 0, pal.Length);
-                    foreach (byte b in remapAdjust.Keys)
-                    {
-                        pal[b] = remapAdjust[b];
-                    }
-                }
+                pal = customPalette ?? (withShadow ? currentlyLoadedPalette : currentlyLoadedPaletteBare);
             }
             else
             {

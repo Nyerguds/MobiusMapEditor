@@ -29,7 +29,7 @@ namespace MobiusEditor.Model
         IsFixedWing     /**/ = 1 << 0,
         /// <summary>Has a turret drawn on the unit.</summary>
         HasTurret       /**/ = 1 << 1,
-        /// <summary>Needs to render two turrets.</summary>
+        /// <summary>Needs to render two turrets. Requires a <see cref="UnitType.TurretOffset"/> greater than zero, which will be applied to the second turret with 180° added to the rotated position.</summary>
         HasDoubleTurret /**/ = 1 << 2,
         /// <summary>Can attack units. This affects the default orders for placing it on the map.</summary>
         IsArmed         /**/ = 1 << 3,
@@ -65,7 +65,7 @@ namespace MobiusEditor.Model
         HasUnloadFrames     /**/ = 1 << 7,
         /// <summary>Specifies that this rotation is a rotor (turret only)</summary>
         Rotor               /**/ = 1 << 8,
-        /// <summary>Specifies that this turret is on a flatbed on the back of the vehicle and should use special positioning logic.</summary>
+        /// <summary>Specifies that this turret is on a flatbed on the back of the vehicle and should use special positioning logic. This is a special case that replaces <see cref="UnitType.TurretOffset"/>.</summary>
         OnFlatBed           /**/ = 1 << 9,
 
         FrameUsages = Frames01Single | Frames08Cardinal | Frames16Simple | Frames16Symmetrical | Frames32Full,

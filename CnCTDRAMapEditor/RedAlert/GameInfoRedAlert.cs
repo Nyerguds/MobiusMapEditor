@@ -245,38 +245,37 @@ namespace MobiusEditor.RedAlert
             return String.IsNullOrEmpty(name) || Constants.EmptyMapName.Equals(name, StringComparison.OrdinalIgnoreCase);
         }
 
-        public override string GetClassicFontInfo(ClassicFont font, TilesetManagerClassic tsmc, TeamRemapManager trm, Color textColor, out bool crop, out TeamRemap remap, out Dictionary<byte, Color> remapAdjust)
+        public override string GetClassicFontInfo(ClassicFont font, TilesetManagerClassic tsmc, Color textColor, out bool crop, out Color[] palette)
         {
             crop = false;
-            remap = null;
-            remapAdjust = null;
+            palette = null;
             string fontName = null;
             switch (font)
             {
                 case ClassicFont.Waypoints:
                     crop = true;
                     fontName = "8point.fnt";
-                    remap = GetClassicFontRemapSimple(fontName, tsmc, trm, textColor, out remapAdjust, 2, 3);
+                    palette = GetClassicFontPalette(textColor, 2, 3);
                     break;
                 case ClassicFont.WaypointsLong:
                     crop = true;
                     fontName = "editfnt.fnt";
-                    remap = GetClassicFontRemapSimple(fontName, tsmc, trm, textColor, out remapAdjust, 2, 3);
+                    palette = GetClassicFontPalette(textColor, 2, 3);
                     break;
                 case ClassicFont.CellTriggers:
                     crop = true;
                     fontName = "scorefnt.fnt";
-                    remap = GetClassicFontRemapSimple(fontName, tsmc, trm, textColor, out remapAdjust);
+                    palette = GetClassicFontPalette(textColor);
                     break;
                 case ClassicFont.RebuildPriority:
                     crop = true;
                     fontName = "scorefnt.fnt";
-                    remap = GetClassicFontRemapSimple(fontName, tsmc, trm, textColor, out remapAdjust);
+                    palette = GetClassicFontPalette(textColor);
                     break;
                 case ClassicFont.TechnoTriggers:
                     crop = true;
                     fontName = "editfnt.fnt";
-                    remap = GetClassicFontRemapSimple(fontName, tsmc, trm, textColor, out remapAdjust, 2, 3);
+                    palette = GetClassicFontPalette(textColor, 2, 3);
                     break;
                 case ClassicFont.TechnoTriggersSmall:
                     crop = true;
@@ -285,12 +284,12 @@ namespace MobiusEditor.RedAlert
                     {
                         fontName = "3point.fnt";
                     }
-                    remap = GetClassicFontRemapSimple(fontName, tsmc, trm, textColor, out remapAdjust);
+                    palette = GetClassicFontPalette(textColor);
                     break;
                 case ClassicFont.FakeLabels:
                     crop = true;
                     fontName = "editfnt.fnt";
-                    remap = GetClassicFontRemapSimple(fontName, tsmc, trm, textColor, out remapAdjust, 2, 3);
+                    palette = GetClassicFontPalette(textColor, 2, 3);
                     break;
             }
             if (!tsmc.TileExists(fontName))

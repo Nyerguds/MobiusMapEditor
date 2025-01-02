@@ -413,6 +413,7 @@ namespace MobiusEditor.TiberianDawn
         {
             // Readonly, so I'm splitting this off
             HashSet<string> movies = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
+            // todo list these and hardcode them so the editor knows them even in pure classic mode.
             string moviesMegPath = Path.Combine(Globals.TheArchiveManager.LoadRoot, "MOVIES_TD.MEG");
             if (File.Exists(moviesMegPath))
             {
@@ -428,10 +429,11 @@ namespace MobiusEditor.TiberianDawn
                     }
                 }
             }
+            int moviesFromMeg = movies.Count;
             movieTypesRemarksNew = movies.Where(mv => !movieTypesTD.Contains(mv) && !movieTypesRemarksOld.Contains(mv)).ToArray();
 
             // In case this isn't the remaster, just add all known videos.
-            if (movies.Count == 0)
+            if (moviesFromMeg == 0)
             {
                 movies.UnionWith(movieTypesTD);
             }
@@ -440,9 +442,12 @@ namespace MobiusEditor.TiberianDawn
                 movies.UnionWith(movieTypesRemarksOld);
             }
             List<string> finalMovies = movies.ToList();
-            for (int i = 0; i < finalMovies.Count; ++i)
+            if (moviesFromMeg > 0 || !Globals.UseClassicFiles)
             {
-                finalMovies[i] = AddVideoRemarks(finalMovies[i]);
+                for (int i = 0; i < finalMovies.Count; ++i)
+                {
+                    finalMovies[i] = AddVideoRemarks(finalMovies[i]);
+                }
             }
             finalMovies.Sort(new ExplorerComparer());
             finalMovies.Insert(0, movieEmpty);
@@ -3551,22 +3556,12 @@ namespace MobiusEditor.TiberianDawn
             writer.WriteValue(Map.MapSection.Theater.Name.ToUpper());
             writer.WritePropertyName("Waypoints");
             writer.WriteStartArray();
-            if (!Map.BasicSection.SoloMission)
+            // Writing the Home for singleplay maps is probably useless, but it's better than the player start points.
+            WaypointFlag waypointType = Map.BasicSection.SoloMission ? WaypointFlag.Home : WaypointFlag.PlayerStart;
+            foreach (Waypoint waypoint in Map.Waypoints.Where(w => w.Flag.HasFlag(waypointType)
+                && w.Cell.HasValue && Map.Metrics.GetLocation(w.Cell.Value, out Point p) && Map.Bounds.Contains(p)))
             {
-                foreach (Waypoint waypoint in Map.Waypoints.Where(w => w.Flag.HasFlag(WaypointFlag.PlayerStart)
-                    && w.Cell.HasValue && Map.Metrics.GetLocation(w.Cell.Value, out Point p) && Map.Bounds.Contains(p)))
-                {
-                    writer.WriteValue(waypoint.Cell.Value);
-                }
-            }
-            else
-            {
-                // Probably useless, but better than the player start points.
-                foreach (Waypoint waypoint in Map.Waypoints.Where(w => w.Flag.HasFlag(WaypointFlag.Home)
-                    && w.Cell.HasValue && Map.Metrics.GetLocation(w.Cell.Value, out Point p) && Map.Bounds.Contains(p)))
-                {
-                    writer.WriteValue(waypoint.Cell.Value);
-                }
+                writer.WriteValue(waypoint.Cell.Value);
             }
             writer.WriteEndArray();
             writer.WriteEndObject();

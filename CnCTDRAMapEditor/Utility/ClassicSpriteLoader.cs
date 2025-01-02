@@ -70,7 +70,7 @@ namespace MobiusEditor.Utility
         /// Retrieves the CPS image.
         /// </summary>
         /// <param name="fileData">Original file data.</param>
-        /// <param name="throwWhenParsing">If false, parse errors will simply return <see langword="false"/> instead of throwing an exception.</param>
+        /// <param name="throwWhenParsing">If <see langword="false"/>, parse errors will simply return <see langword="null"/> instead of throwing an exception.</param>
         /// <returns>The raw 8-bit linear image data in a 64000 byte array.</returns>
         public static Bitmap LoadCpsFile(byte[] fileData, bool throwWhenParsing)
         {
@@ -89,7 +89,7 @@ namespace MobiusEditor.Utility
         /// </summary>
         /// <param name="fileData">Original file data.</param>
         /// <returns>The raw 8-bit linear image data in a 64000 byte array.</returns>
-        /// <param name="throwWhenParsing">If false, parse errors will simply return <see langword="false"/> instead of throwing an exception.</param>
+        /// <param name="throwWhenParsing">If <see langword="false"/>, parse errors will simply return <see langword="null"/> instead of throwing an exception.</param>
         /// <exception cref="FileTypeLoadException">Thrown when parsing failed, indicating this is not a valid file of this format.</exception>
         public static byte[] GetCpsData(byte[] fileData, out Color[] palette, bool throwWhenParsing)
         {
@@ -203,11 +203,11 @@ namespace MobiusEditor.Utility
         }
 
         /// <summary>
-        /// Retrieves the C&amp;C1/RA1 SHP frames.
+        /// Retrieves the C&amp;C1 / RA1 SHP frames.
         /// </summary>
         /// <param name="fileData">Original file data.</param>
         /// <param name="palette">Color palette</param>
-        /// <param name="throwWhenParsing">If false, parse errors will simply return <see langword="false"/> instead of throwing an exception.</param>
+        /// <param name="throwWhenParsing">If <see langword="false"/>, parse errors will simply return <see langword="null"/> instead of throwing an exception.</param>
         /// <returns>The SHP file's frames as bitmaps.</returns>
         public static Bitmap[] LoadCCShpFile(byte[] fileData, Color[] palette, bool throwWhenParsing)
         {
@@ -215,12 +215,12 @@ namespace MobiusEditor.Utility
         }
 
         /// <summary>
-        /// Retrieves the C&amp;C1/RA1 SHP frames.
+        /// Retrieves the C&amp;C1 / RA1 SHP frames.
         /// </summary>
         /// <param name="fileData">Original file data.</param>
         /// <param name="palette">Color palette</param>
         /// <param name="remapTable">Optional remap table. Give null for no remapping.</param>
-        /// <param name="throwWhenParsing">If false, parse errors will simply return <see langword="false"/> instead of throwing an exception.</param>
+        /// <param name="throwWhenParsing">If <see langword="false"/>, parse errors will simply return <see langword="null"/> instead of throwing an exception.</param>
         /// <returns>The SHP file's frames as bitmaps.</returns>
         public static Bitmap[] LoadCCShpFile(byte[] fileData, Color[] palette, byte[] remapTable, bool throwWhenParsing)
         {
@@ -262,7 +262,7 @@ namespace MobiusEditor.Utility
         /// <param name="length">Data length as given by the mix header.</param>
         /// <param name="width">The width of all frames</param>
         /// <param name="height">The height of all frames</param>
-        /// <param name="throwWhenParsing">If false, parse errors will simply return <see langword="false"/> instead of throwing an exception.</param>
+        /// <param name="throwWhenParsing">If <see langword="false"/>, parse errors will simply return <see langword="null"/> instead of throwing an exception.</param>
         /// <returns>An array of byte arrays containing the 8-bit image data for each frame.</returns>
         /// <exception cref="FileTypeLoadException">Thrown when parsing failed, indicating this is not a valid file of this format.</exception>
         public static byte[][] GetCcShpData(Stream fileStream, int length, out int width, out int height, bool throwWhenParsing)
@@ -336,7 +336,7 @@ namespace MobiusEditor.Utility
         /// <param name="fileData">File data</param>
         /// <param name="width">The width of all frames</param>
         /// <param name="height">The height of all frames</param>
-        /// <param name="throwWhenParsing">If false, parse errors will simply return <see langword="false"/> instead of throwing an exception.</param>
+        /// <param name="throwWhenParsing">If <see langword="false"/>, parse errors will simply return <see langword="null"/> instead of throwing an exception.</param>
         /// <returns>An array of byte arrays containing the 8-bit image data for each frame.</returns>
         /// <exception cref="FileTypeLoadException">Thrown when parsing failed, indicating this is not a valid file of this format.</exception>
         public static byte[][] GetCcShpData(byte[] fileData, out int width, out int height, bool throwWhenParsing)
@@ -620,7 +620,7 @@ namespace MobiusEditor.Utility
         /// <param name="length">Data length as given by the mix header.</param>
         /// <param name="widths">The widths of all frames</param>
         /// <param name="heights">The heights of all frames</param>
-        /// <param name="throwWhenParsing">If false, parse errors will simply return <see langword="false"/> instead of throwing an exception.</param>
+        /// <param name="throwWhenParsing">If <see langword="false"/>, parse errors will simply return <see langword="null"/> instead of throwing an exception.</param>
         /// <returns>An array of byte arrays containing the 8-bit image data for each frame.</returns>
         /// <exception cref="ArgumentException">Thrown when parsing failed, indicating this is not a valid file of this format.</exception>
         public static byte[][] GetD2ShpData(Stream fileStream, int length, out int[] widths, out int[] heights, bool throwWhenParsing)
@@ -689,7 +689,7 @@ namespace MobiusEditor.Utility
         /// <param name="fileData">File data</param>
         /// <param name="widths">The widths of all frames</param>
         /// <param name="heights">The heights of all frames</param>
-        /// <param name="throwWhenParsing">If false, parse errors will simply return <see langword="false"/> instead of throwing an exception.</param>
+        /// <param name="throwWhenParsing">If <see langword="false"/>, parse errors will simply return <see langword="null"/> instead of throwing an exception.</param>
         /// <returns>An array of byte arrays containing the 8-bit image data for each frame.</returns>
         /// <exception cref="ArgumentException">Thrown when parsing failed, indicating this is not a valid file of this format.</exception>
         public static byte[][] GetD2ShpData(byte[] fileData, out int[] widths, out int[] heights, bool throwWhenParsing)
@@ -913,7 +913,7 @@ namespace MobiusEditor.Utility
         /// <param name="fileData">File data to parse</param>
         /// <param name="widths">Widths of all returned frames</param>
         /// <param name="heights">Heights of all returned frames</param>
-        /// <param name="throwWhenParsing">If false, parse errors will simply return <see langword="false"/> instead of throwing an exception.</param>
+        /// <param name="throwWhenParsing">If <see langword="false"/>, parse errors will simply return <see langword="null"/> instead of throwing an exception.</param>
         /// <returns>The returned frames, as 8bpp byte arrays.</returns>
         /// <exception cref="FileTypeLoadException"></exception>
         public static byte[][] GetCcTmpData(byte[] fileData, out int[] widths, out int[] heights, bool throwWhenParsing)
@@ -1055,7 +1055,7 @@ namespace MobiusEditor.Utility
         /// <param name="tileUseList">Array indicating which tiles are used.</param>
         /// <param name="tilesX">Width of tileset piece in amount of tiles.</param>
         /// <param name="tilesY">Height of tileset piece in amount of tiles.</param>
-        /// <param name="throwWhenParsing">If false, parse errors will simply return <see langword="false"/> instead of throwing an exception.</param>
+        /// <param name="throwWhenParsing">If <see langword="false"/>, parse errors will simply return <see langword="null"/> instead of throwing an exception.</param>
         /// <returns></returns>
         /// <exception cref="FileTypeLoadException"></exception>
         /// <exception cref="ArgumentException"></exception>
@@ -1124,7 +1124,7 @@ namespace MobiusEditor.Utility
                 {
                     return null;
                 }
-                throw new ArgumentException("Invalid values encountered in header.");
+                throw new FileTypeLoadException("Invalid values encountered in header.");
             }
             if (hdrCount == 0)
             {
@@ -1260,10 +1260,9 @@ namespace MobiusEditor.Utility
         /// <param name="fileData">File data to parse</param>
         /// <param name="widths">Output for the widths of all symbols</param>
         /// <param name="height">Output for the height of all symbols</param>
-        /// <param name="throwWhenParsing">If false, parse errors will simply return <see langword="false"/> instead of throwing an exception.</param>
+        /// <param name="throwWhenParsing">If <see langword="false"/>, parse errors will simply return <see langword="null"/> instead of throwing an exception.</param>
         /// <returns>The parsed font data as array of arrays of 8-bit pixels.</returns>
         /// <exception cref="FileTypeLoadException"></exception>
-        /// <exception cref="IndexOutOfRangeException"></exception>
         public static byte[][] GetCCFontData(byte[] fileData, out int[] widths, out int height, bool throwWhenParsing)
         {
             widths = null;
@@ -1396,7 +1395,7 @@ namespace MobiusEditor.Utility
                     {
                         return null;
                     }
-                    throw new IndexOutOfRangeException(string.Format("Data for font entry #{0} exceeds file bounds!", i), ex);
+                    throw new FileTypeLoadException(string.Format("Data for font entry #{0} exceeds file bounds!", i), ex);
                 }
                 fontList[i] = dataFullFrame;
             }

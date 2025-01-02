@@ -281,7 +281,7 @@ namespace MobiusEditor.Dialogs
             this.chkPersistenceType.Name = "chkPersistenceType";
             this.chkPersistenceType.Size = new System.Drawing.Size(100, 19);
             this.chkPersistenceType.TabIndex = 2;
-            this.chkPersistenceType.Text = "Persistence";
+            this.chkPersistenceType.Text = "Executes";
             this.chkPersistenceType.UseVisualStyleBackColor = true;
             this.chkPersistenceType.CheckedChanged += new System.EventHandler(this.ChkPersistenceType_CheckedChanged);
             // 

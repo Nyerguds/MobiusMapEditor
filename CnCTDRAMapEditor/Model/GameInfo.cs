@@ -162,52 +162,31 @@ namespace MobiusEditor.Model
         /// <returns>True if the given name is considered empty by this game type.</returns>
         public abstract bool MapNameIsEmpty(string name);
         /// <summary>Retrieves classic font info from this game to use for the requested role.</summary>
-        public abstract string GetClassicFontInfo(ClassicFont font, TilesetManagerClassic tsmc, TeamRemapManager trm, Color textColor, out bool crop, out TeamRemap remap, out Dictionary<byte, Color> remapAdjust);
+        public abstract string GetClassicFontInfo(ClassicFont font, TilesetManagerClassic tsmc, Color textColor, out bool crop, out Color[] palette);
         #endregion
 
         #region protected functions
 
         /// <summary>
-        /// Creates a remap object for a specific font, by remapping all indices to the closest color on te palette.
-        /// A list of indices to clear can be given, which remaps those to index 0 on the palette.
+        /// Creates a palette for a specific font.
         /// </summary>
-        /// <param name="fontName">font name, to use in the remap name.</param>
-        /// <param name="tsmc">Classic tileset manager, to get the color info from.</param>
         /// <param name="textColor">Requested color for the text. Probably won't match exactly since it is looked up in the palette.</param>
         /// <param name="clearIndices">Indices on the graphics that need to be cleared to transparent (index 0).</param>
-        /// <returns>A TeamRemap object for the given color.</returns>
-        /// <remarks>The generated remap is cached in the TeamRemapManager.</remarks>
-        protected TeamRemap GetClassicFontRemapSimple(string fontName, TilesetManagerClassic tsmc, TeamRemapManager trm, Color textColor, out Dictionary<byte, Color> remapAdjust, params int[] clearIndices)
+        /// <returns>A color palette for the given color font.</returns>
+        protected Color[] GetClassicFontPalette(Color textColor, params int[] clearIndices)
         {
-            remapAdjust = null;
-            if (fontName == null)
+            Color[] palette = Enumerable.Repeat(Color.Empty, 0x01)
+                .Concat(Enumerable.Repeat(textColor, 0x0F))
+                .Concat(Enumerable.Repeat(Color.Empty, 0xF0)).ToArray();
+            for (int i = 0; i < clearIndices.Length; ++i)
             {
-                return null;
-            }
-            List<int> indicesFiltered = (clearIndices ?? new int[0]).Where(x => x > 0 && x < 16).ToList();
-            indicesFiltered.Sort();
-            string cleared = String.Join("-", indicesFiltered.Select(i => i.ToString("X")));
-            string remapName = "FontRemap_" + fontName + "_" + textColor.ToArgb().ToString("X4") + (cleared.Length > 0 ? "_" : string.Empty) + cleared;
-            TeamRemap fontRemap = trm.GetItem(remapName);
-            if (fontRemap != null)
-            {
-                return fontRemap;
-            }
-            int color = tsmc.GetClosestColorIndex(textColor, true);
-            remapAdjust = new Dictionary<byte, Color>();
-            remapAdjust.Add((byte)color, textColor);
-            // Extremely simple: all indices except 0 remap to the given colour.
-            byte[] remapIndices = 0.Yield().Concat(Enumerable.Repeat(color, 15)).Select(b => (byte)b).ToArray();
-            if (indicesFiltered.Count > 0)
-            {
-                foreach (int index in indicesFiltered)
+                int index = clearIndices[i];
+                if (index > 0 && index < 0x10)
                 {
-                    remapIndices[index] = 0;
+                    palette[index] = Color.Empty;
                 }
             }
-            fontRemap = new TeamRemap(remapName, (byte)color, (byte)color, 0, remapIndices);
-            trm.AddTeamColor(fontRemap);
-            return fontRemap;
+            return palette;
         }
 
         protected static string GetMissionName(char side, int number, string suffix)
