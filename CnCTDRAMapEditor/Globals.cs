@@ -26,32 +26,45 @@ namespace MobiusEditor
     {
         static Globals()
         {
-            // Startup options
-            EnabledGames = (Properties.Settings.Default.EnabledGames ?? String.Empty)
-                .Split(',',';').Select(g => g.Trim()).ToHashSet(StringComparer.OrdinalIgnoreCase);
-            UseClassicFiles = Properties.Settings.Default.UseClassicFiles;
+            // General options
+            SetEnabledGames(Properties.Settings.Default.EnabledGames);
+            //LazyInitSteam: used directly, since it's only used once on startup.
             EditorLanguage = Properties.Settings.Default.EditorLanguage;
             EnableDpiAwareness = Properties.Settings.Default.EnableDpiAwareness;
             CheckUpdatesOnStartup = Properties.Settings.Default.CheckUpdatesOnStartup;
+
+            // Classic files
+            UseClassicFiles = Properties.Settings.Default.UseClassicFiles;
+            //ClassicPathTD/RA/SS: used by the GameInfo classes directly
             ClassicNoRemasterLogic = Properties.Settings.Default.ClassicNoRemasterLogic;
+            ClassicProducesNoMetaFiles = Properties.Settings.Default.ClassicProducesNoMetaFiles;
+            ClassicEncodesNameAsCp437 = Properties.Settings.Default.ClassicEncodesNameAsCp437;
+            //ModsToLoadTD/RA/SS: used by the GameInfo classes directly
             MixContentInfoFile = Properties.Settings.Default.MixContentInfoFile;
+
             // Defaults
             BoundsObstructFill = Properties.Settings.Default.DefaultBoundsObstructFill;
             TileDragProtect = Properties.Settings.Default.DefaultTileDragProtect;
             TileDragRandomize = Properties.Settings.Default.DefaultTileDragRandomize;
             ShowPlacementGrid = Properties.Settings.Default.DefaultShowPlacementGrid;
-            OutlineAllCrates = Properties.Settings.Default.DefaultOutlineAllCrates;
             CratesOnTop = Properties.Settings.Default.DefaultCratesOnTop;
+            //ExportTileScale / ExportTileScaleClassic: auto-selected in ExportTileScale property.
             ExportMultiMapsInBounds = Properties.Settings.Default.DefaultExportMultiInBounds;
+            OutlineAllCrates = Properties.Settings.Default.DefaultOutlineAllCrates;
+
             // Fine tuning
             ZoomToBoundsOnLoad = Properties.Settings.Default.ZoomToBoundsOnLoad;
             RememberToolData = Properties.Settings.Default.RememberToolData;
+            //MapScale / MapScaleClassic: auto-selected in MapScale property.
+            //PreviewScale / PreviewScaleClassic: auto-selected in PreviewScale property.
+            //ObjectToolItemSizeMultiplier/TemplateToolTextureSizeMultiplier/MaxMapTileTextureSize: used in controls directly.
+            UndoRedoStackSize = Properties.Settings.Default.UndoRedoStackSize;
+            MinimumClampSize = Properties.Settings.Default.MinimumClampSize;
 
+            // Colors, hashing, outlines and transparency
             MapBackColor = Color.FromArgb(255, Properties.Settings.Default.MapBackColor);
             MapGridColor = Properties.Settings.Default.MapGridColor;
 
-            HashColorTechnoPart = Properties.Settings.Default.HashColorTechnoPart;
-            HashColorTechnoFull = Properties.Settings.Default.HashColorTechnoFull;
             HashColorLandClear = Properties.Settings.Default.HashColorLandClear;
             HashColorLandBeach = Properties.Settings.Default.HashColorLandBeach;
             HashColorLandRock = Properties.Settings.Default.HashColorLandRock;
@@ -60,25 +73,24 @@ namespace MobiusEditor
             HashColorLandRiver = Properties.Settings.Default.HashColorLandRiver;
             HashColorLandRough = Properties.Settings.Default.HashColorLandRough;
 
+            HashColorTechnoPart = Properties.Settings.Default.HashColorTechnoPart;
+            HashColorTechnoFull = Properties.Settings.Default.HashColorTechnoFull;
+
             OutlineColorCrateWood = Properties.Settings.Default.OutlineColorCrateWood;
             OutlineColorCrateSteel = Properties.Settings.Default.OutlineColorCrateSteel;
             OutlineColorTerrain = Properties.Settings.Default.OutlineColorTerrain;
             OutlineColorSolidOverlay = Properties.Settings.Default.OutlineColorSolidOverlay;
             OutlineColorWall = Properties.Settings.Default.OutlineColorWall;
-            PreviewAlphaFloat = Properties.Settings.Default.PreviewAlpha;
-            UnbuiltAlphaFloat = Properties.Settings.Default.UnbuiltAlpha;
+
             IgnoreShadowOverlap = Properties.Settings.Default.IgnoreShadowOverlap;
 
-            UndoRedoStackSize = Properties.Settings.Default.UndoRedoStackSize;
-            MinimumClampSize = Properties.Settings.Default.MinimumClampSize;
+            PreviewAlphaFloat = Properties.Settings.Default.PreviewAlpha;
+            UnbuiltAlphaFloat = Properties.Settings.Default.UnbuiltAlpha;
+
             // Behavior tweaks
             ReportMissionDetection = Properties.Settings.Default.ReportMissionDetection;
-            AllowWallBuildings = !Properties.Settings.Default.OverlayWallsOnly;
             EnforceObjectMaximums = Properties.Settings.Default.EnforceObjectMaximums;
             EnforceTriggerTypes = Properties.Settings.Default.EnforceTriggerTypes;
-            Ignore106Scripting = Properties.Settings.Default.Ignore106Scripting;
-            ClassicProducesNoMetaFiles = Properties.Settings.Default.ClassicProducesNoMetaFiles;
-            ClassicEncodesNameAsCp437 = Properties.Settings.Default.ClassicEncodesNameAsCp437;
             ConvertRaObsoleteClear = Properties.Settings.Default.ConvertRaObsoleteClear;
             BlockingBibs = Properties.Settings.Default.BlockingBibs;
             DisableAirUnits = Properties.Settings.Default.DisableAirUnits;
@@ -86,14 +98,41 @@ namespace MobiusEditor
             DisableSquishMark = Properties.Settings.Default.DisableSquishMark;
             FilterTheaterObjects = Properties.Settings.Default.FilterTheaterObjects;
             WriteClassicBriefing = Properties.Settings.Default.WriteClassicBriefing;
+            WriteRemasterBriefing = Properties.Settings.Default.WriteRemasterBriefing;
             ApplyHarvestBug = Properties.Settings.Default.ApplyHarvestBug;
+            AllowWallBuildings = !Properties.Settings.Default.OverlayWallsOnly;
+            NoOwnedObjectsInSole = Properties.Settings.Default.NoOwnedObjectsInSole;
+
+            // Mod / 3rd party tweak support
+            EnableTd106LineBreaks = Properties.Settings.Default.EnableTd106LineBreaks;
+            EnableTd106Scripting = !Properties.Settings.Default.EnableTd106Scripting;
+            // Experimental; not enabled for now.
+            EnableTdRpmFormat = false;
+            EnableTdClassicMultiLine = false;
+
+            // Graphical tweaks
             FixClassicEinstein = Properties.Settings.Default.FixClassicEinstein;
             FixConcretePavement = Properties.Settings.Default.FixConcretePavement;
-            NoOwnedObjectsInSole = Properties.Settings.Default.NoOwnedObjectsInSole;
             AdjustSoleTeleports = Properties.Settings.Default.DrawSoleTeleports;
-            RestrictSoleLimits = Properties.Settings.Default.RestrictSoleLimits;
         }
 
+        private static void SetEnabledGames(string eg)
+        {
+            string[] enabledGames = (eg ?? String.Empty)
+                            .Split(',', ';').Select(g => g.Trim()).ToArray();
+            EnabledGames = enabledGames.ToHashSet(StringComparer.OrdinalIgnoreCase);
+            EnabledGamesOrder = new Dictionary<string, int>(StringComparer.OrdinalIgnoreCase);
+            int order = 0;
+            foreach (string game in enabledGames)
+            {
+                if (!EnabledGamesOrder.ContainsKey(game))
+                {
+                    EnabledGamesOrder[game] = order++;
+                }
+            }
+        }
+
+        // Harcoded values
         public const string TilesetsXMLPath = @"DATA\XML\TILESETS.XML";
         public const string TexturesPath = @"DATA\ART\TEXTURES\SRGB";
         public const string MegafilePath = @"DATA";
@@ -106,51 +145,64 @@ namespace MobiusEditor
         public const int PixelWidth = 24;
         public const int PixelHeight = 24;
 
+        public static int ZOrderTop = 20;
+        public static int ZOrderBelowTop = 19;
+        public static int ZOrderHigher = 18;
+        public static int ZOrderHigh = 15;
         public static int ZOrderDefault = 10;
         public static int ZOrderPaved = 5;
-        public static int ZOrderFlat = 1;
+        public static int ZOrderFlat = 2;
+        public static int ZOrderOverlay = 1;
         public static int ZOrderFloor = 0;
 
+        // Global settings
         public static HashSet<string> EnabledGames { get; set; }
-        public static bool UseClassicFiles { get; set; }
+        public static Dictionary<string, int> EnabledGamesOrder { get; set; }
         public static string EditorLanguage { get; set; }
         public static bool EnableDpiAwareness { get; set; }
         public static bool CheckUpdatesOnStartup { get; set; }
+
+        public static bool UseClassicFiles { get; set; }
         public static bool ClassicNoRemasterLogic { get; set; }
+        public static bool ClassicProducesNoMetaFiles { get; private set; }
+        public static bool ClassicEncodesNameAsCp437 { get; private set; }
         public static string MixContentInfoFile { get; set; }
 
         public static bool BoundsObstructFill { get; set; }
         public static bool TileDragProtect { get; set; }
         public static bool TileDragRandomize { get; set; }
         public static bool ShowPlacementGrid { get; set; }
-        public static bool OutlineAllCrates { get; set; }
         public static bool CratesOnTop { get; set; }
+        private static double ExportTileScaleRaw => UseClassicFiles ? Properties.Settings.Default.DefaultExportScaleClassic : Properties.Settings.Default.DefaultExportScale;
+        public static double ExportTileScale => Math.Max(MinScale, Math.Abs(ExportTileScaleRaw));
+        public static bool ExportSmoothScale => ExportTileScaleRaw < 0;
         public static bool ExportMultiMapsInBounds { get; set; }
-
-        public static double ExportTileScale
-        {
-            get
-            {
-                double defExpScale = UseClassicFiles ? Properties.Settings.Default.DefaultExportScaleClassic : Properties.Settings.Default.DefaultExportScale;
-                return Math.Max(GetMinScale(), Math.Abs(defExpScale));
-            }
-        }
-
-        public static bool ExportSmoothScale
-        {
-            get
-            {
-                return (UseClassicFiles ? Properties.Settings.Default.DefaultExportScaleClassic : Properties.Settings.Default.DefaultExportScale) < 0;
-            }
-        }
+        public static bool OutlineAllCrates { get; set; }
 
         public static bool ZoomToBoundsOnLoad { get; private set; }
         public static bool RememberToolData { get; private set; }
+
+        private static double MinScale => 1.0 / Math.Min(OriginalTileWidth, OriginalTileHeight);
+        private static double MapTileScaleRaw => UseClassicFiles ? Properties.Settings.Default.MapScaleClassic : Properties.Settings.Default.MapScale;
+        public static double MapTileScale => Math.Max(MinScale, Math.Abs(MapTileScaleRaw));
+        public static bool MapSmoothScale => MapTileScaleRaw < 0;
+        public static int MapTileWidth => Math.Max(1, (int)Math.Round(OriginalTileWidth * MapTileScale));
+        public static int MapTileHeight => Math.Max(1, (int)Math.Round(OriginalTileHeight * MapTileScale));
+        public static Size MapTileSize => new Size(MapTileWidth, MapTileHeight);
+
+        private static double PreviewTileScaleRaw => UseClassicFiles ? Properties.Settings.Default.PreviewScaleClassic : Properties.Settings.Default.PreviewScale;
+        public static double PreviewTileScale => Math.Max(MinScale, Math.Abs(PreviewTileScaleRaw));
+        public static bool PreviewSmoothScale => (PreviewTileScaleRaw) < 0;
+        public static int PreviewTileWidth => Math.Max(1, (int)Math.Round(OriginalTileWidth * PreviewTileScale));
+        public static int PreviewTileHeight => (int)Math.Round(OriginalTileHeight * PreviewTileScale);
+        public static Size PreviewTileSize => new Size(PreviewTileWidth, PreviewTileHeight);
+
+        public static int UndoRedoStackSize { get; private set; }
+        public static Size MinimumClampSize { get; private set; }
+
         public static Color MapBackColor { get; private set; }
         public static Color MapGridColor { get; private set; }
 
-        public static Color HashColorTechnoPart { get; private set; }
-        public static Color HashColorTechnoFull { get; private set; }
         public static Color HashColorLandClear { get; private set; }
         public static Color HashColorLandBeach { get; private set; }
         public static Color HashColorLandRock { get; private set; }
@@ -159,55 +211,49 @@ namespace MobiusEditor
         public static Color HashColorLandRiver { get; private set; }
         public static Color HashColorLandRough { get; private set; }
 
+        public static Color HashColorTechnoPart { get; private set; }
+        public static Color HashColorTechnoFull { get; private set; }
+
         public static Color OutlineColorCrateWood { get; private set; }
         public static Color OutlineColorCrateSteel { get; private set; }
         public static Color OutlineColorTerrain { get; private set; }
         public static Color OutlineColorSolidOverlay { get; private set; }
         public static Color OutlineColorWall { get; private set; }
 
+        public static bool IgnoreShadowOverlap { get; private set; }
+
         public static float PreviewAlphaFloat { get; private set; }
         public static int PreviewAlphaInt => ((int)(PreviewAlphaFloat * 256)).Restrict(0, 255);
         public static float UnbuiltAlphaFloat { get; private set; }
         public static int UnbuiltAlphaInt => ((int)(UnbuiltAlphaFloat * 256)).Restrict(0, 255);
 
-        public static bool IgnoreShadowOverlap { get; private set; }
-
-        private static double GetMinScale(){ return 1.0 / Math.Min(OriginalTileWidth, OriginalTileHeight); }
-        public static double MapTileScale => Math.Max(GetMinScale(), Math.Abs(UseClassicFiles ? Properties.Settings.Default.MapScaleClassic : Properties.Settings.Default.MapScale));
-        public static bool MapSmoothScale => (UseClassicFiles ? Properties.Settings.Default.MapScaleClassic : Properties.Settings.Default.MapScale) < 0;
-        public static int MapTileWidth => Math.Max(1, (int)Math.Round(OriginalTileWidth * MapTileScale));
-        public static int MapTileHeight => Math.Max(1, (int)Math.Round(OriginalTileHeight * MapTileScale));
-        public static Size MapTileSize => new Size(MapTileWidth, MapTileHeight);
-
-        public static double PreviewTileScale =>  Math.Max(GetMinScale(), Math.Abs(UseClassicFiles ? Properties.Settings.Default.PreviewScaleClassic : Properties.Settings.Default.PreviewScale));
-        public static bool PreviewSmoothScale => (UseClassicFiles ? Properties.Settings.Default.PreviewScaleClassic : Properties.Settings.Default.PreviewScale) < 0;
-        public static int PreviewTileWidth => Math.Max(1, (int)Math.Round(OriginalTileWidth * PreviewTileScale));
-        public static int PreviewTileHeight => (int)Math.Round(OriginalTileHeight * PreviewTileScale);
-        public static Size PreviewTileSize => new Size(PreviewTileWidth, PreviewTileHeight);
-
-        public static int UndoRedoStackSize { get; private set; }
-        public static Size MinimumClampSize { get; private set; }
-
         public static bool ReportMissionDetection { get; private set; }
-        public static bool AllowWallBuildings { get; private set; }
         public static bool EnforceObjectMaximums { get; private set; }
         public static bool EnforceTriggerTypes { get; private set; }
-        public static bool Ignore106Scripting { get; private set; }
-        public static bool ClassicProducesNoMetaFiles { get; private set; }
         public static bool ConvertRaObsoleteClear { get; private set; }
         public static bool BlockingBibs { get; private set; }
         public static bool DisableAirUnits { get; private set; }
         public static bool ConvertCraters { get; private set; }
+        public static bool DisableSquishMark { get; private set; }
         public static bool FilterTheaterObjects { get; private set; }
         public static bool WriteClassicBriefing { get; private set; }
-        public static bool ClassicEncodesNameAsCp437 { get; private set; }
+        public static bool WriteRemasterBriefing { get; private set; }
         public static bool ApplyHarvestBug { get; private set; }
+        public static bool AllowWallBuildings { get; private set; }
         public static bool NoOwnedObjectsInSole { get; private set; }
+
+        // Mod / 3rd party tweak support
+        public static bool EnableTd106LineBreaks { get; private set; }
+        public static bool EnableTd106Scripting { get; private set; }
+        // Experimental; not enabled for now.
+        /// <summary>Embed the map inside the ini file for TD. This is just an experiment, and not normally enabled.</summary>
+        public static bool EnableTdRpmFormat { get; private set; }
+        /// <summary>Use RA style '@' line breaks in the classic briefing. Like the embedded map, this is experimental and not normally enabled. If enabled, it takes priority over the 1.06 line breaks logic.</summary>
+        public static bool EnableTdClassicMultiLine { get; private set; }
+
         public static bool FixClassicEinstein { get; private set; }
         public static bool FixConcretePavement { get; private set; }
-        public static bool DisableSquishMark { get; private set; }
         public static bool AdjustSoleTeleports { get; private set; }
-        public static bool RestrictSoleLimits { get; private set; }
 
         public static readonly Size MapPreviewSize = new Size(512, 512);
         public static readonly Size WorkshopPreviewSize = new Size(512, 512);

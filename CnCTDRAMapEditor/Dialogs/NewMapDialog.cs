@@ -38,7 +38,7 @@ namespace MobiusEditor.Dialogs
             set { lbGames.SelectedIndex = value == null ? -1 : Array.IndexOf(gameTypes, value.GameType); }
         }
 
-        public String Theater
+        public string Theater
         {
             get { return ListItem.GetValueFromListBox<TheaterType>(lbTheaters)?.Name; }
         }
@@ -83,7 +83,7 @@ namespace MobiusEditor.Dialogs
             LbGames_SelectedIndexChanged(null, null);
         }
 
-        private void LbGames_SelectedIndexChanged(Object sender, EventArgs e)
+        private void LbGames_SelectedIndexChanged(object sender, EventArgs e)
         {
             try
             {
@@ -93,13 +93,13 @@ namespace MobiusEditor.Dialogs
                     lbGames.SelectedIndex = 0;
                     return;
                 }
-                String selectedTheater = lbTheaters.Text;
+                string selectedTheater = lbTheaters.Text;
                 GameType gameType = GameType;
                 lbTheaters.Items.Clear();
                 int selectIndex = -1;
                 GameInfo gi = gameInfos[(int)gameType];
                 TheaterType[] ttypes = gi.AvailableTheaters;
-                for (Int32 i = 0; i < ttypes.Length; ++i)
+                for (int i = 0; i < ttypes.Length; ++i)
                 {
                     TheaterType tt = ttypes[i];
                     lbTheaters.Items.Add(new ListItem<TheaterType>(tt, tt.Name));
@@ -135,7 +135,7 @@ namespace MobiusEditor.Dialogs
             }
         }
 
-        private void lbTheaters_SelectedIndexChanged(Object sender, EventArgs e)
+        private void lbTheaters_SelectedIndexChanged(object sender, EventArgs e)
         {
             AdjustBottomInfo();
             if (!loading)
@@ -145,7 +145,7 @@ namespace MobiusEditor.Dialogs
 
         }
 
-        private void ChkMegamap_CheckedChanged(Object sender, EventArgs e)
+        private void ChkMegamap_CheckedChanged(object sender, EventArgs e)
         {
             GameType gameType = GameType;
             GameInfo gi = gameInfos[(int)gameType];
@@ -168,7 +168,7 @@ namespace MobiusEditor.Dialogs
             lblWarnModTheater.Visible = selected != null && selected.IsModTheater;
         }
 
-        private void LbTheaters_MouseDoubleClick(Object sender, MouseEventArgs e)
+        private void LbTheaters_MouseDoubleClick(object sender, MouseEventArgs e)
         {
             int index = this.lbTheaters.IndexFromPoint(e.Location);
             if (index != ListBox.NoMatches)

@@ -14,6 +14,7 @@
 // with this program. If not, see https://github.com/electronicarts/CnC_Remastered_Collection
 using MobiusEditor.Interface;
 using MobiusEditor.Model;
+using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
@@ -29,21 +30,31 @@ namespace MobiusEditor.Utility
     public class GameTextManager: IGameTextManager
     {
         private readonly Dictionary<string, string> gameText = new Dictionary<string, string>();
+        private readonly Dictionary<string, string> gameTextAdditions = new Dictionary<string, string>();
+
+        public Action<IGameTextManager, GameType> AddMissing { get; set; }
 
         public string this[string key]
         {
             get => GetString(key) ?? string.Empty;
-            set => gameText[key] = value;
+            set => gameTextAdditions[key] = value;
         }
 
         public string GetString(string key)
         {
+            if (gameTextAdditions.TryGetValue(key, out string overrStr) && overrStr != null)
+            {
+                return overrStr;
+            }
             return gameText.TryGetValue(key, out string val) ? val : null;
         }
 
         public void Reset(GameType gameType)
         {
-            // Do nothing; the text for both games is read from the same file.
+            // No actual reset needed; the text for both games is read from the same file.
+            // Do reset the extra strings, though.
+            gameTextAdditions.Clear();
+            AddMissing(this, gameType);
         }
 
         public void Dump(string path)
@@ -51,7 +62,9 @@ namespace MobiusEditor.Utility
             using (FileStream fs = new FileStream(path, FileMode.Create))
             using (StreamWriter sw = new StreamWriter(fs, Encoding.UTF8))
             {
-                foreach (string key in gameText.Keys.OrderBy(s => s))
+                List<string> keys = gameText.Keys.ToList();
+                keys.Sort(new ExplorerComparer());
+                foreach (string key in keys)
                 {
                     sw.WriteLine("{0} = {1}", key, gameText[key].Replace("\r\n", "\n").Replace('\r', '\n').Replace("\n", "\\n"));
                 }

@@ -25,6 +25,11 @@ namespace MobiusEditor.Utility
         bool Cancelled { get; set; }
 
         /// <summary>
+        /// Indicates that the state that is returned to is clean.
+        /// </summary>
+        bool NewStateIsClean { get; set; }
+
+        /// <summary>
         /// Source of the change
         /// </summary>
         T Source { get; set; }
@@ -37,6 +42,7 @@ namespace MobiusEditor.Utility
         private readonly List<(Action<T> Undo, Action<T> Redo, U Source)> undoRedoActions = new List<(Action<T> Undo, Action<T> Redo, U Source)>();
         private readonly int maxUndoRedo;
         private int undoRedoPosition = 0;
+        private int lastSavePosition = 0;
 
         public event EventHandler<EventArgs> Tracked;
         public event EventHandler<T> Undone;
@@ -61,6 +67,11 @@ namespace MobiusEditor.Utility
             undoRedoActions.Clear();
             undoRedoPosition = 0;
             OnTracked();
+        }
+
+        public void IndicateSave()
+        {
+            lastSavePosition = undoRedoPosition;
         }
 
         /// <summary>
@@ -98,6 +109,7 @@ namespace MobiusEditor.Utility
             undoRedoPosition--;
             // Set source into event.
             context.Source = undoRedoActions[undoRedoPosition].Source;
+            context.NewStateIsClean = undoRedoPosition == lastSavePosition;
             undoRedoActions[undoRedoPosition].Undo(context);
             if (!context.Cancelled)
             {
@@ -122,6 +134,7 @@ namespace MobiusEditor.Utility
             }
             // Set source into event.
             context.Source = undoRedoActions[undoRedoPosition].Source;
+            context.NewStateIsClean = (undoRedoPosition + 1) == lastSavePosition;
             undoRedoActions[undoRedoPosition].Redo(context);
             if (!context.Cancelled)
             {

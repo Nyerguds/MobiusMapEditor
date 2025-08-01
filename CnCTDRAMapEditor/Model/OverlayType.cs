@@ -38,7 +38,7 @@ namespace MobiusEditor.Model
         SteelCrate      /**/ = 1 << 4,
         /// <summary>Is the flag placement indicator.</summary>
         FlagPlace       /**/ = 1 << 5,
-        /// <summary>Is a pavement type.</summary>
+        /// <summary>Is a pavement type. This flag does not actually have any specific functions at the moment; it was mostly phased out in favour of "Solid".</summary>
         Pavement        /**/ = 1 << 6,
         /// <summary>Needs to use the special concrete pavement connection logic.</summary>
         Concrete        /**/ = 1 << 7,
@@ -48,6 +48,10 @@ namespace MobiusEditor.Model
         RoadSpecial     /**/ = 1 << 9,
         /// <summary>Is something a bit gruesome.</summary>
         Gross           /**/ = 1 << 10,
+        /// <summary>Is a football field.</summary>
+        FootballField   /**/ = 1 << 11,
+        /// <summary>Should be filtered out of the overlay types list.</summary>
+        Unplaceable     /**/ = 1 << 12,
         /// <summary>Is a crate.</summary>
         Crate           /**/ = WoodCrate | SteelCrate,
         /// <summary>Is a resource.</summary>
@@ -62,7 +66,7 @@ namespace MobiusEditor.Model
         public bool ExistsInTheater { get; private set; }
         public OverlayTypeFlag Flag { get; private set; }
         public Bitmap Thumbnail { get; set; }
-        public String GraphicsSource { get; private set; }
+        public string GraphicsSource { get; private set; }
         public int ForceTileNr { get; private set; }
         public bool[,] OccupyMask => new bool[1, 1] { { true } };
         public bool[,] BaseOccupyMask => new bool[1, 1] { { true } };
@@ -81,14 +85,15 @@ namespace MobiusEditor.Model
         public bool IsCrate => (this.Flag & OverlayTypeFlag.Crate) != OverlayTypeFlag.None;
         public bool IsFlag => (this.Flag & OverlayTypeFlag.FlagPlace) != OverlayTypeFlag.None;
         public bool IsGross => (this.Flag & OverlayTypeFlag.Gross) != OverlayTypeFlag.None;
+        public bool IsFootballField => (this.Flag & OverlayTypeFlag.FootballField) != OverlayTypeFlag.None;
         private string nameId;
 
         /// <summary>
         /// Defines that it is placeable under the "overlay" category (and not resource or wall)
         /// </summary>
-        public bool IsOverlay => (this.Flag & (OverlayTypeFlag.Wall | OverlayTypeFlag.TiberiumOrGold | OverlayTypeFlag.Gems)) == OverlayTypeFlag.None;
+        public bool IsOverlay => (this.Flag & (OverlayTypeFlag.Wall | OverlayTypeFlag.TiberiumOrGold | OverlayTypeFlag.Gems | OverlayTypeFlag.Unplaceable)) == OverlayTypeFlag.None;
 
-        public OverlayType(int id, string name, string textId, OverlayTypeFlag flag, String graphicsSource, int forceTileNr)
+        public OverlayType(int id, string name, string textId, OverlayTypeFlag flag, string graphicsSource, int forceTileNr)
         {
             this.ID = id;
             this.Name = name;
@@ -152,7 +157,7 @@ namespace MobiusEditor.Model
         {
             // Shows graphics source and not real internal name to mask different internal name for ROAD #2.
             bool idEmpty = String.IsNullOrEmpty(this.nameId);
-            String fetched = idEmpty ? String.Empty : Globals.TheGameTextManager[this.nameId];
+            string fetched = idEmpty ? String.Empty : Globals.TheGameTextManager[this.nameId];
             this.DisplayName = !idEmpty && !String.IsNullOrEmpty(fetched)
                 ? fetched + " (" + this.GraphicsSource.ToUpperInvariant() + ")"
                 : idEmpty ? this.GraphicsSource.ToUpperInvariant() : this.nameId;
@@ -170,7 +175,11 @@ namespace MobiusEditor.Model
                 int tilenr = this.ForceTileNr == -1 ? 0 : this.ForceTileNr;
                 Overlay mockOverlay = new Overlay() { Type = this, Icon = tilenr };
                 MapRenderer.SetRenderSettings(g, Globals.PreviewSmoothScale);
-                MapRenderer.RenderOverlay(gameInfo, Point.Empty, null, Globals.PreviewTileSize, Globals.PreviewTileScale, mockOverlay, false).Item2(g);
+                RenderInfo render = MapRenderer.RenderOverlay(gameInfo, Point.Empty, null, Globals.PreviewTileSize, Globals.PreviewTileScale, mockOverlay, false);
+                if (render.RenderAction != null)
+                {
+                    render.RenderAction(g);
+                }
             }
             this.Thumbnail = th;
             // only certain types are analysed for opaqueness.

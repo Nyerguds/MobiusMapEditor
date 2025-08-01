@@ -18,6 +18,7 @@
 
 using System;
 using System.Drawing;
+using System.Drawing.Drawing2D;
 using System.Reflection;
 using System.Windows.Forms;
 using MobiusEditor.Controls;
@@ -48,6 +49,10 @@ namespace MobiusEditor.Tools.Dialogs
             infoImage.SetResolution(96, 96);
             using (Graphics g = Graphics.FromImage(infoImage))
             {
+                g.CompositingQuality = CompositingQuality.HighQuality;
+                g.InterpolationMode = InterpolationMode.HighQualityBicubic;
+                g.SmoothingMode = SmoothingMode.HighQuality;
+                g.PixelOffsetMode = PixelOffsetMode.HighQuality;
                 g.DrawIcon(SystemIcons.Information, new Rectangle(0, 0, infoImage.Width, infoImage.Height));
             }
             lblTriggerTypesInfo.Image = infoImage;
@@ -61,7 +66,7 @@ namespace MobiusEditor.Tools.Dialogs
             Tool.OnTriggerChanged += this.Tool_OnTriggerChanged;
         }
 #endif
-        private void Tool_OnTriggerChanged(Object sender, EventArgs e)
+        private void Tool_OnTriggerChanged(object sender, EventArgs e)
         {
             Point pt = MousePosition;
             Point lblPos = lblTriggerTypesInfo.PointToScreen(Point.Empty);
@@ -80,7 +85,7 @@ namespace MobiusEditor.Tools.Dialogs
             }
         }
 
-        private void LblTriggerTypesInfo_MouseEnter(Object sender, EventArgs e)
+        private void LblTriggerTypesInfo_MouseEnter(object sender, EventArgs e)
         {
             Control target = sender as Control;
             ShowToolTip(target, Tool.TriggerInfoToolTip);

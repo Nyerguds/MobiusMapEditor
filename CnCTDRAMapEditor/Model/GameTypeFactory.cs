@@ -47,6 +47,13 @@ namespace MobiusEditor.Model
             return GetGameInfos(false);
         }
 
+        public static GameInfo[] GetAvailableGameInfosOrdered()
+        {
+            GameInfo[] types = GetGameInfos(false);
+            Dictionary<string, int> order = Globals.EnabledGamesOrder;
+            return types.Where(gi => gi != null).OrderBy(gi => order[gi.ShortName]).ToArray();
+        }
+
         public static GameInfo[] GetGameInfos(bool unfiltered)
         {
             HashSet<string> enabledGames = unfiltered ? null : Globals.EnabledGames;

@@ -1,4 +1,4 @@
-<?xml version="1.0" encoding="utf-8"?>
+﻿<?xml version="1.0" encoding="utf-8"?>
 <root>
   <!-- 
     Microsoft ResX Schema 
@@ -117,15 +117,19 @@
   <resheader name="writer">
     <value>System.Resources.ResXResourceWriter, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </resheader>
-  <metadata name="publicMapContextMenuStrip.TrayLocation" type="System.Drawing.Point, System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a">
+  <metadata name="previewContextMenuStrip.TrayLocation" type="System.Drawing.Point, System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a">
     <value>17, 17</value>
   </metadata>
+  <metadata name="publicMapContextMenuStrip.TrayLocation" type="System.Drawing.Point, System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a">
+    <value>208, 17</value>
+  </metadata>
   <data name="lblLegal.Text" xml:space="preserve">
-    <value>Respect the rights of others. Provide only content (1) that is not defamatory, obscene, offensive or indecent, (2) that is not confidential or proprietary and (3) that does not violate or infringe any third-party rights. By providing content, you grant EA all licenses needed to enable EA’s use of the content for any purpose. EA’s User Agreement applies.
+    <value>Respect the rights of others. Provide only content (1) that is not defamatory, obscene, offensive or indecent, (2) that is not confidential or proprietary and (3) that does not violate or infringe any third-party rights. By providing content, you grant EA all licenses needed to enable EA's use of the content for any purpose. EA's User Agreement applies.
 
-EA does not pre-screen, endorse or specifically support any C&amp;&amp;C mod. Please use mods with caution and understand there may be a risk. EA reserves the right to address any inappropriate use of our C&amp;&amp;C content.</value>
+Electronic Arts does not pre-screen, endorse, or support any specific Mod or Custom Content. Therefore, use Mods and Custom Content with caution and understand there may be risks. Electronic Arts reserves the right to address any inappropriate use of the Command &amp;&amp; Conquer brand.
+</value>
   </data>
-  <metadata name="imageTooltip.TrayLocation" type="System.Drawing.Point, System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a">
-    <value>314, 17</value>
+  <metadata name="toolTip1.TrayLocation" type="System.Drawing.Point, System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a">
+    <value>415, 17</value>
   </metadata>
 </root>

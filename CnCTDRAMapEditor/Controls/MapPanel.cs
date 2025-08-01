@@ -96,7 +96,6 @@ namespace MobiusEditor.Controls
                 if (zoomStep != value)
                 {
                     zoomStep = value;
-                    Zoom = (Zoom / zoomStep) * zoomStep;
                 }
             }
         }
@@ -157,7 +156,7 @@ namespace MobiusEditor.Controls
         /// <param name="doZoom">True to zoom in as far as possible to the chosen area.</param>
         public void JumpToPosition(CellMetrics metrics, int cellPointX, int cellPointY, int cellsWidth, int cellsHeight, bool doZoom)
         {
-            Rectangle clientNoScroll = new Rectangle(0,0, this.Width, this.Height);
+            Rectangle clientNoScroll = new Rectangle(0, 0, this.Width, this.Height);
             if (doZoom)
             {
                 this.Zoom = maxZoom;
@@ -198,14 +197,15 @@ namespace MobiusEditor.Controls
             this.InvalidateScroll();
         }
 
-        public void IncreaseZoomStep()
+        public void IncreaseZoomStep(bool fromMousePos)
         {
-            AdjustZoom(zoom + (zoom * zoomStep), false);
+            AdjustZoom(zoom + (zoom * zoomStep), fromMousePos);
         }
 
-        public void DecreaseZoomStep()
+        public void DecreaseZoomStep(bool fromMousePos)
         {
-            AdjustZoom(zoom - (zoom * zoomStep), false);
+            // Exact inverse calculation from zooming in.
+            AdjustZoom(zoom / (1 + zoomStep), fromMousePos);
         }
 
         private bool smoothScale;
@@ -405,7 +405,14 @@ namespace MobiusEditor.Controls
         {
             if (!SuspendMouseZoom && !Control.ModifierKeys.HasAnyFlags(SuspendMouseZoomKeys))
             {
-                Zoom += Zoom * ZoomStep * Math.Sign(e.Delta);
+                if (e.Delta > 0)
+                {
+                    IncreaseZoomStep(true);
+                }
+                else
+                {
+                    DecreaseZoomStep(true);
+                }
             }
             MouseWheel?.Invoke(this, e);
         }

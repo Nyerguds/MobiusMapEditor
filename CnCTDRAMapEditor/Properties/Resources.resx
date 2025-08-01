@@ -122,16 +122,16 @@
     <value>..\resources\gameicon00.ico;System.Drawing.Icon, System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a</value>
   </data>
   <data name="mixcontent" type="System.Resources.ResXFileRef, System.Windows.Forms">
-    <value>..\Classic\mixcontent.ini;System.String, mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089;Windows-1252</value>
+    <value>..\Data\mixcontent.ini;System.String, mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089;Windows-1252</value>
   </data>
   <data name="mixcontent_ra1" type="System.Resources.ResXFileRef, System.Windows.Forms">
-    <value>..\Classic\mixcontent_ra1.ini;System.String, mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089;Windows-1252</value>
+    <value>..\Data\mixcontent_ra1.ini;System.String, mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089;Windows-1252</value>
   </data>
   <data name="mixcontent_sole" type="System.Resources.ResXFileRef, System.Windows.Forms">
-    <value>..\Classic\mixcontent_sole.ini;System.String, mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089;Windows-1252</value>
+    <value>..\Data\mixcontent_sole.ini;System.String, mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089;Windows-1252</value>
   </data>
   <data name="mixcontent_td" type="System.Resources.ResXFileRef, System.Windows.Forms">
-    <value>..\Classic\mixcontent_td.ini;System.String, mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089;Windows-1252</value>
+    <value>..\Data\mixcontent_td.ini;System.String, mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089;Windows-1252</value>
   </data>
   <data name="Mmg1" type="System.Resources.ResXFileRef, System.Windows.Forms">
     <value>..\resources\mmg1.wav;System.IO.MemoryStream, mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
@@ -146,10 +146,16 @@
     <value>..\resources\mtiber1.wav;System.IO.MemoryStream, mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </data>
   <data name="n64_th_desert" type="System.Resources.ResXFileRef, System.Windows.Forms">
-    <value>..\Resources\n64_th_desert.nms;System.Byte[], mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+    <value>..\Data\n64_th_desert.nms;System.Byte[], mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </data>
   <data name="n64_th_temperate" type="System.Resources.ResXFileRef, System.Windows.Forms">
-    <value>..\Resources\n64_th_temperate.nms;System.Byte[], mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+    <value>..\Data\n64_th_temperate.nms;System.Byte[], mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
+  <data name="RA_Head" type="System.Resources.ResXFileRef, System.Windows.Forms">
+    <value>..\Resources\ra-head.png;System.Drawing.Bitmap, System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a</value>
+  </data>
+  <data name="TD_Head" type="System.Resources.ResXFileRef, System.Windows.Forms">
+    <value>..\Resources\td-head.png;System.Drawing.Bitmap, System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a</value>
   </data>
   <data name="UI_CustomMissionPreviewDefault" type="System.Resources.ResXFileRef, System.Windows.Forms">
     <value>..\resources\ui_custommissionpreviewdefault.png;System.Drawing.Bitmap, System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a</value>

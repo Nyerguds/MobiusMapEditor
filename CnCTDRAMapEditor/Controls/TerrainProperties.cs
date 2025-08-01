@@ -19,6 +19,7 @@ using System;
 using System.Collections.Generic;
 using System.Data;
 using System.Drawing;
+using System.Drawing.Drawing2D;
 using System.Linq;
 using System.Reflection;
 using System.Windows.Forms;
@@ -60,6 +61,10 @@ namespace MobiusEditor.Controls
             infoImage.SetResolution(96, 96);
             using (Graphics g = Graphics.FromImage(infoImage))
             {
+                g.CompositingQuality = CompositingQuality.HighQuality;
+                g.InterpolationMode = InterpolationMode.HighQualityBicubic;
+                g.SmoothingMode = SmoothingMode.HighQuality;
+                g.PixelOffsetMode = PixelOffsetMode.HighQuality;
                 g.DrawIcon(SystemIcons.Information, new Rectangle(0, 0, infoImage.Width, infoImage.Height));
             }
             lblTriggerTypesInfo.Image = infoImage;
@@ -112,7 +117,7 @@ namespace MobiusEditor.Controls
             }
         }
 
-        private void TriggerComboBox_SelectedIndexChanged(Object sender, EventArgs e)
+        private void TriggerComboBox_SelectedIndexChanged(object sender, EventArgs e)
         {
             if (filteredEvents == null || filteredActions == null)
             {
@@ -139,7 +144,7 @@ namespace MobiusEditor.Controls
             }
         }
 
-        private void TriggerComboBox_MouseEnter(Object sender, EventArgs e)
+        private void TriggerComboBox_MouseEnter(object sender, EventArgs e)
         {
             Control target = sender as Control;
             ShowToolTip(target, triggerToolTip);
@@ -169,7 +174,7 @@ namespace MobiusEditor.Controls
             }
         }
 
-        private void LblTriggerTypesInfo_MouseEnter(Object sender, EventArgs e)
+        private void LblTriggerTypesInfo_MouseEnter(object sender, EventArgs e)
         {
             Control target = sender as Control;
             ShowToolTip(target, triggerInfoToolTip);

@@ -20,6 +20,7 @@ using System.Collections.Generic;
 using System.ComponentModel;
 using System.Data;
 using System.Drawing;
+using System.Drawing.Drawing2D;
 using System.Linq;
 using System.Reflection;
 using System.Windows.Forms;
@@ -38,7 +39,7 @@ namespace MobiusEditor.Controls
         private Control tooltipShownOn;
         private bool isMockObject;
         private HouseType originalHouse;
-        private String originalTrigger;
+        private string originalTrigger;
         private int originalStrength;
         string[] filteredEvents;
         string[] filteredActions;
@@ -82,20 +83,24 @@ namespace MobiusEditor.Controls
             triggerInfoImage.SetResolution(96, 96);
             using (Graphics g = Graphics.FromImage(triggerInfoImage))
             {
+                g.CompositingQuality = CompositingQuality.HighQuality;
+                g.InterpolationMode = InterpolationMode.HighQualityBicubic;
+                g.SmoothingMode = SmoothingMode.HighQuality;
+                g.PixelOffsetMode = PixelOffsetMode.HighQuality;
                 g.DrawIcon(SystemIcons.Information, new Rectangle(0, 0, triggerInfoImage.Width, triggerInfoImage.Height));
             }
             lblTriggerTypesInfo.Image = triggerInfoImage;
             lblTriggerTypesInfo.ImageAlign = ContentAlignment.MiddleCenter;
         }
 
-        private void ObjectProperties_Load(Object sender, EventArgs e)
+        private void ObjectProperties_Load(object sender, EventArgs e)
         {
             // Fix for the fact the resize in the very first Rebind() call never works correctly,
             // because the UI is not initialised yet at that point.
             //this.Height = tableLayoutPanel1.PreferredSize.Height;
         }
 
-        private void ObjectProperties_Resize(Object sender, EventArgs e)
+        private void ObjectProperties_Resize(object sender, EventArgs e)
         {
             //int prefH = tableLayoutPanel1.PreferredSize.Height + 10;
             //if (this.Height != prefH)
@@ -126,6 +131,10 @@ namespace MobiusEditor.Controls
                 int min = Math.Min(capIcon.Width, capIcon.Height);
                 int xOffs = (capIcon.Width - min) / 2;
                 int yOffs = (capIcon.Height - min) / 2;
+                g.CompositingQuality = CompositingQuality.HighQuality;
+                g.InterpolationMode = InterpolationMode.HighQualityBicubic;
+                g.SmoothingMode = SmoothingMode.HighQuality;
+                g.PixelOffsetMode = PixelOffsetMode.HighQuality;
                 g.DrawImage(capIcon, new Rectangle(0, 0, captureImage.Width, captureImage.Height), new Rectangle(xOffs, yOffs, min, min), GraphicsUnit.Pixel);
             }
             if (captureDisabledImage != null)
@@ -140,6 +149,10 @@ namespace MobiusEditor.Controls
             using (Brush redBrush = new SolidBrush(Color.Red))
             using (Pen crossPen = new Pen(redBrush, 3))
             {
+                g.CompositingQuality = CompositingQuality.HighQuality;
+                g.InterpolationMode = InterpolationMode.HighQualityBicubic;
+                g.SmoothingMode = SmoothingMode.HighQuality;
+                g.PixelOffsetMode = PixelOffsetMode.HighQuality;
                 g.DrawLine(crossPen, new Point(-1, captureDisabledImage.Height), new Point(captureDisabledImage.Width, -1));
             }
             if (captureUnknownImage != null)
@@ -251,7 +264,7 @@ namespace MobiusEditor.Controls
             }
         }
 
-        private void TriggerComboBox_SelectedIndexChanged(Object sender, EventArgs e)
+        private void TriggerComboBox_SelectedIndexChanged(object sender, EventArgs e)
         {
             Point pt = MousePosition;
             if (obj is Building building)
@@ -547,7 +560,7 @@ namespace MobiusEditor.Controls
             }
         }
 
-        private void TriggerComboBox_MouseEnter(Object sender, EventArgs e)
+        private void TriggerComboBox_MouseEnter(object sender, EventArgs e)
         {
             Control target = sender as Control;
             ShowToolTip(target, triggerToolTip);
@@ -561,7 +574,7 @@ namespace MobiusEditor.Controls
             }
         }
 
-        private void LblTriggerTypesInfo_MouseEnter(Object sender, EventArgs e)
+        private void LblTriggerTypesInfo_MouseEnter(object sender, EventArgs e)
         {
             string tooltip;
             if (Object is Building bld && !bld.IsPrebuilt)
@@ -588,7 +601,7 @@ namespace MobiusEditor.Controls
             }
         }
 
-        private void LblCapturable_MouseEnter(Object sender, EventArgs e)
+        private void LblCapturable_MouseEnter(object sender, EventArgs e)
         {
             Control target = sender as Control;
             if (Object is Building)

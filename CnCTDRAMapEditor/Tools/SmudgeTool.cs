@@ -41,10 +41,15 @@ namespace MobiusEditor.Tools
         private readonly SmudgeProperties smudgeProperties;
         private readonly ShapeCacheManager shapeCache = new ShapeCacheManager();
 
+        private readonly Dictionary<Point, Smudge> undoSmudges = new Dictionary<Point, Smudge>();
+        private readonly Dictionary<Point, Smudge> redoSmudges = new Dictionary<Point, Smudge>();
+
+        public override bool IsBusy { get { return undoSmudges.Count > 0; } }
+
         private Map previewMap;
         protected override Map RenderMap => previewMap;
 
-        public override Object CurrentObject
+        public override object CurrentObject
         {
             get { return mockSmudge; }
             set
@@ -66,7 +71,7 @@ namespace MobiusEditor.Tools
 
         private bool placementMode;
 
-        protected override Boolean InPlacementMode
+        protected override bool InPlacementMode
         {
             get { return placementMode; }
         }
@@ -120,12 +125,7 @@ namespace MobiusEditor.Tools
             RefreshPreviewPanel();
         }
 
-        private void MapPanel_MouseLeave(object sender, EventArgs e)
-        {
-            ExitPlacementMode();
-        }
-
-        private void MapPanel_MouseWheel(Object sender, MouseEventArgs e)
+        private void MapPanel_MouseWheel(object sender, MouseEventArgs e)
         {
             if (e.Delta == 0 || (Control.ModifierKeys & Keys.Control) == Keys.None)
             {
@@ -144,7 +144,7 @@ namespace MobiusEditor.Tools
             Point mousePoint = navigationWidget.MouseCell;
             if (map.Metrics.GetCell(navigationWidget.MouseCell, out int cell))
             {
-                if (map.Smudge[cell] is Smudge smudge && !smudge.Type.IsAutoBib)
+                if (map.Smudge[cell] is Smudge smudge && !smudge.IsAutoBib)
                 {
                     selectedSmudge = smudge;
                     selectedSmudgePoint = smudge.GetPlacementOrigin(mousePoint);
@@ -174,7 +174,6 @@ namespace MobiusEditor.Tools
             {
                 return;
             }
-            bool origDirtyState = plugin.Dirty;
             bool origEmptyState = plugin.Empty;
             plugin.Dirty = true;
             void undoAction(UndoRedoEventArgs ev)
@@ -183,14 +182,8 @@ namespace MobiusEditor.Tools
                 ev.MapPanel.Invalidate(ev.Map, smudge);
                 if (ev.Plugin != null)
                 {
-                    if (origEmptyState)
-                    {
-                        ev.Plugin.Empty = true;
-                    }
-                    else
-                    {
-                        ev.Plugin.Dirty = origDirtyState;
-                    }
+                    ev.Plugin.Empty = origEmptyState;
+                    ev.Plugin.Dirty = !ev.NewStateIsClean;
                 }
             }
             void redoAction(UndoRedoEventArgs ev)
@@ -199,7 +192,9 @@ namespace MobiusEditor.Tools
                 ev.MapPanel.Invalidate(ev.Map, smudge);
                 if (ev.Plugin != null)
                 {
-                    ev.Plugin.Dirty = true;
+                    // Redo can never restore the "empty" state, but CAN be the point at which a save was done.
+                    ev.Plugin.Empty = false;
+                    ev.Plugin.Dirty = !ev.NewStateIsClean;
                 }
             }
             url.Track(undoAction, redoAction, ToolType.Smudge);
@@ -213,7 +208,7 @@ namespace MobiusEditor.Tools
         private void SelectedSmudge_PropertyChanged(object sender, PropertyChangedEventArgs e)
         {
             Smudge smudge = sender as Smudge;
-            if (smudge != null && !smudge.Type.IsAutoBib && ReferenceEquals(smudge, selectedSmudge))
+            if (smudge != null && !smudge.IsAutoBib && ReferenceEquals(smudge, selectedSmudge))
             {
                 mapPanel.Invalidate(map, new Rectangle(selectedSmudgePoint, smudge.Type.Size));
             }
@@ -264,6 +259,19 @@ namespace MobiusEditor.Tools
             }
         }
 
+        private void MapPanel_MouseUp(object sender, MouseEventArgs e)
+        {
+            if ((undoSmudges.Count > 0) || (redoSmudges.Count > 0))
+            {
+                CommitChange();
+            }
+        }
+
+        private void MapPanel_MouseLeave(object sender, EventArgs e)
+        {
+            ExitPlacementMode();
+        }
+
         private void MapPanel_MouseMove(object sender, MouseEventArgs e)
         {
             if (!placementMode && (Control.ModifierKeys == Keys.Shift))
@@ -278,18 +286,27 @@ namespace MobiusEditor.Tools
 
         private void MouseoverWidget_MouseCellChanged(object sender, MouseCellChangedEventArgs e)
         {
+            Point mouseCell = e.NewCell;
             if (placementMode)
             {
                 SmudgeType selected = SelectedSmudgeType;
+                if (Control.MouseButtons == MouseButtons.Left)
+                {
+                    AddSmudge(mouseCell);
+                }
+                else if (Control.MouseButtons == MouseButtons.Right)
+                {
+                    RemoveSmudge(mouseCell);
+                }
                 if (selected != null)
                 {
                     mapPanel.Invalidate(map, new Rectangle(e.OldCell, selected.Size));
-                    mapPanel.Invalidate(map, new Rectangle(e.NewCell, selected.Size));
+                    mapPanel.Invalidate(map, new Rectangle(mouseCell, selected.Size));
                 }
             }
             else if (e.MouseButtons == MouseButtons.Right)
             {
-                PickSmudge(e.NewCell);
+                PickSmudge(mouseCell);
             }
         }
 
@@ -300,26 +317,37 @@ namespace MobiusEditor.Tools
             {
                 return;
             }
-            Dictionary<Point, Smudge> undomap = new Dictionary<Point, Smudge>();
-            Dictionary<Point, Smudge> redomap = new Dictionary<Point, Smudge>();
             bool multiCell = selected.IsMultiCell;
             int icon = 0;
             Size size = selected.Size;
-            Smudge oldSmudge = map.Smudge[location];
+            Point placeLocation = location;
+            // check if this would overwrite any smudges placed in the same operation. If so, abort completely.
+            for (int y = 0; y < size.Height; ++y)
+            {
+                for (int x = 0; x < size.Width; ++x)
+                {
+                    placeLocation.X = location.X + x;
+                    if (undoSmudges.ContainsKey(placeLocation))
+                    {
+                        return;
+                    }
+                }
+                placeLocation.Y++;
+            }
             // Find smudges whose 0,0 point will be overwritten by this placement.
             foreach (Point p in FindSmudgesForPoint(location))
             {
                 Smudge existingBib = map.Smudge[p];
-                if (existingBib != null && existingBib.Type.IsAutoBib)
+                if (existingBib != null && existingBib.IsAutoBib)
                 {
                     continue;
                 }
-                undomap[p] = map.Smudge[p];
-                redomap[p] = null;
+                undoSmudges[p] = map.Smudge[p];
+                redoSmudges[p] = null;
                 map.Smudge[p] = null;
             }
-            RestoreNearbySmudge(map, undomap.Keys, redomap);
-            Point placeLocation = location;
+            RestoreNearbySmudge(map, undoSmudges.Keys, redoSmudges);
+            placeLocation = location;
             var basicSmudge = mockSmudge.Clone();
             for (int y = 0; y < size.Height; ++y)
             {
@@ -332,7 +360,7 @@ namespace MobiusEditor.Tools
                         continue;
                     }
                     Smudge existingBib = map.Smudge[placeLocation];
-                    if (existingBib != null && existingBib.Type.IsAutoBib)
+                    if (existingBib != null && existingBib.AttachedTo != null)
                     {
                         icon++;
                         continue;
@@ -343,116 +371,48 @@ namespace MobiusEditor.Tools
                         smudge.Icon = icon++;
                     }
                     // Prevent it from overwriting already-cleared smudge
-                    if (!undomap.ContainsKey(placeLocation))
+                    if (!undoSmudges.ContainsKey(placeLocation))
                     {
-                        undomap[placeLocation] = map.Smudge[placeLocation];
+                        undoSmudges[placeLocation] = map.Smudge[placeLocation];
                     }
-                    redomap[placeLocation] = smudge;
+                    redoSmudges[placeLocation] = smudge;
                     map.Smudge[placeLocation] = smudge;
                 }
                 placeLocation.Y++;
             }
-            mapPanel.Invalidate(map, undomap.Keys);
-            mapPanel.Invalidate(map, redomap.Keys);
-            bool origDirtyState = plugin.Dirty;
+            mapPanel.Invalidate(map, undoSmudges.Keys);
+            mapPanel.Invalidate(map, redoSmudges.Keys);
             bool origEmptyState = plugin.Empty;
             plugin.Dirty = true;
-            void undoAction(UndoRedoEventArgs ev)
-            {
-                ev.MapPanel.Invalidate(ev.Map, undomap.Keys);
-                foreach (Point p in undomap.Keys)
-                {
-                    ev.Map.Smudge[p] = undomap[p];
-                }
-                if (ev.Plugin != null)
-                {
-                    if (origEmptyState)
-                    {
-                        ev.Plugin.Empty = true;
-                    }
-                    else
-                    {
-                        ev.Plugin.Dirty = origDirtyState;
-                    }
-                }
-            }
-            void redoAction(UndoRedoEventArgs ev)
-            {
-                foreach (Point p in redomap.Keys)
-                {
-                    ev.Map.Smudge[p] = redomap[p];
-                }
-                ev.MapPanel.Invalidate(ev.Map, redomap.Keys); if (ev.Plugin != null)
-                {
-                    ev.Plugin.Dirty = true;
-                }
-            }
-            url.Track(undoAction, redoAction, ToolType.Smudge);
         }
 
         private void RemoveSmudge(Point location)
         {
             SmudgeType selected = SelectedSmudgeType;
             Rectangle toClear = new Rectangle(location, selected == null ? new Size(1, 1) : selected.Size);
-            Dictionary<Point, Smudge> undomap = new Dictionary<Point, Smudge>();
-            Dictionary<Point, Smudge> redomap = new Dictionary<Point, Smudge>();
             // Clear points
-            RemoveSmudgePoints(toClear, undomap, redomap);
+            RemoveSmudgePoints(toClear, undoSmudges, redoSmudges);
             // Restore nearby bibs
-            RestoreNearbySmudge(map, undomap.Keys, redomap);
-            mapPanel.Invalidate(map, undomap.Keys);
-            mapPanel.Invalidate(map, redomap.Keys);
-            bool origDirtyState = plugin.Dirty;
+            RestoreNearbySmudge(map, undoSmudges.Keys, redoSmudges);
+            mapPanel.Invalidate(map, undoSmudges.Keys);
+            mapPanel.Invalidate(map, redoSmudges.Keys);
             bool origEmptyState = plugin.Empty;
             plugin.Dirty = true;
-            // TODO
-            void undoAction(UndoRedoEventArgs ev)
-            {
-                foreach (Point p in undomap.Keys)
-                {
-                    ev.Map.Smudge[p] = undomap[p];
-                }
-                ev.MapPanel.Invalidate(ev.Map, undomap.Keys);
-                if (ev.Plugin != null)
-                {
-                    if (origEmptyState)
-                    {
-                        ev.Plugin.Empty = true;
-                    }
-                    else
-                    {
-                        ev.Plugin.Dirty = origDirtyState;
-                    }
-                }
-            }
-            void redoAction(UndoRedoEventArgs ev)
-            {
-                ev.MapPanel.Invalidate(ev.Map, redomap.Keys);
-                foreach (Point p in redomap.Keys)
-                {
-                    ev.Map.Smudge[p] = redomap[p];
-                }
-                if (ev.Plugin != null)
-                {
-                    ev.Plugin.Dirty = true;
-                }
-            }
-            url.Track(undoAction, redoAction, ToolType.Smudge);
         }
 
         private void RemoveSmudgePoints(Rectangle toClear, Dictionary<Point, Smudge> undomap, Dictionary<Point, Smudge> redomap)
         {
             foreach (Point loc in toClear.Points())
             {
-                SmudgeType smudgeType;
                 if (!map.Metrics.Contains(loc))
                 {
                     continue;
                 }
-                if (!(map.Smudge[loc] is Smudge smudge) || (smudgeType = smudge.Type).IsAutoBib)
+                if (!(map.Smudge[loc] is Smudge smudge) || smudge.IsAutoBib)
                 {
                     continue;
                 }
+                SmudgeType smudgeType = smudge.Type;
                 Point baseLocation = smudge.GetPlacementOrigin(loc);
                 int curIcon = 0;
                 Point removeLocation = baseLocation;
@@ -491,8 +451,8 @@ namespace MobiusEditor.Tools
                 return;
             }
             // Maximum size that can be occupied by multi-cell bibs.
-            int maxW = map.SmudgeTypes.Where(sm => sm.IsMultiCell && !sm.IsAutoBib).Max(sm => sm.Size.Width);
-            int maxH = map.SmudgeTypes.Where(sm => sm.IsMultiCell && !sm.IsAutoBib).Max(sm => sm.Size.Height);
+            int maxW = map.SmudgeTypes.Where(sm => sm.IsMultiCell).Max(sm => sm.Size.Width);
+            int maxH = map.SmudgeTypes.Where(sm => sm.IsMultiCell).Max(sm => sm.Size.Height);
             foreach (Point loc in points.OrderBy(p => p.X).ThenByDescending(p => p.Y))
             {
                 // scan smudges from bottom to top, right to left, to find if any cell from a nearby smudge should occupy this location.
@@ -501,7 +461,7 @@ namespace MobiusEditor.Tools
                 {
                     Smudge toFix = map.Smudge[p];
                     SmudgeType toFixType = toFix?.Type;
-                    if (toFixType == null || toFixType.IsAutoBib || !toFixType.IsMultiCell)
+                    if (toFixType == null || toFix.IsAutoBib || !toFixType.IsMultiCell)
                     {
                         continue;
                     }
@@ -524,8 +484,8 @@ namespace MobiusEditor.Tools
         private List<Point> FindSmudgesForPoint(Point loc)
         {
             // Maximum size that can be occupied by multi-cell bibs.
-            int maxW = map.SmudgeTypes.Where(sm => sm.IsMultiCell && !sm.IsAutoBib).Max(sm => sm.Size.Width);
-            int maxH = map.SmudgeTypes.Where(sm => sm.IsMultiCell && !sm.IsAutoBib).Max(sm => sm.Size.Height);
+            int maxW = map.SmudgeTypes.Where(sm => sm.IsMultiCell).Max(sm => sm.Size.Width);
+            int maxH = map.SmudgeTypes.Where(sm => sm.IsMultiCell).Max(sm => sm.Size.Height);
                 // scan smudges from top to bottom to find if any cell from a nearby smudge should occupy this location.
             Rectangle scanRect = new Rectangle(loc.X, loc.Y, maxW, maxH);
             List<Point> found = new List<Point>();
@@ -548,6 +508,44 @@ namespace MobiusEditor.Tools
                 }
             }
             return found;
+        }
+
+        private void CommitChange()
+        {
+            bool origEmptyState = plugin.Empty;
+            plugin.Dirty = true;
+            Dictionary<Point, Smudge> undoSmudges2 = new Dictionary<Point, Smudge>(undoSmudges);
+            void undoAction(UndoRedoEventArgs ev)
+            {
+                foreach (KeyValuePair<Point, Smudge> kv in undoSmudges2)
+                {
+                    ev.Map.Smudge[kv.Key] = kv.Value;
+                }
+                ev.MapPanel.Invalidate(ev.Map, undoSmudges2.Keys.Select(k => Rectangle.Inflate(new Rectangle(k, new Size(1, 1)), 1, 1)));
+                if (ev.Plugin != null)
+                {
+                    ev.Plugin.Empty = origEmptyState;
+                    ev.Plugin.Dirty = !ev.NewStateIsClean;
+                }
+            }
+            Dictionary<Point, Smudge> redoSmudges2 = new Dictionary<Point, Smudge>(redoSmudges);
+            void redoAction(UndoRedoEventArgs ev)
+            {
+                foreach (KeyValuePair<Point, Smudge> kv in redoSmudges2)
+                {
+                    ev.Map.Smudge[kv.Key] = kv.Value;
+                }
+                ev.MapPanel.Invalidate(ev.Map, redoSmudges2.Keys.Select(k => Rectangle.Inflate(new Rectangle(k, new Size(1, 1)), 1, 1)));
+                if (ev.Plugin != null)
+                {
+                    // Redo can never restore the "empty" state, but CAN be the point at which a save was done.
+                    ev.Plugin.Empty = false;
+                    ev.Plugin.Dirty = !ev.NewStateIsClean;
+                }
+            }
+            undoSmudges.Clear();
+            redoSmudges.Clear();
+            url.Track(undoAction, redoAction, ToolType.Overlay);
         }
 
         private void CheckSelectShortcuts(KeyEventArgs e)
@@ -625,22 +623,8 @@ namespace MobiusEditor.Tools
                 return;
             }
             SmudgeType picked = smudge.Type;
-            // convert building bib back to usable bib
-            if (picked.IsAutoBib)
-            {
-                SmudgeType sm = map.SmudgeTypes.FirstOrDefault(s => !s.IsAutoBib && s.Name == picked.Name);
-                if (sm != null)
-                {
-                    mockSmudge.Icon = 0;
-                    SelectedSmudgeType = sm;
-                }
-            }
-            else
-            {
-                mockSmudge.Icon = 0;
-                SelectedSmudgeType = picked;
-                mockSmudge.Icon = Math.Min(picked.Icons - 1, picked.IsMultiCell ? 0 : smudge.Icon);
-            }
+            SelectedSmudgeType = picked;
+            mockSmudge.Icon = Math.Min(picked.Icons - 1, picked.IsMultiCell ? 0 : smudge.Icon);
         }
 
         protected override void RefreshPreviewPanel()
@@ -735,10 +719,11 @@ namespace MobiusEditor.Tools
                         continue;
                     }
                     Smudge oldSmudge = previewMap.Smudge[placeLocation];
-                    if (oldSmudge != null && oldSmudge.Type.IsAutoBib)
+                    if (oldSmudge != null && oldSmudge.IsAutoBib)
                     {
                         if (x == 0 && y == 0)
                         {
+                            // Show red rectangle indicating inability to place there.
                             navigationWidget.MouseoverSize = new Size(1, 1);
                         }
                     }
@@ -758,7 +743,7 @@ namespace MobiusEditor.Tools
             Rectangle boundRenderCells = visibleCells;
             boundRenderCells.Inflate(1, 1);
             boundRenderCells.Intersect(map.Metrics.Bounds);
-            MapRenderer.RenderAllBoundsFromCell(graphics, boundRenderCells, Globals.MapTileSize, previewMap.Smudge.Where(x => !x.Value.Type.IsAutoBib), previewMap.Metrics);
+            MapRenderer.RenderAllBoundsFromCell(graphics, boundRenderCells, Globals.MapTileSize, previewMap.Smudge.Where(x => !x.Value.IsAutoBib), previewMap.Metrics);
         }
 
         public override void Activate()
@@ -767,6 +752,7 @@ namespace MobiusEditor.Tools
             this.Deactivate(true);
             this.mockSmudge.PropertyChanged += MockSmudge_PropertyChanged;
             this.mapPanel.MouseDown += MapPanel_MouseDown;
+            this.mapPanel.MouseUp += MapPanel_MouseUp;
             this.mapPanel.MouseMove += MapPanel_MouseMove;
             this.mapPanel.MouseDoubleClick += MapPanel_MouseDoubleClick;
             this.mapPanel.MouseLeave += MapPanel_MouseLeave;
@@ -793,6 +779,7 @@ namespace MobiusEditor.Tools
             }
             this.mockSmudge.PropertyChanged -= MockSmudge_PropertyChanged;
             this.mapPanel.MouseDown -= MapPanel_MouseDown;
+            this.mapPanel.MouseDown -= MapPanel_MouseUp;
             this.mapPanel.MouseMove -= MapPanel_MouseMove;
             this.mapPanel.MouseDoubleClick -= MapPanel_MouseDoubleClick;
             this.mapPanel.MouseLeave -= MapPanel_MouseLeave;

@@ -207,6 +207,26 @@ namespace MobiusEditor.Properties {
         /// <summary>
         ///   Looks up a localized resource of type System.Drawing.Bitmap.
         /// </summary>
+        internal static System.Drawing.Bitmap RA_Head {
+            get {
+                object obj = ResourceManager.GetObject("RA_Head", resourceCulture);
+                return ((System.Drawing.Bitmap)(obj));
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized resource of type System.Drawing.Bitmap.
+        /// </summary>
+        internal static System.Drawing.Bitmap TD_Head {
+            get {
+                object obj = ResourceManager.GetObject("TD_Head", resourceCulture);
+                return ((System.Drawing.Bitmap)(obj));
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized resource of type System.Drawing.Bitmap.
+        /// </summary>
         internal static System.Drawing.Bitmap UI_CustomMissionPreviewDefault {
             get {
                 object obj = ResourceManager.GetObject("UI_CustomMissionPreviewDefault", resourceCulture);

@@ -16,11 +16,15 @@
 // I'm sure there are more elegant methods to detect games on Steam anyway, like
 // an actual parser, so this little piece of code is public domain.
 using Microsoft.Win32;
+using Steamworks;
 using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
+using System.Net.Http;
 using System.Text.RegularExpressions;
+using System.Threading.Tasks;
+using Newtonsoft.Json.Linq;
 
 namespace MobiusEditor.Utility
 {
@@ -28,6 +32,29 @@ namespace MobiusEditor.Utility
     {
         /// <summary>Simple regex to identify a key-value pair on one line in Steam's special snowflake variant of json.</summary>
         private static Regex SteamKeyVal = new Regex("^\\s*\"([^\"]+)\"\\s*\"([^\"]+)\"\\s*$");
+        private static readonly string AppIdName = "steam_appid.txt";
+
+        public static string TryGetSteamId(string folder)
+        {
+            try
+            {
+                string appIdFile = Path.Combine(folder, AppIdName);
+                if (!File.Exists(appIdFile))
+                {
+                    return null;
+                }
+                string id = File.ReadAllText(appIdFile).Trim("\r\n \t\0".ToCharArray()).Trim();
+                if (!Regex.IsMatch(id, "^\\d+$"))
+                {
+                    return null;
+                }
+                return id;
+            }
+            catch
+            {
+                return null;
+            }
+        }
 
         /// <summary>
         /// Attempts to retrieve the folder that a Steam game is installed in by scanning the Steam library information.
@@ -35,13 +62,13 @@ namespace MobiusEditor.Utility
         /// <param name="steamId">Steam game ID</param>
         /// <param name="identifyingFiles">Optional list of files that need to be present inside the found game folder.</param>
         /// <returns>The first found game folder that matches the criteria and that exists.</returns>
-        public static String TryGetSteamGameFolder(string steamId, params String[] identifyingFiles)
+        public static string TryGetSteamGameFolder(string steamId, params string[] identifyingFiles)
         {
             if (steamId == null)
             {
                 throw new ArgumentNullException("steamId");
             }
-            String steamFolder = GetSteamFolder();
+            string steamFolder = GetSteamFolder();
             if (steamFolder == null)
             {
                 return null;
@@ -51,7 +78,33 @@ namespace MobiusEditor.Utility
             {
                 return null;
             }
-            return GetGameFolder(foundLibraryFolders, steamId, identifyingFiles);
+            return GetGameFolder(foundLibraryFolders, steamId, out _, identifyingFiles);
+        }
+
+        /// <summary>
+        /// Attempts to retrieve the folder that a Steam game is installed in by scanning the Steam library information.
+        /// </summary>
+        /// <param name="steamId">Steam game ID</param>
+        /// <param name="identifyingFiles">Optional list of files that need to be present inside the found game folder.</param>
+        /// <returns>The first found game folder that matches the criteria and that exists.</returns>
+        public static string GetSteamGameName(string steamId)
+        {
+            if (steamId == null)
+            {
+                throw new ArgumentNullException("steamId");
+            }
+            string steamFolder = GetSteamFolder();
+            if (steamFolder == null)
+            {
+                return null;
+            }
+            string[] foundLibraryFolders = GetLibraryFoldersForAppId(steamFolder, steamId);
+            if (foundLibraryFolders == null)
+            {
+                return null;
+            }
+            string path = GetGameFolder(foundLibraryFolders, steamId, out string name);
+            return name;
         }
 
         /// <summary>
@@ -66,14 +119,14 @@ namespace MobiusEditor.Utility
         /// <param name="baseFolder">Returns the base folder of the workshop item.</param>
         /// <returns>The folder in which the requested file was found under the requested workshop id folder, or null if no existing match was found.</returns>
         /// <exception cref="ArgumentNullException">if steamId is null</exception>
-        public static String GetWorkshopFolder(string steamId, string workShopId, string contentFile, string contentFolder, out string baseFolder)
+        public static string GetWorkshopFolder(string steamId, string workShopId, string contentFile, string contentFolder, out string baseFolder)
         {
             baseFolder = null;
             if (steamId == null)
             {
                 throw new ArgumentNullException("steamId");
             }
-            String steamFolder = GetSteamFolder();
+            string steamFolder = GetSteamFolder();
             if (steamFolder == null)
             {
                 return null;
@@ -229,7 +282,7 @@ namespace MobiusEditor.Utility
             {
                 throw new ArgumentNullException("steamId");
             }
-            String steamFolder = GetSteamFolder();
+            string steamFolder = GetSteamFolder();
             if (steamFolder == null)
             {
                 return null;
@@ -253,7 +306,7 @@ namespace MobiusEditor.Utility
             {
                 throw new ArgumentNullException("steamId");
             }
-            String libraryInfo = Path.Combine(steamFolder, "steamapps\\libraryfolders.vdf");
+            string libraryInfo = Path.Combine(steamFolder, "steamapps\\libraryfolders.vdf");
             if (!File.Exists(libraryInfo))
                 return null;
             // Fairly naive implementation; the regex doesn't properly deal with escaping. But for this
@@ -364,12 +417,13 @@ namespace MobiusEditor.Utility
         /// <param name="steamId">Steam game ID.</param>
         /// <param name="identifyingFiles">Optional list of files that need to be present inside the found game folder.</param>
         /// <returns>The first matching game folder for that id that is found, or null if no existing match was found.</returns>
-        private static string GetGameFolder(IEnumerable<string> libraryFolders, string steamId, params string[] identifyingFiles)
+        private static string GetGameFolder(IEnumerable<string> libraryFolders, string steamId, out string gameName, params string[] identifyingFiles)
         {
             if (steamId == null)
             {
                 throw new ArgumentNullException("steamId");
             }
+            gameName = null;
             if (libraryFolders == null)
             {
                 return null;
@@ -391,7 +445,7 @@ namespace MobiusEditor.Utility
                 {
                     continue;
                 }
-                string gameFolder;
+                string gameFolder = null;
                 using (StreamReader sr = new StreamReader(manifest))
                 {
                     string currentLine;
@@ -399,30 +453,79 @@ namespace MobiusEditor.Utility
                     while ((currentLine = sr.ReadLine()) != null)
                     {
                         Match kvm = SteamKeyVal.Match(currentLine);
-                        if (!kvm.Success || !"installdir".Equals(kvm.Groups[1].Value))
+                        if (!kvm.Success)
                         {
                             continue;
                         }
-                        gameFolder = kvm.Groups[2].Value.Replace("\\\\", "\\");
-                        string actualFolder = Path.Combine(commonAppsPath, gameFolder);
-                        if (!Directory.Exists(actualFolder))
+                        string itemName = kvm.Groups[1].Value;
+                        string item = kvm.Groups[2].Value.Replace("\\\\", "\\");
+                        if ("name".Equals(itemName))
                         {
-                            continue;
+                            gameName = item;
                         }
-                        // No checks; just return the folder.
-                        if (identifyingFiles == null || identifyingFiles.Length == 0)
+                        if ("installdir".Equals(itemName))
                         {
-                            return actualFolder;
+                            gameFolder = item;
+                            string actualFolder = Path.Combine(commonAppsPath, gameFolder);
+                            if (!Directory.Exists(actualFolder))
+                            {
+                                continue;
+                            }
+                            else
+                            {
+                                gameFolder = actualFolder;
+                            }
                         }
-                        // Check if files exist in the found folder.
-                        if (identifyingFiles.All(fn => File.Exists(Path.Combine(actualFolder, fn))))
+                        if (gameFolder != null && gameName != null)
                         {
-                            return actualFolder;
+                            // Check if files exist in the found folder.
+                            if ((identifyingFiles == null || identifyingFiles.Length == 0)
+                                || identifyingFiles.All(fn => File.Exists(Path.Combine(gameFolder, fn))))
+                            {
+                                return gameFolder;
+                            }
                         }
                     }
                 }
             }
             return null;
+        }
+
+        public static string GetAppName()
+        {
+            var appId = SteamUtils.GetAppID().m_AppId.ToString();
+            var task = GetAppName(appId);
+            task.Wait();
+            return task.Result;
+        }
+
+        public static async Task<string> GetAppName(string appId)
+        {
+            string url = $"https://store.steampowered.com/api/appdetails?appids={appId}";
+
+            using (HttpClient client = new HttpClient())
+            {
+                HttpResponseMessage response = await client.GetAsync(url).ConfigureAwait(false);
+
+                if (response.IsSuccessStatusCode)
+                {
+                    string result = await response.Content.ReadAsStringAsync();
+                    JObject doc = JObject.Parse(result);
+                    bool success = (bool)doc[appId]["success"];
+                    if ((bool)doc[appId]["success"])
+                    {
+                        return (string)doc[appId]["data"]["name"];
+                    }
+                    else
+                    {
+                        return "App ID not found on the Steam store page!";
+                    }
+                }
+                else
+                {
+                    return "Error fetching data from the Steam store page!";
+                }
+            }
         }
     }
 }

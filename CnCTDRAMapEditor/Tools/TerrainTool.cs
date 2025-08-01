@@ -45,7 +45,7 @@ namespace MobiusEditor.Tools
 
         public override bool IsBusy { get { return startedDragging; } }
 
-        public override Object CurrentObject
+        public override object CurrentObject
         {
             get { return mockTerrain; }
             set
@@ -67,7 +67,7 @@ namespace MobiusEditor.Tools
 
         private bool placementMode;
 
-        protected override Boolean InPlacementMode
+        protected override bool InPlacementMode
         {
             get { return placementMode || startedDragging; }
         }
@@ -128,7 +128,7 @@ namespace MobiusEditor.Tools
             ExitPlacementMode();
         }
 
-        private void MapPanel_MouseWheel(Object sender, MouseEventArgs e)
+        private void MapPanel_MouseWheel(object sender, MouseEventArgs e)
         {
             if (e.Delta == 0 || !Control.ModifierKeys.HasFlag(Keys.Control))
             {
@@ -183,7 +183,6 @@ namespace MobiusEditor.Tools
             {
                 return;
             }
-            bool origDirtyState = plugin.Dirty;
             bool origEmptyState = plugin.Empty;
             plugin.Dirty = true;
             void undoAction(UndoRedoEventArgs ev)
@@ -197,14 +196,8 @@ namespace MobiusEditor.Tools
                 ev.MapPanel.Invalidate(ev.Map, terrain);
                 if (ev.Plugin != null)
                 {
-                    if (origEmptyState)
-                    {
-                        ev.Plugin.Empty = true;
-                    }
-                    else
-                    {
-                        ev.Plugin.Dirty = origDirtyState;
-                    }
+                    ev.Plugin.Empty = origEmptyState;
+                    ev.Plugin.Dirty = !ev.NewStateIsClean;
                 }
             }
             void redoAction(UndoRedoEventArgs ev)
@@ -218,7 +211,9 @@ namespace MobiusEditor.Tools
                 ev.MapPanel.Invalidate(ev.Map, terrain);
                 if (ev.Plugin != null)
                 {
-                    ev.Plugin.Dirty = true;
+                    // Redo can never restore the "empty" state, but CAN be the point at which a save was done.
+                    ev.Plugin.Empty = false;
+                    ev.Plugin.Dirty = !ev.NewStateIsClean;
                 }
             }
             url.Track(undoAction, redoAction, ToolType.Terrain);
@@ -303,7 +298,6 @@ namespace MobiusEditor.Tools
             if (finalLocation.HasValue && finalLocation.Value != startLocation)
             {
                 Point endLocation = finalLocation.Value;
-                bool origDirtyState = plugin.Dirty;
                 bool origEmptyState = plugin.Empty;
                 plugin.Dirty = true;
                 void undoAction(UndoRedoEventArgs ev)
@@ -314,14 +308,8 @@ namespace MobiusEditor.Tools
                     ev.MapPanel.Invalidate(ev.Map, toMove);
                     if (ev.Plugin != null)
                     {
-                        if (origEmptyState)
-                        {
-                            ev.Plugin.Empty = true;
-                        }
-                        else
-                        {
-                            ev.Plugin.Dirty = origDirtyState;
-                        }
+                        ev.Plugin.Empty = origEmptyState;
+                        ev.Plugin.Dirty = !ev.NewStateIsClean;
                     }
                 }
                 void redoAction(UndoRedoEventArgs ev)
@@ -332,7 +320,9 @@ namespace MobiusEditor.Tools
                     ev.MapPanel.Invalidate(ev.Map, toMove);
                     if (ev.Plugin != null)
                     {
-                        ev.Plugin.Dirty = true;
+                        // Redo can never restore the "empty" state, but CAN be the point at which a save was done.
+                        ev.Plugin.Empty = false;
+                        ev.Plugin.Dirty = !ev.NewStateIsClean;
                     }
                 }
                 url.Track(undoAction, redoAction, ToolType.Terrain);
@@ -405,7 +395,6 @@ namespace MobiusEditor.Tools
             var terrain = mockTerrain.Clone();
             if (map.Technos.Add(location, terrain))
             {
-                bool origDirtyState = plugin.Dirty;
                 bool origEmptyState = plugin.Empty;
                 plugin.Dirty = true;
                 mapPanel.Invalidate(map, terrain);
@@ -415,14 +404,8 @@ namespace MobiusEditor.Tools
                     ev.Map.Technos.Remove(terrain);
                     if (ev.Plugin != null)
                     {
-                        if (origEmptyState)
-                        {
-                            ev.Plugin.Empty = true;
-                        }
-                        else
-                        {
-                            ev.Plugin.Dirty = origDirtyState;
-                        }
+                        ev.Plugin.Empty = origEmptyState;
+                        ev.Plugin.Dirty = !ev.NewStateIsClean;
                     }
                 }
                 void redoAction(UndoRedoEventArgs ev)
@@ -431,7 +414,9 @@ namespace MobiusEditor.Tools
                     ev.MapPanel.Invalidate(ev.Map, location);
                     if (ev.Plugin != null)
                     {
-                        ev.Plugin.Dirty = true;
+                        // Redo can never restore the "empty" state, but CAN be the point at which a save was done.
+                        ev.Plugin.Empty = false;
+                        ev.Plugin.Dirty = !ev.NewStateIsClean;
                     }
                 }
                 url.Track(undoAction, redoAction, ToolType.Terrain);
@@ -445,7 +430,6 @@ namespace MobiusEditor.Tools
                 Point actualLocation = map.Technos[terrain].Value;
                 mapPanel.Invalidate(map, terrain);
                 map.Technos.Remove(location);
-                bool origDirtyState = plugin.Dirty;
                 bool origEmptyState = plugin.Empty;
                 plugin.Dirty = true;
                 void undoAction(UndoRedoEventArgs ev)
@@ -454,14 +438,8 @@ namespace MobiusEditor.Tools
                     ev.MapPanel.Invalidate(ev.Map, terrain);
                     if (ev.Plugin != null)
                     {
-                        if (origEmptyState)
-                        {
-                            ev.Plugin.Empty = true;
-                        }
-                        else
-                        {
-                            ev.Plugin.Dirty = origDirtyState;
-                        }
+                        ev.Plugin.Empty = origEmptyState;
+                        ev.Plugin.Dirty = !ev.NewStateIsClean;
                     }
                 }
                 void redoAction(UndoRedoEventArgs ev)
@@ -470,7 +448,9 @@ namespace MobiusEditor.Tools
                     ev.Map.Technos.Remove(terrain);
                     if (ev.Plugin != null)
                     {
-                        ev.Plugin.Dirty = true;
+                        // Redo can never restore the "empty" state, but CAN be the point at which a save was done.
+                        ev.Plugin.Empty = false;
+                        ev.Plugin.Dirty = !ev.NewStateIsClean;
                     }
                 }
                 url.Track(undoAction, redoAction, ToolType.Terrain);
@@ -670,7 +650,7 @@ namespace MobiusEditor.Tools
             if (placementMode && selectedType != null)
             {
                 List<Point> occupyPoints = OccupierSet.GetOccupyPoints(location, selectedType.OccupyMask).ToList();
-                Boolean isCurrent = map.Technos.OfType<Terrain>().Any(lo => lo.Location == location && lo.Occupier.Type == selectedType);
+                bool isCurrent = map.Technos.OfType<Terrain>().Any(lo => lo.Location == location && lo.Occupier.Type == selectedType);
                 // If there is already a terrain object of this exact type placed on the current location, don't render anything extra.
                 if (!isCurrent)
                 {

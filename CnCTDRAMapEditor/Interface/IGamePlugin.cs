@@ -22,9 +22,12 @@ namespace MobiusEditor.Interface
     public enum FileType
     {
         None = 0,
-        INI, // ini file
-        BIN, // bin file
-        PGM, // Petroglyph map archive in big format
+        INI, // ini+bin file
+        BIN, // bin+ini file
+        I64, // N64 ini+map file
+        B64, // N64 map+ini file
+        MPR, // ini file with embedded map
+        PGM, // Petroglyph map archive in meg format
         MIX  // Map selected from inside a mix file; should contain the ini and possibly bin parts behind a '?'.
     }
 
@@ -63,7 +66,7 @@ namespace MobiusEditor.Interface
         /// <param name="extraIniText">The extra ini text to store</param>
         /// <param name="footPrintsChanged">Returns true if any building footprints were changed as a result of the given ini rule tweaks</param>
         /// <returns>Any errors that occurred while parsing <paramref name="extraIniText"/>, or null if nothing went wrong.</returns>
-        IEnumerable<string> SetExtraIniText(String extraIniText, out bool footPrintsChanged);
+        IEnumerable<string> SetExtraIniText(string extraIniText, out bool footPrintsChanged);
 
         /// <summary>Test if setting extra ini text will result in footprint changes.</summary>
         /// <param name="extraIniText">The extra ini text to evaluate</param>
@@ -71,17 +74,21 @@ namespace MobiusEditor.Interface
         /// <param name="expansionEnabled">True if expansion is enabled, which can affect how rules are interpreted.</param>
         /// <param name="footPrintsChanged">Returns true if any building footprints were changed as a result of the given ini rule tweaks</param>
         /// <returns>Any errors that occurred while parsing <paramref name="extraIniText"/>, or null if nothing went wrong.</returns>
-        IEnumerable<string> TestSetExtraIniText(String extraIniText, bool isSolo, bool expansionEnabled, out bool footPrintsChanged);
+        IEnumerable<string> TestSetExtraIniText(string extraIniText, bool isSolo, bool expansionEnabled, out bool footPrintsChanged);
 
         /// <summary>Create a new map in the chosen theater.</summary>
         /// <param name="theater">The name of the theater to use.</param>
         void New(string theater);
 
         /// <summary>Load a map.</summary>
-        /// <param name="path">Path of the map to load.</param>
-        /// <param name="fileType">File type of the actual file in the path, so accompanying files can be loaded correctly.</param>
+        /// <param name="loadPath">Full load path. This can be a .mix file or pgm archive.</param>
+        /// <param name="iniPath">Name of the .ini file.</param>
+        /// <param name="iniContent">Content of the .ini file</param>
+        /// <param name="binPath">Name of the .bin file.</param>
+        /// <param name="binContent">Content of the .bin file</param>
+        /// <param name="fileType">File type that was identified for this.</param>
         /// <returns>Any issues encountered when loading the map.</returns>
-        IEnumerable<string> Load(string path, FileType fileType);
+        IEnumerable<string> Load(string loadPath, string iniPath, byte[] iniContent, string binPath, byte[] binContent, ref FileType fileType);
 
         /// <summary>Save the current map to the given path, with the given file type.</summary>
         /// <param name="path">Path of the map to save.</param>
@@ -94,13 +101,20 @@ namespace MobiusEditor.Interface
         /// <param name="fileType">File type of the actual file in the path, so accompanying files can be saved correctly.</param>
         /// <param name="customPreview">Custom preview given to the map.</param>
         /// <param name="dontResavePreview">True to not resave the preview on disc when doing the save operation.</param>
+        /// <param name="forSteam">True if this is a Steam workshop save</param>
         /// <returns>The length of the ini data that was saved, or 0 if the saving didn't succeed.</returns>
-        long Save(string path, FileType fileType, Bitmap customPreview, bool dontResavePreview);
+        long Save(string path, FileType fileType, Bitmap customPreview, bool dontResavePreview, bool forSteam);
 
         /// <summary>Validate the map to see if there are any blocking errors preventing it from saving.</summary>
+        /// <param name="saveType">Save type that this validating is for. If "None", the save type is not yet known, and no type-specific checks should be done.</param>
+        /// <param name="forResave">
+        ///     If true, the checks for savetype "None" should be included despite a specific save type being specified.
+        ///     This is meant for a resave of an already-saved map, meaning no Save As dialog was shown, and all checks should
+        ///     be done, both for save type "none" and the given save type.
+        /// </param>
         /// <param name="forWarnings">true if this is not the actual map validation, but a check that should return any warnings to show that the user can still choose to ignore.</param>
         /// <returns>Null if the validation succeeded, else a string containing the problems that occurred.</returns>
-        string Validate(Boolean forWarnings);
+        string Validate(FileType saveType, bool forResave, bool forWarnings);
 
         /// <summary>Generates an overview of how many items are on the map and how many are allowed, and does a trigger analysis.</summary>
         /// <returns>The generated map items overview.</returns>

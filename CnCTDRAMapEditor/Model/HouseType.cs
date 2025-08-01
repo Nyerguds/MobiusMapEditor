@@ -40,17 +40,15 @@ namespace MobiusEditor.Model
         public string DisplayName { get { return nameId == null ? Name : Globals.TheGameTextManager[this.nameId]; } }
         public string UnitTeamColor { get; private set; }
         public string BuildingTeamColor { get; private set; }
-        public WaypointFlag MultiplayIdentifier { get; private set; }
         public HouseTypeFlag Flags { get; private set; }
         public IDictionary<string, string> OverrideTeamColors { get; private set; }
         private string nameId;
 
-        public HouseType(int id, string name, string nameId, WaypointFlag multiplayIdentifier, HouseTypeFlag flags, string unitTeamColor, string buildingTeamColor, params (string type, string teamColor)[] overrideTeamColors)
+        public HouseType(int id, string name, string nameId, HouseTypeFlag flags, string unitTeamColor, string buildingTeamColor, params (string type, string teamColor)[] overrideTeamColors)
         {
             this.ID = id;
             this.Name = name;
             this.nameId = nameId;
-            this.MultiplayIdentifier = multiplayIdentifier;
             this.Flags = flags;
             // Alliances not supported for house IDs larger than 32.
             if (id >= 32) Flags &= ~HouseTypeFlag.ForAlliances;
@@ -59,23 +57,13 @@ namespace MobiusEditor.Model
             this.OverrideTeamColors = overrideTeamColors.ToDictionary(x => x.type, x => x.teamColor);
         }
 
-        public HouseType(int id, string name, string nameId, HouseTypeFlag flags, string unitTeamColor, string buildingTeamColor, params (string type, string teamColor)[] overrideTeamColors)
-            : this(id, name, nameId, WaypointFlag.None, flags, unitTeamColor, buildingTeamColor, overrideTeamColors)
-        {
-        }
-
         public HouseType(int id, string name, string nameId, HouseTypeFlag flags, string teamColor)
-            : this(id, name, nameId, WaypointFlag.None, flags, teamColor, teamColor)
-        {
-        }
-
-        public HouseType(int id, string name, WaypointFlag multiplayIdentifier, HouseTypeFlag flags, string teamColor)
-            : this(id, name, null, multiplayIdentifier, flags, teamColor, teamColor)
+            : this(id, name, nameId, flags, teamColor, teamColor)
         {
         }
 
         public HouseType(int id, string name, HouseTypeFlag flags, string teamColor)
-            : this(id, name, null, WaypointFlag.None, flags, teamColor, teamColor)
+            : this(id, name, null, flags, teamColor, teamColor)
         {
         }
 

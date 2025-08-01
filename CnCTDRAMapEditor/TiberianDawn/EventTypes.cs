@@ -13,6 +13,7 @@
 // GNU General Public License along with permitted additional restrictions
 // with this program. If not, see https://github.com/electronicarts/CnC_Remastered_Collection
 using System.Collections.Generic;
+using System.Collections.ObjectModel;
 using System.Linq;
 using System.Reflection;
 
@@ -39,6 +40,7 @@ namespace MobiusEditor.TiberianDawn
         public const string EVENT_BUILD                /**/ = "Built It";
 
         private static readonly string[] Types;
+        public static ReadOnlyDictionary<string, string> TypesInfo { get; }
 
         static EventTypes()
         {
@@ -46,11 +48,33 @@ namespace MobiusEditor.TiberianDawn
                 (from field in typeof(EventTypes).GetFields(BindingFlags.Static | BindingFlags.Public)
                  where field.IsLiteral && !field.IsInitOnly && typeof(string).IsAssignableFrom(field.FieldType)
                  select field.GetValue(null) as string).ToArray();
+            Dictionary<string, string> typesInfo = new Dictionary<string, string>()
+            {
+                { EVENT_NONE, "" },
+                { EVENT_PLAYER_ENTERED, "Cell entered, or building captured." },
+                { EVENT_DISCOVERED, "Map object is discovered by the player." },
+                { EVENT_ATTACKED, "Map object is attacked by anybody.\nIf a House is set, it acts as \"any building of this House is attacked\",\nbut this system only works for the player House." },
+                { EVENT_DESTROYED, "Map object is destroyed.\nThis event should never have a House set." },
+                { EVENT_ANY, "Any action at all." },
+                { EVENT_HOUSE_DISCOVERED, "Anything from this House is discovered by the player." },
+                { EVENT_UNITS_DESTROYED, "All units of this House are destroyed." },
+                { EVENT_BUILDINGS_DESTROYED, "All buildings of this House are destroyed." },
+                { EVENT_ALL_DESTROYED, "Everything owned by this House is destroyed." },
+                { EVENT_CREDITS, "This House reached the set amount of credits\nCash only; harvested tiberium does not count." },
+                { EVENT_TIME, "Time in 1/10th min." },
+                { EVENT_NBUILDINGS_DESTROYED, "Amount of buildings of this House destroyed." },
+                { EVENT_NUNITS_DESTROYED, "Amount of units of this House destroyed." },
+                { EVENT_NOFACTORIES, "No vehicle or infantry production facilities remain for this House." },
+                { EVENT_EVAC_CIVILIAN, "Civilian is evacuated by Chinook helicopter." },
+                { EVENT_BUILD, "This building was constructed by the player." },
+            };
+            TypesInfo = new ReadOnlyDictionary<string, string>(typesInfo);
         }
 
         public static IEnumerable<string> GetTypes()
         {
             return Types;
         }
+
     }
 }
