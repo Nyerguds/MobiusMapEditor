@@ -26,6 +26,7 @@ namespace MobiusEditor.Model
     {
         public int ID { get; private set; }
         public string Name { get; private set; }
+        public bool Ownable => false;
         public string DisplayName { get; private set; }
         public Rectangle OverlapBounds => new Rectangle(Point.Empty, Size);
         public bool[,][] OverlapMask { get; private set; }
@@ -37,7 +38,7 @@ namespace MobiusEditor.Model
         public bool ExistsInTheater { get; private set; }
         public int DisplayIcon { get; private set; }
         public LandType PlacementLand { get; private set; }
-        public String GraphicsSource { get; private set; }
+        public string GraphicsSource { get; private set; }
         public bool IsArmed => false;
         public bool IsAircraft => false;
         public bool IsFixedWing => false;
@@ -90,7 +91,7 @@ namespace MobiusEditor.Model
         /// <param name="occupyMask">String indicating the occupied cells. Spaces are ignored, '0' means unoccupied, any other value means occupied. A null value indicates it is fully occupied.</param>
         /// <param name="graphicsSource">Override for the graphics source. If null, the name is used.</param>
         /// <param name="displayIcon">Override for the frame to display. Normally 0.</param>
-        public TerrainType(int id, string name, string textId, int width, int height, Point centerPoint, string occupyMask, String graphicsSource, int displayIcon)
+        public TerrainType(int id, string name, string textId, int width, int height, Point centerPoint, string occupyMask, string graphicsSource, int displayIcon)
             : this(id, name, textId, width, height, centerPoint, occupyMask, graphicsSource, displayIcon, LandType.Clear)
         {
         }
@@ -105,7 +106,7 @@ namespace MobiusEditor.Model
         /// <param name="height">Height of the terrain object, in cells.</param>
         /// <param name="occupyMask">String indicating the occupied cells. Spaces are ignored, '0' means unoccupied, any other value means occupied. A null value indicates it is fully occupied.</param>
         /// <param name="graphicsSource">Override for the graphics source. If null, the name is used.</param>
-        public TerrainType(int id, string name, string textId, int width, int height, Point centerPoint, string occupyMask, String graphicsSource)
+        public TerrainType(int id, string name, string textId, int width, int height, Point centerPoint, string occupyMask, string graphicsSource)
             : this(id, name, textId, width, height, centerPoint, occupyMask, graphicsSource, 0, LandType.Clear)
         {
         }

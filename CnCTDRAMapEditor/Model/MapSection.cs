@@ -14,6 +14,7 @@
 // with this program. If not, see https://github.com/electronicarts/CnC_Remastered_Collection
 using MobiusEditor.Utility;
 using System;
+using System.Collections.Generic;
 using System.ComponentModel;
 using System.Drawing;
 using System.Globalization;
@@ -72,24 +73,42 @@ namespace MobiusEditor.Model
 
         public MapSection(Size fullSize)
         {
-            this.fullWidth = fullSize.Width;
-            this.fullHeight = fullSize.Height;
+            fullWidth = fullSize.Width;
+            fullHeight = fullSize.Height;
         }
 
-        public Rectangle FixBounds()
+        public Rectangle FixBounds(List<string> errors)
         {
             int fixedX = Math.Max(1, Math.Min(fullWidth - 2, x));
             int fixedY = Math.Max(1, Math.Min(fullHeight - 2, y));
-            int fixedWidth = Math.Max(1, Math.Min(fullWidth - x - 1, width));
-            int fixedHeight = Math.Max(1, Math.Min(fullHeight - y - 1, height));
+            int fixedWidth = Math.Max(1, Math.Min(fullWidth - fixedX - 1, width));
+            int fixedHeight = Math.Max(1, Math.Min(fullHeight - fixedY - 1, height));
             // Assign fixed values.
-            X = fixedX;
-            Y = fixedY;
-            Width = fixedWidth;
-            Height = fixedHeight;
+            if (fixedX != X)
+            {
+                errors?.Add(String.Format("Illegal X value {0} on map bounds. Changed to {1}.", X, fixedX));
+                X = fixedX;
+            }
+            if (fixedY != Y)
+            {
+                errors?.Add(String.Format("Illegal Y value {0} on map bounds. Changed to {1}.", Y, fixedY));
+                Y = fixedY;
+            }
+            if (fixedWidth != Width)
+            {
+                errors?.Add(String.Format("Illegal width value {0} on map bounds with X={1}. Changed to {2}.", Width, X, fixedWidth));
+                Width = fixedWidth;
+            }
+            if (fixedHeight != Height)
+            {
+                errors?.Add(String.Format("Illegal height value {0} on map bounds with Y={1}. Changed to {2}.", Height, Y, fixedHeight));
+                Height = fixedHeight;
+            }
             return Bounds;
         }
 
+        [NonSerializedINIKey]
+        public bool AutoFixSize { get; set; } = true;
         [NonSerializedINIKey]
         public int FullWidth => fullWidth;
         [NonSerializedINIKey]
@@ -107,7 +126,10 @@ namespace MobiusEditor.Model
             get { return x; }
             set
             {
-                value = Math.Max(1, Math.Min(fullWidth - 2, value));
+                if (AutoFixSize)
+                {
+                    value = Math.Max(1, Math.Min(fullWidth - 2, value));
+                }
                 SetField(ref x, value);
             }
         }
@@ -119,7 +141,10 @@ namespace MobiusEditor.Model
             get { return y; }
             set
             {
-                value = Math.Max(1, Math.Min(fullWidth - 2, value));
+                if (AutoFixSize)
+                {
+                    value = Math.Max(1, Math.Min(fullWidth - 2, value));
+                }
                 SetField(ref y, value);
             }
         }
@@ -131,7 +156,10 @@ namespace MobiusEditor.Model
             get { return width; }
             set
             {
-                value = Math.Max(1, Math.Min(fullWidth - 2, value));
+                if (AutoFixSize)
+                {
+                    value = Math.Max(1, Math.Min(fullWidth - 2, value));
+                }
                 SetField(ref width, value);
             }
         }
@@ -143,7 +171,10 @@ namespace MobiusEditor.Model
             get { return height; }
             set
             {
-                value = Math.Max(1, Math.Min(fullHeight - 2, value));
+                if (AutoFixSize)
+                {
+                    value = Math.Max(1, Math.Min(fullHeight - 2, value));
+                }
                 SetField(ref height, value);
             }
         }

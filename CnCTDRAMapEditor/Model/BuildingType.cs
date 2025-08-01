@@ -42,8 +42,10 @@ namespace MobiusEditor.Model
         GapGenerator     /**/ = 1 << 7,
         /// <summary>Do not show this building in the lists if its graphics were not found in the currently loaded theater.</summary>
         TheaterDependent /**/ = 1 << 8,
-        /// <summary>This building type s a wall. Only show if placing walls as buildings is enabled.</summary>
+        /// <summary>This building type is a wall. Only show if placing walls as buildings is enabled.</summary>
         Wall             /**/ = 1 << 9,
+        /// <summary>This type typically has no rules present in the rules file, and needs specific checks on that.</summary>
+        NoRules          /**/ = 1 << 10,
     }
 
     [DebuggerDisplay("{Name}")]
@@ -51,6 +53,7 @@ namespace MobiusEditor.Model
     {
         public int ID { get; private set; }
         public string Name { get; private set; }
+        public bool Ownable => true;
         public string DisplayName { get; private set; }
         public string DisplayNameWithTheaterInfo
         {
@@ -123,7 +126,7 @@ namespace MobiusEditor.Model
         public int ZOrder { get; private set; }
         private string nameId;
 
-        public BuildingType(int id, string name, string textId, int powerProd, int powerUse, int storage, bool capturable, int width, int height, string occupyMask, string ownerHouse, string factoryOverlay, int frameOffset, String graphicsSource, BuildingTypeFlag flag, int zOrder)
+        public BuildingType(int id, string name, string textId, int powerProd, int powerUse, int storage, bool capturable, int width, int height, string occupyMask, string ownerHouse, string factoryOverlay, int frameOffset, string graphicsSource, BuildingTypeFlag flag, int zOrder)
         {
             ID = id;
             Flag = flag;
@@ -143,12 +146,12 @@ namespace MobiusEditor.Model
             HasBib = HasBib;
         }
 
-        public BuildingType(int id, string name, string textId, int powerProd, int powerUse, int storage, bool capturable, int width, int height, string occupyMask, string ownerHouse, string factoryOverlay, int frameOffset, String graphicsSource, BuildingTypeFlag flag)
+        public BuildingType(int id, string name, string textId, int powerProd, int powerUse, int storage, bool capturable, int width, int height, string occupyMask, string ownerHouse, string factoryOverlay, int frameOffset, string graphicsSource, BuildingTypeFlag flag)
             : this(id, name, textId, powerProd, powerUse, storage, capturable, width, height, occupyMask, ownerHouse, factoryOverlay, frameOffset, graphicsSource, flag, Globals.ZOrderDefault)
         {
         }
 
-        public BuildingType(int id, string name, string textId, int powerProd, int powerUse, bool capturable, int width, int height, string occupyMask, string ownerHouse, String graphicsSource, BuildingTypeFlag flag)
+        public BuildingType(int id, string name, string textId, int powerProd, int powerUse, bool capturable, int width, int height, string occupyMask, string ownerHouse, string graphicsSource, BuildingTypeFlag flag)
             : this(id, name, textId, powerProd, powerUse, 0, capturable, width, height, occupyMask, ownerHouse, null, 0, graphicsSource, flag)
         {
         }

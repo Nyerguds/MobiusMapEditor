@@ -30,7 +30,7 @@ namespace MobiusEditor
 {
     static class Program
     {
-        public const string SteamGameId = "1213210";
+        public const string RemasterSteamId = "1213210";
 
         public const string ProgramName = "Mobius Map Editor";
         public const string GithubOwner = "Nyerguds";
@@ -63,6 +63,7 @@ namespace MobiusEditor
         public static readonly string AssemblyName = Assembly.GetExecutingAssembly().GetName().Name;
 
         public static readonly string ProgramVersionTitle = ProgramName + " v" + Assembly.GetExecutingAssembly().GetName().Version;
+        public static string RemasterRunPath { get; private set; }
 
         static Program()
         {
@@ -106,15 +107,10 @@ namespace MobiusEditor
             {
                 if (gameInfo != null)
                 {
-                    modPaths.Add(gameInfo.GameType, StartupLoader.GetModPaths(SteamGameId, gameInfo.ModsToLoad, gameInfo.ModFolder, gameInfo.ModIdentifier));
+                    modPaths.Add(gameInfo.GameType, StartupLoader.GetModPaths(RemasterSteamId, gameInfo.ModsToLoad, gameInfo.ModFolder, gameInfo.ModIdentifier));
                 }
             }
-            String runPath = StartupLoader.GetRemasterRunPath(SteamGameId, !Globals.UseClassicFiles);
-            if (runPath != null)
-            {
-                // Required for Steam interface to work.
-                Environment.CurrentDirectory = runPath;
-            }
+            RemasterRunPath = StartupLoader.GetRemasterRunPath(RemasterSteamId, !Globals.UseClassicFiles);
             bool loadOk = false;
             string mixContentFile = Globals.MixContentInfoFile;
             if (!string.IsNullOrEmpty(mixContentFile)) {
@@ -156,9 +152,9 @@ namespace MobiusEditor
             {
                 // todo: log this somehow.
             }
-            if (!Globals.UseClassicFiles && runPath != null)
+            if (!Globals.UseClassicFiles && RemasterRunPath != null)
             {
-                loadOk = StartupLoader.LoadEditorRemastered(runPath, modPaths, romfis);
+                loadOk = StartupLoader.LoadEditorRemastered(RemasterRunPath, modPaths, romfis);
             }
             else if (Globals.UseClassicFiles)
             {
@@ -168,10 +164,29 @@ namespace MobiusEditor
             {
                 return;
             }
+            // Always default the run path to the app path.
+            Environment.CurrentDirectory = Program.ApplicationPath;
             bool steamEnabled = false;
-            if (SteamworksUGC.IsSteamBuild && !Properties.Settings.Default.LazyInitSteam)
+            if (!Properties.Settings.Default.LazyInitSteam)
             {
-                steamEnabled = SteamworksUGC.Init();
+                string runPath = RemasterRunPath;
+                if (runPath != null)
+                {
+                    // Required for Steam interface to work.
+                    Environment.CurrentDirectory = runPath;
+                    if (SteamAssist.TryGetSteamId(Environment.CurrentDirectory) != null)
+                    {
+                        try
+                        {
+                            steamEnabled = SteamworksUGC.Init();
+                        }
+                        catch (DllNotFoundException ex)
+                        {
+                            MessageBox.Show(ex.Message, "Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
+                            return;
+                        }
+                    }
+                }
             }
             if (steamEnabled & Properties.Settings.Default.ShowInviteWarning)
             {
@@ -185,7 +200,7 @@ namespace MobiusEditor
                     Properties.Settings.Default.Save();
                 }
             }
-            String arg = null;
+            string arg = null;
             try
             {
                 if (args.Length > 0 && File.Exists(args[0]))
@@ -241,7 +256,7 @@ namespace MobiusEditor
         /// </summary>
         /// <param name="currentSettingsVer">Curent version fetched from the settings.</param>
         /// <param name="versionSetter">Delegate to set the version into the settings after the process is complete.</param>
-        private static void CopyLastUserConfig(String currentSettingsVer, Action<String> versionSetter)
+        private static void CopyLastUserConfig(string currentSettingsVer, Action<string> versionSetter)
         {
             AssemblyName assn = Assembly.GetExecutingAssembly().GetName();
             Version currentVersion = assn.Version;

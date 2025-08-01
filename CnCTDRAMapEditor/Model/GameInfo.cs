@@ -16,6 +16,7 @@ using MobiusEditor.Utility;
 using System;
 using System.Collections.Generic;
 using System.Drawing;
+using System.IO;
 using System.Linq;
 
 namespace MobiusEditor.Model
@@ -37,7 +38,7 @@ namespace MobiusEditor.Model
         public const string TRIG_ARG_FORMAT = "{0}: {1}";
         public string[] PERSISTENCE_NAMES = { "first triggered", "all triggered", "each triggering" };
         #region properties
-        /// <summary>GqmeType enup for this game.</summary>
+        /// <summary>GameType enum for this game.</summary>
         public abstract GameType GameType { get; }
         /// <summary>Name used for this game.</summary>
         public abstract string Name { get; }
@@ -45,20 +46,40 @@ namespace MobiusEditor.Model
         public abstract string ShortName { get; }
         /// <summary>Name used for this game in the mixcontent.ini definition.</summary>
         public abstract string IniName { get; }
+        /// <summary>The Steam ID for this game.</summary>
+        public abstract string SteamId { get; }
+        /// <summary>True if the Steam map handling uses a mirror server that requires the maps to be public on the Steam workshop.</summary>
+        public abstract bool PublishedMapsUseMirrorServer { get; }
+        /// <summary>The Steam game name linked to this Steam ID.</summary>
+        public abstract string SteamGameName { get; }
+        /// <summary>Short version of the Steam game name linked to this Steam ID.</summary>
+        public abstract string SteamGameNameShort { get; }
+        /// <summary>Filename extension given to the uploaded singleplayer map file on the Steam workshop.</summary>
+        public abstract string SteamFileExtensionSolo { get; }
+        /// <summary>Filename extension given to the uploaded singleplayer map file on the Steam workshop.</summary>
+        public abstract string SteamFileExtensionMulti { get; }
+        /// <summary>File save type for the Steam workshop upload.</summary>
+        public abstract FileType SteamFileType { get; }
+        /// <summary>Default tags put on maps for this game.</summary>
+        public abstract string[] SteamDefaultTags { get; }
+        /// <summary>Tags put on singleplayer maps for this game.</summary>
+        public abstract string[] SteamSoloTags { get; }
+        /// <summary>Tags put on multiplayer maps for this game.</summary>
+        public abstract string[] SteamMultiTags { get; }
+        /// <summary>Extra tags this game's singleplayer maps can use.</summary>
+        public abstract string[] SteamSoloExtraTags { get; }
+        /// <summary>Extra tags this game's multiplayer maps can use.</summary>
+        public abstract string[] SteamMultiExtraTags { get; }
         /// <summary>Default remaster folder for saving maps of this type.</summary>
         public abstract string DefaultSaveDirectory { get; }
-        /// <summary>"Save File" filter for maps for this game.</summary>
-        public abstract string SaveFilter { get; }
-        /// <summary>"Open File" filter for maps for this game.</summary>
-        public abstract string OpenFilter { get; }
+        /// <summary>Types that can be opened and saved by this plugin.</summary>
+        public abstract FileTypeInfo[] SupportedFileTypes { get; }
         /// <summary>Default extension used for maps of this game.</summary>
-        public abstract string DefaultExtension { get; }
+        public abstract FileType DefaultSaveType { get; }
         /// <summary>Default extension used for maps of this game when they were loaded from inside a .mix file.</summary>
-        public abstract string DefaultExtensionFromMix { get; }
+        public abstract FileType DefaultSaveTypeFromMix { get; }
         /// <summary>Default extension used for maps of this game when they were loaded from inside a .pgm file.</summary>
-        public abstract string DefaultExtensionFromPgm { get; }
-        /// <summary>File types and corresponding extensions supported by this game.</summary>
-        public abstract Dictionary<FileType, string[]> ExtensionsForTypes { get; }
+        public abstract FileType DefaultSaveTypeFromPgm { get; }
         /// <summary>Location to look for mods for this game in the user's Documents folder.</summary>
         public abstract string ModFolder { get; }
         /// <summary>Identifier for this game in mod definition json files.</summary>
@@ -67,8 +88,6 @@ namespace MobiusEditor.Model
         public abstract string ModsToLoad { get; }
         /// <summary>Name of the setting that configures this game's mods to load.</summary>
         public abstract string ModsToLoadSetting { get; }
-        /// <summary>Workshop identifier for maps for this game. If empty, workshop is not supported for this game.</summary>
-        public abstract string WorkshopTypeId { get; }
         /// <summary>Gives the list of remastered .meg files to load for this game.</summary>
         public abstract string[] RemasterMegFiles { get; }
         /// <summary>Configured folder for this this game's Classic files</summary>
@@ -105,6 +124,18 @@ namespace MobiusEditor.Model
         public abstract bool CanUseNewMixFormat { get; }
         /// <summary>Maximum length of the saved ini data for a map of this game.</summary>
         public abstract long MaxDataSize { get; }
+        /// <summary>Maximum amount of aircraft that can be added into a map of this game.</summary>
+        public abstract int MaxAircraft { get; }
+        /// <summary>Maximum amount of vessels that can be added into a map of this game.</summary>
+        public abstract int MaxVessels { get; }
+        /// <summary>Maximum amount of buildings that can be added into a map of this game.</summary>
+        public abstract int MaxBuildings { get; }
+        /// <summary>Maximum amount of infantry that can be added into a map of this game.</summary>
+        public abstract int MaxInfantry { get; }
+        /// <summary>Maximum amount of terrain that can be added into a map of this game.</summary>
+        public abstract int MaxTerrain { get; }
+        /// <summary>Maximum amount of units that can be added into a map of this game.</summary>
+        public abstract int MaxUnits { get; }
         /// <summary>Maximum amount of triggers that can be added into a map of this game.</summary>
         public abstract int MaxTriggers { get; }
         /// <summary>Maximum amount of teams that can be added into a map of this game.</summary>
@@ -113,11 +144,28 @@ namespace MobiusEditor.Model
         public abstract int HitPointsGreenMinimum { get; }
         /// <summary>Threshold (1-256) at which the health bar colour changes from red to yellow in this game.</summary>
         public abstract int HitPointsYellowMinimum { get; }
-        /// <summary>Preferred type of overlay to use as UI icon</summary>
+        /// <summary>Returns whether the Home waypoint indicates the center of the start viewport, or the top left corner.</summary>
+        public abstract bool HomeWaypointIsCenter { get; }
+        /// <summary>Preferred type of overlay to use as UI icon.</summary>
         public abstract OverlayTypeFlag OverlayIconType { get; }
+        /// <summary>Generic image usable as Steam thumbnail.</summary>
+        public abstract Bitmap WorkshopPreviewGeneric { get; }
+        /// <summary>Generic but game-specific image usable as Steam thumbnail.</summary>
+        public abstract Bitmap WorkshopPreviewGenericGame { get; }
+
         #endregion
 
         #region functions
+        /// <summary>
+        /// Identifies if a given map is for this game, and returns the correct type for it.
+        /// </summary>
+        /// <param name="iniContents">Contents of the loaded ini file.</param>
+        /// <param name="binContents">Contents of the loaded bin file.</param>
+        /// <param name="contentWasSwapped">True if the primary opened file was the .bin one.</param>
+        /// <param name="isMegaMap">Returns whether the given map is a megamap.</param>
+        /// <param name="theater">Returns the theater of the map.</param>
+        /// <returns></returns>
+        public abstract FileType IdentifyMap(INI iniContents, byte[] binContents, bool contentWasSwapped, out bool isMegaMap, out string theater);
         /// <summary>
         /// Create game plugin for this game.
         /// </summary>
@@ -163,6 +211,11 @@ namespace MobiusEditor.Model
         public abstract bool MapNameIsEmpty(string name);
         /// <summary>Retrieves classic font info from this game to use for the requested role.</summary>
         public abstract string GetClassicFontInfo(ClassicFont font, TilesetManagerClassic tsmc, Color textColor, out bool crop, out Color[] palette);
+        /// <summary>Get the Tile for the classic Fake label. If this returns nothing, the text is drawn using the FakeLables font.</summary>
+        public abstract Tile GetClassicFakeLabel(TilesetManagerClassic tsm);
+        /// <summary>Gets a filename without extension to call the items used for uploading to the Steam workshop</summary>
+        /// <returns>A filename, without extension, to use as basis for how to call the items in the workshop upload.</returns>
+        public abstract string GetSteamWorkshopFileName(IGamePlugin plugin);
         #endregion
 
         #region protected functions
@@ -199,6 +252,16 @@ namespace MobiusEditor.Model
             const string formatNormal = "sc{0}{1:00}{2}";
             const string formatAm = "sc{0}{3}{1}{2}";
             return String.Format(aftermathLetter == '\0' ? formatNormal : formatAm, side, number, suffix, aftermathLetter);
+        }
+
+        public static bool IsCnCIni(INI iniContents)
+        {
+            return iniContents != null && INITools.CheckForIniInfo(iniContents, "Map") && INITools.CheckForIniInfo(iniContents, "Basic");
+        }
+
+        public static string GetTheater(INI iniContents)
+        {
+            return !INITools.CheckForIniInfo(iniContents, "Map") ? String.Empty : (iniContents["Map"].TryGetValue("Theater") ?? String.Empty).ToLower();
         }
         #endregion
 

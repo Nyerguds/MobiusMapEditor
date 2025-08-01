@@ -422,6 +422,7 @@ namespace MobiusEditor.Utility
                             info.Name = mixName;
                             // Create as embedded mix file
                             mixFile = new MixFile(container, info, mixToAdd.CanUseNewFormat);
+                            break;
                         }
                     }
                 }

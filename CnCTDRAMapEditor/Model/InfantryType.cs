@@ -26,6 +26,7 @@ namespace MobiusEditor.Model
     {
         public int ID { get; private set; }
         public string Name { get; private set; }
+        public bool Ownable => true;
         public string GraphicsSource { get; set; }
         public string DisplayName { get; private set; }
         public string OwnerHouse { get; private set; }

@@ -66,10 +66,18 @@ namespace MobiusEditor.TiberianDawn
                  where field.IsInitOnly && typeof(OverlayType).IsAssignableFrom(field.FieldType)
                  select field.GetValue(null) as OverlayType).OrderBy(t => t.ID).ToList();
             // Force road2 to be behind Road despite IDs not matching.
-            if (types.Contains(Road) && types.Remove(Road2))
+            int roadIndex = types.FindIndex(t => "ROAD".Equals(t.Name, StringComparison.OrdinalIgnoreCase));
+            int road2Index = types.FindIndex(t =>
+                !"ROAD".Equals(t.Name, StringComparison.OrdinalIgnoreCase) &&
+                "ROAD".Equals(t.GraphicsSource, StringComparison.OrdinalIgnoreCase)
+                && t.ForceTileNr == 1);
+            if (roadIndex != -1 && road2Index != -1)
             {
-                int roadIndex = types.IndexOf(Road);
-                types.Insert(roadIndex + 1, Road2);
+                OverlayType roadType = types[roadIndex];
+                OverlayType road2Type = types[road2Index];
+                types.Remove(road2Type);
+                roadIndex = types.IndexOf(roadType);
+                types.Insert(roadIndex + 1, road2Type);
             }
             Types = types.ToArray();
         }

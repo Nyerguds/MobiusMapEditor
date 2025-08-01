@@ -20,8 +20,6 @@ namespace MobiusEditor.RedAlert
     {
         public static readonly Size MaxSize = new Size(128, 128);
 
-        public const string FileFilter = "Red Alert files (*.mpr;*.ini)|*.mpr;*.ini";
-
         public const int MaxBriefLengthClassic = 1022;
         public const int BriefLineCutoffClassic = 74;
 

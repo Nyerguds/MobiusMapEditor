@@ -18,6 +18,7 @@ using System.Drawing.Drawing2D;
 using System.Drawing.Imaging;
 using System.Linq;
 using System.Runtime.InteropServices;
+using System.Text;
 
 namespace MobiusEditor.Utility
 {
@@ -467,7 +468,7 @@ namespace MobiusEditor.Utility
         /// <param name="targetPos">Position at which to paste the image.</param>
         /// <param name="palTransparencyMask">Boolean array determining which offsets on the color palette will be treated as transparent. Use null for no transparency.</param>
         /// <param name="modifyOrig">True to modify the original array rather than returning a copy.</param>
-        /// <returns>A new Byte array with the combined data, and the same stride as the source image.</returns>
+        /// <returns>A new byte array with the combined data, and the same stride as the source image.</returns>
         public static byte[] PasteOn8bpp(byte[] destData, int destWidth, int destHeight, int destStride,
             byte[] pasteData, int pasteWidth, int pasteHeight, int pasteStride,
             Rectangle targetPos, bool[] palTransparencyMask, bool modifyOrig)
@@ -491,7 +492,7 @@ namespace MobiusEditor.Utility
         /// <param name="modifyOrig">True to modify the original array rather than returning a copy.</param>
         /// <param name="transparencyMask">For image-based transparency masking rather than palette based. Values in the array set to true are treated as transparent.
         /// If given, should have a size of exactly <see cref="pasteWidth"/> * <see cref="pasteHeight"/>.</param>
-        /// <returns>A new Byte array with the combined data, and the same stride as the source image.</returns>
+        /// <returns>A new byte array with the combined data, and the same stride as the source image.</returns>
         public static byte[] PasteOn8bpp(byte[] destData, int destWidth, int destHeight, int destStride,
             byte[] pasteData, int pasteWidth, int pasteHeight, int pasteStride,
             Rectangle targetPos, bool[] palTransparencyMask, bool modifyOrig, bool[] transparencyMask)
@@ -618,7 +619,7 @@ namespace MobiusEditor.Utility
                 {
                     Color[] entries = bitmap.Palette.Entries;
                     transColors = new List<int>();
-                    for (int i = 0; i < entries.Length; i++)
+                    for (int i = 0; i < entries.Length; ++i)
                     {
                         if (entries[i].A == 0)
                             transColors.Add(i);
@@ -1068,6 +1069,68 @@ namespace MobiusEditor.Utility
             }
             stride = newStride;
             return dataXbit;
+        }
+
+        public static byte[] SetPngTextChunk(byte[] data, string keyword, string value)
+        {
+            const string TEXTCHUNK = "tEXt";
+            const string IDATCHUNK = "IDAT";
+            if (!PngHandler.IsPng(data))
+            {
+                return data;
+            }
+            Encoding enc = Encoding.GetEncoding("ISO-8859-1");
+            List<int> textChunkOffsets = new List<int>();
+            List<string> textChunkKeywords = new List<string>();
+            int foundOffs = 0;
+            int foundLen = 0;
+            int offs = 0;
+            // Try to find first existing match for keyword
+            while (offs != -1)
+            {
+                int newOffs = PngHandler.FindPngChunk(data, offs, TEXTCHUNK);
+                if (newOffs == -1)
+                {
+                    break;
+                }
+                int len = PngHandler.GetPngChunkDataLength(data, newOffs);
+                byte[] foundTextData = PngHandler.GetPngChunkData(data, newOffs, len);
+                string key = enc.GetString(foundTextData.TakeWhile(b => b != 0).ToArray());
+                if (key == keyword)
+                {
+                    foundOffs = offs;
+                    foundLen = PngHandler.GetPngChunkDataLength(data, offs);
+                    break;
+                }
+                offs = newOffs + len + 12;
+            }
+            // No existing match found. Place the chunk before the image data chunk
+            if (foundOffs == 0)
+            {
+                foundOffs = PngHandler.FindPngChunk(data, 0, IDATCHUNK);
+                // Required chunk
+                if (foundOffs == -1)
+                {
+                    return data;
+                }
+            }
+            int afterChunkOffs = foundOffs + foundLen;
+            int afterChunkLen = data.Length - afterChunkOffs;
+            // Make data
+            byte[] keywordData = enc.GetBytes(keyword);
+            byte[] valueData = enc.GetBytes(value);
+            int textLen = keywordData.Length + 1 + valueData.Length;
+            byte[] textData = new byte[keywordData.Length + 1 + valueData.Length];
+            Array.Copy(keywordData, 0, textData, 0, keywordData.Length);
+            Array.Copy(valueData, 0, textData, keywordData.Length + 1, valueData.Length);
+            // Make chunk
+            byte[] textChunk = PngHandler.MakePngChunk(TEXTCHUNK, textData);
+            // Stitch together the new png data
+            byte[] newData = new byte[foundOffs + textChunk.Length + afterChunkLen];
+            Array.Copy(data, 0, newData, 0, foundOffs);
+            Array.Copy(textChunk, 0, newData, foundOffs, textChunk.Length);
+            Array.Copy(data, afterChunkOffs, newData, foundOffs + textChunk.Length, afterChunkLen);
+            return newData;
         }
     }
 }

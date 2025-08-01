@@ -65,11 +65,13 @@ namespace MobiusEditor.Dialogs
             chkSmooth.Checked = Globals.ExportSmoothScale;
             chkOrigPalette.Enabled = Globals.UseClassicFiles;
             // For multiplayer maps, default to only exporting the bounds.
-            if (Globals.ExportMultiMapsInBounds && !gamePlugin.Map.BasicSection.SoloMission)
+            bool isMulti = !gamePlugin.Map.BasicSection.SoloMission;
+            if (Globals.ExportMultiMapsInBounds && isMulti)
             {
                 chkBoundsOnly.Checked = true;
                 layers &= ~MapLayerFlag.Boundaries;
             }
+            chkHighlightFlags.Enabled = isMulti;
             SetSizeLabels();
             SetLayers(layers);
             txtScale.Select(0, 0);
@@ -262,10 +264,11 @@ namespace MobiusEditor.Dialogs
             }
             MapLayerFlag layers = GetLayers();
             bool smooth = chkSmooth.Checked;
+            bool highlightFlags = true;
             bool inBounds = chkBoundsOnly.Checked;
             bool origPal = chkOrigPalette.Checked;
             string path = txtPath.Text;
-            Func<string> saveOperation = () => SaveImage(gamePlugin, layers, scale, smooth, inBounds, origPal, path);
+            Func<string> saveOperation = () => SaveImage(gamePlugin, layers, scale, smooth, highlightFlags, inBounds, origPal, path);
             multiThreader.ExecuteThreaded(saveOperation, ShowResult, true, EnableControls, "Exporting image");
         }
 
@@ -274,12 +277,13 @@ namespace MobiusEditor.Dialogs
             using (SaveFileDialog sfd = new SaveFileDialog())
             {
                 sfd.AutoUpgradeEnabled = false;
-                sfd.RestoreDirectory = false;
+                sfd.RestoreDirectory = true;
                 sfd.AddExtension = true;
                 sfd.Filter = "PNG files (*.png)|*.png|JPEG files (*.jpg;*.jpeg)|*.jpg;*.jpeg";
                 string current = string.IsNullOrEmpty(txtPath.Text) ? inputFilename : txtPath.Text;
                 if (!string.IsNullOrEmpty(current))
                 {
+                    sfd.RestoreDirectory = true;
                     sfd.InitialDirectory = Path.GetDirectoryName(current);
                     bool isJpeg = Regex.IsMatch(Path.GetExtension(current), "^\\.jpe?g$", RegexOptions.IgnoreCase);
                     sfd.FilterIndex = isJpeg ? 2 : 1;
@@ -299,21 +303,25 @@ namespace MobiusEditor.Dialogs
                     txtPath.Text = sfd.FileName;
                     return true;
                 }
-                return false;
             }
+            return false;
         }
 
-        private static string SaveImage(IGamePlugin gamePlugin, MapLayerFlag layers, double scale, bool smooth, bool inBounds, bool originalPalette, string outputPath)
+        private static string SaveImage(IGamePlugin gamePlugin, MapLayerFlag layers, double scale, bool smooth, bool highlightFlags, bool inBounds, bool originalPalette, string outputPath)
         {
+            Map map = gamePlugin.Map;
+            CellMetrics metrics = map.Metrics;
             int tileWidth = Math.Max(1, (int)Math.Round(Globals.OriginalTileWidth * scale));
             int tileHeight = Math.Max(1, (int)Math.Round(Globals.OriginalTileHeight * scale));
-            int fullWidth = gamePlugin.Map.Metrics.Width;
-            int fullHeight = gamePlugin.Map.Metrics.Height;
-            int width = inBounds ? gamePlugin.Map.Bounds.Width : fullWidth;
-            int height = inBounds ? gamePlugin.Map.Bounds.Height : fullHeight;
+            int fullWidth = metrics.Width;
+            int fullHeight = metrics.Height;
+            int width = inBounds ? map.Bounds.Width : fullWidth;
+            int height = inBounds ? map.Bounds.Height : fullHeight;
             Size size = new Size(width * tileWidth, height * tileHeight);
             bool clearBg = layers.HasFlag(MapLayerFlag.Template);
-            using (Bitmap exportImage = gamePlugin.Map.GeneratePreview(size, gamePlugin, layers, clearBg, smooth, inBounds, false).ToBitmap())
+            byte[] pngData = null;
+            Rectangle boundsToUse = inBounds ? map.Bounds : new Rectangle(Point.Empty, metrics.Size);
+            using (Bitmap exportImage = gamePlugin.Map.GeneratePreview(size, gamePlugin, layers, boundsToUse, clearBg, highlightFlags, smooth, false).ToBitmap())
             {
                 if (!smooth && originalPalette && Globals.TheTilesetManager is TilesetManagerClassic tsmc)
                 {
@@ -329,14 +337,25 @@ namespace MobiusEditor.Dialogs
                             pal.Entries[i] = paletteNoTrans[i];
                         }
                         bmPal.Palette = pal;
-                        bmPal.Save(outputPath, ImageFormat.Png);
+                        using (MemoryStream ms = new MemoryStream())
+                        {
+                            bmPal.Save(ms, ImageFormat.Png);
+                            pngData = ms.ToArray();
+                        }
                     }
                 }
                 else
                 {
-                    exportImage.Save(outputPath, ImageFormat.Png);
+                    using (MemoryStream ms = new MemoryStream())
+                    {
+                        exportImage.Save(ms, ImageFormat.Png);
+                        pngData = ms.ToArray();
+                    }
                 }
             }
+            pngData = ImageUtils.SetPngTextChunk(pngData, "Comment", "Created with " + Program.ProgramVersionTitle);
+            pngData = ImageUtils.SetPngTextChunk(pngData, "Software", Program.ProgramVersionTitle);
+            File.WriteAllBytes(outputPath, pngData);
             return outputPath;
         }
 
@@ -362,6 +381,8 @@ namespace MobiusEditor.Dialogs
             btnSetDimensions.Enabled = enabled;
             chkSmooth.Enabled = enabled;
             chkBoundsOnly.Enabled = enabled;
+            chkHighlightFlags.Enabled = enabled && !gamePlugin.Map.BasicSection.SoloMission;
+            layersListBox.Enabled = enabled;
             layersListBox.Enabled = enabled;
             indicatorsListBox.Enabled = enabled;
             btnPickFile.Enabled = enabled;

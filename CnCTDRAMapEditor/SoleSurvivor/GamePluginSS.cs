@@ -75,7 +75,7 @@ namespace MobiusEditor.SoleSurvivor
         {
             this.isMegaMap = megaMap;
             IEnumerable<Waypoint> crateWaypoints = Enumerable.Range(0, cratePoints).Select(i => new Waypoint(string.Format("CR{0}", i), WaypointFlag.CrateSpawn));
-            IEnumerable<Waypoint> teamWaypoints = Enumerable.Range(cratePoints, teamStartPoints).Select(i => new Waypoint(string.Format("TM{0}", i - cratePoints), Waypoint.GetFlagForMpId(i - cratePoints)));
+            IEnumerable<Waypoint> teamWaypoints = Enumerable.Range(cratePoints, teamStartPoints).Select(i => new Waypoint(string.Format("TM{0}", i - cratePoints), WaypointFlag.FootballField | Waypoint.GetFlagForMpId(i - cratePoints)));
             IEnumerable<Waypoint> generalWaypoints = Enumerable.Range(cratePoints + teamStartPoints, totalNumberedPoints - cratePoints - teamStartPoints).Select(i => new Waypoint(i.ToString()));
             Waypoint[] specialWaypoints = new Waypoint[] { new Waypoint("Flare", "Flr.", WaypointFlag.Flare), new Waypoint("Home", WaypointFlag.Home), new Waypoint("Reinf.", "Rnf.", WaypointFlag.Reinforce) };
             Waypoint[] waypoints = crateWaypoints.Concat(teamWaypoints).Concat(generalWaypoints).Concat(specialWaypoints).ToArray();
@@ -152,9 +152,9 @@ namespace MobiusEditor.SoleSurvivor
             }
         }
 
-        public override IEnumerable<string> Load(string path, FileType fileType)
+        public override IEnumerable<string> Load(string loadPath, string iniPath, byte[] iniContent, string binPath, byte[] binContent, ref FileType fileType)
         {
-            return Load(path, fileType, true);
+            return Load(loadPath, iniPath, iniContent, binPath, binContent, ref fileType, true);
         }
 
         protected override List<string> LoadINI(INI ini, bool tryCheckSoloMission, bool fromMix, ref bool modified)
@@ -203,15 +203,15 @@ namespace MobiusEditor.SoleSurvivor
 
         public override long Save(string path, FileType fileType)
         {
-            return Save(path, fileType, null, false);
+            return Save(path, fileType, null, false, false);
         }
 
-        public override long Save(string path, FileType fileType, Bitmap customPreview, bool dontResavePreview)
+        public override long Save(string path, FileType fileType, Bitmap customPreview, bool dontResavePreview, bool forSteam)
         {
-            return Save(path, fileType, true, customPreview, dontResavePreview);
+            return Save(path, fileType, true, customPreview, dontResavePreview, forSteam);
         }
 
-        protected override void SaveINI(INI ini, FileType fileType, string fileName)
+        protected override void SaveINI(INI ini, FileType fileType, string fileName, bool forSteam)
         {
             INISection waypointBackup = null;
             INISection overlayBackup = null;
@@ -257,9 +257,9 @@ namespace MobiusEditor.SoleSurvivor
             SaveIniSmudge(ini);
         }
 
-        public override string Validate(bool forWarnings)
+        public override string Validate(FileType saveType, bool forResave, bool forWarnings)
         {
-            return Validate(forWarnings, true);
+            return Validate(saveType, forResave, forWarnings, true);
         }
 
         protected override List<string> ResetMissionRules(INI extraIniText, bool forFootprintTest, out bool footPrintsChanged)
@@ -284,22 +284,23 @@ namespace MobiusEditor.SoleSurvivor
             int numTerrain = Map.Technos.OfType<Terrain>().Count();
             int numUnits = Map.Technos.OfType<Unit>().Where(u => u.Occupier.Type.IsGroundUnit).Count();
             const string maximums = "Number of {0}: {1}. Maximum: {2}.";
+            GameInfo gi = GameInfo;
             if (!Globals.NoOwnedObjectsInSole)
             {
                 if (!Globals.DisableAirUnits)
                 {
-                    info.Add(string.Format(maximums, "aircraft", numAircraft, Globals.RestrictSoleLimits ? Constants.MaxAircraftClassic : Constants.MaxAircraft));
+                    info.Add(string.Format(maximums, "aircraft", numAircraft, gi.MaxAircraft));
                 }
-                info.Add(string.Format(maximums, "structures", numBuildings, Globals.RestrictSoleLimits ? Constants.MaxBuildingsClassic : Constants.MaxBuildings));
-                info.Add(string.Format(maximums, "infantry", numInfantry, Globals.RestrictSoleLimits ? Constants.MaxInfantryClassic : Constants.MaxInfantry));
+                info.Add(string.Format(maximums, "structures", numBuildings, gi.MaxBuildings));
+                info.Add(string.Format(maximums, "infantry", numInfantry, gi.MaxInfantry));
             }
-            info.Add(string.Format(maximums, "terrain objects", numTerrain, Globals.RestrictSoleLimits ? Constants.MaxTerrainClassic : Constants.MaxTerrain));
+            info.Add(string.Format(maximums, "terrain objects", numTerrain, gi.MaxTerrain));
             if (!Globals.NoOwnedObjectsInSole)
             {
-                info.Add(string.Format(maximums, "units", numUnits, Globals.RestrictSoleLimits ? Constants.MaxUnitsClassic : Constants.MaxUnits));
+                info.Add(string.Format(maximums, "units", numUnits, gi.MaxUnits));
             }
-            //info.Add(string.Format(maximums, "team types", Map.TeamTypes.Count, Globals.ExpandSoleLimits ? Constants.MaxTeams : Constants.MaxTeamsClassic));
-            //info.Add(string.Format(maximums, "triggers", Map.Triggers.Count, Globals.ExpandSoleLimits ? Constants.MaxTriggers : Constants.MaxTriggersClassic));
+            //info.Add(string.Format(maximums, "team types", Map.TeamTypes.Count, gi.MaxTeamsClassic));
+            //info.Add(string.Format(maximums, "triggers", Map.Triggers.Count, gi.MaxTriggersClassic));
             int startPoints = Map.Waypoints.Count(w => w.Cell.HasValue && w.Flag.HasFlag(WaypointFlag.PlayerStart));
             info.Add(string.Format("Number of set starting points: {0}.", startPoints));
             return info;
@@ -307,21 +308,24 @@ namespace MobiusEditor.SoleSurvivor
 
         public override ITeamColor[] GetFlagColors()
         {
-            ITeamColor[] flagColors = new ITeamColor[8];
-            foreach (HouseType house in Map.HouseTypes)
+            string[] flagColorNames = new string[] {
+                "MULTI2",
+                "MULTI5",
+                "MULTI4",
+                "BAD_UNIT",
+                "MULTI1",
+                "MULTI3",
+                "MULTI7",
+                "MULTI8",
+            };
+            ITeamColor[] flagColors = new ITeamColor[flagColorNames.Length];
+            for (int i = 0; i < flagColorNames.Length; ++i)
             {
-                int mpId = Waypoint.GetMpIdFromFlag(house.MultiplayIdentifier);
-                if (mpId == -1)
-                {
-                    continue;
-                }
-                flagColors[mpId] = Globals.TheTeamColorManager[house.UnitTeamColor];
+                string flag = flagColorNames[i];
+                flagColors[i] = Globals.TheTeamColorManager[flagColorNames[i]];
             }
-            // Multi7: the dark blue that's unused in SS because Multi4 uses BAD_UNITS instead.
-            flagColors[6] = Globals.TheTeamColorManager["MULTI7"];
-            // Multi8: RA Purple
-            flagColors[7] = Globals.TheTeamColorManager["MULTI8"];
             return flagColors;
         }
+
     }
 }

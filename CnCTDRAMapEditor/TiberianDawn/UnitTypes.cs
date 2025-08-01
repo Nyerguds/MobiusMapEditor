@@ -34,7 +34,7 @@ namespace MobiusEditor.TiberianDawn
         public static readonly UnitType Buggy = new VehicleType(9, "bggy", "TEXT_UNIT_TITLE_NOD_NOD_BUGGY", "Badguy", FrameUsage.Frames32Full, FrameUsage.Frames32Full, 0, -4, UnitTypeFlag.IsArmed | UnitTypeFlag.HasTurret);
         public static readonly UnitType Harvester = new VehicleType(10, "harv", "TEXT_UNIT_TITLE_GDI_HARVESTER", "Goodguy", FrameUsage.Frames32Full, UnitTypeFlag.IsHarvester);
         public static readonly UnitType Arty = new VehicleType(11, "arty", "TEXT_UNIT_TITLE_NOD_ARTILLERY", "Badguy", FrameUsage.Frames32Full, UnitTypeFlag.IsArmed);
-        public static readonly UnitType SSM = new VehicleType(12, "mlrs", "TEXT_UNIT_TITLE_GDI_MLRS", "Badguy", FrameUsage.Frames32Full, FrameUsage.Frames32Full | FrameUsage.OnFlatBed, 0, 0, UnitTypeFlag.IsArmed | UnitTypeFlag.HasTurret);
+        public static readonly UnitType SSM = new VehicleType(12, "mlrs", "TEXT_UNIT_TITLE_NOD_SSM_LAUNCHER", "Badguy", FrameUsage.Frames32Full, FrameUsage.Frames32Full | FrameUsage.OnFlatBed, 0, 0, UnitTypeFlag.IsArmed | UnitTypeFlag.HasTurret);
         public static readonly UnitType Hover = new VehicleType(13, "lst", "TEXT_UNIT_TITLE_LST", "Goodguy", FrameUsage.Frames01Single);
         public static readonly UnitType MHQ = new VehicleType(14, "mhq", "TEXT_UNIT_TITLE_MHQ", "Goodguy", FrameUsage.Frames32Full, FrameUsage.Frames32Full, 0, -4, UnitTypeFlag.HasTurret);
         public static readonly UnitType GunBoat = new VehicleType(15, "boat", "TEXT_UNIT_TITLE_WAKE", "Goodguy", FrameUsage.Frames32Full | FrameUsage.DamageStates, FrameUsage.Frames32Full, UnitTypeFlag.IsArmed);
@@ -61,7 +61,7 @@ namespace MobiusEditor.TiberianDawn
                  select field.GetValue(null) as UnitType).ToArray();
         }
 
-        public static IEnumerable<UnitType> GetTypes(Boolean withoutAircraft)
+        public static IEnumerable<UnitType> GetTypes(bool withoutAircraft)
         {
             // only return placeable units; you can't place down aircraft in C&C
             if (withoutAircraft)

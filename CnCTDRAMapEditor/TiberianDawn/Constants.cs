@@ -21,8 +21,6 @@ namespace MobiusEditor.TiberianDawn
         public static readonly Size MaxSize = new Size(64, 64);
         public static readonly Size MaxSizeMega = new Size(128, 128);
 
-        public const string FileFilter = "Tiberian Dawn files (*.ini;*.bin)|*.ini;*.bin";
-
         public const int MaxBriefLengthClassic = 510;
         public const int BriefLineCutoffClassic = 74;
         public const int TiberiumValue = 25;

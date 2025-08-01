@@ -36,6 +36,10 @@ namespace MobiusEditor.Utility
         }
     }
 
+    /// <summary>
+    /// Compares strings in the way Windows Explorer does, detecting numbers
+    /// inside the strings and logically ordering them by numeric value.
+    /// </summary>
     public class ExplorerComparer : IComparer<string>
     {
         [DllImport("shlwapi.dll", CharSet = CharSet.Unicode, ExactSpelling = true)]
@@ -49,68 +53,6 @@ namespace MobiusEditor.Utility
 
     public static class GeneralUtils
     {
-        /// <summary>
-        /// Returns the contents of the ini, or null if no ini content could be found in the file or any accompanying files.
-        /// </summary>
-        /// <param name="path">Path</param>
-        /// <param name="fileType">Detected file type.</param>
-        /// <returns></returns>
-        public static INI GetIniContents(string path, FileType fileType)
-        {
-            try
-            {
-                Encoding encDOS = Encoding.GetEncoding(437);
-                byte[] bytes;
-                string iniContents = null;
-                switch (fileType)
-                {
-                    case FileType.INI:
-                        bytes = File.ReadAllBytes(path);
-                        iniContents = encDOS.GetString(bytes);
-                        break;
-                    case FileType.BIN:
-                        string iniPath = fileType == FileType.INI ? path : Path.ChangeExtension(path, ".ini");
-                        if (File.Exists(iniPath))
-                        {
-                            bytes = File.ReadAllBytes(iniPath);
-                            iniContents = encDOS.GetString(bytes);
-                        }
-                        break;
-                    case FileType.PGM:
-                        using (var megafile = new Megafile(path))
-                        {
-                            Regex ext = new Regex("^\\.((ini)|(mpr))$");
-                            string testIniFile = megafile.Where(p => ext.IsMatch(Path.GetExtension(p).ToLower())).FirstOrDefault();
-                            if (testIniFile != null)
-                            {
-                                using (StreamReader iniReader = new StreamReader(megafile.OpenFile(testIniFile), encDOS))
-                                {
-                                    iniContents = iniReader.ReadToEnd();
-                                }
-                            }
-                        }
-                        break;
-                    case FileType.MIX:
-                        bytes = MixPath.ReadFile(path, FileType.INI, out _);
-                        if (bytes != null)
-                        {
-                            iniContents = encDOS.GetString(bytes);
-                        }
-                        break;
-                }
-                if (iniContents == null)
-                {
-                    return null;
-                }
-                INI checkIni = new INI();
-                checkIni.Parse(iniContents);
-                return checkIni.Sections.Count == 0 ? null : checkIni;
-            }
-            catch
-            {
-                return null;
-            }
-        }
 
         /// <summary>
         /// Reads all remaining bytes from a stream behind the current Position. This does not close the stream.
@@ -192,7 +134,7 @@ namespace MobiusEditor.Utility
                 }
             }
             byte[] buffer;
-            for (int i = 0; i < iniText.Length; i++)
+            for (int i = 0; i < iniText.Length; ++i)
             {
                 string currLine = iniText[i].Trim();
                 bool foundAlt = false;
@@ -486,13 +428,13 @@ namespace MobiusEditor.Utility
             }
             if (options != StringSplitOptions.RemoveEmptyEntries)
             {
-                for (int i = 0; i < split.Length; i++)
+                for (int i = 0; i < split.Length; ++i)
                     split[i] = split[i].Trim();
                 return split;
             }
             // code to remove additional empty entries after trim.
             int actualIndex = 0;
-            for (int i = 0; i < split.Length; i++)
+            for (int i = 0; i < split.Length; ++i)
             {
                 split[actualIndex] = split[i].Trim();
                 if (split[actualIndex].Length > 0)
@@ -564,6 +506,36 @@ namespace MobiusEditor.Utility
             int centerY = (cell.Y + (cellsHigh - 1) / 2) * tileSize.Height + tileSize.Height / 2;
             center = new Point(centerX, centerY);
             return new Rectangle(centerX - realRadX, centerY - realRadY, realDiamX, realDiamY);
+        }
+
+        public static Rectangle ConstrainToBounds(Rectangle rectangle, Rectangle bounds)
+        {
+            Rectangle returnRect = new Rectangle(rectangle.Location, rectangle.Size);
+            if (bounds.Contains(returnRect))
+            {
+                return returnRect;
+            }
+            int spaceRight = bounds.Right - returnRect.Right;
+            if (spaceRight < 0)
+            {
+                returnRect.Offset(spaceRight, 0);
+            }
+            int spaceLeft = returnRect.Left - bounds.Left;
+            if (spaceLeft < 0)
+            {
+                returnRect.Offset(-spaceLeft, 0);
+            }
+            int spaceBottom = bounds.Bottom - returnRect.Bottom;
+            if (spaceBottom < 0)
+            {
+                returnRect.Offset(0, spaceBottom);
+            }
+            int spaceTop = returnRect.Top - bounds.Top;
+            if (spaceTop < 0)
+            {
+                returnRect.Offset(0, -spaceTop);
+            }
+            return returnRect;
         }
 
         /// <summary>
@@ -821,9 +793,9 @@ namespace MobiusEditor.Utility
             int maxOccX = -1;
             int minOccY = int.MaxValue;
             int maxOccY = -1;
-            for (int y = 0; y < height; y++)
+            for (int y = 0; y < height; ++y)
             {
-                for (int x = 0; x < width; x++)
+                for (int x = 0; x < width; ++x)
                 {
                     if (occupyMask[y, x])
                     {

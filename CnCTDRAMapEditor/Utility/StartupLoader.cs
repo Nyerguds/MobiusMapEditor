@@ -191,15 +191,15 @@ namespace MobiusEditor.Utility
             return runPath;
         }
 
-        private static bool RemasterFileTest(String basePath)
+        private static bool RemasterFileTest(string basePath)
         {
             return File.Exists(Path.Combine(basePath, "DATA", "CONFIG.MEG"));
         }
 
-        public static bool LoadEditorRemastered(String runPath, Dictionary<GameType, string[]> modPaths, MixFileNameGenerator romfis)
+        public static bool LoadEditorRemastered(string runPath, Dictionary<GameType, string[]> modPaths, MixFileNameGenerator romfis)
         {
             // Initialize megafiles
-            Dictionary<GameType, String> gameFolders = new Dictionary<GameType, string>();
+            Dictionary<GameType, string> gameFolders = new Dictionary<GameType, string>();
             GameInfo[] gameTypeInfo = GameTypeFactory.GetGameInfos();
             foreach (GameInfo gameInfo in gameTypeInfo)
             {
@@ -313,7 +313,7 @@ namespace MobiusEditor.Utility
             }
             GameTextManager gtm = new GameTextManager(Globals.TheArchiveManager, gameTextFilename);
             //gtm.Dump(Path.Combine(Program.ApplicationPath, "alltext.txt"));
-            AddMissingRemasterText(gtm);
+            gtm.AddMissing = (tm, gt) =>  AddMissingRemasterText(tm, gt);
             Globals.TheGameTextManager = gtm;
             return true;
         }
@@ -425,7 +425,7 @@ namespace MobiusEditor.Utility
             Globals.TheTilesetManager = new TilesetManagerClassic(mfm);
             Globals.TheShapeCacheManager = new ShapeCacheManager();
             Globals.TheTeamColorManager = new TeamRemapManager(mfm);
-            Dictionary<GameType, String> gameStringsFiles = new Dictionary<GameType, string>();
+            Dictionary<GameType, string> gameStringsFiles = new Dictionary<GameType, string>();
             foreach (GameInfo gameInfo in gameTypeInfo)
             {
                 if (gameInfo != null)
@@ -434,7 +434,7 @@ namespace MobiusEditor.Utility
                 }
             }
             GameTextManagerClassic gtm = new GameTextManagerClassic(mfm, gameStringsFiles);
-            AddMissingClassicText(gtm);
+            gtm.AddMissing = (tm, gt) => AddMissingClassicText(tm, gt);
             Globals.TheGameTextManager = gtm;
             return true;
         }
@@ -537,15 +537,18 @@ namespace MobiusEditor.Utility
         /// in the map editor.
         /// </summary>
         /// <param name="gtm">The game text manager to apply these changes on.</param>
-        private static void AddMissingRemasterText(IGameTextManager gtm)
+        private static void AddMissingRemasterText(IGameTextManager gtm, GameType gameType)
         {
             // == Buildings ==
-            string fake = " (" + gtm["TEXT_UI_FAKE"] + ")";
-            if (!gtm["TEXT_STRUCTURE_RA_WEAF"].EndsWith(fake)) gtm["TEXT_STRUCTURE_RA_WEAF"] += fake;
-            if (!gtm["TEXT_STRUCTURE_RA_FACF"].EndsWith(fake)) gtm["TEXT_STRUCTURE_RA_FACF"] += fake;
-            if (!gtm["TEXT_STRUCTURE_RA_SYRF"].EndsWith(fake)) gtm["TEXT_STRUCTURE_RA_SYRF"] += fake;
-            if (!gtm["TEXT_STRUCTURE_RA_SPEF"].EndsWith(fake)) gtm["TEXT_STRUCTURE_RA_SPEF"] += fake;
-            if (!gtm["TEXT_STRUCTURE_RA_DOMF"].EndsWith(fake)) gtm["TEXT_STRUCTURE_RA_DOMF"] += fake;
+            if (gameType == GameType.RedAlert)
+            {
+                string fake = " (" + gtm["TEXT_UI_FAKE"] + ")";
+                if (!gtm["TEXT_STRUCTURE_RA_WEAF"].EndsWith(fake)) gtm["TEXT_STRUCTURE_RA_WEAF"] += fake;
+                if (!gtm["TEXT_STRUCTURE_RA_FACF"].EndsWith(fake)) gtm["TEXT_STRUCTURE_RA_FACF"] += fake;
+                if (!gtm["TEXT_STRUCTURE_RA_SYRF"].EndsWith(fake)) gtm["TEXT_STRUCTURE_RA_SYRF"] += fake;
+                if (!gtm["TEXT_STRUCTURE_RA_SPEF"].EndsWith(fake)) gtm["TEXT_STRUCTURE_RA_SPEF"] += fake;
+                if (!gtm["TEXT_STRUCTURE_RA_DOMF"].EndsWith(fake)) gtm["TEXT_STRUCTURE_RA_DOMF"] += fake;
+            }
             // == Civilian buildings ==
             gtm["TEXT_STRUCTURE_TITLE_OIL_PUMP"] = "Oil Pump";
             gtm["TEXT_STRUCTURE_TITLE_OIL_TANKER"] = "Oil Tanker";
@@ -553,21 +556,31 @@ namespace MobiusEditor.Utility
             gtm["TEXT_STRUCTURE_TITLE_CIV1B"] = gtm["TEXT_STRUCTURE_TITLE_CIV1"];
             // Haystacks. Extra ID added for classic support. Remaster only has the string "Haystack", so we'll just copy it.
             gtm["TEXT_STRUCTURE_TITLE_CIV12B"] = gtm["TEXT_STRUCTURE_TITLE_CIV12"];
+
             // == Overlay ==
-            gtm["TEXT_OVERLAY_CONCRETE_PAVEMENT"] = "Concrete";
-            gtm["TEXT_OVERLAY_ROAD"] = "Road";
-            gtm["TEXT_OVERLAY_ROAD_FULL"] = "Road (full)";
-            gtm["TEXT_OVERLAY_SQUISH_MARK"] = "Squish mark";
-            gtm["TEXT_OVERLAY_TIBERIUM"] = "Tiberium";
-            // Sole Survivor Teleporter
-            gtm["TEXT_OVERLAY_TELEPORTER"] = "Teleporter";
-            // "Gold" exists as "TEXT_CURRENCY_TACTICAL", so it does not need to be added.
-            gtm["TEXT_OVERLAY_GEMS"] = "Gems";
+            if (gameType == GameType.TiberianDawn || gameType == GameType.SoleSurvivor)
+            {
+                gtm["TEXT_OVERLAY_CONCRETE_PAVEMENT"] = "Concrete";
+                gtm["TEXT_OVERLAY_ROAD"] = "Road";
+                gtm["TEXT_OVERLAY_ROAD_FULL"] = "Road (full)";
+                gtm["TEXT_OVERLAY_SQUISH_MARK"] = "Squish mark";
+                gtm["TEXT_OVERLAY_TIBERIUM"] = "Tiberium";
+                if (gameType == GameType.SoleSurvivor)
+                {
+                    // Sole Survivor Teleporter
+                    gtm["TEXT_OVERLAY_TELEPORTER"] = "Teleporter";
+                }
+            }
+            else if (gameType == GameType.RedAlert)
+            {
+                // "Gold" exists as "TEXT_CURRENCY_TACTICAL", so it does not need to be added.
+                gtm["TEXT_OVERLAY_GEMS"] = "Gems";
+                gtm["TEXT_OVERLAY_WATER_CRATE"] = "Water Crate";
+            }
             gtm["TEXT_OVERLAY_WCRATE"] = "Wood Crate";
             gtm["TEXT_OVERLAY_SCRATE"] = "Steel Crate";
-            gtm["TEXT_OVERLAY_WATER_CRATE"] = "Water Crate";
             // == Terrain ==
-            gtm["TEXT_PROP_TITLE_TREES"] = "Trees";
+            gtm["TEXT_PROP_TITLE_TREES"] = gtm["TEXT_PROP_TITLE_TREE"];
             // == Smudge ==
             gtm["TEXT_SMUDGE_CRATER"] = "Crater";
             gtm["TEXT_SMUDGE_SCORCH"] = "Scorch Mark";
@@ -575,32 +588,39 @@ namespace MobiusEditor.Utility
         }
 
         /// <summary>
-        /// Adds strings that are missing in the classic files. Note that unlike for Remastered text,
-        /// the strings in this function cannot be composed from other strings; the actual strings files differ
-        /// per game, and this function is called before any maps are opened, meaning no game is chosen yet,
-        /// and no actual game files are loaded.
+        /// Adds strings that are missing in the classic files. This function is stored inside the
+        /// GameTextManagerClassic so it can be called whenever the strings are reset.
         /// </summary>
         /// <param name="gtm">The game text manager to apply these changes on.</param>
-        private static void AddMissingClassicText(IGameTextManager gtm)
+        private static void AddMissingClassicText(IGameTextManager gtm, GameType gameType)
         {
-            // Classic game text manager does not clear these extra strings when resetting the strings table.
-            // TD Overlay
-            gtm["TEXT_OVERLAY_ROAD_FULL"] = "Road (full)";
-            // Sole Survivor Teleporter
-            gtm["TEXT_OVERLAY_TELEPORTER"] = "Teleporter";
-            // TD Terrain
-            gtm["TEXT_PROP_TITLE_CACTUS"] = "Cactus";
-            // Terrain general
-            gtm["TEXT_PROP_TITLE_TREES"] = "Trees";
-            // RA Misc
-            gtm["TEXT_UI_FAKE"] = "FAKE";
-            // RA ants
-            gtm["TEXT_UNIT_RA_ANT1"] = "Warrior Ant";
-            gtm["TEXT_UNIT_RA_ANT2"] = "Fire Ant";
-            gtm["TEXT_UNIT_RA_ANT3"] = "Scout Ant";
-            gtm["TEXT_STRUCTURE_RA_QUEE"] = "Queen Ant";
-            gtm["TEXT_STRUCTURE_RA_LAR1"] = "Larva";
-            gtm["TEXT_STRUCTURE_RA_LAR2"] = "Larvae";
+            // == Buildings ==
+            if (gameType == GameType.RedAlert)
+            {
+                // ants
+                gtm["TEXT_UNIT_RA_ANT1"] = "Warrior Ant";
+                gtm["TEXT_UNIT_RA_ANT2"] = "Fire Ant";
+                gtm["TEXT_UNIT_RA_ANT3"] = "Scout Ant";
+                gtm["TEXT_STRUCTURE_RA_QUEE"] = "Queen Ant";
+                gtm["TEXT_STRUCTURE_RA_LAR1"] = "Larva";
+                gtm["TEXT_STRUCTURE_RA_LAR2"] = "Larvae";
+            }
+            // == Overlay ==
+            if (gameType == GameType.TiberianDawn || gameType == GameType.SoleSurvivor)
+            {
+                gtm["TEXT_OVERLAY_ROAD_FULL"] = gtm["TEXT_OVERLAY_ROAD"] + " (" + gtm["TEXT_READY"] + ")";
+            }
+            if (gameType == GameType.SoleSurvivor)
+            {
+                // Sole Survivor Teleporter
+                gtm["TEXT_OVERLAY_TELEPORTER"] = "Teleporter";
+            }
+            // == Terrain ==
+            gtm["TEXT_PROP_TITLE_TREES"] = gtm["TEXT_PROP_TITLE_TREE"];
+            if (gameType == GameType.TiberianDawn || gameType == GameType.SoleSurvivor)
+            {
+                gtm["TEXT_PROP_TITLE_CACTUS"] = "Cactus";
+            }
         }
 
     }

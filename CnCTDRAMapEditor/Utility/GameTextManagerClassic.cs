@@ -15,6 +15,7 @@ using MobiusEditor.Interface;
 using MobiusEditor.Model;
 using System;
 using System.Collections.Generic;
+using System.Linq;
 using System.Text;
 
 namespace MobiusEditor.Utility
@@ -30,6 +31,13 @@ namespace MobiusEditor.Utility
     /// </summary>
     public class GameTextManagerClassic : IGameTextManager
     {
+        private static readonly int[][] PossibleShiftsTd = new int[][]
+        {
+            new [] { 40, 0x11, 26 },   /* Fre DOS version: extra string "INTRO & COUP D'OEIL": check on first of DOS left/right/up/down chars. */
+            new [] { 570, (byte)'?', 504 }, /* Fre/Ger version: extra line for "SELECT TERRITORY TO ATTACK": check on string for unknown army type ("?") */
+            new [] { 693, (byte)'(', 661 }  /* Fre/Ger version: extra line for "GLOBAL DEFENSE INITIATIVE": check on "(" on string for obsolete savegame  */
+        };
+
         private static readonly Dictionary<string, int> StringMappingsTd = new Dictionary<string, int>
         {
             //{ "", 0 }, // Null
@@ -132,7 +140,7 @@ namespace MobiusEditor.Utility
             { "TEXT_UNIT_TITLE_C17", 97 }, // C17
             { "TEXT_UNIT_TITLE_GDI_HARVESTER", 98 }, // Harvester
             { "TEXT_UNIT_TITLE_NOD_ARTILLERY", 99 }, // Artillery
-            { "TEXT_UNIT_TITLE_GDI_MLRS", 100 }, // S.S.M. Launcher
+            { "TEXT_UNIT_TITLE_NOD_SSM_LAUNCHER", 100 }, // S.S.M. Launcher
             { "TEXT_UNIT_TITLE_GDI_MINIGUNNER", 101 }, // Minigunner
             { "TEXT_UNIT_TITLE_GDI_GRENADIER", 102 }, // Grenadier
             { "TEXT_UNIT_TITLE_GDI_ROCKET_SOLDIER", 103 }, // Bazooka
@@ -1344,6 +1352,8 @@ namespace MobiusEditor.Utility
         private readonly Dictionary<string, string> gameTextAdditions = new Dictionary<string, string>();
         private readonly Encoding encoding = Encoding.GetEncoding(437);
 
+        public Action<IGameTextManager, GameType> AddMissing { get; set; }
+
         public string this[string key]
         {
             get => GetString(key) ?? string.Empty;
@@ -1352,13 +1362,12 @@ namespace MobiusEditor.Utility
 
         public void Reset(GameType gameType)
         {
-            this.stringsFile = null;
-            this.gameTextMapping = null;
+            stringsFile = null;
+            gameTextMapping = null;
             if (archiveManager.CurrentGameType != gameType)
             {
                 throw new InvalidOperationException("The file manager is not reset to the given game; cannot load the correct files.");
             }
-            this.gameTextMapping = this.GetGameMappings(gameType);
             if (gameTextPaths.TryGetValue(gameType, out string gameTextFile))
             {
                 try
@@ -1369,6 +1378,13 @@ namespace MobiusEditor.Utility
                     stringsFile = LoadFile(file, null, false);
                 }
                 catch { /*ignore; just gonna be empty I guess */ }
+            }
+            gameTextMapping = GetGameMappings(gameType, stringsFile);
+            // Reset added strings
+            gameTextAdditions.Clear();
+            if (AddMissing != null)
+            {
+                AddMissing(this, gameType);
             }
         }
 
@@ -1429,7 +1445,9 @@ namespace MobiusEditor.Utility
                 }
                 int end = cur;
                 while (end < len && fileData[end] != 0)
+                {
                     end++;
+                }
                 int curStrLen = end - cur;
                 byte[] curStr = new byte[curStrLen];
                 Array.Copy(fileData, cur, curStr, 0, curStrLen);
@@ -1447,18 +1465,64 @@ namespace MobiusEditor.Utility
             return strings;
         }
 
-        private Dictionary<string, int> GetGameMappings(GameType gameType)
+        private Dictionary<string, int> GetGameMappings(GameType gameType, List<byte[]> strings)
         {
+            Dictionary<string, int> mapping = null;
+            int[][] possibleShifts = null;
             switch (gameType)
             {
                 case GameType.TiberianDawn:
-                    return StringMappingsTd;
+                    possibleShifts = PossibleShiftsTd;
+                    mapping = StringMappingsTd;
+                    break;
                 case GameType.SoleSurvivor:
-                    return StringMappingsTd; // TODO map out SS's strings file?
+                    mapping = StringMappingsTd; // TODO map out SS's strings file?
+                    break;
                 case GameType.RedAlert:
-                    return StringMappingsRa;
+                    mapping = StringMappingsRa;
+                    break;
             }
-            return null;
+            return AdjustToShifts(mapping, strings, possibleShifts);
+        }
+
+        /// <summary>
+        /// Adjust the given mapping to possible version variations. If no changes are made, the original mapping object is returned.
+        /// Check indices and values are used to detect the shift in a language independent manner. They must always be before the next
+        /// increment-index. Note that the check index for each shift entry is saved as "one more than in the English version", so it
+        /// only matches if the shift is indeed detected.
+        /// </summary>
+        /// <param name="stringMapping">Current mapping dictionary to adjust.</param>
+        /// <param name="stringsData">Strings data to confirm shifts on.</param>
+        /// <param name="possibleShifts">Array of 3 check values: the entry index to check, the expected first byte value of that entry, and the index to increment from.</param>
+        private Dictionary<string, int> AdjustToShifts(Dictionary<string, int> stringMapping, List<byte[]> stringsData, int[][] possibleShifts)
+        {
+            if (possibleShifts == null || stringMapping == null)
+            {
+                return stringMapping;
+            }
+            Dictionary<string, int> mapping = stringMapping.Select(dict => dict).ToDictionary(pair => pair.Key, pair => pair.Value);
+            int maxValue = mapping.Values.Max() + possibleShifts.Length;
+            int added = 0;
+            foreach (int[] check in possibleShifts.OrderBy(ch => ch[0]))
+            {
+                int offset = check[0] + added;
+                byte firstChar = (byte)check[1];
+                if (stringsData.Count < offset || stringsData[offset].Length == 0 || stringsData[offset][0] != firstChar)
+                {
+                    continue;
+                }
+                int shift = check[2] + added;
+                added++;
+                for (int i = maxValue; i > shift; --i)
+                {
+                    List<string> curkeys = mapping.Where(kv => kv.Value == i).Select(kv => kv.Key).ToList();
+                    foreach (string key in curkeys)
+                    {
+                        mapping[key] = i + 1;
+                    }
+                }
+            }
+            return mapping;
         }
 
     }

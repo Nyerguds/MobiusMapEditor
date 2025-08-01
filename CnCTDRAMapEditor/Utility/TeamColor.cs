@@ -234,7 +234,7 @@ namespace MobiusEditor.Utility
             using (Bitmap bitmap = new Bitmap(1, 1, PixelFormat.Format32bppArgb))
             {
                 bitmap.SetResolution(96, 96);
-                bitmap.SetPixel(0, 0, this.teamColorManager.RemapBaseColor);
+                bitmap.SetPixel(0, 0, this.teamColorManager.BaseColorSource);
                 this.ApplyToImage(bitmap);
                 return bitmap.GetPixel(0, 0);
             }
@@ -302,7 +302,7 @@ namespace MobiusEditor.Utility
             var valShift = this.HSVShift.Z;
             // Optimisation: since we got the opaque bounds calculated anyway, might as well use them and only process what's inside.
             int lineStart = bounds.Top * stride;
-            for (int y = bounds.Top; y < bounds.Bottom; y++)
+            for (int y = bounds.Top; y < bounds.Bottom; ++y)
             {
                 int addr = lineStart + bounds.Left * bytesPerPixel;
                 for (int x = bounds.Left; x < bounds.Right; ++x)

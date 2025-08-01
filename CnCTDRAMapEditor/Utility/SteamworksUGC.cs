@@ -26,13 +26,11 @@ namespace MobiusEditor.Utility
     public interface ISteamworksOperation : IDisposable
     {
         bool Done { get; }
-
         bool Failed { get; }
-
         string Status { get; }
+        bool NeedWorkshopAccept { get; }
 
         void OnSuccess();
-
         void OnFailed();
     }
 
@@ -41,7 +39,7 @@ namespace MobiusEditor.Utility
         private readonly string ugcPath;
         private readonly IList<string> tags;
         private readonly Action onSuccess;
-        private readonly Action<string> onFailed;
+        private readonly Action<string, bool> onFailed;
 
         private CallResult<CreateItemResult_t> createItemResult;
         private CallResult<SubmitItemUpdateResult_t> submitItemUpdateResult;
@@ -50,10 +48,10 @@ namespace MobiusEditor.Utility
         public bool Done => !(createItemResult?.IsActive() ?? false) && !(submitItemUpdateResult?.IsActive() ?? false);
 
         public bool Failed { get; private set; }
-
         public string Status { get; private set; }
+        public bool NeedWorkshopAccept { get; private set; }
 
-        public SteamworksUGCPublishOperation(string ugcPath, SteamSection steamSection, IList<string> tags, Action onSuccess, Action<string> onFailed)
+        public SteamworksUGCPublishOperation(string ugcPath, SteamSection steamSection, IList<string> tags, Action onSuccess, Action<string, bool> onFailed)
         {
             this.ugcPath = ugcPath;
             this.steamSection = steamSection;
@@ -75,7 +73,7 @@ namespace MobiusEditor.Utility
 
         public void OnSuccess() => onSuccess();
 
-        public void OnFailed() => onFailed(Status);
+        public void OnFailed() => onFailed(Status, NeedWorkshopAccept);
 
         private void CreateUGCItem()
         {
@@ -136,7 +134,7 @@ namespace MobiusEditor.Utility
                 Status = "Publishing failed.";
                 return;
             }
-
+            NeedWorkshopAccept = callback.m_bUserNeedsToAcceptWorkshopLegalAgreement;
             switch (callback.m_eResult)
             {
                 case EResult.k_EResultOK:
@@ -145,7 +143,7 @@ namespace MobiusEditor.Utility
                     break;
                 case EResult.k_EResultFileNotFound:
                     Failed = true;
-                    Status = "UGC not found.";
+                    Status = "Content not found.";
                     break;
                 case EResult.k_EResultNotLoggedOn:
                     Failed = true;
@@ -166,7 +164,7 @@ namespace MobiusEditor.Utility
                 Status = "Publishing failed.";
                 return;
             }
-
+            NeedWorkshopAccept = callback.m_bUserNeedsToAcceptWorkshopLegalAgreement;
             switch (callback.m_eResult)
             {
                 case EResult.k_EResultOK:
@@ -308,7 +306,7 @@ namespace MobiusEditor.Utility
             }
         }
 
-        public static bool PublishUGC(string ugcPath, SteamSection steamSection, IList<string> tags, Action onSuccess, Action<string> onFailed)
+        public static bool PublishUGC(string ugcPath, SteamSection steamSection, IList<string> tags, Action onSuccess, Action<string, bool> onFailed)
         {
             if (CurrentOperation != null)
             {

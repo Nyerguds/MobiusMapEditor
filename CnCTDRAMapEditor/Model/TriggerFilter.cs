@@ -20,8 +20,8 @@ namespace MobiusEditor.Model
 {
     public class TriggerFilter
     {
-        private GameType gameType;
-        private Map map;
+        private readonly GameType gameType;
+        private readonly Map map;
 
         public bool FilterHouse { get; set; }
         public bool FilterPersistenceType { get; set; }
@@ -218,7 +218,7 @@ namespace MobiusEditor.Model
             return true;
         }
 
-        private Boolean IsTeamMatch(String trigTeam, String filterTeam)
+        private bool IsTeamMatch(string trigTeam, string filterTeam)
         {
             return (Model.TeamType.IsEmpty(filterTeam) && Model.TeamType.IsEmpty(trigTeam)) || trigTeam == filterTeam;
         }
@@ -239,18 +239,18 @@ namespace MobiusEditor.Model
                     return true;
                 case TiberianDawn.ActionTypes.ACTION_DESTROY_UUUU:
                     affectedTrigger = "UUUU";
-                    return !Globals.Ignore106Scripting;
+                    return Globals.EnableTd106Scripting;
                 case TiberianDawn.ActionTypes.ACTION_DESTROY_VVVV:
                     affectedTrigger = "VVVV";
-                    return !Globals.Ignore106Scripting;
+                    return Globals.EnableTd106Scripting;
                 case TiberianDawn.ActionTypes.ACTION_DESTROY_WWWW:
                     affectedTrigger = "WWWW";
-                    return !Globals.Ignore106Scripting;
+                    return Globals.EnableTd106Scripting;
             }
             return false;
         }
 
-        private bool IsRAHouseEvent(String eventType)
+        private bool IsRAHouseEvent(string eventType)
         {
             switch (eventType)
             {
@@ -269,7 +269,7 @@ namespace MobiusEditor.Model
             return false;
         }
 
-        private Boolean IsRAHouseAction(String actionType)
+        private bool IsRAHouseAction(string actionType)
         {
             switch (actionType)
             {
@@ -284,12 +284,12 @@ namespace MobiusEditor.Model
             return false;
         }
 
-        private Boolean IsRATeamEvent(String eventType)
+        private bool IsRATeamEvent(string eventType)
         {
             return eventType == RedAlert.EventTypes.TEVENT_LEAVES_MAP;
         }
 
-        private Boolean IsRATeamAction(String actionType)
+        private bool IsRATeamAction(string actionType)
         {
             switch (actionType)
             {
@@ -300,7 +300,7 @@ namespace MobiusEditor.Model
             }
             return false;
         }
-        private Boolean IsRAGlobalEvent(String eventType)
+        private bool IsRAGlobalEvent(string eventType)
         {
             switch (eventType)
             {
@@ -311,7 +311,7 @@ namespace MobiusEditor.Model
             return false;
         }
 
-        private Boolean IsRAGlobalAction(String actionType)
+        private bool IsRAGlobalAction(string actionType)
         {
             switch (actionType)
             {
@@ -322,7 +322,7 @@ namespace MobiusEditor.Model
             return false;
         }
 
-        private Boolean IsRAWaypointAction(String actionType)
+        private bool IsRAWaypointAction(string actionType)
         {
             switch (actionType)
             {
@@ -334,7 +334,7 @@ namespace MobiusEditor.Model
             return false;
         }
 
-        private Boolean IsRATriggerAction(String actionType)
+        private bool IsRATriggerAction(string actionType)
         {
             switch (actionType)
             {
@@ -345,12 +345,12 @@ namespace MobiusEditor.Model
             return false;
         }
 
-        public override String ToString()
+        public override string ToString()
         {
             return ToString('P', null, null);
         }
 
-        public String ToString(char persistenceLabel, string[] persistenceNames, string[] eventControlNames)
+        public string ToString(char persistenceLabel, string[] persistenceNames, string[] eventControlNames)
         {
             List<string> sb = new List<string>();
             if (this.FilterHouse)

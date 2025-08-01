@@ -116,7 +116,7 @@ namespace MobiusEditor.Dialogs
 
         private bool CheckAbort()
         {
-            Boolean abort = false;
+            bool abort = false;
             lock (abortLockObj)
             {
                 abort = abortRequested;
@@ -298,6 +298,7 @@ namespace MobiusEditor.Dialogs
             string savePath = null;
             using (SaveFileDialog sfd = new SaveFileDialog())
             {
+                sfd.RestoreDirectory = true;
                 sfd.Filter = "All files (*.*)|*.*";
                 sfd.FileName = selected.Name ?? (selected.IdStringBare + "." + GetExtension(selected.Type));
                 if (sfd.ShowDialog(this) == DialogResult.OK)

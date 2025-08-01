@@ -20,6 +20,7 @@ using MobiusEditor.Utility;
 using System;
 using System.Collections.Generic;
 using System.Drawing;
+using System.Drawing.Drawing2D;
 using System.Linq;
 using System.Reflection;
 using System.Windows.Forms;
@@ -43,8 +44,8 @@ namespace MobiusEditor.Dialogs
         private readonly List<TeamType> backupTeamTypes;
         public IEnumerable<TeamType> TeamTypes => teamTypes;
 
-        private readonly List<(String Name1, String Name2)> renameActions;
-        public List<(String Name1, String Name2)> RenameActions => renameActions;
+        private readonly List<(string Name1, string Name2)> renameActions;
+        public List<(string Name1, string Name2)> RenameActions => renameActions;
 
         private ListViewItem SelectedItem => (teamTypesListView.SelectedItems.Count > 0) ? teamTypesListView.SelectedItems[0] : null;
 
@@ -54,18 +55,17 @@ namespace MobiusEditor.Dialogs
         private TeamItemInfo teamItemInfo;
         private MissionItemInfo missionItemInfo;
 
-        private IEnumerable<TeamMission> teamMissionTypes;
-        private ListItem<int>[] wayPoints;
-        //private Dictionary<string, string> teamMissionTooltips;
-        private ITechnoType defaultTeam;
-        private TeamMission defaultMission;
-        private ToolTipFixer ttf;
+        private readonly IEnumerable<TeamMission> teamMissionTypes;
+        private readonly ListItem<int>[] wayPoints;
+        private readonly ITechnoType defaultTeam;
+        private readonly TeamMission defaultMission;
+        private readonly ToolTipFixer ttf;
 
         public TeamTypesDialog(IGamePlugin plugin)
         {
             this.plugin = plugin;
-            this.maxTeams = plugin.GameInfo.MaxTeams;
-            this.technoTypes = plugin.Map.TeamTechnoTypes;
+            maxTeams = plugin.GameInfo.MaxTeams;
+            technoTypes = plugin.Map.TeamTechnoTypes;
 
             InitializeComponent();
             lblTooLong.Text = "Teamtype length exceeds " + maxLength + " characters!";
@@ -93,7 +93,7 @@ namespace MobiusEditor.Dialogs
             renameActions = new List<(string Name1, string Name2)>();
             backupTeamTypes = new List<TeamType>();
             Waypoint[] wps = plugin.Map.Waypoints;
-            this.wayPoints = Enumerable.Range(0, wps.Length).Select(wp => new ListItem<int>(wp, wps[wp].ToString())).ToArray();
+            wayPoints = Enumerable.Range(0, wps.Length).Select(wp => new ListItem<int>(wp, wps[wp].ToString())).ToArray();
 
             int nrOfTeams = Math.Min(maxTeams, plugin.Map.TeamTypes.Count);
             btnAddTeamType.Enabled = nrOfTeams < maxTeams;
@@ -118,8 +118,8 @@ namespace MobiusEditor.Dialogs
             cmbWaypoint.DisplayMember = "Label";
 
             string[] items = plugin.Map.FilterUnitTriggers().Select(t => t.Name).Distinct().ToArray();
-            this.filteredEvents = plugin.Map.EventTypes.Where(ev => plugin.Map.UnitEventTypes.Contains(ev)).Distinct().ToArray();
-            this.filteredActions = plugin.Map.ActionTypes.Where(ac => plugin.Map.UnitActionTypes.Contains(ac)).Distinct().ToArray();
+            filteredEvents = plugin.Map.EventTypes.Where(ev => plugin.Map.UnitEventTypes.Contains(ev)).Distinct().ToArray();
+            filteredActions = plugin.Map.ActionTypes.Where(ac => plugin.Map.UnitActionTypes.Contains(ac)).Distinct().ToArray();
             triggerInfoToolTip = Map.MakeAllowedTriggersToolTip(filteredEvents, filteredActions);
             HashSet<string> allowedTriggers = new HashSet<string>(items);
             items = Trigger.None.Yield().Concat(plugin.Map.Triggers.Select(t => t.Name).Where(t => allowedTriggers.Contains(t)).Distinct()).ToArray();
@@ -127,8 +127,8 @@ namespace MobiusEditor.Dialogs
             defaultTeam = technoTypes.FirstOrDefault();
             // Fix for case sensitivity issue in teamtype missions
             TeamMission[] missions = plugin.Map.TeamMissionTypes;
-            this.teamMissionTypes = missions.ToArray();
-            this.defaultMission = missions.FirstOrDefault();
+            teamMissionTypes = missions.ToArray();
+            defaultMission = missions.FirstOrDefault();
             teamTypeTableLayoutPanel.Visible = false;
         }
 
@@ -138,6 +138,10 @@ namespace MobiusEditor.Dialogs
             image.SetResolution(96, 96);
             using (Graphics g = Graphics.FromImage(image))
             {
+                g.CompositingQuality = CompositingQuality.HighQuality;
+                g.InterpolationMode = InterpolationMode.HighQualityBicubic;
+                g.SmoothingMode = SmoothingMode.HighQuality;
+                g.PixelOffsetMode = PixelOffsetMode.HighQuality;
                 g.DrawIcon(SystemIcons.Information, new Rectangle(0, 0, image.Width, image.Height));
             }
             label.Image = image;
@@ -158,17 +162,17 @@ namespace MobiusEditor.Dialogs
             Rectangle cmbTrigRect = new Rectangle(cmbPos, cmbTrigger.Size);
             if (lblInfoRect.Contains(pt))
             {
-                this.toolTip1.Hide(lblTriggerInfo);
+                toolTip1.Hide(lblTriggerInfo);
                 LblTriggerInfo_MouseEnter(lblTriggerInfo, e);
             }
             else if (cmbTrigRect.Contains(pt))
             {
-                this.toolTip1.Hide(cmbTrigger);
+                toolTip1.Hide(cmbTrigger);
                 CmbTrigger_MouseEnter(cmbTrigger, e);
             }
         }
 
-        private void CmbTrigger_MouseEnter(Object sender, EventArgs e)
+        private void CmbTrigger_MouseEnter(object sender, EventArgs e)
         {
             Control target = sender as Control;
             ShowToolTip(target, triggerToolTip);
@@ -182,7 +186,7 @@ namespace MobiusEditor.Dialogs
             }
         }
 
-        private void LblTriggerInfo_MouseEnter(Object sender, EventArgs e)
+        private void LblTriggerInfo_MouseEnter(object sender, EventArgs e)
         {
             Control target = sender as Control;
             ShowToolTip(target, triggerInfoToolTip);
@@ -200,27 +204,27 @@ namespace MobiusEditor.Dialogs
         {
             if (target == null || message == null)
             {
-                this.HideToolTip(target, null);
+                HideToolTip(target, null);
                 return;
             }
             Point resPoint = target.PointToScreen(new Point(0, target.Height));
             MethodInfo m = toolTip1.GetType().GetMethod("SetTool",
                        BindingFlags.Instance | BindingFlags.NonPublic);
             m.Invoke(toolTip1, new object[] { target, message, 2, resPoint });
-            this.tooltipShownOn = target;
+            tooltipShownOn = target;
         }
 
         private void HideToolTip(object sender, EventArgs e)
         {
             try
             {
-                if (this.tooltipShownOn != null)
+                if (tooltipShownOn != null)
                 {
-                    this.toolTip1.Hide(this.tooltipShownOn);
+                    toolTip1.Hide(tooltipShownOn);
                 }
                 if (sender is Control target)
                 {
-                    this.toolTip1.Hide(target);
+                    toolTip1.Hide(target);
                 }
             }
             catch { /* ignore */ }
@@ -278,7 +282,7 @@ namespace MobiusEditor.Dialogs
                 teamItemInfo = new TeamItemInfo(null, selected.Classes, technoTypes);
                 tilTeams.Populate(teamItemInfo, this);
                 tilTeams.TabStop = selected.Classes.Count > 0;
-                missionItemInfo = new MissionItemInfo(null, selected.Missions, teamMissionTypes, this.wayPoints, plugin.Map.Metrics.Length, toolTip1);
+                missionItemInfo = new MissionItemInfo(null, selected.Missions, teamMissionTypes, wayPoints, plugin.Map.Metrics.Length, toolTip1);
                 milMissions.Populate(missionItemInfo, this);
                 milMissions.TabStop = selected.Missions.Count > 0;
                 btnAddTeam.Enabled = selected.Classes.Count < Globals.MaxTeamClasses;
@@ -317,7 +321,7 @@ namespace MobiusEditor.Dialogs
             }
         }
 
-        private void TeamTypesListView_KeyDown(Object sender, KeyEventArgs e)
+        private void TeamTypesListView_KeyDown(object sender, KeyEventArgs e)
         {
             ListViewItem selected = SelectedItem;
             if (e.KeyData == Keys.F2)
@@ -335,7 +339,7 @@ namespace MobiusEditor.Dialogs
             }
         }
 
-        private void TeamTypesDialog_KeyDown(Object sender, KeyEventArgs e)
+        private void TeamTypesDialog_KeyDown(object sender, KeyEventArgs e)
         {
             if (e.KeyData == (Keys.A | Keys.Control))
             {
@@ -351,10 +355,10 @@ namespace MobiusEditor.Dialogs
         private void TeamTypesDialog_FormClosing(object sender, FormClosingEventArgs e)
         {
             // If user pressed ok, nevermind,just go on.
-            if (this.DialogResult == DialogResult.OK)
+            if (DialogResult == DialogResult.OK)
             {
                 // Remove rename chains of newly added items.
-                RemoveNewRenames(this.renameActions, false);
+                RemoveNewRenames(renameActions, false);
                 // Remove all 0-items from teams, optimise types.
                 foreach (TeamType team in teamTypes)
                 {
@@ -365,7 +369,7 @@ namespace MobiusEditor.Dialogs
             bool hasChanges = teamTypes.Count != backupTeamTypes.Count;
             if (!hasChanges)
             {
-                hasChanges = RemoveNewRenames(this.renameActions, true).Count > 0;
+                hasChanges = RemoveNewRenames(renameActions, true).Count > 0;
             }
             if (!hasChanges)
             {
@@ -387,18 +391,18 @@ namespace MobiusEditor.Dialogs
                 DialogResult dr = MessageBox.Show(this, "Teams have been changed! Are you sure you want to cancel?", "Warning", MessageBoxButtons.YesNo, MessageBoxIcon.Warning);
                 if (dr == DialogResult.Yes)
                     return;
-                this.DialogResult = DialogResult.None;
+                DialogResult = DialogResult.None;
                 e.Cancel = true;
             }
         }
 
-        private List<(String Name1, String Name2)> RemoveNewRenames(List<(String Name1, String Name2)> renameActions, bool clone)
+        private List<(string Name1, string Name2)> RemoveNewRenames(List<(string Name1, string Name2)> renameActions, bool clone)
         {
-            List<(String Name1, String Name2)> renActions;
+            List<(string Name1, string Name2)> renActions;
             if (clone)
             {
-                renActions = new List<(String Name1, String Name2)>();
-                foreach ((String name1, String name2) in renameActions)
+                renActions = new List<(string Name1, string Name2)>();
+                foreach ((string name1, string name2) in renameActions)
                 {
                     renActions.Add((name1, name2));
                 }
@@ -409,15 +413,15 @@ namespace MobiusEditor.Dialogs
             }
             for (int i = 0; i < renActions.Count; ++i)
             {
-                (String Name1, String Name2) foundNew = renActions[i];
+                (string Name1, string Name2) foundNew = renActions[i];
                 if (foundNew.Name1 == null)
                 {
                     renActions[i] = (Trigger.None, foundNew.Name2);
-                    String currentname = foundNew.Name2;
+                    string currentname = foundNew.Name2;
                     // Follow rename chain
                     for (int j = i + 1; j < renActions.Count; ++j)
                     {
-                        (String Name1, String Name2) chained = renActions[j];
+                        (string Name1, string Name2) chained = renActions[j];
                         if (!TeamType.IsEmpty(chained.Name1) && String.Equals(chained.Name1, currentname, StringComparison.OrdinalIgnoreCase))
                         {
                             // Remove from further searches and mark for deletion.
@@ -558,7 +562,7 @@ namespace MobiusEditor.Dialogs
 
         private void TeamTypesListView_AfterLabelEdit(object sender, LabelEditEventArgs e)
         {
-            String curName = e.Label;
+            string curName = e.Label;
             if (string.IsNullOrEmpty(curName))
             {
                 e.CancelEdit = true;
@@ -585,7 +589,7 @@ namespace MobiusEditor.Dialogs
             }
             else
             {
-                String oldName = SelectedTeamType.Name;
+                string oldName = SelectedTeamType.Name;
                 SelectedTeamType.Name = curName;
                 renameActions.Add((oldName, curName));
                 teamTypesListView.Items[e.Item].ToolTipText = SelectedTeamType.Name;
@@ -624,7 +628,7 @@ namespace MobiusEditor.Dialogs
                 int index = SelectedTeamType.Missions.IndexOf(updateInfo);
                 SelectedTeamType.Missions.Remove(updateInfo);
                 // Reset list controller with new list
-                missionItemInfo = new MissionItemInfo(null, SelectedTeamType.Missions, teamMissionTypes, this.wayPoints, plugin.Map.Metrics.Length, toolTip1);
+                missionItemInfo = new MissionItemInfo(null, SelectedTeamType.Missions, teamMissionTypes, wayPoints, plugin.Map.Metrics.Length, toolTip1);
                 milMissions.Populate(missionItemInfo, this);
                 btnAddMission.Enabled = SelectedTeamType.Missions.Count < Globals.MaxTeamMissions;
                 int missions = SelectedTeamType.Missions.Count;
@@ -639,7 +643,7 @@ namespace MobiusEditor.Dialogs
             }
         }
 
-        private void BtnAddTeam_Click(Object sender, EventArgs e)
+        private void BtnAddTeam_Click(object sender, EventArgs e)
         {
             if (SelectedTeamType != null)
             {
@@ -657,7 +661,7 @@ namespace MobiusEditor.Dialogs
              }
         }
 
-        private void BtnAddMission_Click(Object sender, EventArgs e)
+        private void BtnAddMission_Click(object sender, EventArgs e)
         {
             if (SelectedTeamType != null)
             {
@@ -665,7 +669,7 @@ namespace MobiusEditor.Dialogs
                 {
                     TeamTypeMission newItem = new TeamTypeMission() { Mission = defaultMission, Argument = -1 };
                     SelectedTeamType.Missions.Add(newItem);
-                    missionItemInfo = new MissionItemInfo(null, SelectedTeamType.Missions, teamMissionTypes, this.wayPoints, plugin.Map.Metrics.Length, toolTip1);
+                    missionItemInfo = new MissionItemInfo(null, SelectedTeamType.Missions, teamMissionTypes, wayPoints, plugin.Map.Metrics.Length, toolTip1);
                     milMissions.Populate(missionItemInfo, this);
                     MissionItemControl newCtrl = missionItemInfo.GetControlByProperty(newItem, milMissions.Contents);
                     pnlMissionsScroll.ScrollControlIntoView(newCtrl);
@@ -703,7 +707,7 @@ namespace MobiusEditor.Dialogs
         private void CheckMaxAllowed()
         {
             bool err = maxAllowedNud.Value == 0 && chbAutocreate.Checked;
-            errorProvider1.SetError(chbAutocreate, err ? "The AI will not produce teams where \"Max Allowed\" is set to 0." : null);
+            errorProvider1.SetError(chbAutocreate, err ? "The AI will not produce teams when \"Max Allowed\" is set to 0." : null);
         }
 
         /// <summary>
@@ -727,12 +731,12 @@ namespace MobiusEditor.Dialogs
             base.Dispose(disposing);
         }
 
-        private void TeamTypesDialog_Resize(Object sender, EventArgs e)
+        private void TeamTypesDialog_Resize(object sender, EventArgs e)
         {
             CalcListColSizes();
         }
 
-        private void teamTypesListView_ColumnWidthChanging(Object sender, ColumnWidthChangingEventArgs e)
+        private void teamTypesListView_ColumnWidthChanging(object sender, ColumnWidthChangingEventArgs e)
         {
             e.Cancel = true;
             //CalcListColSizes();
@@ -758,7 +762,7 @@ namespace MobiusEditor.Dialogs
             }
         }
 
-        private void cmbHouse_SelectedValueChanged(Object sender, EventArgs e)
+        private void cmbHouse_SelectedValueChanged(object sender, EventArgs e)
         {
             if (teamTypesListView.SelectedItems.Count == 0 || !(cmbHouse.SelectedItem is ListItem<HouseType> selectedHouse))
             {
@@ -771,7 +775,7 @@ namespace MobiusEditor.Dialogs
             }
         }
 
-        private void TeamTypesDialog_Shown(Object sender, EventArgs e)
+        private void TeamTypesDialog_Shown(object sender, EventArgs e)
         {
             CalcListColSizes();
         }

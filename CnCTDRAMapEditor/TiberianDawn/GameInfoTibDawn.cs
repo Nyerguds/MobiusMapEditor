@@ -25,23 +25,46 @@ namespace MobiusEditor.TiberianDawn
 {
     public class GameInfoTibDawn : GameInfo
     {
+        private static readonly int HighestTdMapVal = TemplateTypes.GetTypes().Max(t => (int)t.ID);
+
         public override GameType GameType => GameType.TiberianDawn;
         public override string Name => "Tiberian Dawn";
         public override string ShortName => "TD";
         public override string IniName => "TiberianDawn";
+        public override string SteamId => "1213210";
+        public override bool PublishedMapsUseMirrorServer => true;
+        public override string SteamGameName => "Command & Conquer: Remastered";
+        public override string SteamGameNameShort => "C&C:Rem";
+        public override string SteamFileExtensionSolo => ".PGM";
+        public override string SteamFileExtensionMulti => ".PGM";
+        public override FileType SteamFileType => FileType.PGM;
+        public override string[] SteamDefaultTags => new string[] { "TD" };
+        public override string[] SteamSoloTags => new string[] { "singleplayer" };
+        public override string[] SteamMultiTags => new string[] { "multiplayer" };
+        public override string[] SteamSoloExtraTags => new string[] { };
+        public override string[] SteamMultiExtraTags => new string[] { "FFA", "1v1", "2v2" };
         public override string DefaultSaveDirectory => Path.Combine(Globals.RootSaveDirectory, "Tiberian_Dawn");
-        public override string OpenFilter => "Tiberian Dawn files (*.ini;*.bin)|*.ini;*.bin";
-        public override string SaveFilter => "Tiberian Dawn files (*.ini;*.bin)|*.ini;*.bin";
-        public override string DefaultExtension => ".ini";
-        public override string DefaultExtensionFromMix => ".ini";
-        public override string DefaultExtensionFromPgm => DefaultExtension;
-        public override Dictionary<FileType, string[]> ExtensionsForTypes =>
-            new Dictionary<FileType, string[]>() { { FileType.INI, new string[] { ".ini" } }, { FileType.BIN, new string[] { ".bin", ".map" } }, { FileType.PGM, new string[] { ".pgm", ".meg" } } };
+        public override FileTypeInfo[] SupportedFileTypes => new FileTypeInfo[] {
+            // BIN and B64 are added separately so they get accepted as valid resave types, but their data is never actually used.
+            new FileTypeInfo(FileType.INI, "Tiberian Dawn map (ini+bin)", new string[] { "ini", "bin" }, new string[] { "ini", "bin" },
+                new FileType[] { FileType.INI, FileType.BIN }, new FileType[] { FileType.INI, FileType.BIN }),
+            new FileTypeInfo(FileType.BIN, "Tiberian Dawn map (ini+bin)", FileTypeFlags.HideFromList, new string[] { "bin", "ini" }, new string[] { "bin", "ini" },
+                new FileType[] { FileType.BIN, FileType.INI }, new FileType[] { FileType.BIN, FileType.INI }),
+            // Experimental; TD map but saved in single file as RA. Disabled for now.
+            new FileTypeInfo(FileType.MPR, "Tiberian Dawn map (compact)", FileTypeFlags.ExpandedType, new string[] { "ini" }, new string[] { "mpr" }),
+            new FileTypeInfo(FileType.I64, "Tiberian Dawn N64 map (ini+map)", new string[] { "ini", "map" }, new string[] { "ini", "map" },
+                new FileType[] { FileType.I64, FileType.B64 }, new FileType[] { FileType.I64, FileType.B64 }),
+            new FileTypeInfo(FileType.B64, "Tiberian Dawn N64 map (ini+map)", FileTypeFlags.HideFromList, new string[] { "map", "ini" }, new string[] { "map", "ini" },
+                new FileType[] { FileType.B64, FileType.I64 }, new FileType[] { FileType.B64, FileType.I64 }),
+            new FileTypeInfo(FileType.PGM, "Tiberian Dawn map PGM", FileTypeFlags.InternalUse, new string[] { "pgm" }, new string[] { "pgm" })
+        };
+        public override FileType DefaultSaveType => FileType.INI;
+        public override FileType DefaultSaveTypeFromMix => FileType.INI;
+        public override FileType DefaultSaveTypeFromPgm => FileType.INI;
         public override string ModFolder => Path.Combine(Globals.ModDirectory, "Tiberian_Dawn");
         public override string ModIdentifier => "TD";
         public override string ModsToLoad => Properties.Settings.Default.ModsToLoadTD;
         public override string ModsToLoadSetting => "ModsToLoadTD";
-        public override string WorkshopTypeId => "TD";
         public override string[] RemasterMegFiles => new string[] { "CONFIG.MEG", "TEXTURES_COMMON_SRGB.MEG", "TEXTURES_SRGB.MEG", "TEXTURES_TD_SRGB.MEG" };
         public override string ClassicFolder => Properties.Settings.Default.ClassicPathTD;
         public override string ClassicFolderRemaster => "CNCDATA\\TIBERIAN_DAWN";
@@ -60,11 +83,39 @@ namespace MobiusEditor.TiberianDawn
         public override bool HasSinglePlayer => true;
         public override bool CanUseNewMixFormat => false;
         public override long MaxDataSize => Globals.MaxMapSize;
+        public override int MaxAircraft => Constants.MaxAircraft;
+        public override int MaxVessels => 0;
+        public override int MaxBuildings => Constants.MaxBuildings;
+        public override int MaxInfantry => Constants.MaxInfantry;
+        public override int MaxTerrain => Constants.MaxTerrain;
+        public override int MaxUnits => Constants.MaxUnits;
         public override int MaxTriggers => Constants.MaxTriggers;
         public override int MaxTeams => Constants.MaxTeams;
         public override int HitPointsGreenMinimum => 127;
         public override int HitPointsYellowMinimum => 63;
+        public override bool HomeWaypointIsCenter => false;
         public override OverlayTypeFlag OverlayIconType => OverlayTypeFlag.Crate;
+        public override Bitmap WorkshopPreviewGeneric => Properties.Resources.UI_CustomMissionPreviewDefault;
+        public override Bitmap WorkshopPreviewGenericGame => Properties.Resources.TD_Head;
+
+        public override FileType IdentifyMap(INI iniContents, byte[] binContents, bool contentWasSwapped, out bool isMegaMap, out string theater)
+        {
+            isMegaMap = false;
+            theater = null;
+            bool iniMatch = IsCnCIni(iniContents) &&
+                !RedAlert.GamePluginRA.CheckForRAMap(iniContents) &&
+                !SoleSurvivor.GamePluginSS.CheckForSSmap(iniContents);
+            if (!iniMatch)
+            {
+                return FileType.None;
+            }
+            bool ismpr = GamePluginTD.CheckForEmbeddedMap(iniContents);
+            isMegaMap = GamePluginTD.CheckForMegamap(iniContents);
+            theater = GetTheater(iniContents);
+            // Todo: distinguish N64 and TD maps by analysing the .bin file
+
+            return ismpr ? FileType.MPR : contentWasSwapped ? FileType.BIN : FileType.INI;
+        }
 
         public override IGamePlugin CreatePlugin(bool mapImage, bool megaMap) => new GamePluginTD(mapImage, megaMap);
 
@@ -73,9 +124,9 @@ namespace MobiusEditor.TiberianDawn
             // This function is used by Sole Survivor too, so it references the local GameType and ShortName.
             string prefix = ShortName + ": ";
             mfm.Reset(GameType.None, null);
-            // Contains cursors / strings file
-            mfm.LoadArchive(GameType, "local.mix", false);
+            // Contains cursors / strings file. Prefer Win95 version over DOS one.
             mfm.LoadArchive(GameType, "cclocal.mix", false);
+            mfm.LoadArchive(GameType, "local.mix", false);
             // Mod addons
             mfm.LoadArchives(GameType, "sc*.mix", false, "scores.mix");
             mfm.LoadArchive(GameType, "conquer.mix", false);
@@ -217,6 +268,16 @@ namespace MobiusEditor.TiberianDawn
                 fontName = null;
             }
             return fontName;
+        }
+
+        public override Tile GetClassicFakeLabel(TilesetManagerClassic tsm)
+        {
+            return null;
+        }
+
+        public override string GetSteamWorkshopFileName(IGamePlugin plugin)
+        {
+            return "MAPDATA";
         }
     }
 }

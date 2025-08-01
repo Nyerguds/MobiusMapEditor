@@ -14,6 +14,7 @@
 // with this program. If not, see https://github.com/electronicarts/CnC_Remastered_Collection
 using MobiusEditor.Interface;
 using MobiusEditor.Model;
+using MobiusEditor.RedAlert;
 using MobiusEditor.Utility;
 using Newtonsoft.Json;
 using System;
@@ -34,6 +35,7 @@ namespace MobiusEditor.TiberianDawn
         protected const int multiStartPoints = 8;
         protected const int totalNumberedPoints = 25;
 
+        private bool isLoading = false;
         protected bool isMegaMap = false;
 
         protected static readonly Regex singlePlayRegex = new Regex("^SC[A-LN-Z]\\d{2}\\d?[EWX][A-EL]$", RegexOptions.IgnoreCase | RegexOptions.Compiled);
@@ -249,10 +251,6 @@ namespace MobiusEditor.TiberianDawn
             set
             {
                 isDirty = value;
-                if (value)
-                {
-                    isEmpty = false;
-                }
                 feedBackHandler?.UpdateStatus();
             }
         }
@@ -264,10 +262,6 @@ namespace MobiusEditor.TiberianDawn
             set
             {
                 isEmpty = value;
-                if (value)
-                {
-                    isDirty = false;
-                }
                 feedBackHandler?.UpdateStatus();
             }
         }
@@ -319,6 +313,7 @@ namespace MobiusEditor.TiberianDawn
                 }
             }
             extraTextIni.Sections.Remove("Steam");
+            extraTextIni.Sections.Remove("MapPack");
             extraTextIni.Sections.Remove("TeamTypes");
             extraTextIni.Sections.Remove("Triggers");
             extraTextIni.Sections.Remove("Terrain");
@@ -341,7 +336,7 @@ namespace MobiusEditor.TiberianDawn
                 INITools.ClearDataFrom(extraTextIni, house.Type.Name, (House)house);
             }
             extraSections = extraTextIni.Sections.Count == 0 ? null : extraTextIni.Sections;
-            if (!Globals.Ignore106Scripting)
+            if (!Globals.EnableTd106Scripting)
             {
                 // Perhaps support the v1.06 bibs-disabling option in the future? Would need an entire bib-changing logic like RA has though.
             }
@@ -352,6 +347,11 @@ namespace MobiusEditor.TiberianDawn
         public static bool CheckForMegamap(INI iniContents)
         {
             return INITools.CheckForIniInfo(iniContents, "Map", "Version", "1");
+        }
+
+        public static bool CheckForEmbeddedMap(INI iniContents)
+        {
+            return INITools.CheckForIniInfo(iniContents, "MapPack");
         }
 
         public IEnumerable<string> Initialize()
@@ -521,162 +521,80 @@ namespace MobiusEditor.TiberianDawn
 
         public virtual void New(string theater)
         {
-            Map.Theater = Map.TheaterTypes.Where(t => t.Equals(theater)).FirstOrDefault() ?? Map.TheaterTypes.FirstOrDefault() ?? TheaterTypes.Desert;
-            Map.TopLeft = new Point(1, 1);
-            Map.Size = Map.Metrics.Size - new Size(2, 2);
-            Map.BasicSection.Name = Constants.EmptyMapName;
-            UpdateBasePlayerHouse();
-            Empty = true;
-        }
-
-        public virtual IEnumerable<string> Load(string path, FileType fileType)
-        {
-            return Load(path, fileType, false);
-        }
-
-        protected List<string> Load(string path, FileType fileType, bool forSole)
-        {
-            INI ini = new INI();
-            List<string> errors = new List<string>();
-            bool modified = false;
-            bool tryCheckSingle = false;
-            bool gotMapPack = false;
-            byte[] iniBytes;
-            byte[] binBytes;
-            switch (fileType)
+            try
             {
-                case FileType.INI:
-                case FileType.BIN:
-                    string iniPath = fileType == FileType.INI ? path : Path.ChangeExtension(path, ".ini");
-                    string binPath = fileType == FileType.BIN ? path : Path.ChangeExtension(path, ".bin");
-                    if (fileType != FileType.BIN && !File.Exists(binPath))
-                    {
-                        binPath = Path.ChangeExtension(path, ".map"); 
-                    }
-                    bool checkN64 = binPath.EndsWith(".map", StringComparison.OrdinalIgnoreCase);
-                    if (!File.Exists(iniPath))
-                    {
-                        // Should never happen; this gets filtered out in the game type detection.
-                        // todo maybe allow this to open a map only?
-                        throw new ApplicationException("Cannot find an ini file to load for " + Path.GetFileName(path) + ".");
-                    }
-                    iniBytes = File.ReadAllBytes(iniPath);
-                    ParseIniContent(ini, iniBytes, forSole);
-                    tryCheckSingle = !forSole && singlePlayRegex.IsMatch(Path.GetFileNameWithoutExtension(path));
-                    errors.AddRange(LoadINI(ini, tryCheckSingle, false, ref modified));
-                    if (!File.Exists(binPath))
-                    {
-                        if (INITools.CheckForIniInfo(ini, "MapPack"))
-                        {
-                            ReadMapFromIni(ini, errors, ref modified);
-                        }
-                        else
-                        {
-                            errors.Add(String.Format("No .bin file found for file '{0}'. Using empty map.", Path.GetFileName(path)));
-                            Map.Templates.Clear();
-                        }
-                    }
-                    else
-                    {
-                        using (FileStream fs = new FileStream(binPath, FileMode.Open, FileAccess.Read))
-                        {
-                            ReadMapFromStream(fs, Path.GetFileName(binPath), errors, ref modified, checkN64);
-                        }
-                    }
-                    break;
-                case FileType.PGM:
-                    using (Megafile megafile = new Megafile(path))
-                    {
-                        string iniFileName = megafile.Where(p => Path.GetExtension(p).ToLower() == ".ini").FirstOrDefault();
-                        string binFileName = megafile.Where(p => Path.GetExtension(p).ToLower() == ".bin").FirstOrDefault();
-                        if (iniFileName == null)
-                        {
-                            errors.Add("Cannot find the necessary files inside the " + Path.GetFileName(path) + " archive.");
-                        }
-                        gotMapPack = false;
-                        using (Stream iniStream = megafile.OpenFile(iniFileName))
-                        {
-                            iniBytes = iniStream.ReadAllBytes();
-                            ParseIniContent(ini, iniBytes, forSole);
-                            if (binFileName == null)
-                            {
-                                gotMapPack = INITools.CheckForIniInfo(ini, "MapPack");
-                                if (!gotMapPack)
-                                {
-                                    errors.Add(String.Format("No .bin file found for file '{0}' inside the archive '{1}'. Using empty map.",
-                                        iniFileName, Path.GetFileName(path)));
-                                }
-                            }
-                            errors.AddRange(LoadINI(ini, false, false, ref modified));
-                            if (gotMapPack)
-                            {
-                                ReadMapFromIni(ini, errors, ref modified);
-                            }
-                        }
-                        if (!gotMapPack)
-                        {
-                            using (Stream binStream = megafile.OpenFile(binFileName))
-                            {
-                                ReadMapFromStream(binStream, Path.GetFileName(binFileName), errors, ref modified, false);
-                            }
-                        }
-                    }
-                    break;
-                case FileType.MIX:
-                    // uses combined path of "c:\mixfile.mix;submix1.mix;submix2.mix?file.ini;file.bin"
-                    // If bin is missing its filename is simply empty or missing.
-                    string mixAlone = path.Split('?')[0];
-                    string mixViewable = MixPath.GetFileNameReadable(mixAlone, true, null, out _);
-                    gotMapPack = false;
-                    iniBytes = MixPath.ReadFile(path, FileType.INI, out MixEntry iniFileEntry);
-                    if (iniBytes == null)
-                    {
-                        // todo maybe allow this to open a map only?
-                        throw new ApplicationException("Cannot find the necessary files inside the archive " + mixViewable + ".");
-                    }
-                    ParseIniContent(ini, iniBytes, forSole);
-                    tryCheckSingle = !forSole && (iniFileEntry.Name == null || singlePlayRegex.IsMatch(Path.GetFileNameWithoutExtension(iniFileEntry.Name)));
-                    errors.AddRange(LoadINI(ini, tryCheckSingle, true, ref modified));
-                    binBytes = MixPath.ReadFile(path, FileType.BIN, out MixEntry binFileEntry);
-                    if (binBytes == null)
-                    {
-                        if (INITools.CheckForIniInfo(ini, "MapPack"))
-                        {
-                            ReadMapFromIni(ini, errors, ref modified);
-                        }
-                        else
-                        {
-                            errors.Add(String.Format("No .bin file found for file '{0}' inside the archive '{1}'. Using empty map.",
-                                        iniFileEntry.Name, mixViewable));
-                            Map.Templates.Clear();
-                        }
-                    }
-                    else
-                    {
-                        using (MemoryStream ms = new MemoryStream(binBytes))
-                        {
-                            ReadMapFromStream(ms, binFileEntry.Name, errors, ref modified, false);
-                        }
-                    }
-                    break;
-                default:
-                    throw new NotSupportedException("Unsupported filetype.");
+                isLoading = true;
+                Map.Theater = Map.TheaterTypes.Where(t => t.Equals(theater)).FirstOrDefault() ?? Map.TheaterTypes.FirstOrDefault() ?? TheaterTypes.Desert;
+                Map.TopLeft = new Point(1, 1);
+                Map.Size = Map.Metrics.Size - new Size(2, 2);
+                Map.BasicSection.Name = Constants.EmptyMapName;
+                UpdateBasePlayerHouse();
+                Empty = true;
             }
-            if (modified)
+            finally
             {
-                this.Dirty = true;
+                Empty = true;
+                isLoading = false;
             }
-            return errors;
         }
 
-        private void ReadMapFromStream(Stream stream, string filename, List<string> errors, ref bool modified, bool checkN64)
+        public virtual IEnumerable<string> Load(string loadPath, string iniPath, byte[] iniContent, string binPath, byte[] binContent, ref FileType fileType)
+        {
+            return Load(loadPath, iniPath, iniContent, binPath, binContent, ref fileType, false);
+        }
+
+        protected List<string> Load(string loadPath, string iniPath, byte[] iniContent, string binPath, byte[] binContent, ref FileType fileType, bool forSole)
+        {
+            try
+            {
+                isLoading = true;
+                INI ini = new INI();
+                List<string> errors = new List<string>();
+                bool modified = false;
+                bool tryCheckSingle = false;
+                bool checkN64 = fileType == FileType.I64 || (binPath != null && binPath.EndsWith(".map", StringComparison.OrdinalIgnoreCase));
+                ParseIniContent(ini, iniContent, forSole);
+                tryCheckSingle = !forSole
+                    && singlePlayRegex.IsMatch(Path.GetFileNameWithoutExtension(iniPath))
+                    && !INITools.CheckForIniInfo(ini, "Basic", "SoloMission");
+                errors.AddRange(LoadINI(ini, tryCheckSingle, fileType == FileType.MIX, ref modified));
+                if (binContent != null)
+                {
+                    // if a bin file is present, prefer the external file.
+                    ini.Sections.Remove("MapPack");
+                    ReadMap(binContent, Path.GetFileName(binPath), errors, ref modified, checkN64, out bool isN64Map);
+                    if ((fileType == FileType.INI || fileType == FileType.BIN) && isN64Map)
+                    {
+                        fileType = FileType.I64;
+                    }
+                }
+                else if (INITools.CheckForIniInfo(ini, "MapPack"))
+                {
+                    ReadMapFromIni(ini, errors, ref modified);
+                }
+                else
+                {
+                    errors.Add(String.Format("No ." + (fileType == FileType.I64 ? "map" : "bin") + " file found for file '{0}'. Using empty map.", Path.GetFileName(loadPath)));
+                    Map.Templates.Clear();
+                    fileType = FileType.INI;
+                }
+                extraSections = ini.Sections.Clone();
+                if (modified)
+                {
+                    this.Dirty = true;
+                }
+                return errors;
+            }
+            finally
+            {
+                isLoading = false;
+            }
+        }
+
+        private void ReadMap(byte[] fileContents, string filename, List<string> errors, ref bool modified, bool checkN64, out bool isN64Map)
         {
             const int binLen = 0x2000;
-            byte[] fileContents;
-            using (BinaryReader binReader = new BinaryReader(stream, Encoding.UTF8, true))
-            {
-                fileContents = binReader.ReadAllBytes();
-            }
+            isN64Map = false;
             List<string> err = new List<string>();
             bool mod = modified;
             CellGrid<Template> templates = ReadBinData(fileContents, filename, err, ref mod);            
@@ -695,6 +613,11 @@ namespace MobiusEditor.TiberianDawn
                     {
                         normalType++;
                     }
+                    else if (fileContents[i] == 0 && fileContents[i + 1] < 0x10)
+                    {
+                        // XCC Editor doesn't save using the "-1" shortcut but actually saves clear terrain per cell.
+                        normalType++;
+                    }
                 }
                 if (normalType == 0 && n64Type > 0)
                 {
@@ -704,6 +627,7 @@ namespace MobiusEditor.TiberianDawn
                     // Went better than identifying PC format; use this one.
                     if (templatesN64 != null && errN64.Count < err.Count)
                     {
+                        isN64Map = true;
                         templates = templatesN64;
                         err = errN64;
                         mod = modN64;
@@ -740,7 +664,6 @@ namespace MobiusEditor.TiberianDawn
         private CellGrid<Template> ReadBinData(byte[] mapData, string filename, List<string> errors, ref bool modified)
         {
             CellGrid<Template> templates = new CellGrid<Template>(Map.Metrics);
-            // don't close stream after read; that's the responsibility of the calling code.
             using (MemoryStream ms = new MemoryStream(mapData))
             using (BinaryReader binReader = new BinaryReader(ms, Encoding.UTF8, true))
             {
@@ -1066,11 +989,11 @@ namespace MobiusEditor.TiberianDawn
             {
                 modified = true;
             }
+            extraSections = ini.Sections.Clone();
             // Won't trigger the notifications.
             Map.Triggers.Clear();
             Map.Triggers.AddRange(triggers);
             Map.TeamTypes.Sort((x, y) => comparer.Compare(x.Name, y.Name));
-            extraSections = ini.Sections.Clone();
             if (!forSole) {
                 CheckSwitchToSolo(tryCheckSoloMission, fromMix, errors);
             }
@@ -1103,6 +1026,8 @@ namespace MobiusEditor.TiberianDawn
         {
             // Map info
             string theaterStr = ini["Map"]?.TryGetValue("Theater") ?? String.Empty;
+            // Specifically disable this to give accurate feedback on parse errors in the map size information.
+            Map.MapSection.AutoFixSize = false;
             // This sets the Theater
             INISection mapSection = INITools.ParseAndLeaveRemainder(ini, "Map", Map.MapSection, new MapContext(Map, false));
             if (!this.Map.TheaterTypes.Any(thr => String.Equals(thr.Name, theaterStr, StringComparison.OrdinalIgnoreCase)))
@@ -1115,7 +1040,8 @@ namespace MobiusEditor.TiberianDawn
             {
                 ini.Sections.Remove(mapSection.Name);
             }
-            Map.MapSection.FixBounds();
+            Map.MapSection.FixBounds(errors);
+            Map.MapSection.AutoFixSize = true;
         }
 
         private void LoadBriefing(INI ini, List<string> errors, ref bool modified)
@@ -1132,6 +1058,9 @@ namespace MobiusEditor.TiberianDawn
             }
             else
             {
+                bool parseAtBreaks = Globals.EnableTdClassicMultiLine;
+                // If enabled, '@' type multiLine has priority, since it's an 'official' method (though from RA).
+                bool parseHashBreaks = Globals.EnableTd106LineBreaks && !parseAtBreaks;
                 // Classic briefing, with v1.06 line break support.
                 StringBuilder briefLines = new StringBuilder();
                 int line = 1;
@@ -1141,22 +1070,28 @@ namespace MobiusEditor.TiberianDawn
                 {
                     string briefLine = briefingSection[lineStr].Trim();
                     // C&C95 v1.06 line break format. Unlike RA's '@' system, this only works at the end of the line.
-                    bool hasBreak = briefLine.EndsWith("##");
-                    if (hasBreak)
+                    // The @ system is checked here too so ending on an @ doesn't add an extra space.
+                    int breakLen = (parseHashBreaks && briefLine.EndsWith("##")) ? 2 :
+                        (parseAtBreaks && briefLine.EndsWith("@")) ? 1: 0;
+                    if (breakLen > 0)
                     {
-                        briefLine = briefLine.Substring(0, briefLine.Length - 2);
+                        briefLine = briefLine.Substring(0, briefLine.Length - breakLen);
                     }
                     if (addSpace)
                     {
                         briefLines.Append(" ");
                     }
                     briefLines.Append(briefLine.TrimEnd());
-                    if (hasBreak)
+                    if (breakLen > 0)
                     {
                         briefLines.AppendLine();
                     }
-                    addSpace = !hasBreak;
+                    addSpace = breakLen == 0;
                     line++;
+                }
+                if (parseAtBreaks)
+                {
+                    briefLines = briefLines.Replace("@", Environment.NewLine);
                 }
                 Map.BriefingSection.Briefing = briefLines.ToString();
             }
@@ -1459,13 +1394,13 @@ namespace MobiusEditor.TiberianDawn
                 string[] tokens = kvp.Value.Split(',');
                 if (tokens.Length != 3)
                 {
-                    errors.Add(string.Format("Smudge on cell '{0}' has wrong number of tokens (expecting 3).", kvp.Key));
+                    errors.Add(string.Format("Smudge on cell {0} has wrong number of tokens (expecting 3).", kvp.Key));
                     modified = true;
                     continue;
                 }
                 // Craters other than cr1 don't work right in the game. Replace them by stage-0 cr1.
                 bool badCrater = Globals.ConvertCraters && SmudgeTypes.BadCraters.IsMatch(tokens[0]);
-                SmudgeType smudgeType = badCrater ? SmudgeTypes.Crater1 : Map.SmudgeTypes.Where(t => t.Equals(tokens[0]) && !t.IsAutoBib).FirstOrDefault();
+                SmudgeType smudgeType = badCrater ? SmudgeTypes.Crater1 : Map.SmudgeTypes.Where(t => t.Equals(tokens[0])).FirstOrDefault();
                 if (smudgeType == null)
                 {
                     errors.Add(string.Format("Smudge '{0}' references unknown smudge.", tokens[0]));
@@ -1593,52 +1528,59 @@ namespace MobiusEditor.TiberianDawn
                 int stoppingPos;
                 if (!int.TryParse(tokens[4], out stoppingPos))
                 {
-                    errors.Add(string.Format("Sub-position for infantry '{0}' on cell {1} cannot be parsed; value: '{2}'; skipping.", infantryType.Name, cell, tokens[4]));
+                    errors.Add(string.Format("Sub-position for infantry '{0}' on cell {1} cannot be parsed; value: '{2}'; skipping.",
+                        infantryType.Name, cell, tokens[4]));
                     modified = true;
                     continue;
                 }
                 if (stoppingPos < 0 || stoppingPos >= Globals.NumInfantryStops)
                 {
-                    errors.Add(string.Format("Infantry '{0}' has invalid position {1} in cell {2}; skipping.", infantryType.Name, stoppingPos, cell));
+                    errors.Add(string.Format("Infantry '{0}' has invalid position {1} in cell {2}; skipping.",
+                        infantryType.Name, stoppingPos, cell));
                     modified = true;
                     break;
                 }
                 if (strength < 1 || strength > 256)
                 {
                     int newStrength = strength.Restrict(1, 256);
-                    errors.Add(string.Format("Strength for infantry '{0}' on cell {1}, sub-position {2} has illegal value {3}; corrected to {4}.", infantryType.Name, cell, stoppingPos, strength, newStrength));
+                    errors.Add(string.Format("Strength for infantry '{0}' on cell {1}, sub-position {2} has illegal value {3}; corrected to {4}.",
+                        infantryType.Name, cell, stoppingPos, strength, newStrength));
                     strength = newStrength;
                     modified = true;
                 }
                 int dirValue;
                 if (!int.TryParse(tokens[6], out dirValue))
                 {
-                    errors.Add(string.Format("Direction for infantry '{0}' on cell {1}, sub-position {2} cannot be parsed; value: '{3}'; skipping.", infantryType.Name, cell, stoppingPos, tokens[6]));
+                    errors.Add(string.Format("Direction for infantry '{0}' on cell {1}, sub-position {2} cannot be parsed; value: '{3}'; skipping.",
+                        infantryType.Name, cell, stoppingPos, tokens[6]));
                     modified = true;
                     continue;
                 }
-                DirectionType dirType;
-                if (!DirectionType.TryGetDirectionType(dirValue, Map.UnitDirectionTypes, out dirType))
+                DirectionType dirType = DirectionType.FindClosestDirectionType(dirValue, Map.UnitDirectionTypes);
+                if (dirType.ID != dirValue)
                 {
-                    errors.Add(string.Format("Direction for infantry '{0}', value {1}, cannot be matched to an accepted value. Reverting to {2} ({3}).",
-                        infantryType.Name, dirValue, dirType.ID, dirType.Name));
+                    errors.Add(string.Format("Direction for infantry '{0}' on cell {1}, sub-position {2}, value {3}, cannot be matched to a known value. Taking closest match value {4} ({5}).",
+                        infantryType.Name, cell, stoppingPos, dirValue, dirType.ID, dirType.Name));
                     modified = true;
                 }
                 if (infantryGroup.Infantry[stoppingPos] != null)
                 {
-                    errors.Add(string.Format("Infantry '{0}' overlaps another infantry at position {1} in cell {2}; skipping.", infantryType.Name, stoppingPos, cell));
+                    errors.Add(string.Format("Infantry '{0}' overlaps another infantry at position {1} in cell {2}; skipping.",
+                        infantryType.Name, stoppingPos, cell));
                     modified = true;
                     continue;
                 }
                 if (!caseTrigs.ContainsKey(tokens[7]))
                 {
-                    errors.Add(string.Format("Infantry '{0}' on cell {1}, sub-position {2} links to unknown trigger '{3}'; clearing trigger.", infantryType.Name, cell, stoppingPos, tokens[7]));
+                    errors.Add(string.Format("Infantry '{0}' on cell {1}, sub-position {2} links to unknown trigger '{3}'; clearing trigger.",
+                        infantryType.Name, cell, stoppingPos, tokens[7]));
                     modified = true;
                     tokens[7] = Trigger.None;
                 }
                 else if (!checkUnitTrigs.Contains(tokens[7]))
                 {
-                    errors.Add(string.Format("Infantry '{0}' on cell {1}, sub-position {2} links to trigger '{3}' which does not contain an event applicable to infantry; clearing trigger.", infantryType.Name, cell, stoppingPos, tokens[7]));
+                    errors.Add(string.Format("Infantry '{0}' on cell {1}, sub-position {2} links to trigger '{3}' which does not contain an event applicable to infantry; clearing trigger.",
+                        infantryType.Name, cell, stoppingPos, tokens[7]));
                     modified = true;
                     tokens[7] = Trigger.None;
                 }
@@ -1660,7 +1602,8 @@ namespace MobiusEditor.TiberianDawn
                 if (inf.House == null)
                 {
                     HouseType defHouse = Map.HouseTypes.First();
-                    errors.Add(string.Format("Infantry '{0}' on cell {1}, sub-position {2} references unknown house '{3}'; clearing to '{4}'.", inf.Type.Name, cell, stoppingPos, tokens[0], defHouse.Name));
+                    errors.Add(string.Format("Infantry '{0}' on cell {1}, sub-position {2} references unknown house '{3}'; clearing to '{4}'.",
+                        inf.Type.Name, cell, stoppingPos, tokens[0], defHouse.Name));
                     modified = true;
                     inf.House = defHouse;
                 }
@@ -1730,15 +1673,15 @@ namespace MobiusEditor.TiberianDawn
                 int dirValue;
                 if (!int.TryParse(tokens[4], out dirValue))
                 {
-                    errors.Add(string.Format("Direction for unit '{0}' cannot be parsed; value: '{1}'; skipping.", unitType.Name, tokens[4]));
+                    errors.Add(string.Format("Direction for unit '{0}' on cell {1} cannot be parsed; value: '{2}'; skipping.", unitType.Name, cell, tokens[4]));
                     modified = true;
                     continue;
                 }
-                DirectionType dirType;
-                if (!DirectionType.TryGetDirectionType(dirValue, Map.UnitDirectionTypes, out dirType))
+                DirectionType dirType = DirectionType.FindClosestDirectionType(dirValue, Map.UnitDirectionTypes);
+                if (dirType.ID != dirValue)
                 {
-                    errors.Add(string.Format("Direction for unit '{0}', value {1}, cannot be matched to an accepted value. Reverting to {2} ({3}).",
-                        unitType.Name, dirValue, dirType.ID, dirType.Name));
+                    errors.Add(string.Format("Direction for unit '{0}' on cell {1}, value {2}, cannot be matched to a known value. Taking closest match value {3} ({4}).",
+                        unitType.Name, cell, dirValue, dirType.ID, dirType.Name));
                     modified = true;
                 }
                 Unit newUnit = new Unit()
@@ -1793,13 +1736,15 @@ namespace MobiusEditor.TiberianDawn
                 }
                 if (!caseTrigs.ContainsKey(tokens[6]))
                 {
-                    errors.Add(string.Format("Unit '{0}' on cell {1} links to unknown trigger '{2}'; clearing trigger.", unitType.Name, cell, tokens[6]));
+                    errors.Add(string.Format("Unit '{0}' on cell {1} links to unknown trigger '{2}'; clearing trigger.",
+                        unitType.Name, cell, tokens[6]));
                     modified = true;
                     newUnit.Trigger = Trigger.None;
                 }
                 else if (!checkUnitTrigs.Contains(tokens[6]))
                 {
-                    errors.Add(string.Format("Unit '{0}' on cell {1} links to trigger '{2}' which does not contain an event applicable to units; clearing trigger.", unitType.Name, cell, tokens[6]));
+                    errors.Add(string.Format("Unit '{0}' on cell {1} links to trigger '{2}' which does not contain an event applicable to units; clearing trigger.",
+                        unitType.Name, cell, tokens[6]));
                     modified = true;
                     newUnit.Trigger = Trigger.None;
                 }
@@ -1873,22 +1818,24 @@ namespace MobiusEditor.TiberianDawn
                 if (strength < 1 || strength > 256)
                 {
                     int newStrength = strength.Restrict(1, 256);
-                    errors.Add(string.Format("Strength for aircraft '{0}' on cell {1} has illegal value {2}; corrected to {3}.", aircraftType.Name, cell, strength, newStrength));
+                    errors.Add(string.Format("Strength for aircraft '{0}' on cell {1} has illegal value {2}; corrected to {3}.",
+                        aircraftType.Name, cell, strength, newStrength));
                     strength = newStrength;
                     modified = true;
                 }
                 int dirValue;
                 if (!int.TryParse(tokens[4], out dirValue))
                 {
-                    errors.Add(string.Format("Direction for aircraft '{0}' cannot be parsed; value: '{1}'; skipping.", aircraftType.Name, tokens[4]));
+                    errors.Add(string.Format("Direction for aircraft '{0}' on cell {1} cannot be parsed; value: '{2}'; skipping.",
+                        aircraftType.Name, cell, tokens[4]));
                     modified = true;
                     continue;
                 }
-                DirectionType dirType;
-                if (!DirectionType.TryGetDirectionType(dirValue, Map.UnitDirectionTypes, out dirType))
+                DirectionType dirType = DirectionType.FindClosestDirectionType(dirValue, Map.UnitDirectionTypes);
+                if (dirType.ID != dirValue)
                 {
-                    errors.Add(string.Format("Direction for aircraft '{0}', value {1}, cannot be matched to an accepted value. Reverting to {2} ({3}).",
-                        aircraftType.Name, dirValue, dirType.ID, dirType.Name));
+                    errors.Add(string.Format("Direction for aircraft '{0}' on cell {1}, value {2}, cannot be matched to a known value. Taking closest match value {3} ({4}).",
+                        aircraftType.Name, cell, dirValue, dirType.ID, dirType.Name));
                     modified = true;
                 }
                 Unit newUnit = new Unit()
@@ -1902,7 +1849,8 @@ namespace MobiusEditor.TiberianDawn
                 if (newUnit.House == null)
                 {
                     HouseType defHouse = Map.HouseTypes.First();
-                    errors.Add(string.Format("Aircraft '{0}' on cell {1} references unknown house '{2}'; clearing to '{3}'.", newUnit.Type.Name, cell, tokens[0], defHouse.Name));
+                    errors.Add(string.Format("Aircraft '{0}' on cell {1} references unknown house '{2}'; clearing to '{3}'.",
+                        newUnit.Type.Name, cell, tokens[0], defHouse.Name));
                     modified = true;
                     newUnit.House = defHouse;
                 }
@@ -1993,14 +1941,16 @@ namespace MobiusEditor.TiberianDawn
                 int cell;
                 if (!int.TryParse(tokens[3], out cell))
                 {
-                    errors.Add(string.Format("Cell for structure '{0}' cannot be parsed; value: '{1}'; skipping.", buildingType.Name, tokens[3]));
+                    errors.Add(string.Format("Cell for structure '{0}' cannot be parsed; value: '{1}'; skipping.",
+                        buildingType.Name, tokens[3]));
                     modified = true;
                     continue;
                 }
                 if (strength < 1 || strength > 256)
                 {
                     int newStrength = strength.Restrict(1, 256);
-                    errors.Add(string.Format("Strength for structure '{0}' on cell {1} has illegal value {2}; corrected to {3}.", buildingType.Name, cell, strength, newStrength));
+                    errors.Add(string.Format("Strength for structure '{0}' on cell {1} has illegal value {2}; corrected to {3}.",
+                        buildingType.Name, cell, strength, newStrength));
                     strength = newStrength;
                     modified = true;
                 }
@@ -2010,7 +1960,8 @@ namespace MobiusEditor.TiberianDawn
                     OverlayType wall = Map.OverlayTypes.Where(t => t.Equals(kvp.Value)).FirstOrDefault();
                     if (wall != null)
                     {
-                        errors.Add(string.Format("Structure '{0}' on cell '{1}' is a wall type. It will be treated as wall, not as building.", buildingType.Name, cell));
+                        errors.Add(string.Format("Structure '{0}' on cell {1} is a wall type. It will be treated as wall, not as building.",
+                            buildingType.Name, cell));
                         Map.Overlay[cell] = new Overlay() { Type = wall, Icon = 0 };
                         modified = true;
                         continue;
@@ -2019,15 +1970,16 @@ namespace MobiusEditor.TiberianDawn
                 int dirValue;
                 if (!int.TryParse(tokens[4], out dirValue))
                 {
-                    errors.Add(string.Format("Direction for structure '{0}' cannot be parsed; value: '{1}'; skipping.", buildingType.Name, tokens[4]));
+                    errors.Add(string.Format("Direction for structure '{0}' cannot be parsed; value: '{1}'; skipping.",
+                        buildingType.Name, cell, tokens[4]));
                     modified = true;
                     continue;
                 }
-                DirectionType dirType;
-                if (!DirectionType.TryGetDirectionType(dirValue, Map.BuildingDirectionTypes, out dirType))
+                DirectionType dirType = DirectionType.FindClosestDirectionType(dirValue, Map.BuildingDirectionTypes);
+                if (dirType.ID != dirValue)
                 {
-                    errors.Add(string.Format("Direction for structure '{0}', value {1}, cannot be matched to an accepted value. Reverting to {2} ({3}).",
-                        buildingType.Name, dirValue, dirType.ID, dirType.Name));
+                    errors.Add(string.Format("Direction for structure '{0}' on cell {1}, value {2}, cannot be matched to a known value. Taking closest match value {3} ({4}).",
+                        buildingType.Name, cell, dirValue, dirType.ID, dirType.Name));
                     modified = true;
                 }
                 Building newBld = new Building()
@@ -2040,7 +1992,8 @@ namespace MobiusEditor.TiberianDawn
                 if (newBld.House == null)
                 {
                     HouseType defHouse = Map.HouseTypes.First();
-                    errors.Add(string.Format("Structure '{0}' on cell {1} references unknown house '{2}'; clearing to '{3}'.", buildingType.Name, cell, tokens[0], defHouse.Name));
+                    errors.Add(string.Format("Structure '{0}' on cell {1} references unknown house '{2}'; clearing to '{3}'.",
+                        buildingType.Name, cell, tokens[0], defHouse.Name));
                     modified = true;
                     newBld.House = defHouse;
                 }
@@ -2052,13 +2005,15 @@ namespace MobiusEditor.TiberianDawn
                 Map.Buildings.Add(cell, newBld);
                 if (!caseTrigs.ContainsKey(tokens[5]))
                 {
-                    errors.Add(string.Format("Structure '{0}' on cell {1} links to unknown trigger '{2}'; clearing trigger.", buildingType.Name, cell, tokens[5]));
+                    errors.Add(string.Format("Structure '{0}' on cell {1} links to unknown trigger '{2}'; clearing trigger.",
+                        buildingType.Name, cell, tokens[5]));
                     modified = true;
                     newBld.Trigger = Trigger.None;
                 }
                 else if (!checkStrcTrigs.Contains(tokens[5]))
                 {
-                    errors.Add(string.Format("Structure '{0}' on cell {1} links to trigger '{2}' which does not contain an event applicable to structures; clearing trigger.", buildingType.Name, cell, tokens[5]));
+                    errors.Add(string.Format("Structure '{0}' on cell {1} links to trigger '{2}' which does not contain an event applicable to structures; clearing trigger.",
+                        buildingType.Name, cell, tokens[5]));
                     modified = true;
                     newBld.Trigger = Trigger.None;
                 }
@@ -2109,7 +2064,7 @@ namespace MobiusEditor.TiberianDawn
                 return;
             }
             int curPriorityVal = 0;
-            for (int i = 0; i < baseCount; i++)
+            for (int i = 0; i < baseCount; ++i)
             {
                 string key = i.ToString("D3");
                 string value = baseSection.TryGetValue(key);
@@ -2779,23 +2734,25 @@ namespace MobiusEditor.TiberianDawn
 
         public virtual long Save(string path, FileType fileType)
         {
-            return Save(path, fileType, null, false);
+            return Save(path, fileType, null, false, false);
         }
 
-        public virtual long Save(string path, FileType fileType, Bitmap customPreview, bool dontResavePreview)
+        public virtual long Save(string path, FileType fileType, Bitmap customPreview, bool dontResavePreview, bool forSteam)
         {
-            return Save(path, fileType, false, customPreview, dontResavePreview);
+            return Save(path, fileType, false, customPreview, dontResavePreview, forSteam);
         }
 
-        public long Save(string path, FileType fileType, bool forSole, Bitmap customPreview, bool dontResavePreview)
+        public long Save(string path, FileType fileType, bool forSole, Bitmap customPreview, bool dontResavePreview, bool forSteam)
         {
-            string errors = Validate(false, forSole);
+            string errors = Validate(fileType, false, forSole);
             if (errors != null)
             {
                 return 0;
             }
-            string iniPath = fileType == FileType.INI ? path : Path.ChangeExtension(path, ".ini");
-            string binPath = fileType == FileType.BIN ? path : Path.ChangeExtension(path, ".bin");
+            bool isN64 = fileType == FileType.I64 || fileType == FileType.B64;
+            string binExtension = isN64 ? ".map" : ".bin";
+            string iniPath = fileType == FileType.INI || fileType == FileType.MPR || fileType == FileType.I64 ? path : Path.ChangeExtension(path, ".ini");
+            string binPath = fileType == FileType.BIN || fileType == FileType.B64 ? path : Path.ChangeExtension(path, binExtension);
             Encoding dos437 = Encoding.GetEncoding(437);
             Encoding utf8 = new UTF8Encoding(false, false);
             byte[] linebreak = utf8.GetBytes("\r\n");
@@ -2811,7 +2768,10 @@ namespace MobiusEditor.TiberianDawn
             {
                 case FileType.INI:
                 case FileType.BIN:
-                    SaveINI(ini, fileType, path);
+                case FileType.MPR:
+                case FileType.I64:
+                case FileType.B64:
+                    SaveINI(ini, fileType, path, forSteam);
                     using (FileStream iniStream = new FileStream(iniPath, FileMode.Create))
                     using (BinaryWriter iniWriter = new BinaryWriter(iniStream))
                     {
@@ -2820,20 +2780,35 @@ namespace MobiusEditor.TiberianDawn
                         GeneralUtils.WriteMultiEncoding(iniText.Split('\n'), iniWriter, dos437, utf8, utf8Components.ToArray(), linebreak);
                         retVal = iniStream.Position;
                     }
-                    using (FileStream binStream = new FileStream(binPath, FileMode.Create))
-                    using (BinaryWriter binWriter = new BinaryWriter(binStream))
+                    // MPR = experimental "embedded map" like RA has. If enabled, don't write external .bin file.
+                    if (fileType != FileType.MPR)
                     {
-                        if (!isMegaMap)
+                        using (FileStream binStream = new FileStream(binPath, FileMode.Create))
+                        using (BinaryWriter binWriter = new BinaryWriter(binStream))
                         {
-                            SaveBinaryClassic(binWriter);
-                        }
-                        else
-                        {
-                            SaveBinaryMega(binWriter);
+                            if (!isMegaMap)
+                            {
+                                if (!isN64)
+                                {
+                                    SaveBinaryClassic(binWriter);
+                                }
+                                else
+                                {
+                                    SaveBinaryClassicN64(binWriter, false);
+                                }
+                            }
+                            else
+                            {
+                                if (isN64)
+                                {
+                                    throw new NotSupportedException("Megamaps cannot be saved in N64 format.");
+                                }
+                                SaveBinaryMega(binWriter);
+                            }
                         }
                     }
                     // None of this junk for Sole Survivor.
-                    if (!forSole && !Map.BasicSection.SoloMission && (!Globals.UseClassicFiles || !Globals.ClassicProducesNoMetaFiles))
+                    if (!forSole && !Map.BasicSection.SoloMission && (!Globals.UseClassicFiles || !Globals.ClassicProducesNoMetaFiles) && !forSteam)
                     {
                         string tgaPath = Path.ChangeExtension(path, ".tga");
                         string jsonPath = Path.ChangeExtension(path, ".json");
@@ -2860,7 +2835,7 @@ namespace MobiusEditor.TiberianDawn
                     }
                     break;
                 case FileType.PGM:
-                    SaveINI(ini, fileType, path);
+                    SaveINI(ini, fileType, path, true);
                     using (MemoryStream iniStream = new MemoryStream())
                     using (MemoryStream binStream = new MemoryStream())
                     using (MemoryStream tgaStream = new MemoryStream())
@@ -2914,6 +2889,29 @@ namespace MobiusEditor.TiberianDawn
             return retVal;
         }
 
+        private void SaveSteamInfoIni(INI ini)
+        {
+            INISection generalSection = new INISection("General");
+            generalSection["AuthorId"] = Map.SteamSection.Author;
+            generalSection["Author"] = Map.BasicSection.Author;
+            generalSection["ContentType"] = "0";
+            generalSection["Flags"] = string.Empty;
+            ini.Sections.Add(generalSection);
+
+            INISection titleSection = new INISection("Title");
+            titleSection["0"] = Map.BasicSection.Name;
+            ini.Sections.Add(titleSection);
+
+            INISection descriptionSection = new INISection("Description");
+            string description = GamePluginRA.PreprocessBriefingText(Map.SteamSection.Description);
+            List<string> finalLines = GamePluginRA.WriteClassicBriefing(description, Constants.BriefLineCutoffClassic);
+            for (int i = 0; i < finalLines.Count; ++i)
+            {
+                descriptionSection[(i + 1).ToString()] = finalLines[i];
+            }
+            ini.Sections.Add(descriptionSection);
+        }
+
         /// <summary>
         /// This detects Overlay lines of the dummy type used to represent the second state of ROAD,
         /// and replaces them with double lines of the ROAD type so the game will apply them correctly.
@@ -2938,7 +2936,7 @@ namespace MobiusEditor.TiberianDawn
                 string[] iniString = iniString1.Split('\n');
                 // Quick and dirty ini parser to find the correct ini section.
                 bool inOverlay = false;
-                for (int i = 0; i < iniString.Length; i++)
+                for (int i = 0; i < iniString.Length; ++i)
                 {
                     string currLine = iniString[i].Trim();
                     if (currLine.StartsWith("["))
@@ -2964,7 +2962,7 @@ namespace MobiusEditor.TiberianDawn
             return iniString1;
         }
 
-        protected virtual void SaveINI(INI ini, FileType fileType, string fileName)
+        protected virtual void SaveINI(INI ini, FileType fileType, string fileName, bool forSteam)
         {
             if (extraSections != null)
             {
@@ -2972,7 +2970,10 @@ namespace MobiusEditor.TiberianDawn
             }
             SaveIniBasic(ini, fileName);
             SaveIniMap(ini);
-            SaveIniSteam(ini, fileType);
+            if (!forSteam)
+            {
+                SaveIniSteam(ini);
+            }
             SaveIniBriefing(ini);
             SaveIniCellTriggers(ini, false);
             SaveIniTeamTypes(ini, false);
@@ -2987,8 +2988,10 @@ namespace MobiusEditor.TiberianDawn
             SaveIniOverlay(ini);
             SaveIniSmudge(ini);
             SaveIniTerrain(ini);
-            // Experimental; will need proper save types to enable this.
-            // SaveMapPack(ini);
+            if (fileType == FileType.MPR)
+            {
+                SaveMapPack(ini);
+            }
         }
 
         protected INISection SaveIniBasic(INI ini, string fileName)
@@ -3006,7 +3009,7 @@ namespace MobiusEditor.TiberianDawn
             if (String.IsNullOrWhiteSpace(basic.Name))
             {
                 string[] name = Path.GetFileNameWithoutExtension(fileName).Split(new[] { ' ', '_' }, StringSplitOptions.RemoveEmptyEntries);
-                for (int i = 0; i < name.Length; i++)
+                for (int i = 0; i < name.Length; ++i)
                 {
                     string word = name[i];
                     // Very very rough APA title casing :)
@@ -3023,7 +3026,7 @@ namespace MobiusEditor.TiberianDawn
 
         protected INISection SaveIniMap(INI ini)
         {
-            Map.MapSection.FixBounds();
+            Map.MapSection.FixBounds(null);
             INISection mapSection = INITools.FillAndReAdd(ini, "Map", Map.MapSection, new MapContext(Map, false), true);
             if (isMegaMap)
             {
@@ -3033,9 +3036,9 @@ namespace MobiusEditor.TiberianDawn
             return mapSection;
         }
 
-        protected INISection SaveIniSteam(INI ini, FileType fileType)
+        protected INISection SaveIniSteam(INI ini)
         {
-            if (fileType == FileType.PGM)
+            if (Map.SteamSection.PublishedFileId == 0)
             {
                 return null;
             }
@@ -3062,53 +3065,73 @@ namespace MobiusEditor.TiberianDawn
                 return null;
             }
             INISection briefingSection = ini.Sections.Add("Briefing");
-            string briefText = (Map.BriefingSection.Briefing ?? String.Empty).Replace('\t', ' ').Trim('\r', '\n', ' ').Replace("\r\n", "\n").Replace("\r", "\n");
-            // Remove duplicate spaces,
-            briefText = Regex.Replace(briefText, " +", " ");
-            // Remove spaces around line breaks. (Test this!)
-            briefText = Regex.Replace(briefText, " *\\n *", "\n");
-            if (briefText.Length == 0)
+            string briefText = PreprocessBriefingText(Map.BriefingSection.Briefing);
+            if (Globals.WriteRemasterBriefing)
             {
-                return null;
+                // Remastered TD supports line breaks as @ characters.
+                briefingSection["Text"] = briefText.Replace('\n', '@');
             }
-            briefingSection["Text"] = briefText.Replace("\n", "@");
-            if (Globals.WriteClassicBriefing)
+            // If both disabled, default to classic one
+            if (Globals.WriteClassicBriefing || (!Globals.WriteRemasterBriefing && !Globals.WriteClassicBriefing))
             {
                 if (briefText.Length > Constants.MaxBriefLengthClassic)
                 {
                     briefText = briefText.Substring(0, Constants.MaxBriefLengthClassic);
                 }
-                string[] lines = briefText.Split('\n');
-                List<string> finalLines = new List<string>();
-                int last = lines.Length - 1;
-                for (int i = 0; i < lines.Length; ++i)
+                List<string> finalLines;
+                string[] lines = briefText.Split('\n', true);
+                // If 1.06 line breaks are disabled, remove all line breaks from the briefing.
+                if (!Globals.EnableTd106LineBreaks)
                 {
-                    string line = lines[i].Trim();
-                    if (i != last)
+                    for (int i = 0; i > lines.Length; ++i)
                     {
-                        line += "##";
+                        lines[i] = lines[i].Trim();
                     }
-                    if (line.Length <= Constants.BriefLineCutoffClassic)
+                    lines = new string[] { String.Join(" ", lines) };
+                }
+                if (!Globals.EnableTdClassicMultiLine)
+                {
+                    // Logic for either 1.06 line breaks. With line breaks stripped out,
+                    // this is just the line split logic for normal briefing writing.
+                    // 1.06 line breaks are a bit odd, in that the ## to trigger
+                    // the break must be put on the end of the line.
+                    finalLines = new List<string>();
+                    int last = lines.Length - 1;
+                    for (int i = 0; i < lines.Length; ++i)
                     {
-                        finalLines.Add(line);
-                        continue;
-                    }
-                    string[] splitLine = line.Split(new[] { ' ' }, StringSplitOptions.RemoveEmptyEntries);
-                    int wordIndex = 0;
-                    while (wordIndex < splitLine.Length)
-                    {
-                        StringBuilder sb = new StringBuilder();
-                        // Always allow initial word
-                        int nextLength = 0;
-                        while (nextLength < Constants.BriefLineCutoffClassic && wordIndex < splitLine.Length)
+                        string line = lines[i].Trim();
+                        if (i != last)
                         {
-                            if (sb.Length > 0)
-                                sb.Append(' ');
-                            sb.Append(splitLine[wordIndex++]);
-                            nextLength = wordIndex >= splitLine.Length ? 0 : (sb.Length + 1 + splitLine[wordIndex].Length);
+                            // This logic never triggers for non-1.06 briefings since everything is put on one line.
+                            line += "##";
                         }
-                        finalLines.Add(sb.ToString());
+                        if (line.Length <= Constants.BriefLineCutoffClassic)
+                        {
+                            finalLines.Add(line);
+                            continue;
+                        }
+                        string[] splitLine = line.Split(new[] { ' ' }, StringSplitOptions.RemoveEmptyEntries);
+                        int wordIndex = 0;
+                        while (wordIndex < splitLine.Length)
+                        {
+                            StringBuilder sb = new StringBuilder();
+                            // Always allow initial word
+                            int nextLength = 0;
+                            while (nextLength < Constants.BriefLineCutoffClassic && wordIndex < splitLine.Length)
+                            {
+                                if (sb.Length > 0)
+                                    sb.Append(' ');
+                                sb.Append(splitLine[wordIndex++]);
+                                nextLength = wordIndex >= splitLine.Length ? 0 : (sb.Length + 1 + splitLine[wordIndex].Length);
+                            }
+                            finalLines.Add(sb.ToString());
+                        }
                     }
+                }
+                else
+                {
+                    string briefTextAt = briefText.Replace("\n", "@");
+                    finalLines = GamePluginRA.WriteClassicBriefing(briefTextAt, Constants.BriefLineCutoffClassic);
                 }
                 for (int i = 0; i < finalLines.Count; ++i)
                 {
@@ -3126,6 +3149,17 @@ namespace MobiusEditor.TiberianDawn
                 }
             }
             return briefingSection;
+        }
+
+        private string PreprocessBriefingText(string briefText)
+        {
+            // Remove tabs, trim off spaces and line breaks.
+            briefText = (briefText ?? String.Empty).Replace('\t', ' ').Trim('\r', '\n', ' ').Replace("\r\n", "\n").Replace("\r", "\n");
+            // Remove duplicate spaces.
+            briefText = Regex.Replace(briefText, " +", " ");
+            // Remove spaces around line breaks.
+            briefText = Regex.Replace(briefText, " *\\n *", "\n");
+            return briefText;
         }
 
         private INISection SaveMapPack(INI ini)
@@ -3420,7 +3454,7 @@ namespace MobiusEditor.TiberianDawn
                 // Current house is not in its own alliances list. Fix that.
                 if (houseSection != null && !gameHouse.Allies.Contains(gameHouse.Type.ID))
                 {
-                    HashSet<String> allies = (houseSection.TryGetValue("Allies") ?? String.Empty)
+                    HashSet<string> allies = (houseSection.TryGetValue("Allies") ?? String.Empty)
                         .Split(new char[] { ',' }, StringSplitOptions.RemoveEmptyEntries)
                         .Distinct(StringComparer.OrdinalIgnoreCase)
                         .ToHashSet(StringComparer.OrdinalIgnoreCase);
@@ -3464,7 +3498,7 @@ namespace MobiusEditor.TiberianDawn
             INISection smudgeSection = ini.Sections.Add("Smudge");
             // Flatten multi-cell bibs
             Dictionary<int, Smudge> resolvedSmudge = new Dictionary<int, Smudge>();
-            foreach (var (cell, smudge) in Map.Smudge.Where(item => !item.Value.Type.IsAutoBib).OrderBy(s => s.Cell))
+            foreach (var (cell, smudge) in Map.Smudge.Where(item => !item.Value.IsAutoBib).OrderBy(s => s.Cell))
             {
                 int actualCell = smudge.GetPlacementOrigin(cell, this.Map.Metrics);
                 if (!resolvedSmudge.ContainsKey(actualCell))
@@ -3513,6 +3547,75 @@ namespace MobiusEditor.TiberianDawn
                 }
             }
         }
+        protected List<string> SaveBinaryClassicN64(BinaryWriter writer, bool check)
+        {
+            Dictionary<ushort, List<int>> notFound = check ? new Dictionary<ushort, List<int>>() : null;
+            bool isDesert = TheaterTypes.Desert.Name.Equals(Map.Theater?.Name, StringComparison.OrdinalIgnoreCase);
+            Dictionary<int, ushort> mapping = isDesert ? N64MapConverter.DESERT_MAPPING_REVERSED : N64MapConverter.TEMPERATE_MAPPING_REVERSED;
+            string mappingName = isDesert ? TheaterTypes.Desert.Name : TheaterTypes.Temperate.Name;
+            for (int y = 0; y < Map.Metrics.Height; ++y)
+            {
+                for (int x = 0; x < Map.Metrics.Width; ++x)
+                {
+                    Template template = Map.Templates[y, x];
+                    if (template != null && (template.Type.Flag & TemplateTypeFlag.Clear) == 0)
+                    {
+                        byte template1 = (byte)template.Type.ID;
+                        byte template2 = (byte)template.Icon;
+                        if (mapping.TryGetValue(template1 << 8 | template2, out ushort writeVal))
+                        {
+                            writer.Write((byte)((writeVal >> 8) & 0xFF));
+                            writer.Write((byte)(writeVal & 0xFF));
+                            continue;
+                        }
+                        else if (check)
+                        {
+                            List<int> cells;
+                            if (!notFound.TryGetValue(template.Type.ID, out cells))
+                            {
+                                cells = new List<int>();
+                                notFound.Add(template.Type.ID, cells);
+                            }
+                            cells.Add(Map.Metrics.GetCell(new Point(x, y)).Value);
+                        }
+                    }
+                    // Fallback: write clear terrain.
+                    writer.Write(byte.MaxValue);
+                    writer.Write(byte.MaxValue);
+                }
+            }
+            if (!check)
+            {
+                return null;
+            }
+            List<string> errors = new List<string>();
+            bool multiCellItems = false;
+            if (notFound.Keys.Count > 0)
+            {
+                foreach (TemplateType tt in this.Map.TemplateTypes)
+                {
+                    if (notFound.TryGetValue(tt.ID, out List<int> cells))
+                    {
+                        bool multiple = cells.Count > 1;
+                        errors.Add(String.Format("Template type \"{0}\" is not available in the N64 map type. Found cell{1}: {2}",
+                            tt.Name, multiple ? "s" : String.Empty, String.Join(", ", cells.Select(c => c.ToString()).ToArray())));
+                        if (multiple)
+                        {
+                            multiCellItems = true;
+                        }
+                    }
+                }
+            }
+            if (errors.Count > 0)
+            {
+                // This is not added as extra item, but pasted onto the last warning.
+                bool plural = notFound.Keys.Count > 1 || multiCellItems;
+                string lastITem = errors[errors.Count - 1];
+                errors[errors.Count - 1] = lastITem + "\n" + String.Format("If the map is saved to this type, {0} will be replaced with clear terrain.",
+                    plural ? "these cells" : "this cell");
+            }
+            return errors;
+        }
 
         protected void SaveBinaryMega(BinaryWriter writer)
         {
@@ -3538,7 +3641,7 @@ namespace MobiusEditor.TiberianDawn
 
         protected void SaveMapPreview(Stream stream, bool renderAll)
         {
-            Map.GenerateMapPreview(this, renderAll).Save(stream);
+            Map.GenerateMapPreview(this).Save(stream);
         }
 
         protected void SaveJSON(JsonTextWriter writer)
@@ -3567,110 +3670,184 @@ namespace MobiusEditor.TiberianDawn
             writer.WriteEndObject();
         }
 
-        public virtual string Validate(bool forWarnings)
+        public virtual string Validate(FileType saveType, bool forResave, bool forWarnings)
         {
-            return Validate(forWarnings, false);
+            return Validate(saveType, forResave, forWarnings, false);
         }
 
-        protected string Validate(bool forWarnings, bool forSole)
+        protected string Validate(FileType saveType, bool forResave, bool forWarnings, bool forSole)
         {
+            GameInfo gi = GameInfo;
+            bool isN64 = saveType == FileType.I64 || saveType == FileType.B64;
             if (forWarnings)
             {
-                // Check if map has name
-                if (this.GameInfo.MapNameIsEmpty(this.Map.BasicSection.Name))
-                {
-                    return "Map name is empty. If you continue, the filename will be filled in as map name.";
-                }
-                return null;
+                return ValidateForWarnings(saveType, forResave, isN64, forSole);
             }
-            StringBuilder sb = new StringBuilder("Error(s) during map validation:");
-            bool ok = true;
-            int numAircraft = Map.Technos.OfType<Unit>().Where(u => u.Occupier.Type.IsAircraft).Count();
-            int numBuildings = Map.Buildings.OfType<Building>().Where(x => x.Occupier.IsPrebuilt).Count();
-            int numInfantry = Map.Technos.OfType<InfantryGroup>().Sum(item => item.Occupier.Infantry.Count(i => i != null));
-            int numTerrain = Map.Technos.OfType<Terrain>().Count();
-            int numUnits = Map.Technos.OfType<Unit>().Where(u => u.Occupier.Type.IsGroundUnit).Count();
+            List<string> errors = new List<string>();
+            if (isN64 && isMegaMap)
+            {
+                errors.Add("Megamaps are not supported by the N64 map format.");
+            }
             int numStartPoints = Map.Waypoints.Count(w => w.Flag.HasFlag(WaypointFlag.PlayerStart) && w.Cell.HasValue
                 && Map.Metrics.GetLocation(w.Cell.Value, out Point pt) && Map.Bounds.Contains(pt));
             int numBadPoints = Map.Waypoints.Count(w => w.Flag.HasFlag(WaypointFlag.PlayerStart) && w.Cell.HasValue
                 && Map.Metrics.GetLocation(w.Cell.Value, out Point pt) && !Map.Bounds.Contains(pt));
-            bool classicSole = forSole && Globals.RestrictSoleLimits;
-            int maxAir = classicSole ? Constants.MaxAircraftClassic : Constants.MaxAircraft;
-            int maxBld = classicSole ? Constants.MaxBuildingsClassic : Constants.MaxBuildings;
-            int maxInf = classicSole ? Constants.MaxInfantryClassic : Constants.MaxInfantry;
-            int maxTer = classicSole ? Constants.MaxTerrainClassic : Constants.MaxTerrain;
-            int maxUni = classicSole ? Constants.MaxUnitsClassic : Constants.MaxUnits;
-            bool noSoleSkip = !forSole || !Globals.NoOwnedObjectsInSole;
-            if (!Globals.DisableAirUnits && numAircraft > maxAir && noSoleSkip && Globals.EnforceObjectMaximums)
+            if (Globals.EnforceObjectMaximums)
             {
-                sb.Append(string.Format("\nMaximum number of aircraft exceeded ({0} > {1})", numAircraft, maxAir));
-                ok = false;
-            }
-            if (numBuildings > maxBld && noSoleSkip && Globals.EnforceObjectMaximums)
-            {
-                sb.Append(string.Format("\nMaximum number of structures exceeded ({0} > {1})", numBuildings, maxBld));
-                ok = false;
-            }
-            if (numInfantry > maxInf && noSoleSkip && Globals.EnforceObjectMaximums)
-            {
-                sb.Append(string.Format("\nMaximum number of infantry exceeded ({0} > {1})", numInfantry, maxInf));
-                ok = false;
-            }
-            if (numTerrain > maxTer && Globals.EnforceObjectMaximums)
-            {
-                sb.Append(string.Format("\nMaximum number of terrain objects exceeded ({0} > {1})", numTerrain, maxTer));
-                ok = false;
-            }
-            if (numUnits > maxUni && noSoleSkip && Globals.EnforceObjectMaximums)
-            {
-                sb.Append(string.Format("\nMaximum number of units exceeded ({0} > {1})", numUnits, maxUni));
-                ok = false;
+                int numAircraft = Map.Technos.OfType<Unit>().Where(u => u.Occupier.Type.IsAircraft).Count();
+                int numBuildings = Map.Buildings.OfType<Building>().Where(x => x.Occupier.IsPrebuilt).Count();
+                int numInfantry = Map.Technos.OfType<InfantryGroup>().Sum(item => item.Occupier.Infantry.Count(i => i != null));
+                int numTerrain = Map.Technos.OfType<Terrain>().Count();
+                int numUnits = Map.Technos.OfType<Unit>().Where(u => u.Occupier.Type.IsGroundUnit).Count();
+                bool noSoleSkip = !forSole || !Globals.NoOwnedObjectsInSole;
+                if (!Globals.DisableAirUnits && numAircraft > gi.MaxAircraft && noSoleSkip)
+                {
+                    errors.Add(string.Format("Maximum number of aircraft exceeded ({0} > {1})", numAircraft, gi.MaxAircraft));
+                }
+                if (numBuildings > gi.MaxBuildings && noSoleSkip)
+                {
+                    errors.Add(string.Format("Maximum number of structures exceeded ({0} > {1})", numBuildings, gi.MaxBuildings));
+                }
+                if (numInfantry > gi.MaxInfantry && noSoleSkip)
+                {
+                    errors.Add(string.Format("Maximum number of infantry exceeded ({0} > {1})", numInfantry, gi.MaxInfantry));
+                }
+                if (numTerrain > gi.MaxTerrain)
+                {
+                    errors.Add(string.Format("Maximum number of terrain objects exceeded ({0} > {1})", numTerrain, gi.MaxTerrain));
+                }
+                if (numUnits > gi.MaxUnits && noSoleSkip)
+                {
+                    errors.Add(string.Format("Maximum number of units exceeded ({0} > {1})", numUnits, gi.MaxUnits));
+                }
             }
             // Ignore all further checks for Sole Survivor
-            if (forSole)
+            if (!forSole)
             {
-                return ok ? null : sb.ToString();
-            }
-            if (Map.TeamTypes.Count > Constants.MaxTeams && Globals.EnforceObjectMaximums)
-            {
-                sb.Append(string.Format("\nMaximum number of team types exceeded ({0} > {1})", Map.TeamTypes.Count, Constants.MaxTeams));
-                ok = false;
-            }
-            if (Map.Triggers.Count > Constants.MaxTriggers && Globals.EnforceObjectMaximums)
-            {
-                sb.Append(string.Format("\nMaximum number of triggers exceeded ({0} > {1})", Map.Triggers.Count, Constants.MaxTriggers));
-                ok = false;
-            }
-            if (!Map.BasicSection.SoloMission)
-            {
-                if (numStartPoints < 2)
+                if (Globals.EnforceObjectMaximums)
                 {
-                    sb.Append("\nSkirmish/Multiplayer maps need at least 2 waypoints for player starting locations.");
-                    ok = false;
+                    if (Map.TeamTypes.Count > gi.MaxTeams)
+                    {
+                        errors.Add(string.Format("Maximum number of team types exceeded ({0} > {1})", Map.TeamTypes.Count, gi.MaxTeams));
+                    }
+                    if (Map.Triggers.Count > gi.MaxTriggers)
+                    {
+                        errors.Add(string.Format("Maximum number of triggers exceeded ({0} > {1})", Map.Triggers.Count, gi.MaxTriggers));
+                    }
                 }
-                if (numBadPoints > 0)
+                if (!Map.BasicSection.SoloMission)
                 {
-                    sb.Append("\nSkirmish/Multiplayer maps should not have player start waypoints placed outside the map bound.");
-                    ok = false;
+                    if (numStartPoints < 2)
+                    {
+                        errors.Add("Skirmish/Multiplayer maps need at least 2 waypoints for player starting locations.");
+                    }
+                    if (numBadPoints > 0)
+                    {
+                        errors.Add("Skirmish/Multiplayer maps should not have player start waypoints placed outside the map bound.");
+                    }
                 }
-            }
-            Waypoint homeWaypoint = Map.Waypoints.Where(w => w.Flag.HasFlag(WaypointFlag.Home)).FirstOrDefault();
-            if (Map.BasicSection.SoloMission && (!homeWaypoint.Cell.HasValue || !Map.Metrics.GetLocation(homeWaypoint.Cell.Value, out Point p) || !Map.Bounds.Contains(p)))
-            {
-                sb.Append("\nSingle-player maps need the Home waypoint to be placed, inside the map bounds.");
-                ok = false;
-            }
-            bool fatal;
-            IEnumerable<string> triggerErr = CheckTriggers(this.Map.Triggers, true, true, true, out fatal, false, out _);
-            if (fatal)
-            {
-                foreach (string err in triggerErr)
+                else
                 {
-                    sb.Append("\n").Append(err);
+                    Waypoint homeWaypoint = Map.Waypoints.Where(w => w.Flag.HasFlag(WaypointFlag.Home)).FirstOrDefault();
+                    if ((!homeWaypoint.Cell.HasValue || !Map.Metrics.GetLocation(homeWaypoint.Cell.Value, out Point p) || !Map.Bounds.Contains(p)))
+                    {
+                        errors.Add("Single-player maps need the Home waypoint to be placed, inside the map bounds.");
+                    }
                 }
-                ok = false;
+                IEnumerable<string> triggerErr = CheckTriggers(this.Map.Triggers, true, true, true, out bool triggerErrFatal, false, out _);
+                if (triggerErrFatal)
+                {
+                    errors.AddRange(triggerErr);
+                }
             }
-            return ok ? null : sb.ToString().Trim('\n');
+            if (errors.Count > 0)
+            {
+                return "Error(s) during map validation:\n* "
+                    + String.Join("\n* ", errors.ToArray());
+            }
+            return null;
+        }
+
+        private string ValidateForWarnings(FileType saveType, bool forResave, bool isN64, bool forSole)
+        {
+            // Check if map has name
+            List<string> errors = new List<string>();
+            if ((saveType == FileType.None || forResave) && this.GameInfo.MapNameIsEmpty(this.Map.BasicSection.Name))
+            {
+                errors.Add("Map name is empty. If you continue, the filename will be filled in as map name.");
+            }
+            if (isN64)
+            {
+                if (isMegaMap)
+                {
+                    // Fatal error. Don't bother asking anything for the warning; it'll go to the save attempt and get the fatal error.
+                    return null;
+                }
+                string[][] plurArgs = new[] { new[] { string.Empty, "s" }, new[] { "does", "do" } };
+                // Check houses
+                CheckAllowed(errors, "Found usage of House{0} that {1} not exist in the N64 version: {2}.", plurArgs,
+                    Map.GetAllTechnos().Where(t => t.TechnoType.Ownable).Select(t => t.House.Name)
+                    .Concat(Map.Buildings.OfType<Building>().Select(b => b.Occupier.House.Name))
+                    .Concat(Map.Triggers.Select(t => t.House)).Concat(Map.TeamTypes.Select(t => t.House.Name)).Distinct(),
+                    HouseTypes.GetTypes().Select(h => h.Name), false, true, HouseTypes.None.Name, HouseTypes.Good.Name,
+                    HouseTypes.Bad.Name, HouseTypes.Neutral.Name);
+                // Check units
+                CheckAllowed(errors, "Found unit type{0} that {1} not exist in the N64 version: {2}.", plurArgs,
+                    Map.Technos.OfType<Unit>().Select(i => i.Occupier.Type.Name).Distinct(),
+                    UnitTypes.GetTypes(false).Select(h => h.Name), true, false, UnitTypes.Visceroid.Name,
+                    UnitTypes.SSM.Name, UnitTypes.Tric.Name, UnitTypes.Trex.Name, UnitTypes.Rapt.Name, UnitTypes.Steg.Name);
+                // Check buildings
+                CheckAllowed(errors, "Found building type{0} that {1} not exist in the N64 version: {2}.", plurArgs,
+                    Map.Buildings.OfType<Building>().Select(i => i.Occupier.Type.Name).Distinct(),
+                    BuildingTypes.GetTypes().Select(h => h.Name), true, false, BuildingTypes.Tanker.Name);
+                // Check map
+                List<string> n64MapErrs;
+                using (MemoryStream binStream = new MemoryStream())
+                using (BinaryWriter binWriter = new BinaryWriter(binStream))
+                {
+                    n64MapErrs = SaveBinaryClassicN64(binWriter, true);
+                }
+                errors.AddRange(n64MapErrs);
+            }
+            if (errors.Count > 0)
+            {
+                return "Warnings:\n* " + String.Join("\n* ", errors.ToArray());
+            }
+            return null;
+        }
+
+        private void CheckAllowed(List<string> errors, string format, string[][] plurArgs, IEnumerable<string> enumerable,
+            IEnumerable<string> allTypes, bool uppercaseNames, bool allowFiltered, params string[] filtered)
+        {
+            HashSet<string> filteredItems = new HashSet<string>(filtered, StringComparer.OrdinalIgnoreCase);
+            HashSet<string> foundBadItems = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
+            foreach (string item in enumerable)
+            {
+                bool notAllowed = filteredItems.Contains(item);
+                if (allowFiltered)
+                {
+                    notAllowed = !notAllowed;
+                }
+                if (notAllowed && !foundBadItems.Contains(item))
+                {
+                    foundBadItems.Add(item);
+                }
+            }
+            if (foundBadItems.Count > 0)
+            {
+                string[] badItems = allTypes.Where(hname => foundBadItems.Contains(hname)).ToArray();
+                if (uppercaseNames)
+                {
+                    badItems = badItems.Select(item => item.ToUpperInvariant()).ToArray();
+                }
+                bool plural = foundBadItems.Count > 1;
+                object[] args = new object[plurArgs.Length + 1];
+                args[plurArgs.Length] = String.Join(", ", badItems);
+                for (int i = 0; i < plurArgs.Length; ++i) {
+                    args[i] = plurArgs[i][plural ? 1 : 0];
+                }
+                errors.Add(String.Format(format,args));
+            }
         }
 
         public virtual IEnumerable<string> AssessMapItems()
@@ -3896,7 +4073,7 @@ namespace MobiusEditor.TiberianDawn
             int[] flareRadius = new int[length];
             if (!forLargeReveal)
             {
-                for (int i = 0; i < length; i++)
+                for (int i = 0; i < length; ++i)
                 {
                     Waypoint waypoint = waypoints[i];
                     if (waypoint != null && waypoint.Cell.HasValue && waypoint.Flag.HasFlag(WaypointFlag.Flare))
@@ -3937,7 +4114,7 @@ namespace MobiusEditor.TiberianDawn
                 if (actionType == ActionTypes.ACTION_DESTROY_XXXX) delXExists = true;
                 if (actionType == ActionTypes.ACTION_DESTROY_YYYY) delYExists = true;
                 if (actionType == ActionTypes.ACTION_DESTROY_ZZZZ) delZExists = true;
-                if (!Globals.Ignore106Scripting)
+                if (!Globals.EnableTd106Scripting)
                 {
                     if (String.Equals(trigger.Name, "UUUU", StringComparison.OrdinalIgnoreCase)) uuuuExists = true;
                     if (String.Equals(trigger.Name, "VVVV", StringComparison.OrdinalIgnoreCase)) vvvvExists = true;
@@ -3970,9 +4147,9 @@ namespace MobiusEditor.TiberianDawn
                 bool isDestroyableX = "xxxx".Equals(trigName, StringComparison.OrdinalIgnoreCase);
                 bool isDestroyableY = "yyyy".Equals(trigName, StringComparison.OrdinalIgnoreCase);
                 bool isDestroyableZ = "zzzz".Equals(trigName, StringComparison.OrdinalIgnoreCase);
-                bool isDestroyableU = !Globals.Ignore106Scripting && "uuuu".Equals(trigName, StringComparison.OrdinalIgnoreCase);
-                bool isDestroyableV = !Globals.Ignore106Scripting && "vvvv".Equals(trigName, StringComparison.OrdinalIgnoreCase);
-                bool isDestroyableW = !Globals.Ignore106Scripting && "wwww".Equals(trigName, StringComparison.OrdinalIgnoreCase);
+                bool isDestroyableU = Globals.EnableTd106Scripting && "uuuu".Equals(trigName, StringComparison.OrdinalIgnoreCase);
+                bool isDestroyableV = Globals.EnableTd106Scripting && "vvvv".Equals(trigName, StringComparison.OrdinalIgnoreCase);
+                bool isDestroyableW = Globals.EnableTd106Scripting && "wwww".Equals(trigName, StringComparison.OrdinalIgnoreCase);
                 bool isDestroyable = (isDestroyableX && delXExists) || (isDestroyableY && delYExists) || (isDestroyableZ && delZExists)
                      || (isDestroyableU && delUExists) || (isDestroyableV && delVExists) || (isDestroyableW && delWExists);
 
@@ -4097,7 +4274,7 @@ namespace MobiusEditor.TiberianDawn
                 {
                     curErrors.Add(prefix + "There is no trigger called 'ZZZZ' to destroy.");
                 }
-                if (!Globals.Ignore106Scripting)
+                if (Globals.EnableTd106Scripting)
                 {
                     if (!fatalOnly && action1 == ActionTypes.ACTION_DESTROY_UUUU && !uuuuExists)
                     {
@@ -4169,20 +4346,22 @@ namespace MobiusEditor.TiberianDawn
 
         public virtual ITeamColor[] GetFlagColors()
         {
-            ITeamColor[] flagColors = new ITeamColor[8];
-            foreach (HouseType house in Map.HouseTypes)
+            string[] flagColorNames = new string[] {
+                "MULTI2",
+                "MULTI5",
+                "MULTI4",
+                "MULTI6",
+                "MULTI1",
+                "MULTI3",
+                "MULTI7",
+                "MULTI8",
+            };
+            ITeamColor[] flagColors = new ITeamColor[flagColorNames.Length];
+            for (int i = 0; i < flagColorNames.Length; ++i)
             {
-                int mpId = Waypoint.GetMpIdFromFlag(house.MultiplayIdentifier);
-                if (mpId == -1)
-                {
-                    continue;
-                }
-                flagColors[mpId] = Globals.TheTeamColorManager[house.UnitTeamColor];
+                string flag = flagColorNames[i];
+                flagColors[i] = Globals.TheTeamColorManager[flagColorNames[i]];
             }
-            // Metallic light blue
-            flagColors[6] = Globals.TheTeamColorManager["MULTI7"];
-            // RA Purple
-            flagColors[7] = Globals.TheTeamColorManager["MULTI8"];
             return flagColors;
         }
 
@@ -4302,7 +4481,11 @@ namespace MobiusEditor.TiberianDawn
 
         protected void UpdateBasePlayerHouse()
         {
-            HouseType basePlayer = Map.HouseNone?.Type ?? Map.HouseTypes.FirstOrDefault();
+            string curr = Map.BasicSection.Player;
+            string opposing = HouseTypes.GetClassicOpposingPlayer(curr);
+            HouseType basePlayer = Map.HouseNone?.Type
+                ?? Map.HouseTypes.Where(t => String.Equals(t.Name, opposing, StringComparison.OrdinalIgnoreCase)).FirstOrDefault()
+                ?? Map.HouseTypes.Where(t => !String.Equals(t.Name, curr, StringComparison.OrdinalIgnoreCase)).FirstOrDefault();
             if (basePlayer == null)
             {
                 return;

@@ -76,6 +76,9 @@ namespace MobiusEditor.Model
 
         [DefaultValue(null)]
         public string Title { get; set; }
+        
+        [DefaultValue(null)]
+        public string Author { get; set; }
 
         [DefaultValue(null)]
         public string Description { get; set; }
@@ -88,5 +91,8 @@ namespace MobiusEditor.Model
 
         [DefaultValue(typeof(ulong), "0")]
         public ulong PublishedFileId { get; set; }
+
+        [DefaultValue(null)]
+        public string Tags { get; set; }
     }
 }

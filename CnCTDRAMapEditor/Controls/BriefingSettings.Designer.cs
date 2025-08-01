@@ -42,11 +42,13 @@ namespace MobiusEditor.Controls
         /// </summary>
         private void InitializeComponent()
         {
+            this.components = new System.ComponentModel.Container();
             this.txtBriefing = new System.Windows.Forms.TextBox();
             this.lblBriefing = new System.Windows.Forms.Label();
             this.tableLayoutPanel1 = new System.Windows.Forms.TableLayoutPanel();
-            this.lblSemicolon = new System.Windows.Forms.Label();
             this.lblLength = new System.Windows.Forms.Label();
+            this.lblWarning = new System.Windows.Forms.Label();
+            this.toolTip1 = new System.Windows.Forms.ToolTip(this.components);
             this.tableLayoutPanel1.SuspendLayout();
             this.SuspendLayout();
             // 
@@ -61,7 +63,7 @@ namespace MobiusEditor.Controls
             this.txtBriefing.ScrollBars = System.Windows.Forms.ScrollBars.Vertical;
             this.txtBriefing.Size = new System.Drawing.Size(396, 386);
             this.txtBriefing.TabIndex = 1;
-            this.txtBriefing.TextChanged += new System.EventHandler(this.txtBriefing_TextChanged);
+            this.txtBriefing.TextChanged += new System.EventHandler(this.TxtBriefing_TextChanged);
             // 
             // lblBriefing
             // 
@@ -80,7 +82,7 @@ namespace MobiusEditor.Controls
             this.tableLayoutPanel1.ColumnStyles.Add(new System.Windows.Forms.ColumnStyle(System.Windows.Forms.SizeType.Percent, 50F));
             this.tableLayoutPanel1.ColumnStyles.Add(new System.Windows.Forms.ColumnStyle(System.Windows.Forms.SizeType.Percent, 50F));
             this.tableLayoutPanel1.Controls.Add(this.lblLength, 0, 2);
-            this.tableLayoutPanel1.Controls.Add(this.lblSemicolon, 0, 2);
+            this.tableLayoutPanel1.Controls.Add(this.lblWarning, 0, 2);
             this.tableLayoutPanel1.Controls.Add(this.lblBriefing, 0, 0);
             this.tableLayoutPanel1.Controls.Add(this.txtBriefing, 0, 1);
             this.tableLayoutPanel1.Dock = System.Windows.Forms.DockStyle.Fill;
@@ -93,19 +95,6 @@ namespace MobiusEditor.Controls
             this.tableLayoutPanel1.Size = new System.Drawing.Size(400, 424);
             this.tableLayoutPanel1.TabIndex = 1;
             // 
-            // lblSemicolon
-            // 
-            this.lblSemicolon.AutoSize = true;
-            this.lblSemicolon.Dock = System.Windows.Forms.DockStyle.Fill;
-            this.lblSemicolon.ForeColor = System.Drawing.Color.Red;
-            this.lblSemicolon.Location = new System.Drawing.Point(203, 411);
-            this.lblSemicolon.Name = "lblSemicolon";
-            this.lblSemicolon.Size = new System.Drawing.Size(194, 13);
-            this.lblSemicolon.TabIndex = 2;
-            this.lblSemicolon.Text = "Contains semicolon!";
-            this.lblSemicolon.TextAlign = System.Drawing.ContentAlignment.MiddleRight;
-            this.lblSemicolon.Visible = false;
-            // 
             // lblLength
             // 
             this.lblLength.AutoSize = true;
@@ -115,6 +104,19 @@ namespace MobiusEditor.Controls
             this.lblLength.Size = new System.Drawing.Size(194, 13);
             this.lblLength.TabIndex = 3;
             this.lblLength.Text = "Length:";
+            // 
+            // lblWarning
+            // 
+            this.lblWarning.AutoSize = true;
+            this.lblWarning.Dock = System.Windows.Forms.DockStyle.Fill;
+            this.lblWarning.ForeColor = System.Drawing.Color.Red;
+            this.lblWarning.Location = new System.Drawing.Point(203, 411);
+            this.lblWarning.Name = "lblWarning";
+            this.lblWarning.Size = new System.Drawing.Size(194, 13);
+            this.lblWarning.TabIndex = 2;
+            this.lblWarning.Text = "warning";
+            this.lblWarning.TextAlign = System.Drawing.ContentAlignment.MiddleRight;
+            this.lblWarning.Visible = false;
             // 
             // BriefingSettings
             // 
@@ -135,7 +137,8 @@ namespace MobiusEditor.Controls
         private System.Windows.Forms.TableLayoutPanel tableLayoutPanel1;
         private System.Windows.Forms.TextBox txtBriefing;
         private System.Windows.Forms.Label lblBriefing;
-        private System.Windows.Forms.Label lblSemicolon;
+        private System.Windows.Forms.Label lblWarning;
         private System.Windows.Forms.Label lblLength;
+        private System.Windows.Forms.ToolTip toolTip1;
     }
 }

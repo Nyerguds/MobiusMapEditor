@@ -29,19 +29,31 @@ namespace MobiusEditor.RedAlert
         public override string Name => "Red Alert";
         public override string ShortName => "RA";
         public override string IniName => "RedAlert";
+        public override string SteamId => "1213210";
+        public override bool PublishedMapsUseMirrorServer => true;
+        public override string SteamGameName => "Command & Conquer: Remastered";
+        public override string SteamGameNameShort => "C&C:Rem";
+        public override string SteamFileExtensionSolo => ".PGM";
+        public override string SteamFileExtensionMulti => ".PGM";
+        public override FileType SteamFileType => FileType.PGM;
+        public override string[] SteamDefaultTags => new string[] { "RA" };
+        public override string[] SteamSoloTags => new string[] { "singleplayer" };
+        public override string[] SteamMultiTags => new string[] { "multiplayer" };
+        public override string[] SteamSoloExtraTags => new string[] { };
+        public override string[] SteamMultiExtraTags => new string[] { "FFA", "1v1", "2v2" };
         public override string DefaultSaveDirectory => Path.Combine(Globals.RootSaveDirectory, "Red_Alert");
-        public override string SaveFilter => "Red Alert files (*.mpr;*.ini)|*.mpr;*.ini";
-        public override string OpenFilter => "Red Alert files (*.mpr;*.ini)|*.mpr;*.ini";
-        public override string DefaultExtension => ".mpr";
-        public override string DefaultExtensionFromMix => ".ini";
-        public override string DefaultExtensionFromPgm => DefaultExtension;
-        public override Dictionary<FileType, string[]> ExtensionsForTypes => 
-            new Dictionary<FileType, string[]>() { { FileType.INI, new string[] { ".ini", ".mpr" } }, { FileType.PGM, new string[] { ".pgm", ".meg" } } };
+        // Multiple extensions automatically get split into separate save types
+        public override FileTypeInfo[] SupportedFileTypes => new FileTypeInfo[] {
+            new FileTypeInfo(FileType.MPR, "Red Alert map", new string[] {"mpr", "ini"}, new string[] {"mpr", "ini"}),
+            new FileTypeInfo(FileType.PGM, "Red Alert map PGM", FileTypeFlags.InternalUse, new string[] {"pgm" }, new string[] { "pgm" })
+        };
+        public override FileType DefaultSaveType => FileType.MPR;
+        public override FileType DefaultSaveTypeFromMix => FileType.MPR;
+        public override FileType DefaultSaveTypeFromPgm => FileType.MPR;
         public override string ModFolder => Path.Combine(Globals.ModDirectory, "Red_Alert");
         public override string ModIdentifier => "RA";
         public override string ModsToLoad => Properties.Settings.Default.ModsToLoadRA;
         public override string ModsToLoadSetting => "ModsToLoadRA";
-        public override string WorkshopTypeId => "RA";
         public override string[] RemasterMegFiles => new string[] {"CONFIG.MEG", "TEXTURES_COMMON_SRGB.MEG", "TEXTURES_SRGB.MEG", "TEXTURES_RA_SRGB.MEG" };
         public override string ClassicFolder => Properties.Settings.Default.ClassicPathRA;
         public override string ClassicFolderRemaster => "CNCDATA\\RED_ALERT";
@@ -60,13 +72,35 @@ namespace MobiusEditor.RedAlert
         public override bool HasSinglePlayer => true;
         public override bool CanUseNewMixFormat => true;
         public override long MaxDataSize => Globals.MaxMapSize;
+        public override int MaxAircraft => Constants.MaxAircraft;
+        public override int MaxVessels => Constants.MaxVessels;
+        public override int MaxBuildings => Constants.MaxBuildings;
+        public override int MaxInfantry => Constants.MaxInfantry;
+        public override int MaxTerrain => Constants.MaxTerrain;
+        public override int MaxUnits => Constants.MaxUnits;
         public override int MaxTriggers => Constants.MaxTriggers;
         public override int MaxTeams => Constants.MaxTeams;
         public override int HitPointsGreenMinimum => 128;
         public override int HitPointsYellowMinimum => 64;
+        public override bool HomeWaypointIsCenter => true;
         public override OverlayTypeFlag OverlayIconType => OverlayTypeFlag.Crate;
+        public override Bitmap WorkshopPreviewGeneric => Properties.Resources.UI_CustomMissionPreviewDefault;
+        public override Bitmap WorkshopPreviewGenericGame => Properties.Resources.RA_Head;
 
-        public override IGamePlugin CreatePlugin(Boolean mapImage, Boolean megaMap) => new GamePluginRA(mapImage);
+        public override FileType IdentifyMap(INI iniContents, byte[] binContents, bool contentWasSwapped, out bool isMegaMap, out string theater)
+        {
+            isMegaMap = true;
+            theater = null;
+            bool iniMatch = IsCnCIni(iniContents) && GamePluginRA.CheckForRAMap(iniContents);
+            if (!iniMatch)
+            {
+                return FileType.None;
+            }
+            theater = GetTheater(iniContents);
+            return FileType.MPR;
+        }
+
+        public override IGamePlugin CreatePlugin(bool mapImage, bool megaMap) => new GamePluginRA(mapImage);
 
         public override void InitClassicFiles(MixfileManager mfm, List<string> loadErrors, List<string> fileLoadErrors, bool forRemaster)
         {
@@ -78,6 +112,11 @@ namespace MobiusEditor.RedAlert
             mfm.LoadArchive(GameType.RedAlert, "expand.mix", false, false, false, true);
             // Container archives.
             mfm.LoadArchive(GameType.RedAlert, "redalert.mix", false, true, false, true);
+            // Reverse order, so more updated files are given priority. This fixes the shadowless Convoy Truck, since Aftermath has that fixed.
+            mfm.LoadArchive(GameType.RedAlert, "main4.mix", false, true, false, true);
+            mfm.LoadArchive(GameType.RedAlert, "main3.mix", false, true, false, true);
+            mfm.LoadArchive(GameType.RedAlert, "main2.mix", false, true, false, true);
+            mfm.LoadArchive(GameType.RedAlert, "main1.mix", false, true, false, true);
             mfm.LoadArchive(GameType.RedAlert, "main.mix", false, true, false, true);
             // Needed for theater palettes and the remap settings in palette.cps
             mfm.LoadArchive(GameType.RedAlert, "local.mix", false, false, true, true);
@@ -297,6 +336,16 @@ namespace MobiusEditor.RedAlert
                 fontName = null;
             }
             return fontName;
+        }
+
+        public override Tile GetClassicFakeLabel(TilesetManagerClassic tsm)
+        {
+            return tsm.GetTileData("pips", 18, out Tile tile) ? tile : null;
+        }
+
+        public override string GetSteamWorkshopFileName(IGamePlugin plugin)
+        {
+            return "MAPDATA";
         }
     }
 }

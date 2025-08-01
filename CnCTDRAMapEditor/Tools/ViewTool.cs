@@ -32,7 +32,7 @@ namespace MobiusEditor.Tools
     {
         protected readonly IGamePlugin plugin;
         public IGamePlugin Plugin => plugin;
-        public abstract Object CurrentObject { get; set; }
+        public abstract object CurrentObject { get; set; }
         protected bool isActive = false;
         public bool IsActive { get { return isActive; } }
         public event EventHandler RequestMouseInfoRefresh;
@@ -168,6 +168,16 @@ namespace MobiusEditor.Tools
                         }
                     }
                 }
+                if (modifiedBits.HasFlag(MapLayerFlag.FootballArea))
+                {
+                    foreach (Waypoint wp in RenderMap.Waypoints)
+                    {
+                        if (wp.Cell.HasValue && metr.GetLocation(wp.Cell.Value, out Point pt) && wp.Flag.HasFlag(WaypointFlag.FootballField))
+                        {
+                            points.UnionWith(new Rectangle(pt.X - 1, pt.Y - 1, 4, 3).Points());
+                        }
+                    }
+                }
                 mapPanel.Invalidate(RenderMap, points);
             }
         }
@@ -223,7 +233,7 @@ namespace MobiusEditor.Tools
             // Can be overridden by sub-tools to update their object lists.
         }
 
-        private void Map_RulesChanged(Object sender, MapRefreshEventArgs e)
+        private void Map_RulesChanged(object sender, MapRefreshEventArgs e)
         {
             // Bibs may have changed. Refresh all buildings.
             mapPanel.Invalidate(map, e.Points);
@@ -232,7 +242,7 @@ namespace MobiusEditor.Tools
             RefreshPreviewPanel();
         }
 
-        private void Map_MapContentsChanged(Object sender, MapRefreshEventArgs e)
+        private void Map_MapContentsChanged(object sender, MapRefreshEventArgs e)
         {
             // General event meant to refresh map.
             mapPanel.Invalidate(map, e.Points);
@@ -268,10 +278,21 @@ namespace MobiusEditor.Tools
 
         protected virtual void PostRenderMap(Graphics graphics, Rectangle visibleCells)
         {
-            PostRenderMap(graphics, this.plugin, this.map, Globals.MapTileScale, Layers, ManuallyHandledLayers, this.InPlacementMode, visibleCells);
+            RenderIndicators(graphics, this.plugin, this.map, Globals.MapTileScale, Layers, ManuallyHandledLayers, this.InPlacementMode, visibleCells);
         }
 
-        public static void PostRenderMap(Graphics graphics, IGamePlugin plugin, Map map, double tileScale, MapLayerFlag layersToRender, MapLayerFlag manuallyHandledLayers, bool inPlacementMode, Rectangle visibleCells)
+        /// <summary>
+        /// Paints indicators over the visible part of the map.
+        /// </summary>
+        /// <param name="graphics">Graphics object to paint on.</param>
+        /// <param name="plugin">Game plugin.</param>
+        /// <param name="map">Map object.</param>
+        /// <param name="tileScale">Tile scale.</param>
+        /// <param name="layersToRender">The flags enum of layers to render.</param>
+        /// <param name="manuallyHandledLayers">The flags enum of layers of which the rendering should be suppressed because the current specific tool will handle them.</param>
+        /// <param name="inPlacementMode">True if currently in placement mode, meaning the placement grid might need to be rendered.</param>
+        /// <param name="visibleCells">Area to render the indicators on.</param>
+        public static void RenderIndicators(Graphics graphics, IGamePlugin plugin, Map map, double tileScale, MapLayerFlag layersToRender, MapLayerFlag manuallyHandledLayers, bool inPlacementMode, Rectangle visibleCells)
         {
             // tileScale should always be given so it results in an exact integer tile size. Math.Round was added to account for .999 situations in the floats.
             Size tileSize = new Size(Math.Max(1, (int)Math.Round(Globals.OriginalTileWidth * tileScale)), Math.Max(1, (int)Math.Round(Globals.OriginalTileHeight * tileScale)));
@@ -351,11 +372,11 @@ namespace MobiusEditor.Tools
             {
                 MapRenderer.RenderCellTriggersSoft(graphics, gameInfo, map, visibleCells, tileSize);
             }
-            if (layersToRender.HasFlag(MapLayerFlag.Waypoints | MapLayerFlag.FootballArea)
-                && !manuallyHandledLayers.HasFlag(MapLayerFlag.WaypointsIndic) && gameInfo.SupportsMapLayer(MapLayerFlag.FootballArea))
+            // This is handled quite early, so it doesn't paint over too many things. But it does paint over object and celltrigger box outlines.
+            if (layersToRender.HasFlag(MapLayerFlag.Waypoints | MapLayerFlag.HomeAreaBox)
+                && !manuallyHandledLayers.HasFlag(MapLayerFlag.HomeAreaBox) && plugin.Map.BasicSection.SoloMission)
             {
-                MapRenderer.RenderAllFootballAreas(graphics, map, visibleCells, tileSize, tileScale, gameInfo);
-                MapRenderer.RenderWaypointFlags(graphics, gameInfo, map, visibleCells, tileSize, Globals.TheShapeCacheManager);
+                MapRenderer.RenderHomeWayPointBox(graphics, plugin, map, boundRenderCells, tileSize, null, Color.Orange);
             }
             if (layersToRender.HasFlag(MapLayerFlag.Buildings | MapLayerFlag.EffectRadius)
                 && !manuallyHandledLayers.HasFlag(MapLayerFlag.EffectRadius) && gameInfo.SupportsMapLayer(MapLayerFlag.EffectRadius))
@@ -459,6 +480,9 @@ namespace MobiusEditor.Tools
         {
             isActive = false;
             this.navigationWidget.Deactivate();
+            // Force applying pending updates before unhooking the PreRender and PostRender functions.
+            // This removes preview ghost images.
+            this.mapPanel.Refresh();
             this.mapPanel.PreRender -= MapPanel_PreRender;
             this.mapPanel.PostRender -= MapPanel_PostRender;
             this.map.RulesChanged -= this.Map_RulesChanged;

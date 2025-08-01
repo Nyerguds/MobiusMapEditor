@@ -673,25 +673,54 @@ Released on 22 Sep 2024 at 15:00 GMT
 * Fixed an internal issue with the unit/infantry/building properties popup not cleaning up its internal resources after closing.
 * Waypoints now use the "Select" cursor graphics as indicator on the map, rather than the green beacon that was barely visible behind the text.
 
-### v1.6.0.1:
+### v1.6.1.0:
 
 Unreleased
 
-* Added the ability to choose which games to load with the "EnabledGames" setting, to allow the editor to be bundled with specific games without requiring the files of others.
-* Fixed bug that prevented Tiberian Dawn and Sole Survivor maps from opening from the .bin file.
-* Fixed bug that prevented overlap outlines from working on terrain objects that had any cells that only contained shadow.
+* Changed the executable name to "MobiusMapEditor.exe".
+* Overhauled Steam Publish UI; it always shows the preview image, and has a list of optional tags (for multiplayer).
+* When exporting a map to image, selecting the "Only export map area inside bounds" option will now deselect the "Map Boundaries" indicator. When exporting multiplayer maps, if the "DefaultExportMultiInBounds" is enabled, map boundaries will automatically be deselected.
+* For singleplayer maps, the Steam Publish UI now generates a thumbnail showing the mission's start situation around the Home waypoint, focused specifically on the player's units inside it.
+* The Steam workshop preview generated for a multiplayer map will now show enlarged start location flags with very visible circle indications underneath them. The option to add these is also added to the image export window.
+* Added the ability to choose which games to use the editor for, with the "EnabledGames" setting. This allows e.g. disabling Sole Survivor to reduce UI clutter.
+* Overhauled the map file loading system to massively simplify it internally. This fixes the bug that prevented Tiberian Dawn and Sole Survivor maps from opening from the .bin file.
 * Added a new overlap detection logic for objects of the Terrain, Building and Overlay types that only gives them an outline if at least 50% of their non-shadow graphics (as determined by infantry sub-positions) are considered overlapped.
+* Fixed bug that prevented overlap outlines from working on terrain objects that had any cells that only contained shadow.
 * Fixed bug that occasionally showed building priority as "0" on preview buildings if they showed an overlap outline.
 * Added option "IgnoreShadowOverlap" to not draw overlap outlines on objects that are only overlapped by shadows.
 * Added option "EnforceTriggerTypes" that can be disabled to allow any triggers on any object types. This is mainly for research purposes.
 * Fixed bug that when the option to show crates on top is enabled, they were still outlined by the "outlines on overlapped objects" function, despite never being overlapped.
-* Removed randomness from RA resources on save, to optimise compression of the OverlayPack section. Both the editor and the game re-apply it on load anyway.
+* Removed randomness from RA resources on save, to optimise compression of the OverlayPack ini section. Both the editor and the game re-apply it on load anyway.
 * Fixed bug where opening and confirming the map setting without making any changes would clear the map's "modified" status.
-* Fixed crash when publishing a freshly made new map.
-* Fixed crash when publishing a map opened from mix file.
+* Fixed crash when trying to publish a freshly opened new map with no content added at all.
+* Fixed crash when trying to publish a map opened from mix file. It will now always require being saved to disc first.
 * The editor title now explicitly shows when the editor is connected to Steam.
 * The editor will now only connect to Steam after performing all the required map validations.
-* Added the ability to open the Nintendo 64 map type for Tiberian Dawn.
-* When removing the obsolete old "clear" terrain in RA interior maps, the generated open areas for allowing reinforcements now use the default dark floor type, rather than the first-found passable 1x1 tile.
+* Added the ability to open and save the Nintendo 64 map type for Tiberian Dawn. This type does not support megamaps, and has some limitations in its tileset and units.
+* When removing the obsolete old "clear" terrain in RA interior maps, the generated open areas for allowing reinforcements now use the default dark floor type, rather than the first-found passable 1x1 tile in the tileset list.
 * When FilterTheaterObjects is disabled, the icons in the top bar will now still prefer an existing object to show as example.
 * Fixed bug that made the fallback dummy texture not show correctly after loading a second map where it is used.
+* Fixed bug where the hashing of occupied buildings didn't work unless either map land types hashing was also enabled, or there were units on the map to also show the hashing for.
+* Expanded the validation system to allow specific validations for the type that was chosen to save to, such as the Nintendo 64 version.
+* Fixed bug where pressing \[Ctrl\]+\[Shift\]+\[S\] to access the "Save As" function would create a ghost image on the map of the currently selected object to place.
+* Added logic to snap unsupported facing direction values in the ini to their nearest match rather, than resetting them to North.
+* Fixed feedback on facing direction parsing not giving the object's cell number.
+* Fixed missing first letter of entries in the "Open from Mix" list when the "ClassicPath" setting for that game ends on a backslash.
+* Fixed an issue in the loading of resources from embedded .mix archives where it would take the last found occurrence instead of the first one. This caused it not to load the Aftermath version of the Convoy Truck, which has proper shadows.
+* Fixed issues with waypoint flags getting redrawn multiple times, resulting in a completely black shadow. The flags are now also semitransparent, like all other waypoint graphics.
+* Sole Survivor football area indications are now no longer handled as indicators, so they can be properly painted below the waypoint flags.
+* Changed the Missile Silo preview to be shown as USSR building.
+* Fixed issue with undo system restoring old saved "modified" statuses instead of marking the map as unmodified when restoring the point when the last save happened.
+* Fixed issue with redo system always marking the map as "modified" even when restoring to the point where the last save happened.
+* Added logic to crop unit graphics to a maximum size of 3x3 cells, since that is the maximum refreshed area for a unit. This mitigates issues in the game files such as the classic German RA's uncropped helicarrier.
+* When the editor only has a single game enabled in "EnabledGames", the "Open from Mix" menu will leave out the folder with the game name.
+* Added compatibility system for loading different language and version variations of the classic Tiberian Dawn strings file.
+* Red Alert's "FAKE" labels in classic graphics mode are now loaded from the game graphics rather than generated from text, meaning they adapt to the game language.
+* Tiberian Dawn trigger events will now give a detailed tooltip when hovering over the Event dropdown.
+* When selecting the Home waypoint, single player missions will now show a "Start view" box indicating the initial area the player will see when starting the mission. This will show both the DOS and Win95 viewport, which roughly correspond to respectively being fully zoomed in and fully zoomed out in the Remaster. Like the area reveal indicators on waypoints, this can be shown permanently through an option in the Extra Indicators, with this new one linked to the F8 key.
+* A warning is now shown when trying to publish a map but not setting it "Public", since the C&C Remaster relies on an external maps server that can only find the items if they're fully public.
+* Fixed inconsistencies in zoom level when zooming in and out. The calculation for the zoom factor when zooming out is now the exact inversion of the one done when zooming in.
+* Added more tooltips to the Teamtypes options.
+* Singleplayer map detection will now only happen if the "SoloMission" key is not present inside the ini file.
+* Smudge objects can now be painted by dragging the mouse around. Like for the map tiles, this logic prevents overlapping placement when drag-placing multi-cell objects such as the bibs.
+* Smudge objects can now be bulk-removed by moving around the cursor while the right mouse button is pressed down.

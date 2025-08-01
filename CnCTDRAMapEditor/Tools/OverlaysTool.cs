@@ -46,7 +46,7 @@ namespace MobiusEditor.Tools
         private Map previewMap;
         protected override Map RenderMap => previewMap;
 
-        public override Object CurrentObject
+        public override object CurrentObject
         {
             get { return selectedOverlayType; }
             set
@@ -65,7 +65,7 @@ namespace MobiusEditor.Tools
 
         private bool placementMode;
 
-        protected override Boolean InPlacementMode
+        protected override bool InPlacementMode
         {
             get { return placementMode; }
         }
@@ -101,6 +101,16 @@ namespace MobiusEditor.Tools
             this.overlayTypeMapPanel.MaxZoom = 1;
             this.overlayTypeMapPanel.SmoothScale = Globals.PreviewSmoothScale;
             SelectedOverlayType = this.overlayTypeListBox.Types.First() as OverlayType;
+        }
+
+        private void MapPanel_MouseWheel(object sender, MouseEventArgs e)
+        {
+            if (e.Delta == 0 || (Control.ModifierKeys & Keys.Control) == Keys.None)
+            {
+                return;
+            }
+            KeyEventArgs keyArgs = new KeyEventArgs(e.Delta > 0 ? Keys.PageUp : Keys.PageDown);
+            CheckSelectShortcuts(keyArgs);
         }
 
         private void OverlayTypeListBox_SelectedIndexChanged(object sender, EventArgs e)
@@ -158,16 +168,6 @@ namespace MobiusEditor.Tools
         private void MapPanel_MouseLeave(object sender, EventArgs e)
         {
             ExitPlacementMode();
-        }
-
-        private void MapPanel_MouseWheel(Object sender, MouseEventArgs e)
-        {
-            if (e.Delta == 0 || (Control.ModifierKeys & Keys.Control) == Keys.None)
-            {
-                return;
-            }
-            KeyEventArgs keyArgs = new KeyEventArgs(e.Delta > 0 ? Keys.PageUp : Keys.PageDown);
-            CheckSelectShortcuts(keyArgs);
         }
 
         private void MapPanel_MouseMove(object sender, MouseEventArgs e)
@@ -259,12 +259,12 @@ namespace MobiusEditor.Tools
                 }
             }
         }
+
         private void CommitChange()
         {
-            bool origDirtyState = plugin.Dirty;
             bool origEmptyState = plugin.Empty;
             plugin.Dirty = true;
-            Dictionary<Int32, Overlay> undoOverlays2 = new Dictionary<int, Overlay>(undoOverlays);
+            Dictionary<int, Overlay> undoOverlays2 = new Dictionary<int, Overlay>(undoOverlays);
             void undoAction(UndoRedoEventArgs ev)
             {
                 foreach (KeyValuePair<int, Overlay> kv in undoOverlays2)
@@ -278,20 +278,14 @@ namespace MobiusEditor.Tools
                 }));
                 if (ev.Plugin != null)
                 {
-                    if (origEmptyState)
-                    {
-                        ev.Plugin.Empty = true;
-                    }
-                    else
-                    {
-                        ev.Plugin.Dirty = origDirtyState;
-                    }
+                    ev.Plugin.Empty = origEmptyState;
+                    ev.Plugin.Dirty = !ev.NewStateIsClean;
                 }
             }
             Dictionary<int, Overlay> redoOverlays2 = new Dictionary<int, Overlay>(redoOverlays);
             void redoAction(UndoRedoEventArgs ev)
             {
-                foreach (KeyValuePair<Int32, Overlay> kv in redoOverlays2)
+                foreach (KeyValuePair<int, Overlay> kv in redoOverlays2)
                 {
                     ev.Map.Overlay[kv.Key] = kv.Value;
                 }
@@ -302,7 +296,9 @@ namespace MobiusEditor.Tools
                 }));
                 if (ev.Plugin != null)
                 {
-                    ev.Plugin.Dirty = true;
+                    // Redo can never restore the "empty" state, but CAN be the point at which a save was done.
+                    ev.Plugin.Empty = false;
+                    ev.Plugin.Dirty = !ev.NewStateIsClean;
                 }
             }
             undoOverlays.Clear();
@@ -396,13 +392,13 @@ namespace MobiusEditor.Tools
                     Type = overlayType,
                     Icon = 0
                 };
-                (Rectangle, Action<Graphics>) render = MapRenderer.RenderOverlay(plugin.GameInfo, new Point(0,0), null, Globals.PreviewTileSize, Globals.PreviewTileScale, mockOverlay, false);
-                if (!render.Item1.IsEmpty)
+                RenderInfo render = MapRenderer.RenderOverlay(plugin.GameInfo, new Point(0,0), null, Globals.PreviewTileSize, Globals.PreviewTileScale, mockOverlay, false);
+                if (render.RenderAction != null)
                 {
                     using (Graphics g = Graphics.FromImage(overlayPreview))
                     {
                         MapRenderer.SetRenderSettings(g, Globals.PreviewSmoothScale);
-                        render.Item2(g);
+                        render.RenderAction(g);
                     }
                 }
                 else

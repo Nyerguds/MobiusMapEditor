@@ -39,7 +39,7 @@ namespace MobiusEditor.Tools
 
         public override bool IsBusy { get { return startedDragging; } }
 
-        public override Object CurrentObject
+        public override object CurrentObject
         {
             get { return mockInfantry; }
             set
@@ -67,7 +67,7 @@ namespace MobiusEditor.Tools
 
         private bool placementMode;
 
-        protected override Boolean InPlacementMode
+        protected override bool InPlacementMode
         {
             get { return placementMode || startedDragging; }
         }
@@ -212,7 +212,6 @@ namespace MobiusEditor.Tools
             {
                 return;
             }
-            bool origDirtyState = plugin.Dirty;
             bool origEmptyState = plugin.Empty;
             plugin.Dirty = true;
             void undoAction(UndoRedoEventArgs ev)
@@ -226,14 +225,8 @@ namespace MobiusEditor.Tools
                 ev.MapPanel.Invalidate(ev.Map, infantry.InfantryGroup);
                 if (ev.Plugin != null)
                 {
-                    if (origEmptyState)
-                    {
-                        ev.Plugin.Empty = true;
-                    }
-                    else
-                    {
-                        ev.Plugin.Dirty = origDirtyState;
-                    }
+                    ev.Plugin.Empty = origEmptyState;
+                    ev.Plugin.Dirty = !ev.NewStateIsClean;
                 }
             }
             void redoAction(UndoRedoEventArgs ev)
@@ -247,7 +240,9 @@ namespace MobiusEditor.Tools
                 ev.MapPanel.Invalidate(ev.Map, infantry.InfantryGroup);
                 if (ev.Plugin != null)
                 {
-                    ev.Plugin.Dirty = true;
+                    // Redo can never restore the "empty" state, but CAN be the point at which a save was done.
+                    ev.Plugin.Empty = false;
+                    ev.Plugin.Dirty = !ev.NewStateIsClean;
                 }
             }
             url.Track(undoAction, redoAction, ToolType.Infantry);
@@ -298,7 +293,7 @@ namespace MobiusEditor.Tools
             ExitPlacementMode();
         }
 
-        private void MapPanel_MouseWheel(Object sender, MouseEventArgs e)
+        private void MapPanel_MouseWheel(object sender, MouseEventArgs e)
         {
             if (e.Delta == 0 || (Control.ModifierKeys & Keys.Control) == Keys.None)
             {
@@ -425,7 +420,6 @@ namespace MobiusEditor.Tools
             {
                 return;
             }
-            bool origDirtyState = plugin.Dirty;
             bool origEmptyState = plugin.Empty;
             plugin.Dirty = true;
             Point endLocation = finalLocation.Value;
@@ -459,14 +453,8 @@ namespace MobiusEditor.Tools
                 }
                 if (ev.Plugin != null)
                 {
-                    if (origEmptyState)
-                    {
-                        ev.Plugin.Empty = true;
-                    }
-                    else
-                    {
-                        ev.Plugin.Dirty = origDirtyState;
-                    }
+                    ev.Plugin.Empty = origEmptyState;
+                    ev.Plugin.Dirty = !ev.NewStateIsClean;
                 }
             }
             void redoAction(UndoRedoEventArgs ev)
@@ -499,7 +487,9 @@ namespace MobiusEditor.Tools
                 }
                 if (ev.Plugin != null)
                 {
-                    ev.Plugin.Dirty = true;
+                    // Redo can never restore the "empty" state, but CAN be the point at which a save was done.
+                    ev.Plugin.Empty = false;
+                    ev.Plugin.Dirty = !ev.NewStateIsClean;
                 }
             }
             url.Track(undoAction, redoAction, ToolType.Infantry);
@@ -554,7 +544,6 @@ namespace MobiusEditor.Tools
                     infantryGroup.Infantry[placeStop] = infantry;
                     infantry.InfantryGroup = infantryGroup;
                     mapPanel.Invalidate(map, infantryGroup);
-                    bool origDirtyState = plugin.Dirty;
                     bool origEmptyState = plugin.Empty;
                     plugin.Dirty = true;
                     void undoAction(UndoRedoEventArgs ev)
@@ -571,14 +560,8 @@ namespace MobiusEditor.Tools
                         }
                         if (ev.Plugin != null)
                         {
-                            if (origEmptyState)
-                            {
-                                ev.Plugin.Empty = true;
-                            }
-                            else
-                            {
-                                ev.Plugin.Dirty = origDirtyState;
-                            }
+                            ev.Plugin.Empty = origEmptyState;
+                            ev.Plugin.Dirty = !ev.NewStateIsClean;
                         }
                     }
                     void redoAction(UndoRedoEventArgs ev)
@@ -598,7 +581,9 @@ namespace MobiusEditor.Tools
                         }
                         if (ev.Plugin != null)
                         {
-                            ev.Plugin.Dirty = true;
+                            // Redo can never restore the "empty" state, but CAN be the point at which a save was done.
+                            ev.Plugin.Empty = false;
+                            ev.Plugin.Dirty = !ev.NewStateIsClean;
                         }
                     }
                     url.Track(undoAction, redoAction, ToolType.Infantry);
@@ -630,7 +615,6 @@ namespace MobiusEditor.Tools
                 {
                     map.Technos.Remove(infantryGroup);
                 }
-                bool origDirtyState = plugin.Dirty;
                 bool origEmptyState = plugin.Empty;
                 plugin.Dirty = true;
                 void undoAction(UndoRedoEventArgs ev)
@@ -650,14 +634,8 @@ namespace MobiusEditor.Tools
                     }
                     if (ev.Plugin != null)
                     {
-                        if (origEmptyState)
-                        {
-                            ev.Plugin.Empty = true;
-                        }
-                        else
-                        {
-                            ev.Plugin.Dirty = origDirtyState;
-                        }
+                        ev.Plugin.Empty = origEmptyState;
+                        ev.Plugin.Dirty = !ev.NewStateIsClean;
                     }
                 }
                 void redoAction(UndoRedoEventArgs ev)
@@ -674,7 +652,9 @@ namespace MobiusEditor.Tools
                     }
                     if (ev.Plugin != null)
                     {
-                        ev.Plugin.Dirty = true;
+                        // Redo can never restore the "empty" state, but CAN be the point at which a save was done.
+                        ev.Plugin.Empty = false;
+                        ev.Plugin.Dirty = !ev.NewStateIsClean;
                     }
                 }
                 url.Track(undoAction, redoAction, ToolType.Infantry);

@@ -381,6 +381,9 @@ namespace MobiusEditor.Dialogs
             this.event1ComboBox.Size = new System.Drawing.Size(141, 21);
             this.event1ComboBox.TabIndex = 10;
             this.event1ComboBox.SelectedIndexChanged += new System.EventHandler(this.Event1ComboBox_SelectedIndexChanged);
+            this.event1ComboBox.MouseEnter += new System.EventHandler(this.Event1ComboBox_MouseEnter);
+            this.event1ComboBox.MouseLeave += new System.EventHandler(this.ToolTipComboBox_MouseLeave);
+            this.event1ComboBox.MouseMove += new System.Windows.Forms.MouseEventHandler(this.Event1ComboBox_MouseMove);
             // 
             // event2ComboBox
             // 
@@ -705,33 +708,33 @@ namespace MobiusEditor.Dialogs
             this.tsmiCloneTrigger,
             this.tsmiRemoveTrigger});
             this.triggersContextMenuStrip.Name = "teamTypesContextMenuStrip";
-            this.triggersContextMenuStrip.Size = new System.Drawing.Size(191, 92);
+            this.triggersContextMenuStrip.Size = new System.Drawing.Size(192, 92);
             // 
             // tsmiAddTrigger
             // 
             this.tsmiAddTrigger.Name = "tsmiAddTrigger";
-            this.tsmiAddTrigger.Size = new System.Drawing.Size(190, 22);
+            this.tsmiAddTrigger.Size = new System.Drawing.Size(191, 22);
             this.tsmiAddTrigger.Text = "&Add Trigger (Ctrl+A)";
             this.tsmiAddTrigger.Click += new System.EventHandler(this.TsmiAddTrigger_Click);
             // 
             // tsmiRenameTrigger
             // 
             this.tsmiRenameTrigger.Name = "tsmiRenameTrigger";
-            this.tsmiRenameTrigger.Size = new System.Drawing.Size(190, 22);
+            this.tsmiRenameTrigger.Size = new System.Drawing.Size(191, 22);
             this.tsmiRenameTrigger.Text = "Re&name Trigger (F2)";
             this.tsmiRenameTrigger.Click += new System.EventHandler(this.TsmiRenameTrigger_Click);
             // 
             // tsmiCloneTrigger
             // 
             this.tsmiCloneTrigger.Name = "tsmiCloneTrigger";
-            this.tsmiCloneTrigger.Size = new System.Drawing.Size(190, 22);
+            this.tsmiCloneTrigger.Size = new System.Drawing.Size(191, 22);
             this.tsmiCloneTrigger.Text = "&Clone Trigger (Ctrl+C)";
             this.tsmiCloneTrigger.Click += new System.EventHandler(this.TsmiCloneTrigger_Click);
             // 
             // tsmiRemoveTrigger
             // 
             this.tsmiRemoveTrigger.Name = "tsmiRemoveTrigger";
-            this.tsmiRemoveTrigger.Size = new System.Drawing.Size(190, 22);
+            this.tsmiRemoveTrigger.Size = new System.Drawing.Size(191, 22);
             this.tsmiRemoveTrigger.Text = "&Remove Trigger (Del)";
             this.tsmiRemoveTrigger.Click += new System.EventHandler(this.TsmiRemoveTrigger_Click);
             // 

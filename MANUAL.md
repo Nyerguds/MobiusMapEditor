@@ -6,7 +6,7 @@
 
 Simply unpack the editor into a new folder on your disk somewhere. On first startup, it will automatically try to detect the folder in which the game is installed, and if it can't find it, it will show a dialog asking you to locate it. Note that this autodetect only works on Steam installations of the game.
 
-If the C&C Remastered Collection is not installed on your PC, you can use the "Continue with classic graphics" button on the dialog to start the editor without the Remastered graphics. To suppress the "Select game path" dialog and instead automatically start with classic graphics, you can edit the config file in a text editor and enable the option to always use classic files. (See the "Configuration" section below.)
+If the C&C Remastered Collection is not installed on your PC, you can use the "Continue with classic graphics" button on the dialog to start the editor without the Remastered graphics. To suppress the "Select game path" dialog and instead automatically start with classic graphics, you can edit the config file in a text editor and enable the option to always use classic graphics. (See the "Configuration" section below.)
 
 ---
 
@@ -18,7 +18,7 @@ The creators of the map editor have chosen to build a manual into the editor, bu
 
 In general, holding down \[Shift\] will activate placement mode, and in that mode, left clicking will place an object, and right clicking on an object will remove it. Outside placement mode, double-clicking an object will open its properties, holding down the left mouse button on an object will allow dragging it around, and right-clicking an object will make it the currently selected object in the tool window, including all its specifically-set properties (such as House, Strength, Trigger…). These controls may vary a bit; not all object types can be dragged, not all object types have properties to edit, and for Resources, the placement mode is always active.
 
-As for basic navigation, the controls are fairly straightforward: the scroll wheel and the \[+\] and \[-\] keys allow zooming in and out, arrow keys will pan around the map, and holding down either the middle mouse button or the space bar allows quickly drag-panning around the map. Some special shortcuts for zooming can be found in the "View" → "Zoom" menu; the \[\*\] key will reset the zoom to the full map, and \[Ctrl\]+\[D\] will zoom the editor to the map's bounds area plus one extra cell border around it. Note that you can zoom out farther than the full map; this was done to allow placing map template pieces partially outside the map from the top and left sides of the map.
+As for basic navigation, the controls are fairly straightforward: the scroll wheel and the \[+\] and \[-\] keys allow zooming in and out, arrow keys will pan around the map, and holding down either the middle mouse button or the space bar allows quickly drag-panning around the map. Some special shortcuts for zooming can be found in the "View" → "Zoom" menu; the \[\*\] key will reset the zoom to the full map, and \[Ctrl\]+\[D\] will zoom the editor to the map's bounds area plus one extra cell border around it. Note that you can zoom out slightly farther than the full map; this was done to allow placing map template pieces partially outside the map from the top and left sides of the map.
 
 Specific options about the map and the scripting elements can be found in the "Settings" menu:
 
@@ -38,9 +38,9 @@ Besides those, \[PageUp\] and \[PageDown\] have been universally implemented to 
 
 Some editing modes will have their own specific shortcuts; in Map mode, holding down the \[Ctrl\] key will allow modifying the map border, and \[Ctrl\]+\[Alt\] allows using the flood fill feature. In Waypoints mode, pressing \[Shift\] plus the starting letter of a special waypoint will act as shortcut for quickly selecting it. In Waypoints and Celltriggers modes, the \[Enter\] key acts as shortcut for the "Jump To" function. All such mode-dependent shortcuts will be indicated in the bottom bar along with the mouse function modifiers.
 
-Additionally, the "Extra indicators" you can find under the "View" menu all have an F-key assigned to them, to quickly toggle them. F1 for the map symmetry lines, F2 for the map grid, F3 for showing the map terrain type of each cell, F4 for indicating cells occupied by placed down objects, F5 to show the reveal radius around any waypoints that are configured to reveal terrain through map scripting, and F6 for showing the radiuses for special abilities, such as the gap generators and radar jammers in Red Alert. A lot of these extra indicators will pop up automatically under certain conditions, such as placing/dragging the affected objects, or simply being in the relevant editing mode. The menu toggles will simply keep them permanently enabled, even outside these contexts.
+Additionally, the "Extra indicators" you can find under the "View" menu all have an F-key assigned to them, to quickly toggle them. F1 for the map symmetry lines, F2 for the map grid, F3 for showing the map terrain type of each cell, F4 for indicating cells occupied by placed down objects, F5 to show the reveal radius around any waypoints that are configured to reveal terrain through map scripting, F6 for always showing outlines on crates, F7 for showing the radiuses for special abilities, such as the gap generators and radar jammers in Red Alert, and F8 for showing the initial viewport area around the Home waypoint in singleplayer maps. A lot of these extra indicators will pop up automatically under certain conditions, such as placing/dragging the affected objects, or simply being in the relevant editing mode. The menu toggles will simply keep them permanently enabled, even outside these contexts.
 
-Note that these hotkeys only work when the main window is selected; if you click on the tool window to select it, all keys will work as expected inside the selected controls. Also note that the tool window will automatically deselect when the mouse is moved over the main editor area, to avoid having to click the main window to activate its normal functioning.
+Note that all these hotkeys will only work when the main window is selected; if you click on the tool window to select it, all keys will work as expected inside the selected controls. Also note that the tool window will automatically deselect when the mouse is moved over the main editor area, to avoid having to click the main window to activate its normal functioning.
 
 ### Sole Survivor and Megamaps
 
@@ -80,11 +80,11 @@ If, for some reason, the Steam game folder detection fails, you can get the prom
 
 ### Map land types and object occupancy.
 
-Land types indicate which cells of the map tilesets are passable to different types of units, and which cells can be built on. The option to show them as hashed pattern can be enabled under "View" → "Extra indicators" → "Map land types", or simply by pressing F3. Once enabled, the hashing will be shown both on the map and on the map tile placement preview.
+Land types indicate which cells of the map tilesets are passable to different types of units, and which cells can be built on. They will be showm as hashed pattern when placing down a Map object, and can be permanently enabled under "View" → "Extra indicators" → "Map land types", or simply by pressing F3. Once enabled, the hashing will be shown both on the map and on the map tool window preview.
 
 The colors for the different land types can be configured in the config file; see "Colors and transparency" below. These land types exist in the games:
 
-* Clear: Passable for land units, and can be built on. Normally not shown, except in placement previews, where its default color is white.
+* Clear: Passable for land units, and can be built on. Normally only shown on placement previews, but if the Extra Indicators option is enabled, it will also be visible on the map tool window. Its default color is white.
 * Beach: Passable, but can't be built on. Its default color is yellow.
 * Rock: Land impassable for all units. Its default color is red.
 * Road: Passable for land units, and can be built on. Units move faster on roads. Its default color is brown. (Red Alert only)
@@ -92,7 +92,7 @@ The colors for the different land types can be configured in the config file; se
 * Water: Passable for ships only. Its default color is light blue.
 * River: Water impassable for all units. Its default color is dark blue. (Red Alert only)
 
-The "Map land types" option only evaluates the raw map tiles, though, and does not account for the things placed on top of them. For that, there is a separate option, namely "View" → "Extra indicators" → "Occupied by objects". This will show a hashed pattern over all occupied cells, configured as green by default. On cells containing infantry, the hashing will be light green if the five infantry sub-positions are not all filled up.
+The "Map land types" option only evaluates the raw map tiles, though, and does not account for the things placed on top of them. For that, there is a separate option, namely "View" → "Extra indicators" → "Occupied by objects", also accessible by pressing the F4 key. This will show a hashed pattern over all occupied cells, configured as green by default. On cells containing infantry, the hashing will be light green if the five infantry sub-positions are not all filled up.
 
 ---
 
@@ -114,40 +114,41 @@ The file "CnCTDRAMapEditor.exe.config" contains settings to customise the editor
 * **ClassicPathTD** / **ClassicPathRA** / **ClassicPathSS**: Path to load the classic files from for each of the game types when running in Classic Files mode. If the directory entered in this cannot be found, this reverts to predefined subfolders under the editor's location; "Classic\\TD" for Tiberian Dawn and Sole Survivor, and "Classic\\RA" for Red Alert. If these folders are not found either, the editor will check if it is ran from the C&C Remastered folder, by checking for the existence of the classic folders inside the CNCDATA folder. If the data is not present at the given location, the editor will refuse to launch in classic mode.
 * **ClassicNoRemasterLogic**: Defaults to True. When enabled, using classic mode will make it stop doing remaster-specific checks (such as briefing screen constraints in RA) or use the Remaster's specific folders under Documents.
 * **ClassicProducesNoMetaFiles**: Defaults to False. Suppresses the creation of xml and thumbnail files for multiplayer maps when in Classic Files mode.
-* **ClassicEncodesNameAsCp437**: Defaults to True. When in classic mode, special characters in the map name are saved as DOS-437 encoding, so the classic games can read and display them correctly. Note that this never applies to uploaded workshop maps.
+* **ClassicEncodesNameAsCp437**: Defaults to True. When in classic mode, special characters in the map name are saved as DOS-437 text encoding, so the classic games can read and display them correctly. Note that this never applies to uploaded workshop maps.
 
 Using classic files will not only use the classic graphics, but will also load the classic game text from the respective game's 'CONQUER.ENG' file, and the Red Alert house colors from 'PALETTE.CPS'.
 
-The default "Classic\\TD" and "Classic\\RA" folders are supplied along with the editor, so it is immediately usable in classic mode. The contents of these folders were taken from the official freeware releases of the games, supplemented with some files from the Red Alert expansion packs. For the exact expected contents of the folders, see the "Classic files listing" section below.
+The default "Classic\\TD" and "Classic\\RA" folders are supplied along with the editor, so it is immediately usable in classic mode. The contents of these folders were taken from the official freeware releases of the games, supplemented with some files from the Red Alert expansion packs. For the exact expected contents of the classic folders, see the "Classic files listing" section below.
 
-The extra theaters available for Tiberian Dawn and Red Alert in the upgraded community releases of the classic games are supported if their mix files are found in the configured folders. To achieve this, you can either copy the theater .mix archives from the classic install folder into into the classic folder provided with the editor (see "Classic files listing" section below for the exact names), or point the **ClassicPathTD** / **ClassicPathRA** folder to your own classic game install folder.
+The extra theaters available for Tiberian Dawn and Red Alert in the upgraded community releases of the classic games are supported if their .mix files are found in the configured folders. To achieve this, you can either copy the theater .mix archives from the classic install folder into into the classic folder provided with the editor (see "Classic files listing" section below for the exact names), or point the **ClassicPathTD** / **ClassicPathRA** folder to your own classic game install folder.
 
-Note that for Red Alert, the editor uses the DOS versions of the infantry sprites, and the community version of Red Alert does not contain those for the expansion pack infantry. To amend this, copy the "lores1.mix" file from "Classic\\RA\\" into the Red Alert game folder. This will not have any effect on the game itself; it only uses the contents of "hires1.mix".
+Note that for Red Alert, the editor uses the DOS versions of the infantry sprites, and the community version of Red Alert does not contain those for the expansion pack infantry. To use your own game install folder without losing those graphics, copy the "lores1.mix" file from "Classic\\RA\\" into the Red Alert game folder. This will not have any effect on the game itself; it only uses the contents of "hires1.mix".
 
 ### General editor options
 
-* **LazyInitSteam**: Enabled by default. The link between the editor and Steam is normally initialised on startup, but that link prevents Steam from running the game while the editor is open. With this option, the link with Steam is only initialised at the moment the map publish function is opened, allowing map makers to more easily switch between the editor and the game to test what they're making.
-* **EditorLanguage**: This option can change the language the editor loads for the remastered game text to name the objects in the editor by specifying a culture code in a format such as "EN-US". It only affects the Remastered mode, so it has no effect when _UseClassicFiles_ is ensabled. Since it uses the existing translation files from the C&C Remaster, it only works for languages that are supported by the Remaster as in-game language. When set to "Auto", it will attempt to use the system language, or the nearest supported one that matches it. To force the default English language, you can leave the setting empty, or use "Default" or "None". The supported languages of the game are: EN-US, DE-DE, ES-ES, FR-FR, KO-KR, PL-PL, RU-RU, ZH-CN, ZH-TW.
+* **EnabledGames**: Determines which games the editor will support. The supported games are "TD", "RA", and "SS". This could be used to disable games you don't typically make maps for, to remove clutter from the "New Map" menu. Note that once a game type is disabled, the editor becoms 100% unable to open maps of that type.
+* **LazyInitSteam**: Enabled by default. The link between the editor and Steam was originally initialised on startup, but that link prevents Steam from running the game while the editor is open. With this option, the link with Steam is only initialised at the moment the map publish function is opened, allowing map makers to more easily switch between the editor and the game to test what they're making.
+* **EditorLanguage**: This option does not translate the entire editor; it only affects the language file the editor loads for the remastered game text to name the objects in the editor. It is used by specifying a culture code in a format such as "EN-US". Since it uses the existing translation files from the C&C Remaster, it only works for languages that are supported by the Remaster as in-game language. When set to "Auto", it will attempt to use the system language, or the nearest supported one that matches it. To force the default English language, you can leave the setting empty, or use "Default" or "None". The supported languages of the game are: EN-US, DE-DE, ES-ES, FR-FR, KO-KR, PL-PL, RU-RU, ZH-CN, ZH-TW. Note that this does not affect classic mode; when _UseClassicFiles_ is enabled, the editor will use the game text file read from the classic files, so the language of the objects will depend on the language of the installed game that is used.
 * **CheckUpdatesOnStartup**: Enabled by default. Will make the editor notify users if a new version is available.
 * **EnableDpiAwareness**: Disabled by default. On some machines with high dpi monitors, people might have odd issues where the positioning of the indicators on the map doesn't correctly match the map tiles. If this happens, enabling this option might fix the problem.
 
 ### Mods:
 
-* **ModsToLoadTD** / **ModsToLoadRA** / **ModsToLoadSS**: semicolon (or comma) separated list of mod entries for each supported game.
+* **ModsToLoadTD** / **ModsToLoadRA** / **ModsToLoadSS**: semicolon (or comma) separated list of Remaster mod entries for each supported game.
 
-These refer to mods in the format defined by the Command & Conquer Remastered Collection. A mod entry can either be a Steam workshop ID, or a folder name. Steam workshop IDs are looked up in the game's downloaded Workshop items. Folder names will initially be looked up in the mods folder of the respective game in the CnCRemastered\\mods\\ folder under your Documents folder, but if nothing is found there, the loading system will also check the Steam workshop files for a matching mod. Sole Survivor will use Tiberian Dawn mods. Note that mods can only apply graphical changes from the tilesets and house colors xml files; the editor can't read any data from compiled dll files. This mods system is mostly meant to apply graphical fixes to the editor.
+These refer to mods in the format defined by the Command & Conquer Remastered Collection. A mod entry can be either a Steam workshop ID, or a folder name. Steam workshop IDs are looked up in the game's downloaded Workshop items. Folder names will initially be looked up in the mods folder of the respective game in the **CnCRemastered\\mods\\** folder under your Documents folder, but if nothing is found there, the loading system will also check the Steam workshop files for a matching mod. Sole Survivor will use Tiberian Dawn mods. Note that mods can only apply graphical changes from the tilesets and house colors xml files; the editor can't read any data from compiled dll files. This mods system is mostly meant to apply graphical fixes to the editor.
 
 The **ModsToLoadTD** and **ModsToLoadSS** settings will have the `GraphicsFixesTD` mod set by default, to complete the incomplete TD Remastered graphics set, meaning the mod will automatically be loaded if found. Similarly, the **ModsToLoadRA** setting will have the `GraphicsFixesRA` mod set. Note that the editor has no way to check whether mods are enabled in the Remastered Collection games, so that makes no difference.
 
 You can find these mods on the Steam workshop ([GraphicsFixesTD](https://steamcommunity.com/sharedfiles/filedetails/?id=2844969675), [GraphicsFixesRA](https://steamcommunity.com/sharedfiles/filedetails/?id=2978875641)) and on ModDB ([GraphicsFixesTD](https://www.moddb.com/games/command-conquer-remastered/addons/graphicsfixestd), [GraphicsFixesRA](https://www.moddb.com/games/cc-red-alert-remastered/addons/graphicsfixesra)).
 
-In classic graphics mode, the editor can still use mods, if they contain classic files in a "ccdata" folder. The 'GraphicsFixesRA' mod has such a classic component, to fix the classic graphics of Einstein and the ant buildings.
+In classic graphics mode, the editor can still use mods, if they contain classic files in a "ccdata" folder. The 'GraphicsFixesRA' mod has such a classic component, to fix the classic graphics of Einstein and the ant buildings. Classic fixes can also be applied manually, by adding override files (generally inside **sc\*.mix** archives) into the classic folders.
 
 ### Mix content analysis:
 
 Starting from v1.6.0.0, the editor has the ability to open the original games' .mix archives to open the missions inside it. However, the names of the files inside those archives are only stored as hashed numeric values created with a one-way hashing algorithm. This means that, to identify these files, lists of all the original file names are needed. The system to generate these names and their hash values is controlled by a set of ini files, of which the main definitions file is configured in the settings:
 
-* **MixContentInfoFile**: Contains the definitions of the supported games for which mix file content analysis can be done, and any additional files to be loaded to get all information for each game. By default, this is set to "Classic\mixcontent.ini".
+* **MixContentInfoFile**: Contains the definitions of the supported games for which mix file content analysis can be done, and any additional files to be loaded to get all information for each game. By default, this is set to "Data\\mixcontent.ini".
 
 ### Defaults:
 
@@ -157,7 +158,8 @@ Starting from v1.6.0.0, the editor has the ability to open the original games' .
 * **DefaultShowPlacementGrid**: Default for the option "Tools" → "Options" → "Show grid when placing / moving". This option enables showing the map grid when in placement mode (and/or holding down \[Shift\]) or when dragging a placed down object to a different location.
 * **DefaultCratesOnTop**: Default for the option "Tools" → "Options" → "Show crates on top of other objects".
 * **DefaultExportScale**: Default scaling multiplier for the size at which an exported image will be generated through "Tools" → "Export As Image". A negative values will set it to smooth scaling. Defaults to -0.5.
-* **DefaultExportScaleClassic**: Default scaling multiplier for exporting images when using classic graphics. Defaults to 1.0.
+* **DefaultExportScaleClassic**: Default scaling multiplier in the "Export As Image" tool for exporting images when using classic graphics. Defaults to 1.0.
+* **DefaultExportMultiInBounds**: In the "Export As Image" tool, if the exported map is a multiplayer map, this automatically enables the option to only export the area inside the map bounds.
 * **DefaultOutlineAllCrates**: Default for the option "View" → "Extra Indicators" → "Outlines on crates". When enabled, outlines will be shown on all crates, regardless of whether it is overlapped, or whether the "View" → "Indicators" → "Outlines on overlapped objects" option is enabled.
 
 ### Editor fine tuning:
@@ -176,12 +178,12 @@ Starting from v1.6.0.0, the editor has the ability to open the original games' .
 
 ### Colors and transparency:
 
-General:
+#### General:
 
 * **MapBackColor**: Background color for the map screen, as "R,G,B". This defaults to dark grey, so users can see the actual map outline on Red Alert Interior maps.
-* **MapGridColor**: Color for drawing the map grid, as "A,R,G,B". This includes the alpha value, because the grid is semitransparent by default.
+* **MapGridColor**: Color for drawing the map grid, as "A,R,G,B". This includes the alpha value, because the grid is semitransparent by default. Defaults to a 15% visible blue.
 
-For the option "Extra indicators" → "Map terrain types":
+#### For the option "Extra indicators" → "Map terrain types":
 
 * **HashColorLandClear**: The color for cells of the 'Clear' land type. Defaults to transparent white. Note that by default, this one's alpha component is set to 0, to suppress the indicators for this type. However, the actual color information will be used for placement previews of map templates, to indicate all cells in the shape.
 * **HashColorLandBeach**: The color for cells of the 'Beach' land type. Defaults to yellow.
@@ -191,12 +193,12 @@ For the option "Extra indicators" → "Map terrain types":
 * **HashColorLandRiver**: The color for cells of the 'River' land type. Defaults to blue.
 * **HashColorLandRough**: The color for cells of the 'Rough' land type. Defaults to grayish purple.
 
-For the option "Extra indicators" → "Occupied by objects":
+#### For the option "Extra indicators" → "Occupied by objects":
 
 * **HashColorTechnoPart**: The color for cells partially filled with map objects. This is only used for infantry.
 * **HashColorTechnoFull**: The color for cells fully filled with map objects; either cells of buildings, terrain or units, or cells fully filled with five infantry units.
 
-Outline colors for unowned objects:
+#### Outline colors for unowned objects:
 
 An outline will be shown around objects that are partially or fully behind other objects. For owned objects, these outlines are given the color of their owners, but for unowned objects, they are editable here. An outline type can be disabled by adding an alpha factor of 0 in front of the R,G,B color values.
 
@@ -208,11 +210,11 @@ Note that crates are always outlined if the "Outlines on crates" option is enabl
 * **OutlineColorSolidOverlay**: The outline color for impassable overlay. Pavement-type overlay is never outlined. Defaults to gray.
 * **OutlineColorWall**: The outline color for walls. Defaults to purple. Note that this one is disabled by default (by setting its alpha to 0) because they are very common to have overlaps on, and it is rarely useful to show them.
 
-Another extra option related to outlines:
+#### Extra options related to outlines:
 
 * **IgnoreShadowOverlap**: Don't show overlap outlines on objects that are only overlapped by shadows. This is enabled by default, but can be disabled if you want to increase the visibility of e.g. infantry under trees.
 
-Alpha transparency factors used:
+#### Alpha transparency factors used:
 
 * **PreviewAlpha**: The alpha factor used when previewing an object to place down on the map. Defaults to 0.5 (50%)
 * **UnbuiltAlpha**: The alpha factor used for buildings that are placed on the map, but configured to only be built later by an AI. Defaults to 0.6 (60%)
@@ -223,20 +225,27 @@ These two factors will be multiplied for the placement preview of an unbuilt bui
 
 These options are all enabled by default, but can be disabled if you wish. Use these at your own risk. Some of these (air units, craters, harvesting) are related to bugs in the games, so they could be disabled when making maps for a mod in which these issues are fixed.
 
-* **ReportMissionDetection**: When detecting that a file is a classic single player mission file because it matches the classic "SCG01EA"-like name pattern and contains win and lose scripts, a note about it is shown in the mission load analysis. When disabled, this will only be shown if it is not the only remark in the list. Note that missions loaded from .mix archives will always behave as if this option is enabled.
+* **ReportMissionDetection**: If the "SoloMission" info is not present in a map file, the editor will always try to detect if a file is a classic single player mission file, by checking if it matches the classic "SCG01EA"-like name pattern, and seeing if it contains win and lose scripts. If this all matches, a note about it will be shown in the mission load analysis. When this option is disabled, this note will only be shown if it is not the only remark in the load warnings list. Note that missions loaded from .mix archives will always behave as if this option is disabled, since the original classic files will never contain remaster-specific info.
 * **EnforceObjectMaximums**: Don't allow saving a map if any of the object amounts exceed the normal internal maximums of the game. Can be disabled in case a mission is specifically meant to be played on a modded game that increases these limits.
-* **Ignore106Scripting**: Don't support the extended scripting added by the C&C95 v1.06 patch. If this option is disabled, additional triggers named UUUU, VVVV and WWWW can also be destroyed with "Dstry Trig" actions.
+* **EnforceTriggerTypes**: Remove triggers linked to incorrect objects on map load, and only show relevant triggers in the dropdowns for connecting triggers to units, buildings, teams, celltriggers, etc. Can be disabled for research purposes.
 * **ConvertRaObsoleteClear**: Automatically clear tiles with ID 255 on RA Temperate/Snow maps, or on Interior maps if more than 80% of the area outside the map bounds is filled with it, to fix the fact old versions of RA saved that as Clear terrain. This can be disabled to research changes on old maps.
-* **BlockingBibs**: Bibs block the placement of other structures. Note that if you disable this, you should be careful not to block the build plan of rebuildable AI structures. Also, the games might have issues with walls overlaying building bibs.
+* **BlockingBibs**: Bibs block the placement of other structures. Note that if you disable this, you should be careful not to block the build plan of rebuildable AI structures. Also, the games might have issues with walls overlaying building bibs. Can be disabled because some official missions have errors in that, and need this option to be disabled to load correctly.
 * **DisableAirUnits**: Air unit reading from maps was a disabled feature in the original games. Even though the Remaster re-enabled this, it is buggy and unpredictable, so the editor disables air units by default. Air units put on maps will not appear on the specified cell; they will spawn in the air above it, will either fly off the map or find a nearby building of their House to land at, and (in TD) will usually leave behind an impassable cell on the map under the place where they spawned. Note that any "preplaced" Chinook helicopters that might appear in missions are actually flown in by scripts at the start of the mission.
-* **ConvertCraters**: Any craters of the types CR2-CR6 placed in maps are bugged in the games, and revert to the smallest size of CR1. This filters them out and converts them to CR1 craters of the specified size, and removes the other crater types from the Smudge choices list.
+* **ConvertCraters**: Any craters of the types CR2-CR6 placed in maps are bugged in the games, and revert to the smallest size of CR1. This filters them out and converts them to CR1 craters of the specified size, and removes the other crater types from the Smudge choices list. This option can be switched off to support builds of the game where this is fixed.
 * **DisableSquishMark**: The overlay SQUISH (a crushed corpse) exists in Tiberian Dawn, but is normally not usable because the logic to enable it in the game (by putting "Overrun=Pancake" in conquer.ini) is broken, messing up all non-wall overlay spawning. This option can be switched off to support builds of the game where this is fixed.
-* **FilterTheaterObjects**: Filter out objects that don't belong in the current map's theater. This affects both map loading, and the items visible in the placement lists. Do not turn this off unless you really know what you're doing; having theater-illegal objects on maps may cause situations that crash the game.
-* **WriteClassicBriefing**: In addition to the single-line "Text=" briefing used by the Remaster, also write classic-style briefings into the ini file as "1=", "2=", etc. lines split at human-readable length. This includes the C&C95 v1.06 line break system using ## characters at the end of a line. Any special characters in this are always written in DOS-437 text encoding.
+* **FilterTheaterObjects**: Filter out objects that don't belong in the current map's theater. This affects both the map load, and the items visible in the placement lists. Do not turn this off unless you really know what you're doing; having theater-illegal objects on maps may cause situations that crash the game.
+* **WriteClassicBriefing**: Write classic-style briefings into the ini file as "1=", "2=", etc. lines split at human-readable length. Any special characters in this are always written in DOS-437 text encoding.
+* **WriteRemasterBriefing**: Write the single-line "Text=" briefing used by the Remaster. If both are disabled, the classic one will always be written.
 * **ApplyHarvestBug**: The game has a bug where the final harvested stage of a cell yields nothing (or only 3/4th for RA gems). Assume this bug is unfixed when doing the resource calculations.
 * **OverlayWallsOnly**: if this option is set to False, walls will show up in the Buildings list as well, from where they can be placed down as player-owned buildings. This allows selling them, but it is generally not advised since it bloats the ini file.
 * **NoOwnedObjectsInSole**: Sole Survivor maps normally don't include placed down units, structures or infantry, so loading and saving them is disabled by default. But it seems some official maps do contain decorative civilian buildings, and old betas of the game could read those, so this option can be disabled for research purposes.
-* **RestrictSoleLimits**: When analysing / saving Sole Survivor maps, use the original object amount limits of the game, rather than the Remaster's larger values.
+
+### Extra tweaks:
+
+Options that can be enabled to support features that some versions might have modded into the game. These are generally disabled by default.
+
+* **EnableTd106Scripting**: Support the extended scripting added by the C&C95 v1.06 patch. If this option is enabled, additional triggers named UUUU, VVVV and WWWW can be destroyed with "Dstry Trig" actions.
+* **EnableTd106LineBreaks**: Enable the C&C95 v1.06 fan-patch system of using ## at the end of a line as line break in a briefing. Defaults to False. This option requires _WriteClassicBriefing_ to be enabled.
 
 ### Graphical tweaks:
 
@@ -252,23 +261,22 @@ The following files can be read from the configured classic data folders, for ru
 
 Some files have special markings added to them. This is what they mean:
 
-* (*) - Required, though they may not be visible inside the folder if they are embedded inside another archive.
-* (1) - Add-ons (the sc*.mix archives). Anything matching the pattern will be read, but they obey the general game rule that each archive name is only read from one location.
-* (2) - Archives that might be embedded inside the ''redalert.mix'' or ''main.mix'' archive. (RA only)
+* (\*) - Required, though they may not be visible inside the folder if they are embedded inside another archive.
+* (1) - Add-ons (the sc\*.mix archives). Anything matching the pattern will be read, but they obey the general game rule that each archive name is only read from one location.
+* (2) - Archives that might be embedded inside the ''redalert.mix'' or ''main.mix'' archive. (Red Alert only)
 * (+) - Extra theaters added in the fan-patched community releases of the games.
 
 Note that there is no support for running the editor for one specific game only, while not having the files for the other game(s) available. All data needs to be present to make the editor start up.
 
 ### Tiberian Dawn and Sole Survivor
-
 These are read from the "Classic\\TD" subfolder by default. Note that the TD folder included in the editor has a minor added fix (sc-ptem.mix) which won't be present in a bare TD/Sole install folder.
 
 * cclocal.mix (or local.mix) <sup>(*)</sup>
-* sc*.mix <sup>(1)</sup>
-* conquer.mix <sup>(*)</sup>
-* desert.mix <sup>(*)</sup>
-* temperat.mix <sup>(*)</sup>
-* winter.mix <sup>(*)</sup>
+* sc\*.mix <sup>(1)</sup>
+* conquer.mix <sup>(\*)</sup>
+* desert.mix <sup>(\*)</sup>
+* temperat.mix <sup>(\*)</sup>
+* winter.mix <sup>(\*)</sup>
 * snow.mix <sup>(+)</sup>
 
 ### Red Alert
@@ -279,15 +287,15 @@ These are read from the "Classic\\RA" subfolder by default.
 * expand.mix
 * redalert.mix
 * main.mix
-* local.mix <sup>(*)</sup> <sup>(2)</sup>
-* sc*.mix <sup>(1)</sup>
+* local.mix <sup>(\*)</sup> <sup>(2)</sup>
+* sc\*.mix <sup>(1)</sup>
 * general.mix <sup>(2)</sup>
-* conquer.mix <sup>(*)</sup> <sup>(2)</sup>
-* lores.mix <sup>(*)</sup> <sup>(2)</sup>
+* conquer.mix <sup>(\*)</sup> <sup>(2)</sup>
+* lores.mix <sup>(\*)</sup> <sup>(2)</sup>
 * lores1.mix <sup>(2)</sup>
-* interior.mix <sup>(*)</sup> <sup>(2)</sup>
-* snow.mix <sup>(*)</sup> <sup>(2)</sup>
-* temperat.mix <sup>(*)</sup> <sup>(2)</sup>
+* interior.mix <sup>(\*)</sup> <sup>(2)</sup>
+* snow.mix <sup>(\*)</sup> <sup>(2)</sup>
+* temperat.mix <sup>(\*)</sup> <sup>(2)</sup>
 * winter.mix <sup>(+)</sup>
 * desert.mix <sup>(+)</sup>
 * jungle.mix <sup>(+)</sup>

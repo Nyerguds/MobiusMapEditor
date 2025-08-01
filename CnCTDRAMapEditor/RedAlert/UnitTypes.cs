@@ -36,9 +36,9 @@ namespace MobiusEditor.RedAlert
         public static readonly UnitType MCV = new VehicleType(11, "mcv", "TEXT_UNIT_RA_MCV", "Greece", FrameUsage.Frames32Full);
         public static readonly UnitType V2Launcher = new VehicleType(12, "v2rl", "TEXT_UNIT_RA_V2RL", "USSR", FrameUsage.Frames32Full, UnitTypeFlag.IsArmed);
         public static readonly UnitType ConvoyTruck = new VehicleType(13, "truk", "TEXT_UNIT_RA_TRUK", "Greece", FrameUsage.Frames32Full);
-        public static readonly UnitType Ant1 = new VehicleType(14, "ant1", "TEXT_UNIT_RA_ANT1", "USSR", FrameUsage.Frames08Cardinal, UnitTypeFlag.IsArmed);
-        public static readonly UnitType Ant2 = new VehicleType(15, "ant2", "TEXT_UNIT_RA_ANT2", "Ukraine", FrameUsage.Frames08Cardinal, UnitTypeFlag.IsArmed);
-        public static readonly UnitType Ant3 = new VehicleType(16, "ant3", "TEXT_UNIT_RA_ANT3", "Germany", FrameUsage.Frames08Cardinal, UnitTypeFlag.IsArmed);
+        public static readonly UnitType Ant1 = new VehicleType(14, "ant1", "TEXT_UNIT_RA_ANT1", "USSR", FrameUsage.Frames08Cardinal, UnitTypeFlag.IsArmed | UnitTypeFlag.NoRules);
+        public static readonly UnitType Ant2 = new VehicleType(15, "ant2", "TEXT_UNIT_RA_ANT2", "Ukraine", FrameUsage.Frames08Cardinal, UnitTypeFlag.IsArmed | UnitTypeFlag.NoRules);
+        public static readonly UnitType Ant3 = new VehicleType(16, "ant3", "TEXT_UNIT_RA_ANT3", "Germany", FrameUsage.Frames08Cardinal, UnitTypeFlag.IsArmed | UnitTypeFlag.NoRules);
         public static readonly UnitType Chrono = new VehicleType(17, "ctnk", "TEXT_UNIT_RA_CTNK", "Greece", FrameUsage.Frames32Full, UnitTypeFlag.IsArmed | UnitTypeFlag.IsExpansionUnit);
         public static readonly UnitType Tesla = new VehicleType(18, "ttnk", "TEXT_UNIT_RA_TTNK", "USSR", FrameUsage.Frames32Full, FrameUsage.Frames01Single, UnitTypeFlag.IsArmed | UnitTypeFlag.HasTurret | UnitTypeFlag.IsExpansionUnit | UnitTypeFlag.IsJammer);
         public static readonly UnitType MAD = new VehicleType(19, "qtnk", "TEXT_UNIT_RA_QTNK", "USSR", FrameUsage.Frames32Full, UnitTypeFlag.IsArmed | UnitTypeFlag.IsExpansionUnit);

@@ -239,7 +239,7 @@ namespace MobiusEditor.Utility
                 for (int i = 0; i < length; ++i)
                 {
                     byte[] curFrame = frameData[i];
-                    for (int j = 0; j < frameLength; j++)
+                    for (int j = 0; j < frameLength; ++j)
                     {
                         curFrame[i] = remapTable[curFrame[i]];
                     }
@@ -355,12 +355,12 @@ namespace MobiusEditor.Utility
                 throw new FileTypeLoadException("File is not long enough for header.", "TD/RA SHP file");
             }
             ushort hdrFrames = ArrayUtils.ReadUInt16FromByteArrayLe(fileData, 0);
-            //UInt16 hdrXPos = ArrayUtils.ReadUInt16FromByteArrayLe(fileData, 2);
-            //UInt16 hdrYPos = ArrayUtils.ReadUInt16FromByteArrayLe(fileData, 4);
+            //ushort hdrXPos = ArrayUtils.ReadUInt16FromByteArrayLe(fileData, 2);
+            //ushort hdrYPos = ArrayUtils.ReadUInt16FromByteArrayLe(fileData, 4);
             ushort hdrWidth = ArrayUtils.ReadUInt16FromByteArrayLe(fileData, 6);
             ushort hdrHeight = ArrayUtils.ReadUInt16FromByteArrayLe(fileData, 8);
-            //UInt16 hdrDeltaSize = ArrayUtils.ReadUInt16FromByteArrayLe(fileData, 0x0A);
-            //UInt16 hdrFlags = ArrayUtils.ReadUInt16FromByteArrayLe(fileData, 0x0C);
+            //ushort hdrDeltaSize = ArrayUtils.ReadUInt16FromByteArrayLe(fileData, 0x0A);
+            //ushort hdrFlags = ArrayUtils.ReadUInt16FromByteArrayLe(fileData, 0x0C);
             if (hdrFrames == 0) // Can be TS SHP; it identifies with an empty first byte IIRC.
             {
                 if (!throwWhenParsing)
@@ -466,7 +466,7 @@ namespace MobiusEditor.Utility
                 int frameOffsEnd = nextFrame.DataOffset;
                 int frameStart = frameOffs;
                 CcShpFrameFormat frameOffsFormat = currentFrame.DataFormat;
-                //Int32 dataLen = frameOffsEnd - frameOffs;
+                //int dataLen = frameOffsEnd - frameOffs;
                 if (frameOffs > fileData.Length || frameOffsEnd > fileData.Length)
                 {
                     if (!throwWhenParsing)
@@ -581,29 +581,21 @@ namespace MobiusEditor.Utility
         }
 
         /// <summary>
-        /// Retrieves the Dune II SHP frames.
+        /// Retrieves the Dune II SHP frames. (used for mouse cursors in C&amp;C1/RA1)
         /// </summary>
         /// <param name="fileData">Original file data.</param>
         /// <returns>The SHP file's frames as bitmaps.</returns>
         public static Bitmap[] LoadD2ShpFile(byte[] fileData, Color[] palette)
         {
-            byte[][] frameData;
-            int[] widths;
-            int[] heights;
-            try
-            {
-                frameData = frameData = GetD2ShpData(fileData, out widths, out heights, false);
-            }
-            catch (FileTypeLoadException)
-            {
-                return null;
-            }
+            byte[][] frameData = GetD2ShpData(fileData, out int[] widths, out int[] heights, false);
             if (frameData == null)
             {
                 return null;
             }
             if (palette == null)
+            {
                 palette = Enumerable.Range(0, 0x100).Select(i => Color.FromArgb(i, i, i)).ToArray();
+            }
             int length = frameData.Length;
             Bitmap[] frames = new Bitmap[length];
             for (int i = 0; i < length; ++i)
@@ -1286,15 +1278,15 @@ namespace MobiusEditor.Utility
                 throw new FileTypeLoadException("File is not long enough to be an C&C Font file.", "Font file");
             }
             byte fontHeaderCompress = fileData[0x02];
-            //Byte dataBlocks = fileData[0x03];
-            //Int16 infoBlockOffset = (UInt16)ArrayUtils.ReadIntFromByteArray(fileData, 0x04, 2, true);
+            //byte dataBlocks = fileData[0x03];
+            //short infoBlockOffset = (ushort)ArrayUtils.ReadIntFromByteArray(fileData, 0x04, 2, true);
             int fontHeaderOffsetBlockOffset = (ushort)ArrayUtils.ReadIntFromByteArray(fileData, 0x06, 2, true);
             int fontHeaderWidthBlockOffset = (ushort)ArrayUtils.ReadIntFromByteArray(fileData, 0x08, 2, true);
             // use this for pos on TS format
             int fontHeaderDataBlockOffset = (ushort)ArrayUtils.ReadIntFromByteArray(fileData, 0x0A, 2, true);
             int fontHeaderHeightOffset = (ushort)ArrayUtils.ReadIntFromByteArray(fileData, 0x0C, 2, true);
-            //UInt16 unknown0E = (UInt16)ArrayUtils.ReadIntFromByteArray(fileData, 0x0E, 2, true);
-            //Byte AlwaysZero = fileData[0x10];
+            //ushort unknown0E = (ushort)ArrayUtils.ReadIntFromByteArray(fileData, 0x0E, 2, true);
+            //byte AlwaysZero = fileData[0x10];
             int nrOfSymbols;
             if (fontHeaderCompress == 0x02)
             {

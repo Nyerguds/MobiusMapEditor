@@ -79,7 +79,7 @@ namespace MobiusEditor.Properties {
         
         [global::System.Configuration.ApplicationScopedSettingAttribute()]
         [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
-        [global::System.Configuration.DefaultSettingValueAttribute("False")]
+        [global::System.Configuration.DefaultSettingValueAttribute("True")]
         public bool ClassicProducesNoMetaFiles {
             get {
                 return ((bool)(this["ClassicProducesNoMetaFiles"]));
@@ -133,7 +133,7 @@ namespace MobiusEditor.Properties {
         
         [global::System.Configuration.ApplicationScopedSettingAttribute()]
         [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
-        [global::System.Configuration.DefaultSettingValueAttribute("")]
+        [global::System.Configuration.DefaultSettingValueAttribute("2844969675;GraphicsFixesTD")]
         public string ModsToLoadTD {
             get {
                 return ((string)(this["ModsToLoadTD"]));
@@ -142,7 +142,7 @@ namespace MobiusEditor.Properties {
         
         [global::System.Configuration.ApplicationScopedSettingAttribute()]
         [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
-        [global::System.Configuration.DefaultSettingValueAttribute("")]
+        [global::System.Configuration.DefaultSettingValueAttribute("2978875641;GraphicsFixesRA")]
         public string ModsToLoadRA {
             get {
                 return ((string)(this["ModsToLoadRA"]));
@@ -151,7 +151,7 @@ namespace MobiusEditor.Properties {
         
         [global::System.Configuration.ApplicationScopedSettingAttribute()]
         [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
-        [global::System.Configuration.DefaultSettingValueAttribute("")]
+        [global::System.Configuration.DefaultSettingValueAttribute("2844969675;GraphicsFixesTD")]
         public string ModsToLoadSS {
             get {
                 return ((string)(this["ModsToLoadSS"]));
@@ -160,7 +160,7 @@ namespace MobiusEditor.Properties {
         
         [global::System.Configuration.ApplicationScopedSettingAttribute()]
         [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
-        [global::System.Configuration.DefaultSettingValueAttribute("Classic\\mixcontent.ini")]
+        [global::System.Configuration.DefaultSettingValueAttribute("Data\\mixcontent.ini")]
         public string MixContentInfoFile {
             get {
                 return ((string)(this["MixContentInfoFile"]));
@@ -206,15 +206,6 @@ namespace MobiusEditor.Properties {
         [global::System.Configuration.ApplicationScopedSettingAttribute()]
         [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
         [global::System.Configuration.DefaultSettingValueAttribute("False")]
-        public bool DefaultOutlineAllCrates {
-            get {
-                return ((bool)(this["DefaultOutlineAllCrates"]));
-            }
-        }
-        
-        [global::System.Configuration.ApplicationScopedSettingAttribute()]
-        [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
-        [global::System.Configuration.DefaultSettingValueAttribute("False")]
         public bool DefaultCratesOnTop {
             get {
                 return ((bool)(this["DefaultCratesOnTop"]));
@@ -241,10 +232,19 @@ namespace MobiusEditor.Properties {
         
         [global::System.Configuration.ApplicationScopedSettingAttribute()]
         [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
-        [global::System.Configuration.DefaultSettingValueAttribute("true")]
+        [global::System.Configuration.DefaultSettingValueAttribute("True")]
         public bool DefaultExportMultiInBounds {
             get {
                 return ((bool)(this["DefaultExportMultiInBounds"]));
+            }
+        }
+        
+        [global::System.Configuration.ApplicationScopedSettingAttribute()]
+        [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
+        [global::System.Configuration.DefaultSettingValueAttribute("False")]
+        public bool DefaultOutlineAllCrates {
+            get {
+                return ((bool)(this["DefaultOutlineAllCrates"]));
             }
         }
         
@@ -367,24 +367,6 @@ namespace MobiusEditor.Properties {
         
         [global::System.Configuration.ApplicationScopedSettingAttribute()]
         [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
-        [global::System.Configuration.DefaultSettingValueAttribute("0, 255, 0")]
-        public global::System.Drawing.Color HashColorTechnoPart {
-            get {
-                return ((global::System.Drawing.Color)(this["HashColorTechnoPart"]));
-            }
-        }
-        
-        [global::System.Configuration.ApplicationScopedSettingAttribute()]
-        [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
-        [global::System.Configuration.DefaultSettingValueAttribute("0, 170, 0")]
-        public global::System.Drawing.Color HashColorTechnoFull {
-            get {
-                return ((global::System.Drawing.Color)(this["HashColorTechnoFull"]));
-            }
-        }
-        
-        [global::System.Configuration.ApplicationScopedSettingAttribute()]
-        [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
         [global::System.Configuration.DefaultSettingValueAttribute("0, 255, 255, 255")]
         public global::System.Drawing.Color HashColorLandClear {
             get {
@@ -443,6 +425,24 @@ namespace MobiusEditor.Properties {
         public global::System.Drawing.Color HashColorLandRough {
             get {
                 return ((global::System.Drawing.Color)(this["HashColorLandRough"]));
+            }
+        }
+        
+        [global::System.Configuration.ApplicationScopedSettingAttribute()]
+        [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
+        [global::System.Configuration.DefaultSettingValueAttribute("0, 255, 0")]
+        public global::System.Drawing.Color HashColorTechnoPart {
+            get {
+                return ((global::System.Drawing.Color)(this["HashColorTechnoPart"]));
+            }
+        }
+        
+        [global::System.Configuration.ApplicationScopedSettingAttribute()]
+        [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
+        [global::System.Configuration.DefaultSettingValueAttribute("0, 170, 0")]
+        public global::System.Drawing.Color HashColorTechnoFull {
+            get {
+                return ((global::System.Drawing.Color)(this["HashColorTechnoFull"]));
             }
         }
         
@@ -548,15 +548,6 @@ namespace MobiusEditor.Properties {
         [global::System.Configuration.ApplicationScopedSettingAttribute()]
         [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
         [global::System.Configuration.DefaultSettingValueAttribute("True")]
-        public bool Ignore106Scripting {
-            get {
-                return ((bool)(this["Ignore106Scripting"]));
-            }
-        }
-        
-        [global::System.Configuration.ApplicationScopedSettingAttribute()]
-        [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
-        [global::System.Configuration.DefaultSettingValueAttribute("True")]
         public bool ConvertRaObsoleteClear {
             get {
                 return ((bool)(this["ConvertRaObsoleteClear"]));
@@ -620,6 +611,15 @@ namespace MobiusEditor.Properties {
         [global::System.Configuration.ApplicationScopedSettingAttribute()]
         [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
         [global::System.Configuration.DefaultSettingValueAttribute("True")]
+        public bool WriteRemasterBriefing {
+            get {
+                return ((bool)(this["WriteRemasterBriefing"]));
+            }
+        }
+        
+        [global::System.Configuration.ApplicationScopedSettingAttribute()]
+        [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
+        [global::System.Configuration.DefaultSettingValueAttribute("True")]
         public bool ApplyHarvestBug {
             get {
                 return ((bool)(this["ApplyHarvestBug"]));
@@ -646,10 +646,19 @@ namespace MobiusEditor.Properties {
         
         [global::System.Configuration.ApplicationScopedSettingAttribute()]
         [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
-        [global::System.Configuration.DefaultSettingValueAttribute("True")]
-        public bool RestrictSoleLimits {
+        [global::System.Configuration.DefaultSettingValueAttribute("False")]
+        public bool EnableTd106Scripting {
             get {
-                return ((bool)(this["RestrictSoleLimits"]));
+                return ((bool)(this["EnableTd106Scripting"]));
+            }
+        }
+        
+        [global::System.Configuration.ApplicationScopedSettingAttribute()]
+        [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
+        [global::System.Configuration.DefaultSettingValueAttribute("True")]
+        public bool EnableTd106LineBreaks {
+            get {
+                return ((bool)(this["EnableTd106LineBreaks"]));
             }
         }
         

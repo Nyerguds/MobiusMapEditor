@@ -43,6 +43,8 @@ namespace MobiusEditor.Model
         IsGapGenerator  /**/ = 1 << 7,
         /// <summary>Can show a radar jamming area-of-effect radius indicator.</summary>
         IsJammer        /**/ = 1 << 8,
+        /// <summary>This type typically has no rules present in the rules file, and needs specific checks on that.</summary>
+        NoRules         /**/ = 1 << 9,
     }
 
     [Flags]
@@ -149,6 +151,7 @@ namespace MobiusEditor.Model
     {
         public int ID { get; private set; }
         public string Name { get; private set; }
+        public bool Ownable => true;
         public string DisplayName { get; private set; }
         public string Turret { get; private set; }
         public string SecondTurret { get; private set; }

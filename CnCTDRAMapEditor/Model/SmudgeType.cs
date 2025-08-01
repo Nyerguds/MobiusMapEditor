@@ -27,11 +27,11 @@ namespace MobiusEditor.Model
     public enum SmudgeTypeFlag
     {
         None = 0,
-        /// <summary>4-wide bib indicator. Only used for the bibs automatically added under buildings.</summary>
+        /// <summary>This smudge type can be used as 4-wide bib automatically added under a building.</summary>
         Bib1 = 1 << 0,
-        /// <summary>3-wide bib indicator. Only used for the bibs automatically added under buildings.</summary>
+        /// <summary>This smudge type can be used as 3-wide bib automatically added under a building.</summary>
         Bib2 = 1 << 1,
-        /// <summary>2-wide bib indicator. Only used for the bibs automatically added under buildings.</summary>
+        /// <summary>This smudge type can be used as 2-wide bib automatically added under a building.</summary>
         Bib3 = 1 << 2,
     }
 
@@ -45,7 +45,6 @@ namespace MobiusEditor.Model
         public Size Size { get; set; }
         public int Icons { get; set; }
         public SmudgeTypeFlag Flag { get; private set; }
-        public bool IsAutoBib => (this.Flag & (SmudgeTypeFlag.Bib1 | SmudgeTypeFlag.Bib2 | SmudgeTypeFlag.Bib3)) != SmudgeTypeFlag.None;
         public bool IsMultiCell => this.Icons == 1 && (this.Size.Width > 0 || this.Size.Height > 0);
         public Bitmap Thumbnail { get; set; }
         private string nameId;
@@ -138,9 +137,9 @@ namespace MobiusEditor.Model
             {
                 bool isSmooth = Globals.PreviewSmoothScale;
                 MapRenderer.SetRenderSettings(g, isSmooth);
-                for (int y = 0; y < this.Size.Height; y++)
+                for (int y = 0; y < this.Size.Height; ++y)
                 {
-                    for (int x = 0; x < this.Size.Width; x++)
+                    for (int x = 0; x < this.Size.Width; ++x)
                     {
                         Smudge mockSmudge = new Smudge(this) { Icon = icon++ };
                         MapRenderer.RenderSmudge(new Point(x, y), Globals.PreviewTileSize, Globals.PreviewTileScale, mockSmudge, isSmooth, cm).Item2(g);
@@ -169,6 +168,7 @@ namespace MobiusEditor.Model
                     return null;
             }
         }
+
         public void Reset()
         {
             this.ExistsInTheater = false;

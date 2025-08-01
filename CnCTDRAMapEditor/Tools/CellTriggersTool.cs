@@ -57,7 +57,7 @@ namespace MobiusEditor.Tools
         protected override Map RenderMap => previewMap;
 
         private string currentObj;
-        public override Object CurrentObject
+        public override object CurrentObject
         {
             get { return currentObj; }
             set
@@ -74,7 +74,7 @@ namespace MobiusEditor.Tools
 
         private bool placementMode;
 
-        protected override Boolean InPlacementMode
+        protected override bool InPlacementMode
         {
             get { return placementMode; }
         }
@@ -137,7 +137,7 @@ namespace MobiusEditor.Tools
             OnTriggerChanged?.Invoke(this, new EventArgs());
         }
 
-        private String[] GetItems(out bool hasItems)
+        private string[] GetItems(out bool hasItems)
         {
             string[] items = plugin.Map.FilterCellTriggers().Select(t => t.Name).Distinct().ToArray();
             hasItems = items.Length > 0;
@@ -178,7 +178,7 @@ namespace MobiusEditor.Tools
             }
             int height = map.Metrics.Height;
             int width = map.Metrics.Width;
-            foreach (String trig in items)
+            foreach (string trig in items)
             {
                 bool[,] cellTrigs = new bool[height, width];
                 List<Point> points = new List<Point>();
@@ -200,9 +200,9 @@ namespace MobiusEditor.Tools
                 {
                     // Should cover buildings too.
                     bool[,] occupyMask = techno.Occupier.OccupyMask;
-                    for (Int32 y = 0; y < occupyMask.GetLength(0); ++y)
+                    for (int y = 0; y < occupyMask.GetLength(0); ++y)
                     {
-                        for (Int32 x = 0; x < occupyMask.GetLength(1); ++x)
+                        for (int x = 0; x < occupyMask.GetLength(1); ++x)
                         {
                             Point loc = new Point(techno.Location.X + x, techno.Location.Y + y);
                             points.Add(loc);
@@ -282,7 +282,7 @@ namespace MobiusEditor.Tools
             ExitPlacementMode();
         }
 
-        private void MapPanel_MouseWheel(Object sender, MouseEventArgs e)
+        private void MapPanel_MouseWheel(object sender, MouseEventArgs e)
         {
             if (e.Delta == 0 || (Control.ModifierKeys & Keys.Control) == Keys.None)
             {
@@ -399,7 +399,7 @@ namespace MobiusEditor.Tools
             {
                 return;
             }
-            String trigger = cellTrigger.Trigger;
+            string trigger = cellTrigger.Trigger;
             triggerComboBox.SelectedItem = trigger;
             if (!cellTrigBlobCenters.TryGetValue(trigger, out Rectangle[] locations))
             {
@@ -410,7 +410,7 @@ namespace MobiusEditor.Tools
             currentCellTrigIndex = 0;
             // If found, make sure clicking the "jump to next use" button
             // will go to the blob after the currently clicked one.
-            for (Int32 i = 0; i < locations.Length; ++i)
+            for (int i = 0; i < locations.Length; ++i)
             {
                 Rectangle triggerLocation = locations[i];
                 if (triggerLocation.Contains(location))
@@ -423,7 +423,6 @@ namespace MobiusEditor.Tools
 
         private void CommitChange()
         {
-            bool origDirtyState = plugin.Dirty;
             bool origEmptyState = plugin.Empty;
             plugin.Dirty = true;
             var undoCellTriggers2 = new Dictionary<int, CellTrigger>(undoCellTriggers);
@@ -441,14 +440,8 @@ namespace MobiusEditor.Tools
                 }
                 if (ev.Plugin != null)
                 {
-                    if (origEmptyState)
-                    {
-                        ev.Plugin.Empty = true;
-                    }
-                    else
-                    {
-                        ev.Plugin.Dirty = origDirtyState;
-                    }
+                    ev.Plugin.Empty = origEmptyState;
+                    ev.Plugin.Dirty = !ev.NewStateIsClean;
                 }
             }
             var redoCellTriggers2 = new Dictionary<int, CellTrigger>(redoCellTriggers);
@@ -464,7 +457,9 @@ namespace MobiusEditor.Tools
                 }
                 if (ev.Plugin != null)
                 {
-                    ev.Plugin.Dirty = true;
+                    // Redo can never restore the "empty" state, but CAN be the point at which a save was done.
+                    ev.Plugin.Empty = false;
+                    ev.Plugin.Dirty = !ev.NewStateIsClean;
                 }
             }
             undoCellTriggers.Clear();
@@ -502,7 +497,7 @@ namespace MobiusEditor.Tools
             }
         }
 
-        private void TriggerCombo_SelectedIndexChanged(Object sender, EventArgs e)
+        private void TriggerCombo_SelectedIndexChanged(object sender, EventArgs e)
         {
             string selected = triggerComboBox.SelectedItem as string;
             jumpToButton.Enabled = selected != null && cellTrigBlobCenters.TryGetValue(selected, out Rectangle[] locations) && locations != null && locations.Length > 0;
@@ -520,7 +515,7 @@ namespace MobiusEditor.Tools
             OnTriggerChanged?.Invoke(this, new EventArgs());
         }
 
-        private void JumpToButton_Click(Object sender, EventArgs e)
+        private void JumpToButton_Click(object sender, EventArgs e)
         {
             JumpToNextBlob();
         }

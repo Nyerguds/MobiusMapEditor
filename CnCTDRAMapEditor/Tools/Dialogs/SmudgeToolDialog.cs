@@ -51,7 +51,7 @@ namespace MobiusEditor.Tools.Dialogs
             IGamePlugin plugin, UndoRedoList<UndoRedoEventArgs, ToolType> undoRedoList)
         {
             smudgeTypeListBox.Types = plugin.Map.SmudgeTypes
-                .Where(t => !t.IsAutoBib && (!Globals.FilterTheaterObjects || t.ExistsInTheater))
+                .Where(t => !Globals.FilterTheaterObjects || t.ExistsInTheater)
                 .OrderBy(t => t.ID);
             Tool = new SmudgeTool(mapPanel, activeLayers, toolStatusLabel, smudgeTypeListBox, smudgeTypeMapPanel, smudgeProperties, plugin, undoRedoList);
         }
