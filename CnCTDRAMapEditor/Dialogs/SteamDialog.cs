@@ -446,6 +446,7 @@ namespace MobiusEditor.Dialogs
 
         private void RefreshPreviewImage()
         {
+            CheckSelectedPreview();
             CleanupPreview();
             try
             {
@@ -466,6 +467,24 @@ namespace MobiusEditor.Dialogs
             {
                 previewImage = null;
                 pnlImage.BackgroundImage = null;
+            }
+        }
+
+        private void CheckSelectedPreview()
+        {
+            bool isChecked = false;
+            string linkedPath;
+            foreach (ToolStripMenuItem tsm in previewContextMenuStrip.Items)
+            {
+                if (!isChecked && previewPaths.TryGetValue(tsm, out linkedPath) && linkedPath.Equals(previewPath, StringComparison.OrdinalIgnoreCase))
+                {
+                    tsm.Checked = true;
+                    isChecked = true;
+                }
+                else
+                {
+                    tsm.Checked = false;
+                }
             }
         }
 
