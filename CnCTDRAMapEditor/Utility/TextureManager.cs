@@ -191,7 +191,7 @@ namespace MobiusEditor.Utility
             return (resBitmap, resBounds);
         }
 
-        private void LoadTgaFromZipFileStream(Stream fileStream, String name, ref TGA tga, ref JObject metadata)
+        private void LoadTgaFromZipFileStream(Stream fileStream, string name, ref TGA tga, ref JObject metadata)
         {
             if (fileStream == null)
             {

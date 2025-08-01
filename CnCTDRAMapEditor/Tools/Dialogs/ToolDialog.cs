@@ -125,7 +125,7 @@ namespace MobiusEditor.Tools.Dialogs
             base.OnShown(e);
         }
 
-        private void ObjectToolDialog_FormClosing(System.Object sender, FormClosingEventArgs e)
+        private void ObjectToolDialog_FormClosing(object sender, FormClosingEventArgs e)
         {
             // Prevent users from closing the form with Alt+F4, and pass the request to close through to the parent form.
             if (e.CloseReason == CloseReason.UserClosing)

@@ -211,7 +211,7 @@ namespace MobiusEditor.Utility
                     foreach (int key in shapeFile.Keys)
                     {
                         ShapeFrameData sfd = shapeFile[key];
-                        Byte[] frameGfx = sfd.FrameData;
+                        byte[] frameGfx = sfd.FrameData;
                         for (int i = 0; i < frameGfx.Length; ++i)
                         {
                             frameGfx[i] = remapTable[frameGfx[i]];
@@ -299,7 +299,7 @@ namespace MobiusEditor.Utility
         {
             bool isShpExt = false;
             bool isFntExt = false;
-            Byte[] fileContents = null;
+            byte[] fileContents = null;
             // If it has an extension, force it.
             if (Path.HasExtension(name))
             {
@@ -340,7 +340,7 @@ namespace MobiusEditor.Utility
 #endif
             int[] widths = null;
             int[] heights = null;
-            Byte[][] shpData = null;
+            byte[][] shpData = null;
             if (!isFntExt)
             {
                 try
@@ -466,7 +466,7 @@ namespace MobiusEditor.Utility
             // Finally, we got our frames; get the data.
             Dictionary<int, ShapeFrameData> shapeFile = new Dictionary<int, ShapeFrameData>();
             int frames = shpData.Length;
-            for (int i = 0; i < frames; i++)
+            for (int i = 0; i < frames; ++i)
             {
                 byte[] frameData = shpData[i];
                 int width = widths[i];
@@ -495,7 +495,7 @@ namespace MobiusEditor.Utility
             if (customPalette != null)
             {
                 List<int> empty = new List<int>();
-                List<String> cols = new List<String>();
+                List<string> cols = new List<string>();
                 for (int i = 0; i < customPalette.Length; ++i)
                 {
                     uint col = (uint)customPalette[i].ToArgb();
@@ -605,7 +605,7 @@ namespace MobiusEditor.Utility
             int width = 24;
             int height = 24;
             int length = width * height;
-            byte[] dummyData = Enumerable.Repeat<Byte>(14, length).ToArray();
+            byte[] dummyData = Enumerable.Repeat<byte>(14, length).ToArray();
             // Nevermind the internal border if it's too small.
             if (width > 12 || height > 12)
             {
@@ -614,7 +614,7 @@ namespace MobiusEditor.Utility
                 int smallGrW = width - offsGrX * 2;
                 int smallGrH = height - offsGrY * 2;
                 int smallGrLen = smallGrW * smallGrH;
-                byte[] dataSmallGr = Enumerable.Repeat<Byte>(13, smallGrLen).ToArray();
+                byte[] dataSmallGr = Enumerable.Repeat<byte>(13, smallGrLen).ToArray();
                 ImageUtils.PasteOn8bpp(dummyData, width, height, width, dataSmallGr, smallGrW, smallGrH, smallGrW, new Rectangle(offsGrX, offsGrY, smallGrW, smallGrH), null, true);
             }
             int offsWhX =  width / 6;
@@ -622,7 +622,7 @@ namespace MobiusEditor.Utility
             int smallWhW = width - offsWhX * 2;
             int smallWhH = height - offsWhY * 2;
             int smallWhLen = smallWhW * smallWhH;
-            byte[] dataSmallWh = Enumerable.Repeat<Byte>(15, smallWhLen).ToArray();
+            byte[] dataSmallWh = Enumerable.Repeat<byte>(15, smallWhLen).ToArray();
             ImageUtils.PasteOn8bpp(dummyData, width, height, width, dataSmallWh, smallWhW, smallWhH, smallWhW, new Rectangle(offsWhX, offsWhY, smallWhW, smallWhH), null, true);
             // Fill frame daya object.
             ShapeFrameData frameData = new ShapeFrameData();

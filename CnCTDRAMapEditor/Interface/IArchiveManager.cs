@@ -48,7 +48,7 @@ namespace MobiusEditor.Interface
         /// </summary>
         /// <param name="path">The internal path of the file to open.</param>
         /// <returns>A byte array with the file's contents, or null if the file was not found.</returns>
-        Byte[] ReadFile(string path);
+        byte[] ReadFile(string path);
 
         /// <summary>
         /// Check whether a file exists in the currently loaded classic files.
@@ -69,7 +69,7 @@ namespace MobiusEditor.Interface
         /// </summary>
         /// <param name="name">The name of the file to open.</param>
         /// <returns>A byte array with the file's contents, or null if the file was not found.</returns>
-        Byte[] ReadFileClassic(string path);
+        byte[] ReadFileClassic(string path);
 
         /// <summary>
         /// Resets the archive manager for a new context. This may restrict or re-prioritise where certain files are read from.

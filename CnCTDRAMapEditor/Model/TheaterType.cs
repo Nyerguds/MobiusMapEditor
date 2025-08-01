@@ -50,11 +50,11 @@ namespace MobiusEditor.Model
             IsClassicMixFound = false;
             IsRemasterTilesetFound = false;
             IsModTheater = modTheater;
-            Tilesets = mainTileSet.Yield().Concat(tilesets?.Distinct() ?? new List<String>());
+            Tilesets = mainTileSet.Yield().Concat(tilesets?.Distinct() ?? new List<string>());
         }
 
         public TheaterType(sbyte id, string name, string classicTileset, string classicExt, bool modTheater, string mainTileSet, params string[] tilesets)
-            : this(id, name, classicTileset, classicExt, modTheater, mainTileSet, (IEnumerable<String>)tilesets)
+            : this(id, name, classicTileset, classicExt, modTheater, mainTileSet, (IEnumerable<string>)tilesets)
         { }
 
         public TheaterType(sbyte id, string name, string classicTileset, string classicExt, string mainTileSet, IEnumerable<string> tilesets)
@@ -62,7 +62,7 @@ namespace MobiusEditor.Model
         { }
 
         public TheaterType(sbyte id, string name, string classicTileset, string classicExt, string mainTileSet, params string[] tilesets)
-            : this(id, name, classicTileset, classicExt, false, mainTileSet, (IEnumerable<String>)tilesets)
+            : this(id, name, classicTileset, classicExt, false, mainTileSet, (IEnumerable<string>)tilesets)
         { }
 
         public override bool Equals(object obj)

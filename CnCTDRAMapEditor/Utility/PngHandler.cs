@@ -26,7 +26,7 @@ namespace MobiusEditor.Utility
         private static readonly byte[] PNG_IDENTIFIER = { 0x89, 0x50, 0x4E, 0x47, 0x0D, 0x0A, 0x1A, 0x0A };
         /// <summary>Returns an array containing the identifying bytes required at the start of a PNG image file.</summary>
         /// <returns>An array containing the identifying bytes required at the start of a PNG image file.</returns>
-        public static byte[] GetPngIdentifier() { return ArrayUtils.CloneArray(PNG_IDENTIFIER); }
+        public static byte[] GetPngIdentifier() { return PNG_IDENTIFIER.CloneArray(); }
 
         /// <summary>The contents of the IDAT chunk for a 1x1 8-bit indexed image with pixel value 0.</summary>
         private static readonly byte[] PNG_BLANK = { 0x08, 0xD7, 0x63, 0x60, 0x00, 0x00, 0x00, 0x02, 0x00, 0x01 };
@@ -35,7 +35,7 @@ namespace MobiusEditor.Utility
         /// Used as dummy for generating custom-sized palettes.
         /// </summary>
         /// <returns>The contents of the IDAT chunk for a 1x1 8-bit indexed image with pixel value 0.</returns>
-        public static byte[] GetBlankPngIdatContents() { return ArrayUtils.CloneArray(PNG_BLANK); }
+        public static byte[] GetBlankPngIdatContents() { return PNG_BLANK.CloneArray(); }
 
         /// <summary>
         /// Checks the start of a byte array to see if it matches the identifying bytes required at the start of a PNG image file.

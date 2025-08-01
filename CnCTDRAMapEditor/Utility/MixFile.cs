@@ -23,7 +23,7 @@ namespace MobiusEditor.Utility
 {
     public class MixParseException : Exception
     {
-        protected readonly String AffectedEntryIdTag = "MixParseExceptionAffectedEntryId";
+        protected readonly string AffectedEntryIdTag = "MixParseExceptionAffectedEntryId";
 
         public MixParseException()
         {

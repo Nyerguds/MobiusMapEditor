@@ -97,7 +97,7 @@ namespace MobiusEditor.Controls
             houseSettingsTracker.TrySetMember("Allies", new AlliesMask(allies));
         }
 
-        private void playersListBox_Resize(Object sender, EventArgs e)
+        private void playersListBox_Resize(object sender, EventArgs e)
         {
             if (!initDone)
                 return;

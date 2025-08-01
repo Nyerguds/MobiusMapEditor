@@ -96,11 +96,11 @@ namespace MobiusEditor.Model
             return Clone();
         }
 
-        public Boolean Equals(Terrain other)
+        public bool Equals(Terrain other)
         {
-            return this.Type == other.Type &&
-                this.Strength == other.Strength &&
-                this.Trigger == other.Trigger;
+            return Type == other.Type &&
+                Strength == other.Strength &&
+                Trigger == other.Trigger;
         }
     }
 }

@@ -1,6 +1,5 @@
-﻿// Class written by https://github.com/MortonPL, originally for the WAE project:
+﻿// Based on a class written by https://github.com/MortonPL, originally for the WAE project:
 // https://github.com/Rampastring/WorldAlteringEditor/blob/master/src/TSMapEditor/CCEngine/CCCrypto.cs
-// Minor adjustments were made to make it work on .Net 4.6.2.
 //
 // LICENSE
 //
@@ -27,7 +26,6 @@
 // SOFTWARE.
 using System;
 using System.IO;
-using System.Linq;
 using System.Numerics;
 
 namespace MobiusEditor.Utility
@@ -60,7 +58,7 @@ namespace MobiusEditor.Utility
 
             byte[] decryptedBlowfishKey = new byte[BlowfishStream.SIZE_OF_BLOWFISH_KEY];
 
-            var writeOffs = 0;
+            int writeOffs = 0;
             int remainingLength = encryptedBlowfishKey.Length;
             // For some reason write blocks are ALWAYS 39 bytes, even if returned data is less.
             const int writeBlock = 39;
@@ -70,7 +68,7 @@ namespace MobiusEditor.Utility
                 Array.Copy(encryptedBlowfishKey, i, part, 0, Math.Min(remainingLength, SIZE_OF_RSA_KEY));
                 remainingLength -= SIZE_OF_RSA_KEY;
                 // Perform RSA decryption on 40 byte chunks.
-                var decrypted = BigInteger.ModPow(new BigInteger(part), publicExponent, publicModulus).ToByteArray();
+                byte[] decrypted = BigInteger.ModPow(new BigInteger(part), publicExponent, publicModulus).ToByteArray();
                 // Adjust length to write.
                 int writeLength = decrypted.Length;
                 while (decrypted[--writeLength] == 0) { }
@@ -292,25 +290,25 @@ namespace MobiusEditor.Utility
             Buffer.BlockCopy(key, 0, this.key, 0, SIZE_OF_BLOWFISH_KEY);
 
             // Key processing #1. XOR all subkeys using key.
-            for (int i = 0; i < subkeys.Length; i++)
+            for (int i = 0; i < subkeys.Length; ++i)
                 subkeys[i] ^= ReverseEndianness(this.key[i % this.key.Length]);
 
             // Key processing #2.
             KeyExpansion();
         }
 
-        private UInt32 ReverseEndianness(UInt32 value)
+        private uint ReverseEndianness(uint value)
         {
             return RotateRight(value & 0x00FF00FFu, 8) // xx zz
                 + RotateLeft(value & 0xFF00FF00u, 8); // ww yy
         }
 
-        public static UInt32 RotateRight(UInt32 x, int n)
+        public static uint RotateRight(uint x, int n)
         {
             return (x >> n) | ((x) << (32 - n));
         }
 
-        public static UInt32 RotateLeft(UInt32 x, int n)
+        public static uint RotateLeft(uint x, int n)
         {
             return (x << n) | (x >> (32 - n));
         }
@@ -401,7 +399,7 @@ namespace MobiusEditor.Utility
             uint swap;
 
             // Perform 16 rounds.
-            for (int i = 0; i < 16; i++)
+            for (int i = 0; i < 16; ++i)
             {
                 left ^= subkeys[i];
                 right ^= FunctionF(left);
@@ -463,7 +461,7 @@ namespace MobiusEditor.Utility
         {
             var a = new uint[4];
             // Split input 32-bit value into four 8-bit values used as indices for substitution boxes.
-            for (int i = 0; i < 4; i++)
+            for (int i = 0; i < 4; ++i)
                 a[i] = substitutions[i, (value >> (24 - i * 8)) & 0xff];
 
             return ((a[0] + a[1]) ^ a[2]) + a[3];
@@ -484,7 +482,7 @@ namespace MobiusEditor.Utility
                 subkeys[i + 1] = right;
             }
 
-            for (int i = 0; i < 4; i++)
+            for (int i = 0; i < 4; ++i)
             {
                 for (int j = 0; j < 256; j += 2)
                 {

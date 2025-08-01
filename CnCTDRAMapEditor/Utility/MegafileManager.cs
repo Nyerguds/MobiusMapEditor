@@ -32,7 +32,7 @@ namespace MobiusEditor.Utility
 
         public TheaterType CurrentTheater { get; private set; }
 
-        public String LoadRoot { get; private set; }
+        public string LoadRoot { get; private set; }
 
         private readonly List<Megafile> megafiles = new List<Megafile>();
 
@@ -123,7 +123,7 @@ namespace MobiusEditor.Utility
             return null;
         }
 
-        public Byte[] ReadFile(string path)
+        public byte[] ReadFile(string path)
         {
             using (Stream file = OpenFile(path))
             {
@@ -143,7 +143,7 @@ namespace MobiusEditor.Utility
             }
         }
 
-        public Stream OpenFileClassic(String path)
+        public Stream OpenFileClassic(string path)
         {
             if (disposedValue)
             {
@@ -152,7 +152,7 @@ namespace MobiusEditor.Utility
             return mixFm.OpenFile(path);
         }
 
-        public Byte[] ReadFileClassic(string path)
+        public byte[] ReadFileClassic(string path)
         {
             using (Stream file = mixFm.OpenFile(path))
             {

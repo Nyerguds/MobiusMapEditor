@@ -24,14 +24,14 @@ namespace MobiusEditor.Controls.ControlsList
     /// <typeparam name="TU">Type of the information objects that contain all information to create/manage a listed control.</typeparam>
     public abstract class CustomControlInfo<T, TU> where T : Control
     {
-        public String Name { get; set; }
+        public string Name { get; set; }
         public TU[] Properties { get; set; }
 
         public abstract T MakeControl(TU property, ListedControlController<TU> controller);
         public abstract void UpdateControl(TU property, ListedControlController<TU> controller, T control);
         public abstract T GetControlByProperty(TU property, IEnumerable<T> controls);
 
-        public override String ToString()
+        public override string ToString()
         {
             return this.Name;
         }

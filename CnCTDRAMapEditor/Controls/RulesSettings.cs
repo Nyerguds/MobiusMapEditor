@@ -30,7 +30,7 @@ namespace MobiusEditor.Controls
             }
         }
 
-        private void txtRules_Leave(Object sender, EventArgs e)
+        private void txtRules_Leave(object sender, EventArgs e)
         {
             if (TextNeedsUpdating != null)
             {

@@ -145,7 +145,7 @@ namespace MobiusEditor.Controls
             return newValue;
         }
 
-        private int SetUpNumValue(int min, int max, int mouseWheelIncrement, int curValue, ToolTip tooltip, String tooltipText)
+        private int SetUpNumValue(int min, int max, int mouseWheelIncrement, int curValue, ToolTip tooltip, string tooltipText)
         {
             this.cmbValue.Visible = false;
             this.numValue.Visible = true;
@@ -163,7 +163,7 @@ namespace MobiusEditor.Controls
             return constrainedVal;
         }
 
-        private int SetUpCmbValue(ListItem<int>[] items, int value, ToolTip tooltip, String tooltipText)
+        private int SetUpCmbValue(ListItem<int>[] items, int value, ToolTip tooltip, string tooltipText)
         {
             this.numValue.Visible = false;
             this.cmbValue.Visible = true;
@@ -182,7 +182,7 @@ namespace MobiusEditor.Controls
             return selectIndex;
         }
 
-        private void CmbMission_SelectedIndexChanged(Object sender, EventArgs e)
+        private void CmbMission_SelectedIndexChanged(object sender, EventArgs e)
         {
             if (this.m_Loading || this.Info == null)
             {
@@ -202,7 +202,7 @@ namespace MobiusEditor.Controls
             }
         }
 
-        private void NumValue_ValueChanged(Object sender, EventArgs e)
+        private void NumValue_ValueChanged(object sender, EventArgs e)
         {
             if (this.m_Loading || this.Info == null || !this.numValue.Visible)
             {
@@ -213,7 +213,7 @@ namespace MobiusEditor.Controls
                 this.m_Controller.UpdateControlInfo(this.Info);
         }
 
-        private void CmbValue_SelectedIndexChanged(Object sender, EventArgs e)
+        private void CmbValue_SelectedIndexChanged(object sender, EventArgs e)
         {
             if (this.m_Loading || this.Info == null || !this.cmbValue.Visible)
             {
@@ -224,12 +224,12 @@ namespace MobiusEditor.Controls
             {
                 return;
             }
-            this.Info.Argument = (Byte)item.Value;
+            this.Info.Argument = (byte)item.Value;
             if (this.m_Controller != null)
                 this.m_Controller.UpdateControlInfo(this.Info);
         }
 
-        private void BtnRemove_Click(Object sender, EventArgs e)
+        private void BtnRemove_Click(object sender, EventArgs e)
         {
             if (this.m_Loading || this.Info == null)
             {

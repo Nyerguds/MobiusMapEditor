@@ -164,7 +164,7 @@ namespace MobiusEditor.Utility
             {
                 return false;
             }
-            Object value;
+            object value;
             if (propertyValues.TryGetValue(memberName, out value))
             {
                 result = (U)value;
@@ -212,12 +212,9 @@ namespace MobiusEditor.Utility
             return true;
         }
 
-        public void NotifyPropertyChanged(String name)
+        public void NotifyPropertyChanged(string name)
         {
-            if (this.PropertyChanged != null)
-            {
-                this.PropertyChanged(this, new PropertyChangedEventArgs(name));
-            }
+            PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(name));
         }
 
         public AttributeCollection GetAttributes()

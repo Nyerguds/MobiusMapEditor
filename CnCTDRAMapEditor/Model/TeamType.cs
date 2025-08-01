@@ -93,7 +93,7 @@ namespace MobiusEditor.Model
         {
         }
 
-        public Boolean Equals(TeamMission other)
+        public bool Equals(TeamMission other)
         {
             return Mission == other.Mission;
         }
@@ -207,7 +207,7 @@ namespace MobiusEditor.Model
             return teamType;
         }
 
-        public Boolean IsEmpty() {
+        public bool IsEmpty() {
             // true if nothing is filled in besides a default selected house.
             return
                 IsRoundAbout == false

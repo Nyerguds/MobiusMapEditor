@@ -39,7 +39,7 @@ namespace MobiusEditor.Utility
         /// <param name="brightnessThreshold">Brightness threshold needed to see a pixel as "bright".</param>
         /// <param name="mergeThreshold">The found spots are merged based on their square bounds. This is the amount of added pixels when checking these bounds. Use -1 to disable all merging.</param>
         /// <returns>A list of points indicating the centers of all found spots.</returns>
-        public static List<Point> FindPoints(Bitmap image, Boolean detectDark, Single brightnessThreshold, Int32 mergeThreshold)
+        public static List<Point> FindPoints(Bitmap image, bool detectDark, Single brightnessThreshold, int mergeThreshold)
         {
             List<List<Point>> blobs = FindBlobs(image, detectDark, brightnessThreshold, mergeThreshold, true);
             return blobs.Where(b => b.Count > 0).Select(GetBlobCenter).ToList();
@@ -54,36 +54,36 @@ namespace MobiusEditor.Utility
         /// <param name="mergeThreshold">The found spots are merged based on their square bounds. This is the amount of added pixels when checking these bounds. Use -1 to disable all merging.</param>
         /// <param name="getEdgesOnly">True to make the returned lists only contain the edges of the blobs. This saves a lot of memory.</param>
         /// <returns>A list of blobs.</returns>
-        public static List<List<Point>> FindBlobs(Bitmap image, Boolean detectDark, Single brightnessThreshold, Int32 mergeThreshold, Boolean getEdgesOnly)
+        public static List<List<Point>> FindBlobs(Bitmap image, bool detectDark, float brightnessThreshold, int mergeThreshold, bool getEdgesOnly)
         {
-            Int32 width = image.Width;
-            Int32 height = image.Height;
+            int width = image.Width;
+            int height = image.Height;
             // Binarization: get 32-bit data
             BitmapData sourceData = image.LockBits(new Rectangle(0, 0, width, height), ImageLockMode.ReadOnly, PixelFormat.Format32bppArgb);
-            Int32 stride = sourceData.Stride;
-            Byte[] data = new Byte[stride * height];
+            int stride = sourceData.Stride;
+            byte[] data = new byte[stride * height];
             System.Runtime.InteropServices.Marshal.Copy(sourceData.Scan0, data, 0, data.Length);
             image.UnlockBits(sourceData);
             // Binarization: get brightness
             Single[,] brightness = new Single[height, width];
-            Int32 lineOffset = 0;
-            for (Int32 y = 0; y < height; ++y)
+            int lineOffset = 0;
+            for (int y = 0; y < height; ++y)
             {
                 // use stride to get the start offset of each line
-                Int32 offset = lineOffset;
-                for (Int32 x = 0; x < width; ++x)
+                int offset = lineOffset;
+                for (int x = 0; x < width; ++x)
                 {
                     // get color
-                    Byte blu = data[offset + 0];
-                    Byte grn = data[offset + 1];
-                    Byte red = data[offset + 2];
+                    byte blu = data[offset + 0];
+                    byte grn = data[offset + 1];
+                    byte red = data[offset + 2];
                     Color c = Color.FromArgb(red, grn, blu);
                     brightness[y, x] = c.GetBrightness();
                     offset += 4;
                 }
                 lineOffset += stride;
             }
-            Func<Single[,], Int32, Int32, Boolean> clearsThreshold;
+            Func<Single[,], int, int, bool> clearsThreshold;
             if (detectDark)
                 clearsThreshold = (imgData, yVal, xVal) => imgData[yVal, xVal] <= brightnessThreshold;
             else
@@ -114,10 +114,10 @@ namespace MobiusEditor.Utility
         /// <param name="allEightEdges">When scanning for pixels to add to the blob, scan all eight surrounding pixels rather than just top, left, bottom, right.</param>
         /// <param name="mergeThreshold">The found spots are merged based on their square bounds. This is the amount of added pixels when checking these bounds. Use -1 to disable all merging.</param>
         /// <param name="getEdgesOnly">True to make the lists in 'blobs' only contain the edge points of the blobs. The 'inBlobs' items will still have all points marked.</param>
-        public static List<List<Point>> FindBlobs<T>(T data, Int32 width, Int32 height, Func<T, Int32, Int32, Boolean> clearsThreshold, Boolean allEightEdges, Int32 mergeThreshold, Boolean getEdgesOnly)
+        public static List<List<Point>> FindBlobs<T>(T data, int width, int height, Func<T, int, int, bool> clearsThreshold, bool allEightEdges, int mergeThreshold, bool getEdgesOnly)
         {
-            List<Boolean[,]> inBlobs;
-            Boolean[,] fullBlobs;
+            List<bool[,]> inBlobs;
+            bool[,] fullBlobs;
             List<List<Point>> blobs = FindBlobs(data, width, height, clearsThreshold, allEightEdges, getEdgesOnly, out inBlobs, out fullBlobs);
             MergeBlobs(blobs, width, height, null, mergeThreshold);
             return blobs;
@@ -125,7 +125,7 @@ namespace MobiusEditor.Utility
 
         /// <summary>
         /// Detects a list of all blobs in the image, and merges any with bounds that intersect with each other according to the 'mergeThreshold' parameter.
-        /// Returns the results as Boolean[,] arrays.
+        /// Returns the results as a list of bool[,] arrays.
         /// </summary>
         /// <typeparam name="T">Type of the list to detect equal neighbours in.</typeparam>
         /// <param name="data">Image data array. It is processed as one pixel per coordinate.</param>
@@ -135,10 +135,10 @@ namespace MobiusEditor.Utility
         /// <param name="allEightEdges">When scanning for pixels to add to the blob, scan all eight surrounding pixels rather than just top, left, bottom, right.</param>
         /// <param name="mergeThreshold">The found spots are merged based on their square bounds. This is the amount of added pixels when checking these bounds. Use -1 to disable all merging.</param>
         /// <param name="getEdgesOnly">True to make the lists in 'blobs' only contain the edge points of the blobs. The 'inBlobs' items will still have all points marked.</param>
-        public static List<Boolean[,]> FindBlobsAsBooleans<T>(T data, Int32 width, Int32 height, Func<T, Int32, Int32, Boolean> clearsThreshold, Boolean allEightEdges, Int32 mergeThreshold, Boolean getEdgesOnly)
+        public static List<bool[,]> FindBlobsAsBooleans<T>(T data, int width, int height, Func<T, int, int, bool> clearsThreshold, bool allEightEdges, int mergeThreshold, bool getEdgesOnly)
         {
-            List<Boolean[,]> inBlobs;
-            Boolean[,] fullBlobs;
+            List<bool[,]> inBlobs;
+            bool[,] fullBlobs;
             List<List<Point>> blobs = FindBlobs(data, width, height, clearsThreshold, allEightEdges, getEdgesOnly, out inBlobs, out fullBlobs);
             MergeBlobs(blobs, width, height, inBlobs, mergeThreshold);
             return inBlobs;
@@ -155,10 +155,10 @@ namespace MobiusEditor.Utility
         /// <param name="clearsThreshold">Function to check if the pixel at the given coordinates clears the threshold. Should be of the format (imgData, yVal, xVal) => Boolean.</param>
         /// <param name="allEightEdges">When scanning for pixels to add to the blob, scan all eight surrounding pixels rather than just top, left, bottom, right.</param>
         /// <param name="getEdgesOnly">True to make the lists in 'blobs' only contain the edge points of the blobs. The 'inBlobs' items will still have all points marked.</param>
-        public static List<List<Point>> FindBlobs<T>(T data, Int32 width, Int32 height, Point[] toCheck, Func<T, Int32, Int32, Boolean> clearsThreshold, Boolean allEightEdges, Boolean getEdgesOnly)
+        public static List<List<Point>> FindBlobs<T>(T data, int width, int height, Point[] toCheck, Func<T, int, int, bool> clearsThreshold, bool allEightEdges, bool getEdgesOnly)
         {
-            List<Boolean[,]> inBlobs;
-            Boolean[,] fullBlobs;
+            List<bool[,]> inBlobs;
+            bool[,] fullBlobs;
             List<List<Point>> blobs = FindBlobs(data, width, height, toCheck, clearsThreshold, allEightEdges, getEdgesOnly, out inBlobs, out fullBlobs);
             return blobs;
         }
@@ -177,15 +177,15 @@ namespace MobiusEditor.Utility
         /// <param name="inBlobs">Output parameter for receiving the blobs as boolean[,] arrays.</param>
         /// <param name="inAnyBlob">Output parameter for receiving all points in all the blobs as single boolean[,] array.</param>
         /// <returns>The list of blobs, as list of list of points</returns>
-        public static List<List<Point>> FindBlobs<T>(T data, Int32 width, Int32 height, Point[] toCheck, Func<T, Int32, Int32, Boolean> clearsThreshold, Boolean allEightEdges, Boolean getEdgesOnly, out List<Boolean[,]> inBlobs, out Boolean[,] inAnyBlob)
+        public static List<List<Point>> FindBlobs<T>(T data, int width, int height, Point[] toCheck, Func<T, int, int, bool> clearsThreshold, bool allEightEdges, bool getEdgesOnly, out List<bool[,]> inBlobs, out bool[,] inAnyBlob)
         {
             List<List<Point>> blobs = new List<List<Point>>();
-            inAnyBlob = new Boolean[height, width];
-            inBlobs = new List<Boolean[,]>();
-            for (Int32 p = 0; p < toCheck.Length; ++p)
+            inAnyBlob = new bool[height, width];
+            inBlobs = new List<bool[,]>();
+            for (int p = 0; p < toCheck.Length; ++p)
             {
                 Point pt = toCheck[p];
-                Boolean[,] inBlob;
+                bool[,] inBlob;
                 List<Point> newBlob = MakeBlobForPoint(pt.X, pt.Y, data, width, height, clearsThreshold, allEightEdges, getEdgesOnly, inAnyBlob, out inBlob);
                 if (newBlob == null)
                     continue;
@@ -205,10 +205,10 @@ namespace MobiusEditor.Utility
         /// <param name="clearsThreshold">Function to check if the pixel at the given coordinates clears the threshold. Should be of the format (imgData, yVal, xVal) => Boolean.</param>
         /// <param name="allEightEdges">When scanning for pixels to add to the blob, scan all eight surrounding pixels rather than just top, left, bottom, right.</param>
         /// <param name="getEdgesOnly">True to make the lists in 'blobs' only contain the edge points of the blobs. The 'inBlobs' items will still have all points marked.</param>
-        public static List<List<Point>> FindBlobs<T>(T data, Int32 width, Int32 height, Func<T, Int32, Int32, Boolean> clearsThreshold, Boolean allEightEdges, Boolean getEdgesOnly)
+        public static List<List<Point>> FindBlobs<T>(T data, int width, int height, Func<T, int, int, bool> clearsThreshold, bool allEightEdges, bool getEdgesOnly)
         {
-            List<Boolean[,]> inBlobs;
-            Boolean[,] fullBlobs;
+            List<bool[,]> inBlobs;
+            bool[,] fullBlobs;
             List<List<Point>> blobs = FindBlobs(data, width, height, clearsThreshold, allEightEdges, getEdgesOnly, out inBlobs, out fullBlobs);
             return blobs;
         }
@@ -226,16 +226,16 @@ namespace MobiusEditor.Utility
         /// <param name="inBlobs">Output parameter for receiving the blobs as boolean[,] arrays.</param>
         /// <param name="inAnyBlob">Output parameter for receiving all points in all the blobs as single boolean[,] array.</param>
         /// <returns>The list of blobs, as list of list of points</returns>
-        public static List<List<Point>> FindBlobs<T>(T data, Int32 width, Int32 height, Func<T, Int32, Int32, Boolean> clearsThreshold, Boolean allEightEdges, Boolean getEdgesOnly, out List<Boolean[,]> inBlobs, out Boolean[,] inAnyBlob)
+        public static List<List<Point>> FindBlobs<T>(T data, int width, int height, Func<T, int, int, bool> clearsThreshold, bool allEightEdges, bool getEdgesOnly, out List<bool[,]> inBlobs, out bool[,] inAnyBlob)
         {
             List<List<Point>> blobs = new List<List<Point>>();
-            inAnyBlob = new Boolean[height, width];
-            inBlobs = new List<Boolean[,]>();
-            for (Int32 y = 0; y < height; ++y)
+            inAnyBlob = new bool[height, width];
+            inBlobs = new List<bool[,]>();
+            for (int y = 0; y < height; ++y)
             {
-                for (Int32 x = 0; x < width; ++x)
+                for (int x = 0; x < width; ++x)
                 {
-                    Boolean[,] inBlob;
+                    bool[,] inBlob;
                     List<Point> newBlob = MakeBlobForPoint(x, y, data, width, height, clearsThreshold, allEightEdges, getEdgesOnly, inAnyBlob, out inBlob);
                     if (newBlob == null)
                         continue;
@@ -255,22 +255,22 @@ namespace MobiusEditor.Utility
         /// <param name="height">Height of full image. Use -1 to detect from blob bounds.</param>
         /// <param name="inBlobs">Boolean arrays that contain whether pixels are in a blob. If not null, these are adapted too.</param>
         /// <param name="mergeThreshold">The found blobs are merged based on their square bounds. This is the amount of added pixels when checking these bounds. Use -1 to disable all merging.</param>
-        public static void MergeBlobs(List<List<Point>> blobs, Int32 width, Int32 height, List<Boolean[,]> inBlobs, Int32 mergeThreshold)
+        public static void MergeBlobs(List<List<Point>> blobs, int width, int height, List<bool[,]> inBlobs, int mergeThreshold)
         {
             if (width == -1 || height == -1)
             {
                 width = -1;
                 height = -1;
-                Int32 nrOfBlobs = blobs.Count;
-                for (Int32 i = 0; i < nrOfBlobs; ++i)
+                int nrOfBlobs = blobs.Count;
+                for (int i = 0; i < nrOfBlobs; ++i)
                 {
                     List<Point> blob = blobs[i];
-                    Int32 nrOfPoints = blob.Count;
-                    for (Int32 j = 0; j < nrOfPoints; ++j)
+                    int nrOfPoints = blob.Count;
+                    for (int j = 0; j < nrOfPoints; ++j)
                     {
                         Point point = blob[j];
-                        Int32 pointX = point.X;
-                        Int32 pointY = point.Y;
+                        int pointX = point.X;
+                        int pointY = point.Y;
                         if (width < pointX)
                             width = pointX;
                         if (height < pointY)
@@ -281,14 +281,14 @@ namespace MobiusEditor.Utility
                 width++;
                 height++;
             }
-            Boolean continueMerge = mergeThreshold >= 0;
+            bool continueMerge = mergeThreshold >= 0;
             List<Rectangle> collBounds = new List<Rectangle>();
             List<Rectangle> collBoundsInfl = new List<Rectangle>();
             Rectangle imageBounds = new Rectangle(0, 0, width, height);
-            Int32 blobsCount = blobs.Count;
+            int blobsCount = blobs.Count;
             if (continueMerge)
             {
-                for (Int32 i = 0; i < blobsCount; ++i)
+                for (int i = 0; i < blobsCount; ++i)
                 {
                     Rectangle rect = GetBlobBounds(blobs[i]);
                     collBounds.Add(rect);
@@ -299,19 +299,19 @@ namespace MobiusEditor.Utility
             while (continueMerge)
             {
                 continueMerge = false;
-                for (Int32 i = 0; i < blobsCount; ++i)
+                for (int i = 0; i < blobsCount; ++i)
                 {
                     List<Point> blob1 = blobs[i];
                     if (blob1.Count == 0)
                         continue;
-                    Boolean[,] inBlob1 = inBlobs == null ? null : inBlobs[i];
+                    bool[,] inBlob1 = inBlobs == null ? null : inBlobs[i];
                     Rectangle checkBounds = collBoundsInfl[i];
-                    for (Int32 j = 0; j < blobsCount; ++j)
+                    for (int j = 0; j < blobsCount; ++j)
                     {
                         if (i == j)
                             continue;
                         List<Point> blob2 = blobs[j];
-                        Int32 blob2Count = blob2.Count;
+                        int blob2Count = blob2.Count;
                         if (blob2Count == 0)
                             continue;
                         // collBounds corresponds to blobs in length.
@@ -325,7 +325,7 @@ namespace MobiusEditor.Utility
                         // Mark all points on the ref to the inBlobs[i] boolean array. Easier to use the points list for this instead of the second inBlobs array.
                         if (inBlob1 != null)
                         {
-                            for (Int32 k = 0; k < blob2Count; ++k)
+                            for (int k = 0; k < blob2Count; ++k)
                             {
                                 Point p = blob2[k];
                                 inBlob1[p.Y, p.X] = true;
@@ -342,21 +342,21 @@ namespace MobiusEditor.Utility
                 }
             }
             // Filter out removed entries.
-            Int32[] nonEmptyIndices = Enumerable.Range(0, blobsCount).Where(i => blobs[i].Count > 0).ToArray();
-            Int32 nrOfNonEmpty = nonEmptyIndices.Length;
+            int[] nonEmptyIndices = Enumerable.Range(0, blobsCount).Where(i => blobs[i].Count > 0).ToArray();
+            int nrOfNonEmpty = nonEmptyIndices.Length;
             // Nothing to remove.
             if (nrOfNonEmpty == blobsCount)
                 return;
             if (inBlobs != null)
             {
-                List<Boolean[,]> trimmedInBlobs = new List<Boolean[,]>();
-                for (Int32 i = 0; i < nrOfNonEmpty; ++i)
+                List<bool[,]> trimmedInBlobs = new List<bool[,]>();
+                for (int i = 0; i < nrOfNonEmpty; ++i)
                     trimmedInBlobs.Add(inBlobs[nonEmptyIndices[i]]);
                 inBlobs.Clear();
                 inBlobs.AddRange(trimmedInBlobs);
             }
             List<List<Point>> trimmedBlobs = new List<List<Point>>();
-            for (Int32 i = 0; i < nrOfNonEmpty; ++i)
+            for (int i = 0; i < nrOfNonEmpty; ++i)
                 trimmedBlobs.Add(blobs[nonEmptyIndices[i]]);
             blobs.Clear();
             blobs.AddRange(trimmedBlobs);
@@ -378,7 +378,7 @@ namespace MobiusEditor.Utility
         /// <param name="inAnyBlob">array of booleans with true values for the coordinates of all points already added to blobs. If not null, this is checked, and will be updated with the new added points.</param>
         /// <param name="inBlob">array of booleans with true values for the coordinates that are in the returned blob.</param>
         /// <returns>A list containing all points in the new blob, or null if the point was either already in <see cref="inAnyBlob"/>, or the given point itself does not pass <see cref="clearsThreshold"/>. Can be null.</returns>
-        public static List<Point> MakeBlobForPoint<T>(Int32 pointX, Int32 pointY, T data, Int32 width, Int32 height, Func<T, Int32, Int32, Boolean> clearsThreshold, Boolean allEightEdges, Boolean getEdgesOnly, Boolean[,] inAnyBlob, out Boolean[,] inBlob)
+        public static List<Point> MakeBlobForPoint<T>(int pointX, int pointY, T data, int width, int height, Func<T, int, int, bool> clearsThreshold, bool allEightEdges, bool getEdgesOnly, bool[,] inAnyBlob, out bool[,] inBlob)
         {
             // If the point is already in a blob, or if it doesn't clear the threshold, abort.
             if ((inAnyBlob != null && inAnyBlob[pointY, pointX]) || !clearsThreshold(data, pointY, pointX))
@@ -389,17 +389,17 @@ namespace MobiusEditor.Utility
             // Initialize blob
             List<Point> blob = new List<Point>();
             // existence check optimisation in the form of a boolean grid that is kept synced with the points in the collection.
-            inBlob = new Boolean[height, width];
+            inBlob = new bool[height, width];
             // setting up all variables to use, making sure nothing needs to be fetched inside the loops
             Point[] currentEdge = new Point[1];
-            Int32 lastX = width - 1;
-            Int32 lastY = height - 1;
+            int lastX = width - 1;
+            int lastY = height - 1;
             List<Point> nextEdge = new List<Point>();
-            Boolean[,] inNextEdge = new Boolean[height, width];
-            Int32 clearLen = inNextEdge.Length;
+            bool[,] inNextEdge = new bool[height, width];
+            int clearLen = inNextEdge.Length;
             // starting point
             currentEdge[0] = new Point(pointX, pointY);
-            Int32 currentEdgeCount = currentEdge.Length;
+            int currentEdgeCount = currentEdge.Length;
             // Start looking.
             while (currentEdgeCount > 0)
             {
@@ -407,11 +407,11 @@ namespace MobiusEditor.Utility
                 // Memory-unoptimised: add all points.
                 if (!getEdgesOnly)
                     blob.AddRange(currentEdge);
-                for (Int32 i = 0; i < currentEdgeCount; ++i)
+                for (int i = 0; i < currentEdgeCount; ++i)
                 {
                     Point p = currentEdge[i];
-                    Int32 x = p.X;
-                    Int32 y = p.Y;
+                    int x = p.X;
+                    int y = p.Y;
                     // Mark point in boolean array for quick checks later.
                     inBlob[y, x] = true;
                     // Optimisation: keep a combined boolean array of all blobs for quick checking at the start.
@@ -429,17 +429,17 @@ namespace MobiusEditor.Utility
                 // 2. Search all neighbouring pixels of the current neighbours list.
                 // Set starting capacity of next edge to 2 times the amount of points in the current edge, to avoid too many resizes.
                 nextEdge.Capacity = currentEdgeCount * 2;
-                for (Int32 i = 0; i < currentEdgeCount; ++i)
+                for (int i = 0; i < currentEdgeCount; ++i)
                 {
                     Point ep = currentEdge[i];
                     // 3. gets all (4 or 8) neighbouring pixels.
                     List<Point> neighbours = GetNeighbours(ep.X, ep.Y, lastX, lastY, allEightEdges);
-                    Int32 neighboursCount = neighbours.Count;
-                    for (Int32 j = 0; j < neighboursCount; ++j)
+                    int neighboursCount = neighbours.Count;
+                    for (int j = 0; j < neighboursCount; ++j)
                     {
                         Point p = neighbours[j];
-                        Int32 x = p.X;
-                        Int32 y = p.Y;
+                        int x = p.X;
+                        int y = p.Y;
                         // 4. If the point is not already in the blob or in the new edge collection, and clears the threshold, add it to the new edge collection.
                         if (inBlob[y, x] || inNextEdge[y, x] || !clearsThreshold(data, y, x))
                             continue;
@@ -465,7 +465,7 @@ namespace MobiusEditor.Utility
         /// <param name="lastY">Last valid Y-coordinate on the image.</param>
         /// <param name="allEight">True to include diagonal neighbours.</param>
         /// <returns>The list of all valid neighbours around the given coordinate.</returns>
-        private static List<Point> GetNeighbours(Int32 x, Int32 y, Int32 lastX, Int32 lastY, Boolean allEight)
+        private static List<Point> GetNeighbours(int x, int y, int lastX, int lastY, bool allEight)
         {
             // Init to max value to avoid constant list expand operations.
             List<Point> neighbours = new List<Point>(allEight ? 8 : 4);
@@ -496,12 +496,12 @@ namespace MobiusEditor.Utility
         {
             if (blob.Count == 0)
                 return new Rectangle(0, 0, 0, 0);
-            Int32 minX = Int32.MaxValue;
-            Int32 maxX = 0;
-            Int32 minY = Int32.MaxValue;
-            Int32 maxY = 0;
-            Int32 blobCount = blob.Count;
-            for (Int32 i = 0; i < blobCount; ++i)
+            int minX = Int32.MaxValue;
+            int maxX = 0;
+            int minY = Int32.MaxValue;
+            int maxY = 0;
+            int blobCount = blob.Count;
+            for (int i = 0; i < blobCount; ++i)
             {
                 Point p = blob[i];
                 minX = Math.Min(minX, p.X);
@@ -512,24 +512,24 @@ namespace MobiusEditor.Utility
             return new Rectangle(minX, minY, maxX - minX + 1, maxY - minY + 1);
         }
 
-        public static List<Point> GetBlobEdgePoints(List<Point> blob, Int32 imageWidth, Int32 imageHeight)
+        public static List<Point> GetBlobEdgePoints(List<Point> blob, int imageWidth, int imageHeight)
         {
-            Boolean[,] pointInList = new Boolean[imageHeight, imageWidth];
-            Int32 blobCount = blob.Count;
-            for (Int32 i = 0; i < blobCount; ++i)
+            bool[,] pointInList = new bool[imageHeight, imageWidth];
+            int blobCount = blob.Count;
+            for (int i = 0; i < blobCount; ++i)
             {
                 Point p = blob[i];
                 pointInList[p.Y, p.X] = true;
             }
             List<Point> edgePoints = new List<Point>();
-            Int32 lastX = imageWidth - 1;
-            Int32 lastY = imageHeight - 1;
+            int lastX = imageWidth - 1;
+            int lastY = imageHeight - 1;
 
-            for (Int32 i = 0; i < blobCount; ++i)
+            for (int i = 0; i < blobCount; ++i)
             {
                 Point p = blob[i];
-                Int32 x = p.X;
-                Int32 y = p.Y;
+                int x = p.X;
+                int y = p.Y;
                 // Image edge is obviously a blob edge too.
                 if (x == 0 || y == 0 || x == lastX || y == lastY
                     || !pointInList[y - 1, x]

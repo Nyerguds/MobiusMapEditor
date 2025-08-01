@@ -26,7 +26,7 @@ namespace MobiusEditor.Controls
     {
         ITechnoType[] technos;
 
-        public TeamItemInfo(String name, IEnumerable<TeamTypeClass> properties, IEnumerable<ITechnoType> technos)
+        public TeamItemInfo(string name, IEnumerable<TeamTypeClass> properties, IEnumerable<ITechnoType> technos)
         {
             Name = name;
             Properties = properties.ToArray();

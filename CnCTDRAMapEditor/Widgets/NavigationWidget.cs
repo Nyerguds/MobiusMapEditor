@@ -206,7 +206,7 @@ namespace MobiusEditor.Widgets
             CheckIfDragging();
         }
 
-        private void MapPanel_KeyDown(Object sender, KeyEventArgs e)
+        private void MapPanel_KeyDown(object sender, KeyEventArgs e)
         {
             if (CheckIfDragging() || startScrollMouseLocation.HasValue)
             {
@@ -214,7 +214,7 @@ namespace MobiusEditor.Widgets
             }
         }
 
-        private void MapPanel_KeyUp(Object sender, KeyEventArgs e)
+        private void MapPanel_KeyUp(object sender, KeyEventArgs e)
         {
             CheckIfDragging();
         }

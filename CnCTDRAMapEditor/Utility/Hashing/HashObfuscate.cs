@@ -63,7 +63,7 @@ namespace MobiusEditor.Utility.Hashing
 			**	Ensure that only visible ASCII characters compose the key phrase. This
 			**	discourages the direct forced illegal character input method of attack.
 			*/
-            for (int index = 0; index < length; index++)
+            for (int index = 0; index < length; ++index)
             {
                 if (!isGraph[data[index]])
                 {
@@ -90,7 +90,7 @@ namespace MobiusEditor.Utility.Hashing
                     newBuffer[i] = 0xA5;
                 Array.Copy(data, 0, newBuffer, 0, length);
                 int index;
-                for (index = length; index < maxlen; index++)
+                for (index = length; index < maxlen; ++index)
                 {
                     newBuffer[index] = (byte)('A' + ((('?' ^ newBuffer[index - length]) + index) % 26));
                 }
@@ -111,7 +111,7 @@ namespace MobiusEditor.Utility.Hashing
 			**	cypher process occurs later.
 			*/
             Array.Reverse(data);     // Restore original string order.
-            for (int index = 0; index < length; index++)
+            for (int index = 0; index < length; ++index)
             {
                 code ^= data[index];
                 byte temp = (byte)code;
@@ -128,7 +128,7 @@ namespace MobiusEditor.Utility.Hashing
             int _lossbitsLen = _lossbits.Length;
             byte[] _addbits = { 0x10, 0x00, 0x00, 0x80, 0x40, 0x00, 0x00, 0x04 };
             int _addbitsLen = _addbits.Length;
-            for (int index = 0; index < length; index++)
+            for (int index = 0; index < length; ++index)
             {
                 data[index] |= _addbits[index % _addbitsLen];
                 data[index] &= (byte)~_lossbits[index % _lossbitsLen];

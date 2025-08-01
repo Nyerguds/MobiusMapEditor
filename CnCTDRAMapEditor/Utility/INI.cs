@@ -789,7 +789,7 @@ namespace MobiusEditor.Utility
                 {
                     continue;
                 }
-                Object value = property.GetValue(data);
+                object value = property.GetValue(data);
                 if (property.PropertyType.IsValueType || (value != null))
                 {
                     TypeConverter converter = propertyDescriptors.Find(property.Name, false)?.Converter ?? TypeDescriptor.GetConverter(property.PropertyType);

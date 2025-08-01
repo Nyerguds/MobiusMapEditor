@@ -109,14 +109,14 @@ namespace MobiusEditor.Model
             return Clone();
         }
 
-        public Boolean DataEquals(Infantry other)
+        public bool DataEquals(Infantry other)
         {
-            return this.Type == other.Type &&
-                this.House == other.House &&
-                this.Strength == other.Strength &&
-                this.Direction == other.Direction &&
-                this.Trigger == other.Trigger &&
-                this.Mission == other.Mission;
+            return Type == other.Type &&
+                House == other.House &&
+                Strength == other.Strength &&
+                Direction == other.Direction &&
+                Trigger == other.Trigger &&
+                Mission == other.Mission;
         }
     }
 
@@ -206,7 +206,7 @@ namespace MobiusEditor.Model
             "Bottom right"
         };
 
-        public static String GetStoppingTypeName(InfantryStoppingType stopLocation)
+        public static string GetStoppingTypeName(InfantryStoppingType stopLocation)
         {
             int index = (int)stopLocation;
             if (index >= 0 && index < Enum.GetValues(typeof(InfantryStoppingType)).Length)

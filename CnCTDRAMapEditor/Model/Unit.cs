@@ -99,14 +99,14 @@ namespace MobiusEditor.Model
             return Clone();
         }
 
-        public Boolean DataEquals(Unit other)
+        public bool DataEquals(Unit other)
         {
-            return this.Type == other.Type &&
-                this.House == other.House &&
-                this.Strength == other.Strength &&
-                this.Direction == other.Direction &&
-                this.Mission == other.Mission &&
-                this.Trigger == other.Trigger;
+            return Type == other.Type &&
+                House == other.House &&
+                Strength == other.Strength &&
+                Direction == other.Direction &&
+                Mission == other.Mission &&
+                Trigger == other.Trigger;
         }
     }
 }

@@ -54,7 +54,7 @@ namespace MobiusEditor.Controls.ControlsList
             this.SuspendLayout();
             if (contentsCount > 0) {
 
-                for (Int32 i = 0; i < contentsCount; ++i)
+                for (int i = 0; i < contentsCount; ++i)
                 {
                     TU prop = this.m_CustomControlInfo.Properties[i];
                     T control = this.m_CustomControlInfo.GetControlByProperty(prop, this.m_Contents);
@@ -74,9 +74,9 @@ namespace MobiusEditor.Controls.ControlsList
             this.lblTypeName.Text = cci.Name;
             this.lblTypeName.Visible = !String.IsNullOrEmpty(cci.Name);
             TU[] props = cci.Properties;
-            Int32 nrOfProps = props.Length;
+            int nrOfProps = props.Length;
             int finalHeight = 0;
-            for (Int32 i = 0; i < nrOfProps; ++i)
+            for (int i = 0; i < nrOfProps; ++i)
             {
                 try
                 {
@@ -128,14 +128,14 @@ namespace MobiusEditor.Controls.ControlsList
             control.Select();
         }
 
-        protected int AddControl(T control, Boolean refresh)
+        protected int AddControl(T control, bool refresh)
         {
             if (refresh)
                 this.SuspendLayout();
-            Int32 ySpacing = this.lblTypeName.Location.Y;
+            int ySpacing = this.lblTypeName.Location.Y;
             // Can't count on "lblTypeName.Visible" inside suspended layout.
-            Boolean addSpacing = !String.IsNullOrEmpty(lblTypeName.Text);
-            Int32 YPos;
+            bool addSpacing = !String.IsNullOrEmpty(lblTypeName.Text);
+            int YPos;
             if (this.m_Contents.Count == 0)
                 YPos = ySpacing + (addSpacing ? this.lblTypeName.Height + ySpacing : 0);
             else
@@ -161,8 +161,8 @@ namespace MobiusEditor.Controls.ControlsList
         {
             this.SuspendLayout();
             this.lblTypeName.Text = String.Empty;
-            Int32 contentsCount = this.m_Contents.Count;
-            for (Int32 i = 0; i < contentsCount; ++i)
+            int contentsCount = this.m_Contents.Count;
+            for (int i = 0; i < contentsCount; ++i)
             {
                 T c = this.m_Contents[i];
                 this.Controls.Remove(c);
@@ -172,11 +172,11 @@ namespace MobiusEditor.Controls.ControlsList
             this.PerformLayout();
         }
 
-        protected void EffectBarList_Resize(Object sender, EventArgs e)
+        protected void EffectBarList_Resize(object sender, EventArgs e)
         {
             this.SuspendLayout();
-            Int32 contentsCount = this.m_Contents.Count;
-            for (Int32 i = 0; i < contentsCount; ++i)
+            int contentsCount = this.m_Contents.Count;
+            for (int i = 0; i < contentsCount; ++i)
             {
                 T c = this.m_Contents[i];
                 c.Size = new Size(this.DisplayRectangle.Width, c.Size.Height);

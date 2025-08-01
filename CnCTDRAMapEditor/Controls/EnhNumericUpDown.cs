@@ -35,7 +35,7 @@ namespace MobiusEditor.Controls
         [DefaultValue(1)]
         [Category("Data")]
         [Description("Indicates the amount to increment or decrement on mouse wheel scroll.")]
-        public Int32 MouseWheelIncrement { get; set; }
+        public int MouseWheelIncrement { get; set; }
         [Category("Action")]
         [Description("Occurs when the value is changed a single tick through either the up-down arrow keys, the up-down buttons or the scrollwheel.")]
         public event EventHandler<UpDownEventArgs> ValueUpDown;
@@ -45,15 +45,15 @@ namespace MobiusEditor.Controls
         [Category("Data")]
         [Description("True to make the scrollwheel action cause validation on EnteredValue.")]
         [DefaultValue(true)]
-        public Boolean ScrollValidatesEnter { get { return this._ScrollValidatesEnter; } set { this._ScrollValidatesEnter = value; } }
+        public bool ScrollValidatesEnter { get { return _ScrollValidatesEnter; } set { _ScrollValidatesEnter = value; } }
         [Category("Data")]
         [DefaultValue(true)]
         [Description("True to make the up-down arrow keys or controls cause validation on EnteredValue.")]
-        public Boolean UpDownValidatesEnter { get { return this._UpDownValidatesEnter; } set { this._UpDownValidatesEnter = value; } }
+        public bool UpDownValidatesEnter { get { return _UpDownValidatesEnter; } set { _UpDownValidatesEnter = value; } }
         [Category("Data")]
         [DefaultValue(true)]
         [Description("True to make focus loss cause validation on EnteredValue.")]
-        public Boolean FocusLossValidatesEnter { get { return this._FocusLossValidatesEnter; } set { this._FocusLossValidatesEnter = value; } }
+        public bool FocusLossValidatesEnter { get { return _FocusLossValidatesEnter; } set { _FocusLossValidatesEnter = value; } }
 
         [Browsable(false), EditorBrowsable(EditorBrowsableState.Never)]
         [DesignerSerializationVisibility(DesignerSerializationVisibility.Hidden)]
@@ -72,7 +72,7 @@ namespace MobiusEditor.Controls
                     if (value < Minimum || value > Maximum)
                     {
                         // Let the system take care of the 'out of range' exception.
-                        this.Value = value;
+                        Value = value;
                     }
                     Type numUpDownType = typeof(NumericUpDown);
                     FieldInfo val = numUpDownType.GetField("currentValue", BindingFlags.Instance | BindingFlags.NonPublic);
@@ -88,71 +88,71 @@ namespace MobiusEditor.Controls
         /// <summary>As annoying side effect of the fact NumericUpDown implements ISupportInitialize, this needs to be accessible, but isn't.</summary>
         [Browsable(false), EditorBrowsable(EditorBrowsableState.Never)]
         [DesignerSerializationVisibility(DesignerSerializationVisibility.Hidden)]
-        protected Boolean IsInitalising
+        protected bool IsInitalising
         {
             get
             {
                 Type numUpDownType = typeof(NumericUpDown);
                 FieldInfo init = numUpDownType.GetField("initializing", BindingFlags.Instance | BindingFlags.NonPublic);
-                return init != null && (Boolean)init.GetValue(this);
+                return init != null && (bool)init.GetValue(this);
             }
         }
 
         [Browsable(false), EditorBrowsable(EditorBrowsableState.Never)]
         [DesignerSerializationVisibility(DesignerSerializationVisibility.Hidden)]
-        public Int32 IntValue
+        public int IntValue
         {
-            get { return (Int32)this.Value; }
-            set { this.Value = this.Constrain(value); }
+            get { return (int)Value; }
+            set { Value = Constrain(value); }
         }
 
         /// <summary>Gets or sets the starting point of text selected in the text box.</summary>
         [Browsable(false), EditorBrowsable(EditorBrowsableState.Never)]
         [DesignerSerializationVisibility(DesignerSerializationVisibility.Hidden)]
-        public Int32 SelectionStart
+        public int SelectionStart
         {
-            get { return this._TextBox.SelectionStart; }
-            set { this._TextBox.SelectionStart = value; }
+            get { return _TextBox.SelectionStart; }
+            set { _TextBox.SelectionStart = value; }
         }
 
         /// <summary>Gets or sets the number of characters selected in the text box.</summary>
         [Browsable(false), EditorBrowsable(EditorBrowsableState.Never)]
         [DesignerSerializationVisibility(DesignerSerializationVisibility.Hidden)]
-        public Int32 SelectionLength
+        public int SelectionLength
         {
-            get { return this._TextBox.SelectionLength; }
-            set { this._TextBox.SelectionLength = value; }
+            get { return _TextBox.SelectionLength; }
+            set { _TextBox.SelectionLength = value; }
         }
 
         /// <summary>Gets or sets a value indicating the currently selected text in the control.</summary>
         [Browsable(false), EditorBrowsable(EditorBrowsableState.Never)]
         [DesignerSerializationVisibility(DesignerSerializationVisibility.Hidden)]
-        public String SelectedText
+        public string SelectedText
         {
-            get { return this._TextBox.SelectedText; }
-            set { this._TextBox.SelectedText = value; }
+            get { return _TextBox.SelectedText; }
+            set { _TextBox.SelectedText = value; }
         }
 
-        private Boolean _ScrollValidatesEnter = true;
-        private Boolean _UpDownValidatesEnter = true;
-        private Boolean _FocusLossValidatesEnter = true;
-        private TextBox _TextBox;
+        private bool _ScrollValidatesEnter = true;
+        private bool _UpDownValidatesEnter = true;
+        private bool _FocusLossValidatesEnter = true;
+        private readonly TextBox _TextBox;
 
         public EnhNumericUpDown()
         {
-            this.MouseWheelIncrement = 1;
-            this.KeyDown += this.CheckKeyPress;
-            foreach (Control control in this.Controls)
+            MouseWheelIncrement = 1;
+            KeyDown += CheckKeyPress;
+            foreach (Control control in Controls)
             {
                 if (control is TextBox)
                 {
-                    this._TextBox = control as TextBox;
+                    _TextBox = control as TextBox;
                     break;
                 }
             }
         }
 
-        public TextBox TextBox { get { return this._TextBox; } }
+        public TextBox TextBox { get { return _TextBox; } }
 
         // Private function extracted from base
         protected string GetNumberText(decimal num)
@@ -170,24 +170,24 @@ namespace MobiusEditor.Controls
             {
                 return;
             }
-            Boolean allowMinus = this.Minimum < 0;
-            Boolean allowHex = this.Hexadecimal;
-            String curText = this.Text;
-            String pattern = (allowMinus ? "-?" : String.Empty) + (allowHex ? "[A-F0-9]*" : "\\d*");
+            bool allowMinus = Minimum < 0;
+            bool allowHex = Hexadecimal;
+            string curText = Text;
+            string pattern = (allowMinus ? "-?" : String.Empty) + (allowHex ? "[A-F0-9]*" : "\\d*");
             if (Regex.IsMatch(curText, "^" + pattern + "$", RegexOptions.IgnoreCase)) // && !"-".Equals(curText))
                 return;
             // something snuck in, probably with ctrl+v. Remove it.
             System.Media.SystemSounds.Beep.Play();
             StringBuilder text = new StringBuilder();
-            String txt = curText.ToUpperInvariant();
-            Int32 txtLen = txt.Length;
-            Int32 firstIllegalChar = -1;
-            for (Int32 i = 0; i < txtLen; ++i)
+            string txt = curText.ToUpperInvariant();
+            int txtLen = txt.Length;
+            int firstIllegalChar = -1;
+            for (int i = 0; i < txtLen; ++i)
             {
-                Char c = txt[i];
-                Boolean isNumRange = c >= '0' && c <= '9';
-                Boolean isAllowedHexRange = allowHex && c >= 'A' && c <= 'F';
-                Boolean isAllowedMinus = allowMinus && i == 0 && c == '-';
+                char c = txt[i];
+                bool isNumRange = c >= '0' && c <= '9';
+                bool isAllowedHexRange = allowHex && c >= 'A' && c <= 'F';
+                bool isAllowedMinus = allowMinus && i == 0 && c == '-';
                 if (!isNumRange && !isAllowedHexRange && !isAllowedMinus)
                 {
                     if (firstIllegalChar == -1)
@@ -196,109 +196,109 @@ namespace MobiusEditor.Controls
                 }
                 text.Append(c);
             }
-            String filteredText = text.ToString();
+            string filteredText = text.ToString();
             Decimal value;
             NumberStyles ns = allowHex ? NumberStyles.HexNumber : NumberStyles.Number;
             // Setting "this.Text" will trigger this function again, but that's okay, it'll immediately succeed in the regex and abort.
             if (Decimal.TryParse(filteredText, ns, NumberFormatInfo.CurrentInfo, out value))
             {
-                value = Math.Max((Int32)this.Minimum, Math.Min(this.Maximum, value));
-                this.Text = GetNumberText(value);
+                value = Math.Max((int)Minimum, Math.Min(Maximum, value));
+                Text = GetNumberText(value);
             }
             else
             {
-                this.Text = filteredText;
+                Text = filteredText;
             }
             if (firstIllegalChar == -1)
                 firstIllegalChar = 0;
-            this.Select(firstIllegalChar, 0);
+            Select(firstIllegalChar, 0);
         }
 
         public void SelectAll()
         {
-            this._TextBox.SelectionStart = 0;
-            this._TextBox.SelectionLength = this.TextBox.TextLength;
+            _TextBox.SelectionStart = 0;
+            _TextBox.SelectionLength = TextBox.TextLength;
         }
 
         protected override void OnMouseWheel(MouseEventArgs e)
         {
-            if (this.ReadOnly)
+            if (ReadOnly)
             {
                 return;
             }
-            Decimal oldval = this.CurrentInternalValue;
+            Decimal oldval = CurrentInternalValue;
             HandledMouseEventArgs hme = e as HandledMouseEventArgs;
             if (hme != null)
                 hme.Handled = true;
-            Int32 delta = e.Delta;
+            int delta = e.Delta;
             if (delta == 0)
             {
                 return;
             }
-            Int32 scroll = this.MouseWheelIncrement;
+            int scroll = MouseWheelIncrement;
             if (delta < 0)
             {
                 scroll = -scroll;
             }
             // Negative increment is perfectly allowed, but will simply be handled as opposite direction scrolling.
-            if (this.MouseWheelIncrement < 0)
+            if (MouseWheelIncrement < 0)
             {
                 delta = -delta;
             }
-            decimal oldValue = this.Value;
-            decimal newValue = this.Constrain(oldValue + scroll);
+            decimal oldValue = Value;
+            decimal newValue = Constrain(oldValue + scroll);
             if (oldValue != newValue)
             {
-                this.Value = newValue;
+                Value = newValue;
                 UpDownAction action = delta > 0 ? UpDownAction.Up : UpDownAction.Down;
-                if (this.ScrollValidatesEnter)
-                    this.ValidateValue(oldval);
-                if (this.ValueUpDown != null)
-                    this.ValueUpDown(this, new UpDownEventArgs(action, this.MouseWheelIncrement, true));
+                if (ScrollValidatesEnter)
+                    ValidateValue(oldval);
+                if (ValueUpDown != null)
+                    ValueUpDown(this, new UpDownEventArgs(action, MouseWheelIncrement, true));
             }
         }
 
         protected override void OnLostFocus(EventArgs e)
         {
-            if (this.ReadOnly)
+            if (ReadOnly)
             {
                 return;
             }
-            if (this.FocusLossValidatesEnter)
+            if (FocusLossValidatesEnter)
             {
-                Decimal oldval = this.CurrentInternalValue;
-                this.ValidateValue(oldval);
+                Decimal oldval = CurrentInternalValue;
+                ValidateValue(oldval);
             }
         }
 
-        private void CheckKeyPress(Object sender, KeyEventArgs e)
+        private void CheckKeyPress(object sender, KeyEventArgs e)
         {
-            if (this.ReadOnly)
+            if (ReadOnly)
             {
                 return;
             }
             if (e.KeyCode == Keys.Enter)
             {
-                Decimal oldval = this.CurrentInternalValue;
-                e.SuppressKeyPress = this.ValidateValue(oldval);
+                Decimal oldval = CurrentInternalValue;
+                e.SuppressKeyPress = ValidateValue(oldval);
             }
         }
 
-        private Boolean ValidateValue(decimal oldValue)
+        private bool ValidateValue(decimal oldValue)
         {
             base.ValidateEditText();
-            decimal newVal = this.Value;
-            if (this.ValueEntered != null)
-                this.ValueEntered(this, new ValueEnteredEventArgs(oldValue, newVal));
+            decimal newVal = Value;
+            if (ValueEntered != null)
+                ValueEntered(this, new ValueEnteredEventArgs(oldValue, newVal));
             return true;
         }
 
         public Decimal Constrain(Decimal value)
         {
-            if (value > this.Maximum)
-                value = this.Maximum;
-            else if (value < this.Minimum)
-                value = this.Minimum;
+            if (value > Maximum)
+                value = Maximum;
+            else if (value < Minimum)
+                value = Minimum;
             return value;
         }
 
@@ -307,16 +307,16 @@ namespace MobiusEditor.Controls
         /// </summary>
         public override void DownButton()
         {
-            if (this.ReadOnly)
+            if (ReadOnly)
             {
                 return;
             }
-            Decimal oldval = this.CurrentInternalValue;
+            Decimal oldval = CurrentInternalValue;
             base.DownButton();
-            if (this.UpDownValidatesEnter)
-                this.ValidateValue(oldval);
-            if (this.ValueUpDown != null)
-                this.ValueUpDown(this, new UpDownEventArgs(UpDownAction.Down));
+            if (UpDownValidatesEnter)
+                ValidateValue(oldval);
+            if (ValueUpDown != null)
+                ValueUpDown(this, new UpDownEventArgs(UpDownAction.Down));
         }
 
         /// <summary>
@@ -324,16 +324,16 @@ namespace MobiusEditor.Controls
         /// </summary>
         public override void UpButton()
         {
-            if (this.ReadOnly)
+            if (ReadOnly)
             {
                 return;
             }
-            Decimal oldval = this.CurrentInternalValue;
+            Decimal oldval = CurrentInternalValue;
             base.UpButton();
-            if (this.UpDownValidatesEnter)
-                this.ValidateValue(oldval);
-            if (this.ValueUpDown != null)
-                this.ValueUpDown(this, new UpDownEventArgs(UpDownAction.Up));
+            if (UpDownValidatesEnter)
+                ValidateValue(oldval);
+            if (ValueUpDown != null)
+                ValueUpDown(this, new UpDownEventArgs(UpDownAction.Up));
         }
     }
 
@@ -344,26 +344,26 @@ namespace MobiusEditor.Controls
 
         public ValueEnteredEventArgs(Decimal oldvalue, Decimal newvalue)
         {
-            this.Oldvalue = oldvalue;
-            this.Newvalue = newvalue;
+            Oldvalue = oldvalue;
+            Newvalue = newvalue;
         }
     }
 
     public class UpDownEventArgs : EventArgs
     {
         public UpDownAction Direction;
-        public Int32 Increment;
-        public Boolean FromMouseWheel;
+        public int Increment;
+        public bool FromMouseWheel;
 
         public UpDownEventArgs(UpDownAction direction)
             : this(direction, 1, false)
         { }
 
-        public UpDownEventArgs(UpDownAction direction, Int32 increment, Boolean fromMouseWheel)
+        public UpDownEventArgs(UpDownAction direction, int increment, bool fromMouseWheel)
         {
-            this.Direction = direction;
-            this.Increment = increment;
-            this.FromMouseWheel = fromMouseWheel;
+            Direction = direction;
+            Increment = increment;
+            FromMouseWheel = fromMouseWheel;
         }
     }
 

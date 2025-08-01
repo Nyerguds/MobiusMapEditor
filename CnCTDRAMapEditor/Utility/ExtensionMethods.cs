@@ -396,7 +396,7 @@ namespace MobiusEditor.Utility
             if ((bitmap.PixelFormat & PixelFormat.Indexed) == PixelFormat.Indexed)
             {
                 ColorPalette pal = bitmap.Palette;
-                for (int i = 0; i < pal.Entries.Length; i++)
+                for (int i = 0; i < pal.Entries.Length; ++i)
                 {
                     pal.Entries[i] = Color.FromArgb(255, pal.Entries[i]);
                 }
@@ -408,13 +408,13 @@ namespace MobiusEditor.Utility
                 return;
             }
             BitmapData sourceData = bitmap.LockBits(rect, ImageLockMode.ReadWrite, PixelFormat.Format32bppArgb);
-            Int32 actualDataWidth = rect.Width * 4;
-            Int32 h = bitmap.Height;
-            Int32 origStride = sourceData.Stride;
-            Byte[] imageData = new Byte[actualDataWidth];
-            Int64 sourcePos = sourceData.Scan0.ToInt64();
+            int actualDataWidth = rect.Width * 4;
+            int h = bitmap.Height;
+            int origStride = sourceData.Stride;
+            byte[] imageData = new byte[actualDataWidth];
+            long sourcePos = sourceData.Scan0.ToInt64();
             // Copy line by line, skipping by stride but copying actual data width
-            for (Int32 y = 0; y < h; ++y)
+            for (int y = 0; y < h; ++y)
             {
                 Marshal.Copy(new IntPtr(sourcePos), imageData, 0, actualDataWidth);
                 for (int i = 3; i < actualDataWidth; i += 4)
@@ -436,15 +436,15 @@ namespace MobiusEditor.Utility
             targetImage.SetResolution(bitmap.HorizontalResolution, bitmap.VerticalResolution);
             BitmapData sourceData = bitmap.LockBits(rect, ImageLockMode.ReadOnly, PixelFormat.Format32bppArgb);
             BitmapData targetData = targetImage.LockBits(rect, ImageLockMode.WriteOnly, PixelFormat.Format32bppArgb);
-            Int32 actualDataWidth = ((Image.GetPixelFormatSize(PixelFormat.Format32bppArgb) * rect.Width) + 7) / 8;
-            Int32 h = bitmap.Height;
-            Int32 origStride = sourceData.Stride;
-            Int32 targetStride = targetData.Stride;
-            Byte[] imageData = new Byte[actualDataWidth];
-            Int64 sourcePos = sourceData.Scan0.ToInt64();
-            Int64 destPos = targetData.Scan0.ToInt64();
+            int actualDataWidth = ((Image.GetPixelFormatSize(PixelFormat.Format32bppArgb) * rect.Width) + 7) / 8;
+            int h = bitmap.Height;
+            int origStride = sourceData.Stride;
+            int targetStride = targetData.Stride;
+            byte[] imageData = new byte[actualDataWidth];
+            long sourcePos = sourceData.Scan0.ToInt64();
+            long destPos = targetData.Scan0.ToInt64();
             // Copy line by line, skipping by stride but copying actual data width
-            for (Int32 y = 0; y < h; ++y)
+            for (int y = 0; y < h; ++y)
             {
                 Marshal.Copy(new IntPtr(sourcePos), imageData, 0, actualDataWidth);
                 for (int i = 3; i < actualDataWidth; i += 4)

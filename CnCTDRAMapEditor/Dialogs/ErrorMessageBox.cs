@@ -61,7 +61,7 @@ namespace MobiusEditor.Dialogs
             }
         }
 
-        private void SetWrap(Boolean wrap)
+        private void SetWrap(bool wrap)
         {
             txtErrors.WordWrap = wrap;
             lblWordWrap.Text = String.Format("Word wrap: [{0}]", wrap ? "ON" : "OFF");
@@ -72,12 +72,12 @@ namespace MobiusEditor.Dialogs
             Clipboard.SetText(txtErrors.Text);
         }
 
-        private void btnWordWrap_Click(Object sender, EventArgs e)
+        private void btnWordWrap_Click(object sender, EventArgs e)
         {
             SetWrap(!txtErrors.WordWrap);
         }
 
-        private void ErrorMessageBox_Shown(Object sender, EventArgs e)
+        private void ErrorMessageBox_Shown(object sender, EventArgs e)
         {
             txtErrors.SelectionLength = 0;
             txtErrors.SelectionStart = 0;

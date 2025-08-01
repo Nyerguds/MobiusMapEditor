@@ -277,7 +277,7 @@ namespace MobiusEditor.Utility
             }
         }
 
-        private Dictionary<string, FileNameGeneratorEntry[]> GetTypeDefinitions(String[] typesSections, List<INI> toScan)
+        private Dictionary<string, FileNameGeneratorEntry[]> GetTypeDefinitions(string[] typesSections, List<INI> toScan)
         {
             Dictionary<string, FileNameGeneratorEntry[]> typeDefinitions = new Dictionary<string, FileNameGeneratorEntry[]>(StringComparer.OrdinalIgnoreCase);
             foreach (string sectionName in typesSections)
@@ -1008,7 +1008,7 @@ namespace MobiusEditor.Utility
                 int nextChunkPosition = currentChunkPosition + 1;
                 int entriesLength = iterations[currentChunkPosition].Length;
                 // We are looping through the full length of our array of entries to generate.
-                for (int i = 0; i < entriesLength; i++)
+                for (int i = 0; i < entriesLength; ++i)
                 {
                     // The string index at the currentChunkPosition in chunkEntries will be replaced by the next one,
                     // and from these indices, a new string combination will be created using the "iterations" data.
@@ -1042,7 +1042,7 @@ namespace MobiusEditor.Utility
             {
                 int keyLength = iterations.Length;
                 string[] chunks = new string[keyLength];
-                for (int i = 0; i < keyLength; i++)
+                for (int i = 0; i < keyLength; ++i)
                 {
                     chunks[i] = iterations[i][keyEntries[i]];
                 }
@@ -1055,7 +1055,7 @@ namespace MobiusEditor.Utility
                 }
                 if (!IsTheaterDependent)
                 {
-                    for (int j = 1; j < arrLen; j++)
+                    for (int j = 1; j < arrLen; ++j)
                     {
                         // If the description uses theater args, ignore them.
                         strings[j] = String.Empty;
@@ -1066,11 +1066,11 @@ namespace MobiusEditor.Utility
                 }
                 else
                 {
-                    for (int i = 0; i < theaterInfo.Length; i++)
+                    for (int i = 0; i < theaterInfo.Length; ++i)
                     {
                         string[] thInfo = theaterInfo[i];
                         int thInfoLen = thInfo.Length + 1;
-                        for (int j = 1; j < arrLen; j++)
+                        for (int j = 1; j < arrLen; ++j)
                         {
                             strings[j] = new EnhFormatString(j >= thInfoLen ? String.Empty : thInfo[j - 1]);
                         }

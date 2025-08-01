@@ -46,7 +46,7 @@ namespace MobiusEditor.Dialogs
             public int state;
             public int stateMask;
             [MarshalAs(UnmanagedType.LPTStr)]
-            public String lpszText;
+            public string lpszText;
             public int cchTextMax;
             public int iImage;
             public int iSelectedImage;
@@ -83,7 +83,7 @@ namespace MobiusEditor.Dialogs
             ResetSettingsTree(this.plugin.Map.BasicSection.SoloMission);
         }
 
-        private void BasicSettingsTracker_PropertyChanged(Object sender, PropertyChangedEventArgs e)
+        private void BasicSettingsTracker_PropertyChanged(object sender, PropertyChangedEventArgs e)
         {
             if (e.PropertyName == "SoloMission")
             {
@@ -191,7 +191,7 @@ namespace MobiusEditor.Dialogs
             }
         }
 
-        private void RulesPanel_TextNeedsUpdating(Object sender, EventArgs e)
+        private void RulesPanel_TextNeedsUpdating(object sender, EventArgs e)
         {
             if (sender is TextBox tb)
             {
@@ -253,14 +253,14 @@ namespace MobiusEditor.Dialogs
             }
         }
 
-        private void MapSettingsDialog_FormClosing(Object sender, FormClosingEventArgs e)
+        private void MapSettingsDialog_FormClosing(object sender, FormClosingEventArgs e)
         {
             if (this.DialogResult != DialogResult.OK || plugin == null)
             {
                 return;
             }
             briefingSettingsTracker.TryGetMember("Briefing", out object brf);
-            if (brf is String brief)
+            if (brf is string brief)
             {
                 string message = plugin.GameInfo.EvaluateBriefing(brief);
                 if (!String.IsNullOrEmpty(message))
@@ -278,12 +278,12 @@ namespace MobiusEditor.Dialogs
             string normalised = (this.ExtraIniText ?? String.Empty).Normalize(NormalizationForm.FormC);
             Encoding dos437 = Encoding.GetEncoding(437);
             // DOS chars excluding specials at the start and end. Explicitly add tab, then the normal range from 32 to 254.
-            HashSet<Char> dos437chars = ("\t\r\n" + String.Concat(Enumerable.Range(32, 256 - 32 - 1).Select(i => dos437.GetString(new Byte[] { (byte)i })))).ToHashSet();
+            HashSet<char> dos437chars = ("\t\r\n" + String.Concat(Enumerable.Range(32, 256 - 32 - 1).Select(i => dos437.GetString(new byte[] { (byte)i })))).ToHashSet();
             normalised = new String(normalised.Where(ch => dos437chars.Contains(ch)).ToArray());
             // Check if rules were changed. Ignore trivial line changes. This will not detect any irrelevant but non-trivial changes like swapping lines, though.
             // This is specifically about RA rules. TD has no changes that require any kind of refresh on the map.
-            String checkTextNew = Regex.Replace(normalised, "[\\r\\n]+", "\n").Trim('\n');
-            String checkTextOrig = Regex.Replace(originalExtraIniText ?? String.Empty, "[\\r\\n]+", "\n").Trim('\n');
+            string checkTextNew = Regex.Replace(normalised, "[\\r\\n]+", "\n").Trim('\n');
+            string checkTextOrig = Regex.Replace(originalExtraIniText ?? String.Empty, "[\\r\\n]+", "\n").Trim('\n');
             bool footPrintsChanged = false;
             bool isSolo = basicSettingsTracker.TryGetMember("SoloMission", out object sres) && (sres is bool solo) && solo;
             bool isExp = basicSettingsTracker.TryGetMember("ExpansionEnabled", out object exres) && (exres is bool exp) && exp;

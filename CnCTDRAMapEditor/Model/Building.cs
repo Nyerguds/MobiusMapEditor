@@ -139,17 +139,17 @@ namespace MobiusEditor.Model
             return Clone();
         }
 
-        public Boolean DataEquals(Building other)
+        public bool DataEquals(Building other)
         {
-            return this.Type == other.Type &&
-                this.House == other.House &&
-                this.Strength == other.Strength &&
-                this.Direction == other.Direction &&
-                this.Trigger == other.Trigger &&
-                this.BasePriority == other.BasePriority &&
-                this.IsPrebuilt == other.IsPrebuilt &&
-                this.Sellable == other.Sellable &&
-                this.Rebuild == other.Rebuild;
+            return Type == other.Type &&
+                House == other.House &&
+                Strength == other.Strength &&
+                Direction == other.Direction &&
+                Trigger == other.Trigger &&
+                BasePriority == other.BasePriority &&
+                IsPrebuilt == other.IsPrebuilt &&
+                Sellable == other.Sellable &&
+                Rebuild == other.Rebuild;
         }
     }
 }

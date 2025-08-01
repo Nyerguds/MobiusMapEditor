@@ -22,7 +22,7 @@ namespace MobiusEditor.Dialogs
 {
     public partial class ThankYouDialog : Form
     {
-        readonly Object spLock = new Object();
+        readonly object spLock = new object();
         readonly Random random;
         SoundPlayer soundPlayer;
         int clicks = 0;
@@ -42,7 +42,7 @@ namespace MobiusEditor.Dialogs
             this.lblLink.Text = GeneralUtils.DoubleAmpersands(Program.GithubUrl);
         }
 
-        private void lblImage_Click(Object sender, EventArgs e)
+        private void lblImage_Click(object sender, EventArgs e)
         {
             this.PlaySound(this.clicks);
             if (this.clicks < maxclicks)
@@ -128,17 +128,17 @@ namespace MobiusEditor.Dialogs
             base.Dispose(disposing);
         }
 
-        private void ThankYou_FormClosing(Object sender, FormClosingEventArgs e)
+        private void ThankYou_FormClosing(object sender, FormClosingEventArgs e)
         {
             this.StopSound();
         }
 
-        private void ThankYouDialog_Shown(Object sender, EventArgs e)
+        private void ThankYouDialog_Shown(object sender, EventArgs e)
         {
             this.lblLink.Left = (this.ClientSize.Width - this.lblLink.Width) / 2;
         }
 
-        private void lblLink_Click(Object sender, EventArgs e)
+        private void lblLink_Click(object sender, EventArgs e)
         {
             Process.Start(Program.GithubUrl);
         }

@@ -56,7 +56,7 @@ namespace MobiusEditor.Dialogs
                 }
                 lstTemplates.Enabled = true;
                 templateTypeMapPanel.Enabled = true;
-                lblColorVal.Text = value.HasValue ? "#" + ((UInt32)value.Value.ToArgb() & 0xFFFFFF).ToString("X6") : "-";
+                lblColorVal.Text = value.HasValue ? "#" + ((uint)value.Value.ToArgb() & 0xFFFFFF).ToString("X6") : "-";
                 Color foreCol = SystemColors.ControlText;
                 Color backCol = SystemColors.Control;
                 if (value.HasValue)
@@ -173,7 +173,7 @@ namespace MobiusEditor.Dialogs
                 Dictionary<int, string> map = new Dictionary<int, string>();
                 foreach (KeyValuePair<int, string> pair in mappingsTemplate)
                 {
-                    String cur = pair.Value;
+                    string cur = pair.Value;
                     if (mappingsIcons.ContainsKey(pair.Key))
                     {
                         cur += ":" + mappingsIcons[pair.Key];
@@ -214,7 +214,7 @@ namespace MobiusEditor.Dialogs
             {
                 origData.SetResolution(96, 96);
                 // Remove all alpha.
-                for (Int32 i = 3; i < imgData.Length; i += 4)
+                for (int i = 3; i < imgData.Length; i += 4)
                 {
                     imgData[i] = 0xFF;
                 }
@@ -250,7 +250,7 @@ namespace MobiusEditor.Dialogs
                 .GroupBy(t => templateCategory(t)).OrderBy(g => g.Key, expl);
             lstTemplates.Items.Add(clear.Name);
             // Not sure if the grouping makes the order different, but I'll keep it like in the actual tool.
-            foreach (IGrouping<String, TemplateType> group in templateTypes)
+            foreach (IGrouping<string, TemplateType> group in templateTypes)
             {
                 foreach (TemplateType template in group)
                 {
@@ -268,14 +268,14 @@ namespace MobiusEditor.Dialogs
             int indexToSelect = -1;
             int[] keys = mappingsTemplate.Keys.OrderBy(c => c & 0xFFFFFF).ToArray();
             lstMappings.Items.Clear();
-            for (Int32 i = 0; i < keys.Length; i++)
+            for (int i = 0; i < keys.Length; ++i)
             {
-                Int32 col = keys[i];
+                int col = keys[i];
                 if (select && col == valToSelect)
                 {
                     indexToSelect = i;
                 }
-                String entry = MakeMappingString(col);
+                string entry = MakeMappingString(col);
                 if (entry == null)
                 {
                     mappingsTemplate.Remove(col);
@@ -290,9 +290,9 @@ namespace MobiusEditor.Dialogs
             }
         }
 
-        protected String MakeMappingString(int col)
+        protected string MakeMappingString(int col)
         {
-            String tile;
+            string tile;
             if (!mappingsTemplate.TryGetValue(col, out tile))
             {
                 return null;
@@ -306,7 +306,7 @@ namespace MobiusEditor.Dialogs
             return String.Format("#{0:X6} → {1}:{2}", col & 0xFFFFFF, tmpl.Name, icon);
         }
 
-        private void picZoom_MouseDown(Object sender, MouseEventArgs e)
+        private void picZoom_MouseDown(object sender, MouseEventArgs e)
         {
             if (e.Button == MouseButtons.Left)
             {
@@ -316,7 +316,7 @@ namespace MobiusEditor.Dialogs
             }
         }
 
-        private void picZoom_MouseMove(Object sender, MouseEventArgs e)
+        private void picZoom_MouseMove(object sender, MouseEventArgs e)
         {
             if (e.Button == MouseButtons.Left)
             {
@@ -324,10 +324,9 @@ namespace MobiusEditor.Dialogs
                     ctr.Cursor = Cursors.Hand;
                 HandlePickColor(e.Location.X, e.Location.Y);
             }
-
         }
 
-        private void HandlePickColor(Int32 mouseX, Int32 mouseY)
+        private void HandlePickColor(int mouseX, int mouseY)
         {
             if (picZoom.Image == null)
             {
@@ -336,22 +335,22 @@ namespace MobiusEditor.Dialogs
             }
             if (picZoom.Image is Bitmap image)
             {
-                Int32 realW = image.Width;
-                Int32 realH = image.Height;
-                Int32 currentW = picZoom.ClientRectangle.Width;
-                Int32 currentH = picZoom.ClientRectangle.Height;
-                Double zoomX = (currentW / (Double)realW);
-                Double zoomY = (currentH / (Double)realH);
-                Double zoomActual = Math.Min(zoomX, zoomY);
-                Double sizeX = zoomActual == zoomX ? currentW : zoomActual * realW;
-                Double sizeY = zoomActual == zoomY ? currentH : zoomActual * realH;
-                Int32 padX = (Int32)(currentW - sizeX) / 2;
-                Int32 padY = (Int32)(currentH - sizeY) / 2;
-                Boolean outOfBounds = mouseX < 0 || mouseX >= currentW || mouseY < 0 || mouseY >= currentH;
-                Int32 realX = zoomActual <= 0 ? 0 : (Int32)((mouseX - padX) / zoomActual);
-                Int32 realY = zoomActual <= 0 ? 0 : (Int32)((mouseY - padY) / zoomActual);
-                Boolean inImageX = !outOfBounds && realX > 0 && realX < realW;
-                Boolean inImageY = !outOfBounds && realY > 0 && realY < realH;
+                int realW = image.Width;
+                int realH = image.Height;
+                int currentW = picZoom.ClientRectangle.Width;
+                int currentH = picZoom.ClientRectangle.Height;
+                double zoomX = (currentW / (Double)realW);
+                double zoomY = (currentH / (Double)realH);
+                double zoomActual = Math.Min(zoomX, zoomY);
+                double sizeX = zoomActual == zoomX ? currentW : zoomActual * realW;
+                double sizeY = zoomActual == zoomY ? currentH : zoomActual * realH;
+                int padX = (int)(currentW - sizeX) / 2;
+                int padY = (int)(currentH - sizeY) / 2;
+                bool outOfBounds = mouseX < 0 || mouseX >= currentW || mouseY < 0 || mouseY >= currentH;
+                int realX = zoomActual <= 0 ? 0 : (int)((mouseX - padX) / zoomActual);
+                int realY = zoomActual <= 0 ? 0 : (int)((mouseY - padY) / zoomActual);
+                bool inImageX = !outOfBounds && realX > 0 && realX < realW;
+                bool inImageY = !outOfBounds && realY > 0 && realY < realH;
                 SelectedColor = inImageX && inImageY ? (Color?)image.GetPixel(realX, realY) : null;
             }
         }
@@ -388,7 +387,7 @@ namespace MobiusEditor.Dialogs
             {
                 return -1;
             }
-            String mappingStr = MakeMappingString(selected.Value.ToArgb());
+            string mappingStr = MakeMappingString(selected.Value.ToArgb());
             int selectedMapping = GetSelectedMapping(selected);
             if (selectedMapping >= 0)
             {
@@ -429,11 +428,11 @@ namespace MobiusEditor.Dialogs
             {
                 return -1;
             }
-            String col = String.Format("#{0:X6} ", selected.Value.ToArgb() & 0xFFFFFF);
+            string col = String.Format("#{0:X6} ", selected.Value.ToArgb() & 0xFFFFFF);
             int mappings = lstMappings.Items.Count;
-            for (int i = 0; i < mappings; i++)
+            for (int i = 0; i < mappings; ++i)
             {
-                String entry = (lstMappings.Items[i] ?? String.Empty).ToString();
+                string entry = (lstMappings.Items[i] ?? String.Empty).ToString();
                 if (entry.StartsWith(col))
                 {
                     return i;
@@ -464,7 +463,7 @@ namespace MobiusEditor.Dialogs
             base.Dispose(disposing);
         }
 
-        private void lstTemplates_SelectedIndexChanged(Object sender, EventArgs e)
+        private void lstTemplates_SelectedIndexChanged(object sender, EventArgs e)
         {
             if (lstTemplates.SelectedItem == null)
             {
@@ -533,7 +532,7 @@ namespace MobiusEditor.Dialogs
             RefreshMapping(colVal);
         }
 
-        private void templateTypeMapPanel_PostRender(Object sender, Event.RenderEventArgs e)
+        private void templateTypeMapPanel_PostRender(object sender, Event.RenderEventArgs e)
         {
             e.Graphics.Transform = new Matrix();
             if (!_selectedColor.HasValue || _selectedTemplate == null || _selectedTemplate.Flag.HasFlag(TemplateTypeFlag.Clear))
@@ -563,7 +562,7 @@ namespace MobiusEditor.Dialogs
             }
         }
 
-        private void templateTypeMapPanel_MouseDown(Object sender, MouseEventArgs e)
+        private void templateTypeMapPanel_MouseDown(object sender, MouseEventArgs e)
         {
             if (e.Button != MouseButtons.Left)
             {
@@ -606,19 +605,19 @@ namespace MobiusEditor.Dialogs
             }
         }
 
-        private void templateTypeMapPanel_MouseMove(Object sender, MouseEventArgs e)
+        private void templateTypeMapPanel_MouseMove(object sender, MouseEventArgs e)
         {
             // The function will filter out the mouse buttons.
             templateTypeMapPanel_MouseDown(sender, e);
         }
 
-        private void lstMappings_SelectedIndexChanged(Object sender, EventArgs e)
+        private void lstMappings_SelectedIndexChanged(object sender, EventArgs e)
         {
             if (!(sender is ListBox lb) || lb.SelectedItem == null)
             {
                 return;
             }
-            String mapping = lb.SelectedItem.ToString();
+            string mapping = lb.SelectedItem.ToString();
             Regex mappingRegex = new Regex("^#([0-9A-F]{6}) .*?");
             Match match = mappingRegex.Match(mapping);
             if (!match.Success)
@@ -630,7 +629,7 @@ namespace MobiusEditor.Dialogs
             SelectedColor = Color.FromArgb(0xFF, Color.FromArgb(color));
         }
 
-        private void lstMappings_MouseDown(Object sender, MouseEventArgs e)
+        private void lstMappings_MouseDown(object sender, MouseEventArgs e)
         {
             if (sender is ListBox lb)
             {
@@ -643,7 +642,7 @@ namespace MobiusEditor.Dialogs
             }
         }
 
-        private void btnChooseColor_Click(Object sender, EventArgs e)
+        private void btnChooseColor_Click(object sender, EventArgs e)
         {
             using (ColorDialog cdl = new ColorDialog())
             {

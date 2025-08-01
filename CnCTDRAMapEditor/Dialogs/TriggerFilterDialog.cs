@@ -43,7 +43,7 @@ namespace MobiusEditor.Dialogs
             }
         }
 
-        public TriggerFilterDialog(IGamePlugin plugin, String persistenceLabel, string[] persistenceNames, string[] eventControlNames, string[] currentTrigs)
+        public TriggerFilterDialog(IGamePlugin plugin, string persistenceLabel, string[] persistenceNames, string[] eventControlNames, string[] currentTrigs)
         {
             this.persistenceNames = persistenceNames;
             this.eventControlNames = eventControlNames;
@@ -123,12 +123,12 @@ namespace MobiusEditor.Dialogs
             chkGlobal.Checked = false;
         }
 
-        private void btnReset_Click(Object sender, EventArgs e)
+        private void btnReset_Click(object sender, EventArgs e)
         {
             ResetOptions();
         }
 
-        private void ChkHouse_CheckedChanged(Object sender, EventArgs e)
+        private void ChkHouse_CheckedChanged(object sender, EventArgs e)
         {
             cmbHouse.DataSource = null;
             cmbHouse.Enabled = chkHouse.Checked;
@@ -139,7 +139,7 @@ namespace MobiusEditor.Dialogs
             }
         }
 
-        private void ChkPersistenceType_CheckedChanged(Object sender, EventArgs e)
+        private void ChkPersistenceType_CheckedChanged(object sender, EventArgs e)
         {
             cmbPersistenceType.DataSource = null;
             cmbPersistenceType.Enabled = chkPersistenceType.Checked;
@@ -150,7 +150,7 @@ namespace MobiusEditor.Dialogs
             }
         }
 
-        private void ChkEventControl_CheckedChanged(Object sender, EventArgs e)
+        private void ChkEventControl_CheckedChanged(object sender, EventArgs e)
         {
             cmbEventControl.DataSource = null;
             cmbEventControl.Enabled = isRA && chkEventControl.Checked;
@@ -161,7 +161,7 @@ namespace MobiusEditor.Dialogs
             }
         }
 
-        private void ChkEventType_CheckedChanged(Object sender, EventArgs e)
+        private void ChkEventType_CheckedChanged(object sender, EventArgs e)
         {
             cmbEventType.DataSource = null;
             cmbEventType.Enabled = chkEventType.Checked;
@@ -171,7 +171,7 @@ namespace MobiusEditor.Dialogs
             }
         }
 
-        private void ChkActionType_CheckedChanged(Object sender, EventArgs e)
+        private void ChkActionType_CheckedChanged(object sender, EventArgs e)
         {
             cmbActionType.DataSource = null;
             cmbActionType.Enabled = chkActionType.Checked;
@@ -181,7 +181,7 @@ namespace MobiusEditor.Dialogs
             }
         }
 
-        private void ChkTeamType_CheckedChanged(Object sender, EventArgs e)
+        private void ChkTeamType_CheckedChanged(object sender, EventArgs e)
         {
             cmbTeamType.DataSource = null;
             cmbTeamType.Enabled = chkTeamType.Checked;
@@ -191,7 +191,7 @@ namespace MobiusEditor.Dialogs
             }
         }
 
-        private void ChkTrigger_CheckedChanged(Object sender, EventArgs e)
+        private void ChkTrigger_CheckedChanged(object sender, EventArgs e)
         {
             cmbTrigger.DataSource = null;
             cmbTrigger.Enabled = chkTrigger.Checked;
@@ -201,7 +201,7 @@ namespace MobiusEditor.Dialogs
             }
         }
 
-        private void ChkWaypoint_CheckedChanged(Object sender, EventArgs e)
+        private void ChkWaypoint_CheckedChanged(object sender, EventArgs e)
         {
             cmbWaypoint.DataSource = null;
             if (isRA)
@@ -214,7 +214,7 @@ namespace MobiusEditor.Dialogs
             }
         }
 
-        private void ChkGlobal_CheckedChanged(Object sender, EventArgs e)
+        private void ChkGlobal_CheckedChanged(object sender, EventArgs e)
         {
             if (isRA)
             {
@@ -223,7 +223,7 @@ namespace MobiusEditor.Dialogs
             }
         }
 
-        private void btnOk_Click(Object sender, EventArgs e)
+        private void btnOk_Click(object sender, EventArgs e)
         {
             filter = new TriggerFilter(plugin);
             filter.FilterHouse = chkHouse.Checked;
@@ -233,20 +233,20 @@ namespace MobiusEditor.Dialogs
             filter.FilterEventControl = chkEventControl.Checked;
             filter.EventControl = filter.FilterEventControl ? (TriggerMultiStyleType)cmbEventControl.SelectedValue : TriggerMultiStyleType.Only;
             filter.FilterEventType = chkEventType.Checked;
-            filter.EventType = filter.FilterEventType ? (String)cmbEventType.SelectedItem : TriggerEvent.None;
+            filter.EventType = filter.FilterEventType ? (string)cmbEventType.SelectedItem : TriggerEvent.None;
             filter.FilterActionType = chkActionType.Checked;
-            filter.ActionType = filter.FilterActionType ? (String)cmbActionType.SelectedItem : TriggerAction.None;
+            filter.ActionType = filter.FilterActionType ? (string)cmbActionType.SelectedItem : TriggerAction.None;
             filter.FilterTeamType = chkTeamType.Checked;
-            filter.TeamType = filter.FilterTeamType ? (String)cmbTeamType.SelectedItem : TeamType.None;
+            filter.TeamType = filter.FilterTeamType ? (string)cmbTeamType.SelectedItem : TeamType.None;
             filter.FilterWaypoint = chkWaypoint.Checked;
             filter.Waypoint = filter.FilterWaypoint ? cmbWaypoint.SelectedIndex - 1 : -1;
             filter.FilterGlobal = chkGlobal.Checked;
             filter.Global = filter.FilterGlobal ? nudGlobal.IntValue : 0;
             filter.FilterTrigger= chkTrigger.Checked;
-            filter.Trigger = filter.FilterTrigger ? (String)cmbTrigger.SelectedItem : Trigger.None;
+            filter.Trigger = filter.FilterTrigger ? (string)cmbTrigger.SelectedItem : Trigger.None;
         }
 
-        private void TriggerFilterDialog_Load(Object sender, EventArgs e)
+        private void TriggerFilterDialog_Load(object sender, EventArgs e)
         {
             int origTableHeight = triggersTableLayoutPanel.Height;
             chkEventControl.Visible = this.isRA;

@@ -13,8 +13,6 @@
 //   0. You just DO WHAT THE FUCK YOU WANT TO.
 using MobiusEditor.Controls.ControlsList;
 using MobiusEditor.Model;
-using MobiusEditor.Utility;
-using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Windows.Forms;
@@ -28,7 +26,7 @@ namespace MobiusEditor.Controls
         int mapSize;
         ToolTip tooltip;
 
-        public MissionItemInfo(String name, IEnumerable<TeamTypeMission> properties, IEnumerable<TeamMission> missions, IEnumerable<ListItem<int>> waypoints, int mapSize, ToolTip tooltip)
+        public MissionItemInfo(string name, IEnumerable<TeamTypeMission> properties, IEnumerable<TeamMission> missions, IEnumerable<ListItem<int>> waypoints, int mapSize, ToolTip tooltip)
         {
             Name = name;
             Properties = properties.ToArray();

@@ -101,7 +101,7 @@ namespace MobiusEditor.Controls
             0,
             0,
             0});
-            this.numAmount.ValueChanged += new System.EventHandler(this.numAmount_ValueChanged);
+            this.numAmount.ValueChanged += new System.EventHandler(this.NumAmount_ValueChanged);
             // 
             // panel1
             // 
@@ -123,7 +123,7 @@ namespace MobiusEditor.Controls
             this.cmbTechno.Name = "cmbTechno";
             this.cmbTechno.Size = new System.Drawing.Size(189, 21);
             this.cmbTechno.TabIndex = 1;
-            this.cmbTechno.SelectedIndexChanged += new System.EventHandler(this.cmbTechno_SelectedIndexChanged);
+            this.cmbTechno.SelectedIndexChanged += new System.EventHandler(this.CmbTechno_SelectedIndexChanged);
             // 
             // panel3
             // 
@@ -145,7 +145,7 @@ namespace MobiusEditor.Controls
             this.btnRemove.TabIndex = 0;
             this.btnRemove.Text = "x";
             this.btnRemove.UseVisualStyleBackColor = true;
-            this.btnRemove.Click += new System.EventHandler(this.btnRemove_Click);
+            this.btnRemove.Click += new System.EventHandler(this.BtnRemove_Click);
             // 
             // TeamItemControl
             // 
