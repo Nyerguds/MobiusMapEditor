@@ -108,7 +108,7 @@ This should make you end up in the "AppData\\Local\\Nyerguds" folder under your 
 
 The file "CnCTDRAMapEditor.exe.config" contains settings to customise the editor. The file is in xml format, meaning it can be opened in any text editor. This section details what its settings do.
 
-### Using classic files:
+### Using classic files
 
 * **UseClassicFiles**: Disabled by default, so the editor can ask you for your C&C Remastered game folder, but if you don't own the Remaster, or prefer the classic graphics, simply set this to "True".
 * **ClassicPathTD** / **ClassicPathRA** / **ClassicPathSS**: Path to load the classic files from for each of the game types when running in Classic Files mode. If the directory entered in this cannot be found, this reverts to predefined subfolders under the editor's location; "Classic\\TD" for Tiberian Dawn and Sole Survivor, and "Classic\\RA" for Red Alert. If these folders are not found either, the editor will check if it is ran from the C&C Remastered folder, by checking for the existence of the classic folders inside the CNCDATA folder. If the data is not present at the given location, the editor will refuse to launch in classic mode.
@@ -132,7 +132,7 @@ Note that for Red Alert, the editor uses the DOS versions of the infantry sprite
 * **CheckUpdatesOnStartup**: Enabled by default. Will make the editor notify users if a new version is available.
 * **EnableDpiAwareness**: Disabled by default. On some machines with high dpi monitors, people might have odd issues where the positioning of the indicators on the map doesn't correctly match the map tiles. If this happens, enabling this option might fix the problem.
 
-### Mods:
+### Mods
 
 * **ModsToLoadTD** / **ModsToLoadRA** / **ModsToLoadSS**: semicolon (or comma) separated list of Remaster mod entries for each supported game.
 
@@ -144,13 +144,13 @@ You can find these mods on the Steam workshop ([GraphicsFixesTD](https://steamco
 
 In classic graphics mode, the editor can still use mods, if they contain classic files in a "ccdata" folder. The 'GraphicsFixesRA' mod has such a classic component, to fix the classic graphics of Einstein and the ant buildings. Classic fixes can also be applied manually, by adding override files (generally inside **sc\*.mix** archives) into the classic folders.
 
-### Mix content analysis:
+### Mix content analysis
 
 Starting from v1.6.0.0, the editor has the ability to open the original games' .mix archives to open the missions inside it. However, the names of the files inside those archives are only stored as hashed numeric values created with a one-way hashing algorithm. This means that, to identify these files, lists of all the original file names are needed. The system to generate these names and their hash values is controlled by a set of ini files, of which the main definitions file is configured in the settings:
 
 * **MixContentInfoFile**: Contains the definitions of the supported games for which mix file content analysis can be done, and any additional files to be loaded to get all information for each game. By default, this is set to "Data\\mixcontent.ini".
 
-### Defaults:
+### Defaults
 
 * **DefaultBoundsObstructFill**: Default for the option "Tools" → "Options" → "Flood fill is obstructed by map bounds".  When enabled, and filling map tiles with \[Ctrl\]+\[Shift\]+\[Click\], the map boundary acts as border blocking the fill spread. This applies both inside and outside the border.
 * **DefaultTileDragProtect**: Default for the option "Tools" → "Options" → "Drag-place map tiles without smearing". When placing tiles in map mode, and dragging around the mouse, this option will make sure a new tileset block is only placed after fully leaving the previously-placed blocks inside that one mouse action.
@@ -162,7 +162,7 @@ Starting from v1.6.0.0, the editor has the ability to open the original games' .
 * **DefaultExportMultiInBounds**: In the "Export As Image" tool, if the exported map is a multiplayer map, this automatically enables the option to only export the area inside the map bounds.
 * **DefaultOutlineAllCrates**: Default for the option "View" → "Extra Indicators" → "Outlines on crates". When enabled, outlines will be shown on all crates, regardless of whether it is overlapped, or whether the "View" → "Indicators" → "Outlines on overlapped objects" option is enabled.
 
-### Editor fine tuning:
+### Editor fine tuning
 
 * **ZoomToBoundsOnLoad**: Defaults to True. When enabled, causes the editor to zoom in to the map bounds when loading an existing map.
 * **RememberToolData**: Defaults to False. When enabled, the item selections and options on the tool windows will be remembered when opening a different map for the same game.
@@ -176,14 +176,14 @@ Starting from v1.6.0.0, the editor has the ability to open the original games' .
 * **UndoRedoStackSize**: The amount of undo/redo actions stored in memory. Defaults to 100.
 * **MinimumClampSize**: Minimum size of the tool window that will automatically be forced to remain in the screen area. If set to 0,0, this will default to the size of the entire tool window.
 
-### Colors and transparency:
+### Colors and transparency
 
-#### General:
+#### General
 
 * **MapBackColor**: Background color for the map screen, as "R,G,B". This defaults to dark grey, so users can see the actual map outline on Red Alert Interior maps.
 * **MapGridColor**: Color for drawing the map grid, as "A,R,G,B". This includes the alpha value, because the grid is semitransparent by default. Defaults to a 15% visible blue.
 
-#### For the option "Extra indicators" → "Map terrain types":
+#### For the option "Extra indicators" → "Map terrain types"
 
 * **HashColorLandClear**: The color for cells of the 'Clear' land type. Defaults to transparent white. Note that by default, this one's alpha component is set to 0, to suppress the indicators for this type. However, the actual color information will be used for placement previews of map templates, to indicate all cells in the shape.
 * **HashColorLandBeach**: The color for cells of the 'Beach' land type. Defaults to yellow.
@@ -193,12 +193,12 @@ Starting from v1.6.0.0, the editor has the ability to open the original games' .
 * **HashColorLandRiver**: The color for cells of the 'River' land type. Defaults to blue.
 * **HashColorLandRough**: The color for cells of the 'Rough' land type. Defaults to grayish purple.
 
-#### For the option "Extra indicators" → "Occupied by objects":
+#### For the option "Extra indicators" → "Occupied by objects"
 
 * **HashColorTechnoPart**: The color for cells partially filled with map objects. This is only used for infantry.
 * **HashColorTechnoFull**: The color for cells fully filled with map objects; either cells of buildings, terrain or units, or cells fully filled with five infantry units.
 
-#### Outline colors for unowned objects:
+#### Outline colors for unowned objects
 
 An outline will be shown around objects that are partially or fully behind other objects. For owned objects, these outlines are given the color of their owners, but for unowned objects, they are editable here. An outline type can be disabled by adding an alpha factor of 0 in front of the R,G,B color values.
 
@@ -210,18 +210,18 @@ Note that crates are always outlined if the "Outlines on crates" option is enabl
 * **OutlineColorSolidOverlay**: The outline color for impassable overlay. Pavement-type overlay is never outlined. Defaults to gray.
 * **OutlineColorWall**: The outline color for walls. Defaults to purple. Note that this one is disabled by default (by setting its alpha to 0) because they are very common to have overlaps on, and it is rarely useful to show them.
 
-#### Extra options related to outlines:
+#### Extra options related to outlines
 
 * **IgnoreShadowOverlap**: Don't show overlap outlines on objects that are only overlapped by shadows. This is enabled by default, but can be disabled if you want to increase the visibility of e.g. infantry under trees.
 
-#### Alpha transparency factors used:
+#### Alpha transparency factors used
 
 * **PreviewAlpha**: The alpha factor used when previewing an object to place down on the map. Defaults to 0.5 (50%)
 * **UnbuiltAlpha**: The alpha factor used for buildings that are placed on the map, but configured to only be built later by an AI. Defaults to 0.6 (60%)
 
 These two factors will be multiplied for the placement preview of an unbuilt building, meaning, by default, the result will be 30% visible.
 
-### Editor behavior tweaks:
+### Editor behavior tweaks
 
 These options are all enabled by default, but can be disabled if you wish. Use these at your own risk. Some of these (air units, craters, harvesting) are related to bugs in the games, so they could be disabled when making maps for a mod in which these issues are fixed.
 
@@ -240,14 +240,14 @@ These options are all enabled by default, but can be disabled if you wish. Use t
 * **OverlayWallsOnly**: if this option is set to False, walls will show up in the Buildings list as well, from where they can be placed down as player-owned buildings. This allows selling them, but it is generally not advised since it bloats the ini file.
 * **NoOwnedObjectsInSole**: Sole Survivor maps normally don't include placed down units, structures or infantry, so loading and saving them is disabled by default. But it seems some official maps do contain decorative civilian buildings, and old betas of the game could read those, so this option can be disabled for research purposes.
 
-### Extra tweaks:
+### Extra tweaks
 
 Options that can be enabled to support features that some versions might have modded into the game. These are generally disabled by default.
 
 * **EnableTd106Scripting**: Support the extended scripting added by the C&C95 v1.06 patch. If this option is enabled, additional triggers named UUUU, VVVV and WWWW can be destroyed with "Dstry Trig" actions.
 * **EnableTd106LineBreaks**: Enable the C&C95 v1.06 fan-patch system of using ## at the end of a line as line break in a briefing. Defaults to False. This option requires _WriteClassicBriefing_ to be enabled.
 
-### Graphical tweaks:
+### Graphical tweaks
 
 These don't affect any real behaviour, but change some graphics to look more correct in the editor:
 
@@ -255,7 +255,7 @@ These don't affect any real behaviour, but change some graphics to look more cor
 * **FixConcretePavement**: The connection logic of the "CONC" pavement in Tiberian Dawn is seriously bugged in-game. The editor contains a fixed logic, showing the concrete how it was intended to be, filling in side gaps with filler cells. However, be advised that this new logic does not match the actual game. For this reason, it is disabled by default.
 * **DrawSoleTeleports**: On Sole Survivor maps, draw a black area with a blue border over the loaded ROAD graphics to emulate the look of the in-game teleporters.
 
-## Classic files listing:
+## Classic files listing
 
 The following files can be read from the configured classic data folders, for running the editor in classic mode. They can also be loaded from mod folders. They will be loaded in the listed order, from any available sources. The basic rule in the game is that each file name can only be loaded once, and the first-loaded files have priority, so this also shows which archives can override the contents of which other archives.
 
