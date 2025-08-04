@@ -1429,6 +1429,7 @@ namespace MobiusEditor
             bool multiStatusChanged = false;
             bool iniTextChanged = false;
             bool footPrintsChanged = false;
+            HashSet<Point> refreshPoints = null;
             ClearActiveTool();
             using (MapSettingsDialog msd = new MapSettingsDialog(plugin, basicSettings, briefingSettings, cratesSettings, houseSettingsTrackers, extraIniText))
             {
@@ -1471,7 +1472,7 @@ namespace MobiusEditor
                     // TODO: give warning on the multiplay rules changes.
                     if (amStatusChanged || multiStatusChanged || iniTextChanged)
                     {
-                        IEnumerable<string> errors = plugin.SetExtraIniText(normalised, out footPrintsChanged);
+                        IEnumerable<string> errors = plugin.SetExtraIniText(normalised, out footPrintsChanged, out refreshPoints);
                         if (errors != null && errors.Count() > 0)
                         {
                             using (ErrorMessageBox emb = new ErrorMessageBox())
@@ -1495,7 +1496,9 @@ namespace MobiusEditor
             // Might need updating is solo mission status changed.
             SetMenuItemsVisible();
             // Only do full repaint if changes happened that might need a repaint (bibs, removed units, flags).
-            RefreshActiveTool(!footPrintsChanged && !expansionWiped && !multiStatusChanged);
+            bool softRefresh = !footPrintsChanged && !expansionWiped && !multiStatusChanged;
+            RefreshActiveTool(softRefresh);
+            plugin.Map.NotifyRulesChanges(refreshPoints == null || !softRefresh ? new HashSet<Point>() : refreshPoints);
             if (footPrintsChanged || amStatusChanged)
             {
                 // If Aftermath units were disabled, we can't guarantee none of them are still in
@@ -2497,8 +2500,8 @@ namespace MobiusEditor
                 TheaterType theater = plugin.Map.Theater;
                 TemplateType tt = plugin.Map.TemplateTypes.Where(t => t.ExistsInTheater
                     //&& (!Globals.FilterTheaterObjects || t.Theaters == null || t.Theaters.Length == 0 || t.Theaters.Contains(plugin.Map.Theater.Name))
-                    && t.Flag.HasFlag(TemplateTypeFlag.DefaultFill)
-                    && !t.Flag.HasFlag(TemplateTypeFlag.IsGrouped))
+                    && t.Flags.HasFlag(TemplateTypeFlag.DefaultFill)
+                    && !t.Flags.HasFlag(TemplateTypeFlag.IsGrouped))
                 .OrderBy(t => t.Name, expl).FirstOrDefault();
                 if (tt != null)
                 {
@@ -3797,7 +3800,7 @@ namespace MobiusEditor
         {
             TheaterType theater = plugin.Map.Theater;
             string th = theater.Name;
-            TemplateType template = plugin.Map.TemplateTypes.Where(tt => tt.ExistsInTheater && !tt.Flag.HasFlag(TemplateTypeFlag.Clear)
+            TemplateType template = plugin.Map.TemplateTypes.Where(tt => tt.ExistsInTheater && !tt.Flags.HasFlag(TemplateTypeFlag.Clear)
                 && tt.IconWidth == 1 && tt.IconHeight == 1).OrderBy(tt => tt.Name).FirstOrDefault();
             Tile templateTile = null;
             if (template != null)
@@ -3808,7 +3811,7 @@ namespace MobiusEditor
                 && (!Globals.FilterTheaterObjects || sm.ExistsInTheater))
                 .OrderBy(sm => sm.Icons).ThenBy(sm => sm.ID).ToList();
             SmudgeType smudge = smudges.FirstOrDefault(sm => sm.ExistsInTheater) ?? smudges.FirstOrDefault();
-            List<OverlayType> overlays = plugin.Map.OverlayTypes.Where(ov => (ov.Flag & plugin.GameInfo.OverlayIconType) != OverlayTypeFlag.None && ov.Thumbnail != null
+            List<OverlayType> overlays = plugin.Map.OverlayTypes.Where(ov => (ov.Flags & plugin.GameInfo.OverlayIconType) != OverlayTypeFlag.None && ov.Thumbnail != null
                 && (!Globals.FilterTheaterObjects || ov.ExistsInTheater))
                 .OrderBy(ov => ov.ID).ToList();
             OverlayType overlay = overlays.FirstOrDefault(ov => ov.ExistsInTheater) ?? overlays.FirstOrDefault();
@@ -3820,10 +3823,10 @@ namespace MobiusEditor
             List<BuildingType> buildings = plugin.Map.BuildingTypes.Where(bl => bl.Size.Width == 2 && bl.Size.Height == 2
                                         && (!Globals.FilterTheaterObjects || !bl.IsTheaterDependent || bl.ExistsInTheater)).OrderBy(bl => bl.ID).ToList();
             BuildingType building = buildings.FirstOrDefault(bl => !bl.IsTheaterDependent || bl.ExistsInTheater) ?? buildings.FirstOrDefault(bl => bl.GraphicsFound) ?? buildings.FirstOrDefault();
-            List<OverlayType> resources = plugin.Map.OverlayTypes.Where(ov => ov.Flag.HasFlag(OverlayTypeFlag.TiberiumOrGold)
+            List<OverlayType> resources = plugin.Map.OverlayTypes.Where(ov => ov.Flags.HasFlag(OverlayTypeFlag.TiberiumOrGold)
                                         && (!Globals.FilterTheaterObjects || ov.ExistsInTheater)).OrderBy(ov => ov.ID).ToList();
             OverlayType resource = resources.FirstOrDefault(ov => ov.ExistsInTheater) ?? resources.FirstOrDefault();
-            List<OverlayType> walls = plugin.Map.OverlayTypes.Where(ov => ov.Flag.HasFlag(OverlayTypeFlag.Wall)
+            List<OverlayType> walls = plugin.Map.OverlayTypes.Where(ov => ov.Flags.HasFlag(OverlayTypeFlag.Wall)
                                         && (!Globals.FilterTheaterObjects || ov.ExistsInTheater)).OrderBy(ov => ov.ID).ToList();
             OverlayType wall = walls.FirstOrDefault(ov => ov.ExistsInTheater) ?? walls.FirstOrDefault();
             LoadNewIcon(mapToolStripButton, templateTile?.Image, plugin, 0);

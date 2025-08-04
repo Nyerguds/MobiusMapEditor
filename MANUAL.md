@@ -237,7 +237,7 @@ These options are all enabled by default, but can be disabled if you wish. Use t
 * **WriteClassicBriefing**: Write classic-style briefings into the ini file as "1=", "2=", etc. lines split at human-readable length. Any special characters in this are always written in DOS-437 text encoding.
 * **WriteRemasterBriefing**: Write the single-line "Text=" briefing used by the Remaster. If both are disabled, the classic one will always be written.
 * **ApplyHarvestBug**: The game has a bug where the final harvested stage of a cell yields nothing (or only 3/4th for RA gems). Assume this bug is unfixed when doing the resource calculations.
-* **OverlayWallsOnly**: if this option is set to False, walls will show up in the Buildings list as well, from where they can be placed down as player-owned buildings. This allows selling them, but it is generally not advised since it bloats the ini file.
+* **OverlayWallsOnly**: if this option is set to False, walls will show up in the Buildings list as well, from where they can be placed down as player-owned buildings. This allows selling them, but it is generally not advised since it bloats the ini file. Note that this option only affects Tiberian Dawn, because the presence of such wall-buildings will cause an immediate game crash in Red Alert.
 * **NoOwnedObjectsInSole**: Sole Survivor maps normally don't include placed down units, structures or infantry, so loading and saving them is disabled by default. But it seems some official maps do contain decorative civilian buildings, and old betas of the game could read those, so this option can be disabled for research purposes.
 
 ### Extra tweaks

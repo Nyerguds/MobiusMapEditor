@@ -795,7 +795,7 @@ namespace MobiusEditor.Dialogs
             else if (isFlare)
             {
                 string wp = "Waypoint 'Z' (flare): ";
-                Waypoint z = plugin.Map.Waypoints.FirstOrDefault(w => w.Flag.HasFlag(WaypointFlag.Flare));
+                Waypoint z = plugin.Map.Waypoints.FirstOrDefault(w => w.Flags.HasFlag(WaypointFlag.Flare));
                 if (z == null)
                     return wp + "Not found.";
                 if (!z.Point.HasValue)

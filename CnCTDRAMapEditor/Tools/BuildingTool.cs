@@ -285,6 +285,7 @@ namespace MobiusEditor.Tools
         private void MapPanel_MouseLeave(object sender, EventArgs e)
         {
             ExitPlacementMode();
+            MapPanel_MouseUp(sender, new MouseEventArgs(MouseButtons.None, 0, 0, 0, 0));
         }
 
         private void MapPanel_MouseWheel(object sender, MouseEventArgs e)
@@ -895,14 +896,26 @@ namespace MobiusEditor.Tools
         {
             BuildingType newPicked = null;
             Building building = map.Buildings[location] as Building;
+            bool neutralOverlay = false;
             if (building != null)
             {
                 newPicked = building.Type;
             }
-            else if (Globals.AllowWallBuildings && map.Overlay[location] is Overlay overlay && overlay.Type.IsWall)
+            else if (map.Overlay[location] is Overlay overlay)
             {
-                string wType = overlay.Type.Name;
-                newPicked = map.BuildingTypes.FirstOrDefault(bl => bl.IsWall && String.Equals(bl.Name, wType, StringComparison.OrdinalIgnoreCase));
+                if (overlay.Type.IsWall && Globals.AllowWallBuildings)
+                {
+                    // Selects buildings-as-walls in the list
+                    string wType = overlay.Type.Name;
+                    newPicked = map.BuildingTypes.FirstOrDefault(bl => bl.IsWall && String.Equals(bl.Name, wType, StringComparison.OrdinalIgnoreCase));
+                }
+                else if (!overlay.Type.IsWall)
+                {
+                    // Selects buildings that have an overlay equivalent, e.g. haystacks.
+                    string wType = overlay.Type.Name;
+                    newPicked = map.BuildingTypes.FirstOrDefault(bl => !bl.IsWall && String.Equals(bl.Name, wType, StringComparison.OrdinalIgnoreCase));
+                    neutralOverlay = true;
+                }
             }
             if (newPicked != null)
             {
@@ -918,6 +931,18 @@ namespace MobiusEditor.Tools
                 mockBuilding.House = building.House;
                 mockBuilding.Sellable = building.Sellable;
                 mockBuilding.Rebuild = building.Rebuild;
+            }
+            else if (neutralOverlay)
+            {
+                HouseType neutral = map.Houses.FirstOrDefault(h => h.Type.IsCivilianHouse)?.Type ?? mockBuilding.House;
+                mockBuilding.Strength = 0x100;
+                mockBuilding.Direction = map.BuildingDirectionTypes.FirstOrDefault();
+                mockBuilding.Trigger = Trigger.None;
+                mockBuilding.BasePriority = -1;
+                mockBuilding.IsPrebuilt = true;
+                mockBuilding.House = neutral;
+                mockBuilding.Sellable = false;
+                mockBuilding.Rebuild = false;
             }
         }
 
@@ -969,7 +994,7 @@ namespace MobiusEditor.Tools
                         bibRender.Add(bibCellRender);
                     }
                 }
-                RenderInfo render = MapRenderer.RenderBuilding(plugin.GameInfo, null, new Point(0, 0), Globals.PreviewTileSize, Globals.PreviewTileScale, mockBuilding, false);
+                RenderInfo render = MapRenderer.RenderBuilding(plugin.GameInfo, map, new Point(0, 0), Globals.PreviewTileSize, Globals.PreviewTileScale, mockBuilding, false);
                 Size previewSize = mockBuilding.OccupyMask.GetDimensions();
                 Bitmap buildingPreview = new Bitmap(previewSize.Width * Globals.PreviewTileWidth, previewSize.Height * Globals.PreviewTileHeight);
                 buildingPreview.SetResolution(96, 96);
@@ -1172,6 +1197,7 @@ namespace MobiusEditor.Tools
             mapPanel.MouseMove += MapPanel_MouseMove;
             mapPanel.MouseLeave += MapPanel_MouseLeave;
             mapPanel.MouseWheel += MapPanel_MouseWheel;
+            mapPanel.LostFocus += MapPanel_MouseLeave;
             mapPanel.SuspendMouseZoomKeys = Keys.Control;
             (mapPanel as Control).KeyDown += BuildingTool_KeyDown;
             (mapPanel as Control).KeyUp += BuildingTool_KeyUp;
@@ -1201,6 +1227,7 @@ namespace MobiusEditor.Tools
             mapPanel.MouseMove -= MapPanel_MouseMove;
             mapPanel.MouseLeave -= MapPanel_MouseLeave;
             mapPanel.MouseWheel -= MapPanel_MouseWheel;
+            mapPanel.LostFocus -= MapPanel_MouseLeave;
             mapPanel.SuspendMouseZoomKeys = Keys.None;
             (mapPanel as Control).KeyDown -= BuildingTool_KeyDown;
             (mapPanel as Control).KeyUp -= BuildingTool_KeyUp;

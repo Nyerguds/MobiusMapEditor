@@ -277,18 +277,17 @@ namespace MobiusEditor.TiberianDawn
             return ini.ToString();
         }
 
-        public virtual IEnumerable<string> SetExtraIniText(string extraIniText, out bool footPrintsChanged)
+        public virtual IEnumerable<string> SetExtraIniText(string extraIniText, out bool footPrintsChanged, out HashSet<Point> refreshPoints)
         {
-            return SetExtraIniText(extraIniText, false, out footPrintsChanged);
+            return SetExtraIniText(extraIniText, false, out footPrintsChanged, out refreshPoints);
         }
 
         public IEnumerable<string> TestSetExtraIniText(string extraIniText, bool isSolo, bool expansionEnabled, out bool footPrintsChanged)
         {
-            // No such thing in TD as rules that change footprints, unless I add support for the 1.06 mission option.
-            return SetExtraIniText(extraIniText, true, out footPrintsChanged);
+            return SetExtraIniText(extraIniText, true, out footPrintsChanged, out _);
         }
 
-        public IEnumerable<string> SetExtraIniText(string extraIniText, bool forFootprintTest, out bool footPrintsChanged)
+        public IEnumerable<string> SetExtraIniText(string extraIniText, bool forFootprintTest, out bool footPrintsChanged, out HashSet<Point> refreshPoints)
         {
             footPrintsChanged = false;
             INI extraTextIni = new INI();
@@ -298,6 +297,7 @@ namespace MobiusEditor.TiberianDawn
             }
             catch
             {
+                refreshPoints = null;
                 return null;
             }
             // Remove any sections known and handled / disallowed by the editor.
@@ -340,7 +340,8 @@ namespace MobiusEditor.TiberianDawn
             {
                 // Perhaps support the v1.06 bibs-disabling option in the future? Would need an entire bib-changing logic like RA has though.
             }
-            ResetMissionRules(extraTextIni, forFootprintTest, out footPrintsChanged);
+            refreshPoints = forFootprintTest ? null : new HashSet<Point>();
+            ResetMissionRules(extraTextIni, forFootprintTest, out footPrintsChanged, refreshPoints);
             return null;
         }
 
@@ -578,7 +579,6 @@ namespace MobiusEditor.TiberianDawn
                     Map.Templates.Clear();
                     fileType = FileType.INI;
                 }
-                extraSections = ini.Sections.Clone();
                 if (modified)
                 {
                     this.Dirty = true;
@@ -832,7 +832,7 @@ namespace MobiusEditor.TiberianDawn
             // then finds the FIRST entry for each key. This means the contents of the second line never
             // get read, but those of the first are simply applied twice. For ROAD, however, this is
             // exactly what we want to achieve to unlock its second state, so the bug doesn't matter.
-            OverlayType[] fixTypes = Map.OverlayTypes.Where(ov => (ov.Flag & OverlayTypeFlag.RoadSpecial) != OverlayTypeFlag.None && ov.ForceTileNr == 1 && ov.GraphicsSource != ov.Name).ToArray();
+            OverlayType[] fixTypes = Map.OverlayTypes.Where(ov => (ov.Flags & OverlayTypeFlag.RoadSpecial) != OverlayTypeFlag.None && ov.ForceTileNr == 1 && ov.GraphicsSource != ov.Name).ToArray();
             foreach (OverlayType road2 in fixTypes)
             {
                 string[] iniTextArr = iniText.Replace("\r\n", "\n").Replace('\r', '\n').Split('\n');
@@ -951,7 +951,7 @@ namespace MobiusEditor.TiberianDawn
             ini.Sections.Remove("Digest");
             BasicSection basic = (BasicSection)Map.BasicSection;
             HouseType player = this.LoadBasic(ini, basic);
-            UpdateBuildingRules(ini, this.Map, false);
+            UpdateBuildingRules(ini, this.Map, false, null);
             this.LoadMapInfo(ini, errors, ref modified);
 #if DEBUG
             //MessageBox.Show("Graphics loaded");
@@ -994,7 +994,9 @@ namespace MobiusEditor.TiberianDawn
             Map.Triggers.Clear();
             Map.Triggers.AddRange(triggers);
             Map.TeamTypes.Sort((x, y) => comparer.Compare(x.Name, y.Name));
-            if (!forSole) {
+            if (!forSole)
+            {
+                errors.AddRange(UpdateHouseRules(ini, Map, null));
                 CheckSwitchToSolo(tryCheckSoloMission, fromMix, errors);
             }
             Map.EndUpdate();
@@ -2602,7 +2604,7 @@ namespace MobiusEditor.TiberianDawn
                 modified = true;
                 return null;
             }
-            if (templateType.Flag.HasFlag(TemplateTypeFlag.Clear) || templateType.Flag.HasFlag(TemplateTypeFlag.Group))
+            if (templateType.Flags.HasFlag(TemplateTypeFlag.Clear) || templateType.Flags.HasFlag(TemplateTypeFlag.Group))
             {
                 // No explicitly set Clear terrain allowed. Also no explicitly set versions allowed of the "group" dummy entries.
                 templateType = null;
@@ -2635,11 +2637,11 @@ namespace MobiusEditor.TiberianDawn
         /// <param name="forFootprintTest">Don't apply changes, just test the result for <paramref name="footPrintsChanged"/></param>
         /// <param name="footPrintsChanged">Returns true if any building footprints were changed as a result of the ini rule changes.</param>
         /// <returns>Any errors in parsing the <paramref name="extraIniText"/> contents.</returns>
-        protected virtual List<string> ResetMissionRules(INI extraIniText, bool forFootprintTest, out bool footPrintsChanged)
+        protected virtual List<string> ResetMissionRules(INI extraIniText, bool forFootprintTest, out bool footPrintsChanged, HashSet<Point> refreshPoints)
         {
             List<string> errors = new List<string>();
             Dictionary<string, bool> bibBackups = Map.BuildingTypes.ToDictionary(b => b.Name, b => b.HasBib, StringComparer.OrdinalIgnoreCase);
-            errors.AddRange(UpdateBuildingRules(extraIniText, this.Map, forFootprintTest));
+            errors.AddRange(UpdateBuildingRules(extraIniText, Map, forFootprintTest, refreshPoints));
             footPrintsChanged = false;
             foreach (BuildingType bType in Map.BuildingTypes)
             {
@@ -2654,10 +2656,15 @@ namespace MobiusEditor.TiberianDawn
                     }
                 }
             }
+            if (!forFootprintTest)
+            {
+                errors.AddRange(UpdateHouseRules(extraIniText, Map, refreshPoints));
+            }
+            Map.NotifyRulesChanges(refreshPoints);
             return errors;
         }
 
-        private static IEnumerable<string> UpdateBuildingRules(INI ini, Map map, bool forFootPrintTest)
+        private static IEnumerable<string> UpdateBuildingRules(INI ini, Map map, bool forFootPrintTest, HashSet<Point> refreshPoints)
         {
             const string CapturableKey= "Capturable";
             bool disableAllBibs = false;
@@ -2669,7 +2676,6 @@ namespace MobiusEditor.TiberianDawn
             }                
             List<string> errors = new List<string>();
             Dictionary<string, BuildingType> originals = BuildingTypes.GetTypes().ToDictionary(b => b.Name, StringComparer.OrdinalIgnoreCase);
-            HashSet<Point> refreshPoints = new HashSet<Point>();
             List<(Point Location, Building Occupier)> buildings = map.Buildings.OfType<Building>()
                  .OrderBy(pb => pb.Location.Y * map.Metrics.Width + pb.Location.X).ToList();
             // Remove all buildings
@@ -2677,7 +2683,10 @@ namespace MobiusEditor.TiberianDawn
             {
                 foreach ((Point p, Building b) in buildings)
                 {
-                    refreshPoints.UnionWith(OccupierSet.GetOccupyPoints(p, b));
+                    if (refreshPoints != null)
+                    {
+                        refreshPoints.UnionWith(OccupierSet.GetOccupyPoints(p, b));
+                    }
                     map.Buildings.Remove(b);
                 }
             }
@@ -2725,10 +2734,78 @@ namespace MobiusEditor.TiberianDawn
             // Try re-adding the buildings.
             foreach ((Point p, Building b) in buildings)
             {
-                refreshPoints.UnionWith(OccupierSet.GetOccupyPoints(p, b));
+                if (refreshPoints != null)
+                {
+                    refreshPoints.UnionWith(OccupierSet.GetOccupyPoints(p, b));
+                }
                 map.Buildings.Add(p, b);
             }
-            map.NotifyRulesChanges(refreshPoints);
+            return errors;
+        }
+
+        private IEnumerable<string> UpdateHouseRules(INI ini, Map map, HashSet<Point> refreshPoints)
+        {
+            List<string> errors = new List<string>();
+            // Not going to bother implementing this in remastered mode.
+            if (!Globals.UseClassicFiles)
+            {
+                return errors;
+            }
+            List<(Point Location, Building Occupier)> buildings = map.Buildings.OfType<Building>()
+                 .OrderBy(pb => pb.Location.Y * map.Metrics.Width + pb.Location.X).ToList();
+            List<(Point Location, Unit Occupier)> units = map.Technos.OfType<Unit>()
+                 .OrderBy(pb => pb.Location.Y * map.Metrics.Width + pb.Location.X).ToList();
+            List<(Point Location, InfantryGroup Occupier)> inf = map.Technos.OfType<InfantryGroup>()
+                 .OrderBy(pb => pb.Location.Y * map.Metrics.Width + pb.Location.X).ToList();
+
+            foreach (House house in Map.Houses)
+            {
+                INISection basicSection = ini.Sections[house.Type.Name];
+                House.PlayerColorType primarySchemeOrig = house.PrimaryScheme;
+                House.PlayerColorType secondarySchemeOrig = house.SecondaryScheme;
+                if (basicSection == null)
+                {
+                    house.PrimaryScheme = null;
+                    house.SecondaryScheme = null;
+                }
+                else
+                {
+                    string primScheme = basicSection.TryGetValue("ColorScheme");
+                    house.PrimaryScheme = House.PlayerColorType.GetPlayerColor(primScheme);
+                    if (!String.IsNullOrWhiteSpace(primScheme) && house.PrimaryScheme == null && !"None".Equals(primScheme, StringComparison.OrdinalIgnoreCase))
+                    {
+                        errors.Add(String.Format("Unknown value \"{0}\"for ColorScheme on House {1}", primScheme.Trim(), house.Type.Name));
+                    }
+                    string secScheme = basicSection.TryGetValue("SecondaryScheme");
+                    if ("None".Equals(secScheme, StringComparison.OrdinalIgnoreCase))
+                    {
+                        house.SecondaryScheme = new House.PlayerColorType();
+                    }
+                    else
+                    {
+                        house.SecondaryScheme = House.PlayerColorType.GetPlayerColor(secScheme);
+                        if (!String.IsNullOrWhiteSpace(secScheme) && house.SecondaryScheme == null)
+                        {
+                            errors.Add(String.Format("Unknown value \"{0}\"for SecondaryScheme on House {1}", secScheme.Trim(), house.Type.Name));
+                        }
+                    }
+                }
+                if (refreshPoints != null && (house.PrimaryScheme != primarySchemeOrig || house.SecondaryScheme != secondarySchemeOrig))
+                {
+                    foreach ((Point Location, Building Occupier) in buildings.Where(b => b.Occupier.House == house.Type))
+                    {
+                        refreshPoints.UnionWith(OccupierSet.GetOccupyPoints(Location, Occupier));
+                    }
+                    foreach ((Point Location, Unit Occupier) in units.Where(u => u.Occupier.House == house.Type))
+                    {
+                        refreshPoints.UnionWith(OccupierSet.GetOccupyPoints(Location, Occupier));
+                    }
+                    foreach ((Point Location, InfantryGroup Occupier) in inf.Where(b => b.Occupier.Infantry.Any(i => i != null && i.House == house.Type)))
+                    {
+                        refreshPoints.UnionWith(OccupierSet.GetOccupyPoints(Location, Occupier));
+                    }
+                }
+            }
             return errors;
         }
 
@@ -2927,7 +3004,7 @@ namespace MobiusEditor.TiberianDawn
             // get read, but those of the first are simply applied twice. For ROAD, however, this is
             // exactly what we want to achieve to unlock its second state, so the bug doesn't matter.
             string iniString1 = ini.ToString("\n");
-            OverlayType[] fixTypes = Map.OverlayTypes.Where(ov => (ov.Flag & OverlayTypeFlag.RoadSpecial) != OverlayTypeFlag.None && ov.ForceTileNr > 0 && ov.GraphicsSource != ov.Name).ToArray();
+            OverlayType[] fixTypes = Map.OverlayTypes.Where(ov => (ov.Flags & OverlayTypeFlag.RoadSpecial) != OverlayTypeFlag.None && ov.ForceTileNr > 0 && ov.GraphicsSource != ov.Name).ToArray();
             foreach (OverlayType road2 in fixTypes)
             {
                 string roadLine = "=" + road2.GraphicsSource.ToUpperInvariant() + lineEnd;
@@ -3172,7 +3249,7 @@ namespace MobiusEditor.TiberianDawn
                     for (int x = 0; x < Map.Metrics.Width; ++x)
                     {
                         Template template = Map.Templates[y, x];
-                        if (template != null && (template.Type.Flag & TemplateTypeFlag.Clear) == TemplateTypeFlag.None)
+                        if (template != null && (template.Type.Flags & TemplateTypeFlag.Clear) == TemplateTypeFlag.None)
                         {
                             writer.Write((ushort)template.Type.ID);
                         }
@@ -3187,7 +3264,7 @@ namespace MobiusEditor.TiberianDawn
                     for (int x = 0; x < Map.Metrics.Width; ++x)
                     {
                         Template template = Map.Templates[y, x];
-                        if (template != null && (template.Type.Flag & TemplateTypeFlag.Clear) == TemplateTypeFlag.None)
+                        if (template != null && (template.Type.Flags & TemplateTypeFlag.Clear) == TemplateTypeFlag.None)
                         {
                             writer.Write((byte)template.Icon);
                         }
@@ -3534,7 +3611,7 @@ namespace MobiusEditor.TiberianDawn
                 for (int x = 0; x < Map.Metrics.Width; ++x)
                 {
                     Template template = Map.Templates[y, x];
-                    if (template != null && (template.Type.Flag & TemplateTypeFlag.Clear) == 0)
+                    if (template != null && (template.Type.Flags & TemplateTypeFlag.Clear) == 0)
                     {
                         writer.Write((byte)template.Type.ID);
                         writer.Write((byte)template.Icon);
@@ -3558,7 +3635,7 @@ namespace MobiusEditor.TiberianDawn
                 for (int x = 0; x < Map.Metrics.Width; ++x)
                 {
                     Template template = Map.Templates[y, x];
-                    if (template != null && (template.Type.Flag & TemplateTypeFlag.Clear) == 0)
+                    if (template != null && (template.Type.Flags & TemplateTypeFlag.Clear) == 0)
                     {
                         byte template1 = (byte)template.Type.ID;
                         byte template2 = (byte)template.Icon;
@@ -3626,7 +3703,7 @@ namespace MobiusEditor.TiberianDawn
                 for (int x = 0; x < width; ++x)
                 {
                     Template template = Map.Templates[y, x];
-                    if (template == null || (template.Type.Flag & TemplateTypeFlag.Clear) != 0)
+                    if (template == null || (template.Type.Flags & TemplateTypeFlag.Clear) != 0)
                     {
                         continue;
                     }
@@ -3661,7 +3738,7 @@ namespace MobiusEditor.TiberianDawn
             writer.WriteStartArray();
             // Writing the Home for singleplay maps is probably useless, but it's better than the player start points.
             WaypointFlag waypointType = Map.BasicSection.SoloMission ? WaypointFlag.Home : WaypointFlag.PlayerStart;
-            foreach (Waypoint waypoint in Map.Waypoints.Where(w => w.Flag.HasFlag(waypointType)
+            foreach (Waypoint waypoint in Map.Waypoints.Where(w => w.Flags.HasFlag(waypointType)
                 && w.Cell.HasValue && Map.Metrics.GetLocation(w.Cell.Value, out Point p) && Map.Bounds.Contains(p)))
             {
                 writer.WriteValue(waypoint.Cell.Value);
@@ -3688,9 +3765,9 @@ namespace MobiusEditor.TiberianDawn
             {
                 errors.Add("Megamaps are not supported by the N64 map format.");
             }
-            int numStartPoints = Map.Waypoints.Count(w => w.Flag.HasFlag(WaypointFlag.PlayerStart) && w.Cell.HasValue
+            int numStartPoints = Map.Waypoints.Count(w => w.Flags.HasFlag(WaypointFlag.PlayerStart) && w.Cell.HasValue
                 && Map.Metrics.GetLocation(w.Cell.Value, out Point pt) && Map.Bounds.Contains(pt));
-            int numBadPoints = Map.Waypoints.Count(w => w.Flag.HasFlag(WaypointFlag.PlayerStart) && w.Cell.HasValue
+            int numBadPoints = Map.Waypoints.Count(w => w.Flags.HasFlag(WaypointFlag.PlayerStart) && w.Cell.HasValue
                 && Map.Metrics.GetLocation(w.Cell.Value, out Point pt) && !Map.Bounds.Contains(pt));
             if (Globals.EnforceObjectMaximums)
             {
@@ -3748,7 +3825,7 @@ namespace MobiusEditor.TiberianDawn
                 }
                 else
                 {
-                    Waypoint homeWaypoint = Map.Waypoints.Where(w => w.Flag.HasFlag(WaypointFlag.Home)).FirstOrDefault();
+                    Waypoint homeWaypoint = Map.Waypoints.Where(w => w.Flags.HasFlag(WaypointFlag.Home)).FirstOrDefault();
                     if ((!homeWaypoint.Cell.HasValue || !Map.Metrics.GetLocation(homeWaypoint.Cell.Value, out Point p) || !Map.Bounds.Contains(p)))
                     {
                         errors.Add("Single-player maps need the Home waypoint to be placed, inside the map bounds.");
@@ -3875,7 +3952,7 @@ namespace MobiusEditor.TiberianDawn
             {
                 info.Add(String.Empty);
                 info.Add("Multiplayer info:");
-                int startPoints = Map.Waypoints.Count(w => w.Cell.HasValue && w.Flag.HasFlag(WaypointFlag.PlayerStart));
+                int startPoints = Map.Waypoints.Count(w => w.Cell.HasValue && w.Flags.HasFlag(WaypointFlag.PlayerStart));
                 info.Add(String.Format("Number of set starting points: {0}.", startPoints));
             }
             const bool assessScripting = true;
@@ -3922,11 +3999,11 @@ namespace MobiusEditor.TiberianDawn
                 foreach (Trigger tr in Map.Triggers)
                 {
                     if (tr.Action1.ActionType == ActionTypes.ACTION_DZ)
-                        usedWaypoints.Add(Enumerable.Range(0, Map.Waypoints.Length).Where(i => Map.Waypoints[i].Flag.HasFlag(WaypointFlag.Flare)).First());
+                        usedWaypoints.Add(Enumerable.Range(0, Map.Waypoints.Length).Where(i => Map.Waypoints[i].Flags.HasFlag(WaypointFlag.Flare)).First());
                 }
                 WaypointFlag toIgnore = WaypointFlag.Home | WaypointFlag.Reinforce;
                 string unusedWaypointsStr = String.Join(", ", setWaypoints.OrderBy(w => w)
-                    .Where(w => (Map.Waypoints[w].Flag & toIgnore) == WaypointFlag.None
+                    .Where(w => (Map.Waypoints[w].Flags & toIgnore) == WaypointFlag.None
                                 && !usedWaypoints.Contains(w)).Select(w => Map.Waypoints[w].Name).ToArray());
                 string unsetUsedWaypointsStr = String.Join(", ", usedWaypoints.OrderBy(w => w).Where(w => !setWaypoints.Contains(w)).Select(w => Map.Waypoints[w].Name).ToArray());
                 string evalEmpty(string str)
@@ -4014,7 +4091,7 @@ namespace MobiusEditor.TiberianDawn
             // Tiberian Dawn logic: find AIs with construction yard and Production trigger.
             HashSet<string> housesWithCY = new HashSet<string>();
             foreach ((_, Building bld) in Map.Buildings.OfType<Building>().Where(b => b.Occupier.IsPrebuilt &&
-                !b.Occupier.House.Flags.HasFlag(HouseTypeFlag.Special) && b.Occupier.Type.Flag.HasFlag(BuildingTypeFlag.Factory)))
+                !b.Occupier.House.Flags.HasFlag(HouseTypeFlag.Special) && b.Occupier.Type.Flags.HasFlag(BuildingTypeFlag.Factory)))
             {
                 housesWithCY.Add(bld.House.Name);
             }
@@ -4076,7 +4153,7 @@ namespace MobiusEditor.TiberianDawn
                 for (int i = 0; i < length; ++i)
                 {
                     Waypoint waypoint = waypoints[i];
-                    if (waypoint != null && waypoint.Cell.HasValue && waypoint.Flag.HasFlag(WaypointFlag.Flare))
+                    if (waypoint != null && waypoint.Cell.HasValue && waypoint.Flags.HasFlag(WaypointFlag.Flare))
                     {
                         flareRadius[i] = Map.DropZoneRadius;
                     }
@@ -4515,6 +4592,7 @@ namespace MobiusEditor.TiberianDawn
                     catch { /* ignore */ }
                     // Dispose of cached images in type objects. This is non-destructive; the type objects themselves don't actually get disposed.
                     Map.ResetCachedGraphics();
+                    Map.ClearEvents();
                 }
                 disposedValue = true;
             }

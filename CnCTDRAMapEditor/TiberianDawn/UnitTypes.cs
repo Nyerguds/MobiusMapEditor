@@ -32,13 +32,13 @@ namespace MobiusEditor.TiberianDawn
         public static readonly UnitType MLRS = new VehicleType(7, "msam", "TEXT_UNIT_TITLE_GDI_MRLS", "Goodguy", FrameUsage.Frames32Full, FrameUsage.Frames32Full | FrameUsage.OnFlatBed, 0, 0, UnitTypeFlag.IsArmed | UnitTypeFlag.HasTurret);
         public static readonly UnitType Jeep = new VehicleType(8, "jeep", "TEXT_UNIT_TITLE_GDI_HUMVEE", "Goodguy", FrameUsage.Frames32Full, FrameUsage.Frames32Full, 0, -4, UnitTypeFlag.IsArmed | UnitTypeFlag.HasTurret);
         public static readonly UnitType Buggy = new VehicleType(9, "bggy", "TEXT_UNIT_TITLE_NOD_NOD_BUGGY", "Badguy", FrameUsage.Frames32Full, FrameUsage.Frames32Full, 0, -4, UnitTypeFlag.IsArmed | UnitTypeFlag.HasTurret);
-        public static readonly UnitType Harvester = new VehicleType(10, "harv", "TEXT_UNIT_TITLE_GDI_HARVESTER", "Goodguy", FrameUsage.Frames32Full, UnitTypeFlag.IsHarvester);
+        public static readonly UnitType Harvester = new VehicleType(10, "harv", "TEXT_UNIT_TITLE_GDI_HARVESTER", "Goodguy", FrameUsage.Frames32Full, UnitTypeFlag.IsHarvester|UnitTypeFlag.BuildingRemap);
         public static readonly UnitType Arty = new VehicleType(11, "arty", "TEXT_UNIT_TITLE_NOD_ARTILLERY", "Badguy", FrameUsage.Frames32Full, UnitTypeFlag.IsArmed);
         public static readonly UnitType SSM = new VehicleType(12, "mlrs", "TEXT_UNIT_TITLE_NOD_SSM_LAUNCHER", "Badguy", FrameUsage.Frames32Full, FrameUsage.Frames32Full | FrameUsage.OnFlatBed, 0, 0, UnitTypeFlag.IsArmed | UnitTypeFlag.HasTurret);
         public static readonly UnitType Hover = new VehicleType(13, "lst", "TEXT_UNIT_TITLE_LST", "Goodguy", FrameUsage.Frames01Single);
         public static readonly UnitType MHQ = new VehicleType(14, "mhq", "TEXT_UNIT_TITLE_MHQ", "Goodguy", FrameUsage.Frames32Full, FrameUsage.Frames32Full, 0, -4, UnitTypeFlag.HasTurret);
         public static readonly UnitType GunBoat = new VehicleType(15, "boat", "TEXT_UNIT_TITLE_WAKE", "Goodguy", FrameUsage.Frames32Full | FrameUsage.DamageStates, FrameUsage.Frames32Full, UnitTypeFlag.IsArmed);
-        public static readonly UnitType MCV = new VehicleType(16, "mcv", "TEXT_UNIT_TITLE_GDI_MCV", "Goodguy", FrameUsage.Frames32Full);
+        public static readonly UnitType MCV = new VehicleType(16, "mcv", "TEXT_UNIT_TITLE_GDI_MCV", "Goodguy", FrameUsage.Frames32Full, UnitTypeFlag.BuildingRemap);
         public static readonly UnitType Bike = new VehicleType(17, "bike", "TEXT_UNIT_TITLE_NOD_RECON_BIKE", "Badguy", FrameUsage.Frames32Full, UnitTypeFlag.IsArmed);
         public static readonly UnitType Tric = new VehicleType(18, "tric", "TEXT_UNIT_TITLE_TRIC", "Special", FrameUsage.Frames08Cardinal, UnitTypeFlag.IsArmed | UnitTypeFlag.NoRemap);
         public static readonly UnitType Trex = new VehicleType(19, "trex", "TEXT_UNIT_TITLE_TREX", "Special", FrameUsage.Frames08Cardinal, UnitTypeFlag.IsArmed | UnitTypeFlag.NoRemap);

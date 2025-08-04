@@ -182,7 +182,7 @@ Released on 20 Aug 2022 at 22:37 UTC
 * Sounds lists in RA triggers now have descriptions.
 * If you try to save an opened file but the folder it was loaded from is deleted, it will no longer give an error, but revert to "Save As" behavior.
 * The chosen preview image in the Steam upload dialog will now also be used as in-game preview for the map.
-* In TD maps, a building that is set to be rebuilt but is not built from the start will now show as House "None".
+* In Tiberian Dawn, buildings where "Prebuilt" is disabled will now show as House "None", with black team color, since Tiberian Dawn has no real restrictions on which House can build these.
 * The Interior tiles "wall0002" to "wall0022" are now grouped per type into three dummy-entries "wallgroup1", "wallgroup2" and "wallgroup3", to simplify random placement of these tiles and to remove clutter from the tiles list.
 
 ### v1.4.1.1:
@@ -196,7 +196,6 @@ Released on 22 Aug 2022 at 09:28 UTC
 * The title of the window will now show an asterisk behind the filename to indicate that the current file has unsaved changes.
 * Maps loaded from file are now seen as 'modified' if any issues were detected that made the editor change or discard data during the loading process.
 * The triggers check feedback (TD only) now also uses the large window used for showing the map load errors.
-* In Tiberian Dawn, buildings where "Prebuilt" is disabled will now show as House "None", with black team color, since Tiberian Dawn has no real restrictions on which House can build these.
 
 ### v1.4.2.0:
 
@@ -617,7 +616,7 @@ Released on 31 Jan 2023 at 20:50 GMT
 * Added indicator of line wrap mode in text dialog.
 * Added \[Ctrl\]+scrollwheel for going through item lists.
 * Added an "EditorLanguage" option that can be used to change the language of the game text loaded in the editor. The default value is "Auto", which makes it autodetect the language using the system language.
-* Added an option to control the behaviour of allowing walls as structures, with an owner. Since this is a behavior tweaks option, and those are all enabled by default, it is called "DontAllowWallsAsBuildings".
+* Added an option to control the behaviour of allowing walls as structures, with an owner. Since this is a behavior tweaks option, and those are all enabled by default, it is called "DontAllowWallsAsBuildings". \[NOTE: Later changed to "OverlayWallsOnly"\]
 
 ### v1.6.0.0:
 
@@ -724,3 +723,7 @@ Unreleased
 * Singleplayer map detection will now only happen if the "SoloMission" key is not present inside the ini file.
 * Smudge objects can now be painted by dragging the mouse around. Like for the map tiles, this logic prevents overlapping placement when drag-placing multi-cell objects such as the bibs.
 * Smudge objects can now be bulk-removed by moving around the cursor while the right mouse button is pressed down.
+* Right-clicking on placed down buildings that have overlay equivalents, or vice versa (such as the fields and haystacks) will now select the corresponding item even if the item you clicked is the other type version.
+* Added support for the expanded House colours in C&C1 accesible by putting ColorScheme / SecondaryScheme / RadarScheme in the ini under the house's settings section. This only works in Classic graphics.
+* If the editor loses focus while dragging an object, this will no longer prevent the undo action for that drag operation from being stored.
+* Removed the ability to place walls as structures (by disabling "OverlayWallsOnly") in Red Alert maps; it simply crashes the game.

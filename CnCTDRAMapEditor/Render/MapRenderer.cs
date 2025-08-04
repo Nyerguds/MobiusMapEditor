@@ -25,6 +25,7 @@ using System.Drawing.Imaging;
 using System.Drawing.Text;
 using System.Linq;
 using System.Text;
+using System.Windows.Forms;
 
 namespace MobiusEditor.Render
 {
@@ -237,7 +238,7 @@ namespace MobiusEditor.Render
             // required size, and if isSmooth is false, the settings were already on pixel resize.
             if ((layers & MapLayerFlag.Template) != MapLayerFlag.None)
             {
-                TemplateType clear = map.TemplateTypes.Where(t => t.Flag == TemplateTypeFlag.Clear).FirstOrDefault();
+                TemplateType clear = map.TemplateTypes.Where(t => t.Flags == TemplateTypeFlag.Clear).FirstOrDefault();
                 foreach (Point topLeft in renderLocations())
                 {
                     Template template = map.Templates[topLeft];
@@ -338,7 +339,9 @@ namespace MobiusEditor.Render
             {
                 foreach ((Point topLeft, Building building) in map.Buildings.OfType<Building>())
                 {
-                    if ((locations != null) && !locations.Contains(topLeft))
+                    Rectangle bounds = building.OverlapBounds;
+                    bounds.Offset(topLeft);
+                    if (locations != null && !locations.Any(l => bounds.Contains(l)))
                     {
                         continue;
                     }
@@ -349,7 +352,9 @@ namespace MobiusEditor.Render
             {
                 foreach ((Point topLeft, InfantryGroup infantryGroup) in map.Technos.OfType<InfantryGroup>())
                 {
-                    if ((locations != null) && !locations.Contains(topLeft))
+                    Rectangle bounds = infantryGroup.OverlapBounds;
+                    bounds.Offset(topLeft);
+                    if (locations != null && !locations.Any(l => bounds.Contains(l)))
                     {
                         continue;
                     }
@@ -360,7 +365,7 @@ namespace MobiusEditor.Render
                         {
                             continue;
                         }
-                        overlappingRenderList.Add(RenderInfantry(topLeft, tileSize, infantry, ist, false));
+                        overlappingRenderList.Add(RenderInfantry(map, topLeft, tileSize, infantry, ist, false));
                     }
                 }
             }
@@ -368,11 +373,13 @@ namespace MobiusEditor.Render
             {
                 foreach ((Point topLeft, Unit unit) in map.Technos.OfType<Unit>())
                 {
-                    if ((locations != null) && !locations.Contains(topLeft))
+                    Rectangle bounds = unit.OverlapBounds;
+                    bounds.Offset(topLeft);
+                    if (locations != null && !locations.Any(l => bounds.Contains(l)))
                     {
                         continue;
                     }
-                    overlappingRenderList.Add(RenderUnit(gameInfo, topLeft, tileSize, unit, false));
+                    overlappingRenderList.Add(RenderUnit(gameInfo, map, topLeft, tileSize, unit, false));
                 }
             }
             if ((layers & MapLayerFlag.Terrain) != MapLayerFlag.None)
@@ -405,7 +412,7 @@ namespace MobiusEditor.Render
                     for (int i = 0; i < map.Waypoints.Length; ++i)
                     {
                         Waypoint waypoint = map.Waypoints[i];
-                        HashSet<int> toCheck = waypoint.Flag.HasFlag(WaypointFlag.CrateSpawn) ? handledPointsCrate : handledPoints;
+                        HashSet<int> toCheck = waypoint.Flags.HasFlag(WaypointFlag.CrateSpawn) ? handledPointsCrate : handledPoints;
                         if ((flagPoints != null && flagPoints.Contains(i)) || !waypoint.Point.HasValue || (locations != null && !locations.Contains(waypoint.Point.Value))
                             || !map.Metrics.GetCell(waypoint.Point.Value, out int cell) || toCheck.Contains(cell))
                         {
@@ -678,7 +685,21 @@ namespace MobiusEditor.Render
                     icon += damageIconOffs;
                 }
             }
-            ITeamColor teamColor = building.Type.CanRemap ? Globals.TheTeamColorManager[building.House?.BuildingTeamColor] : null;
+            string color = null;
+            if (map != null)
+            {
+                House house = building.House == null ? null : map.Houses.FirstOrDefault(h => h.Type.ID == building.House.ID);
+                if (building.Type.CanRemap && house != null)
+                {
+                    color = house.BuildingTeamColor ?? house.UnitTeamColor;
+                }
+            }
+            // Fall back to type defaults. This might be necessary for House "None", which does not actually exist in Map.Houses.
+            if (color == null && building.House != null && building.Type.CanRemap)
+            {
+                color = building.House.BuildingTeamColor ?? building.House.UnitTeamColor;
+            }
+            ITeamColor teamColor = color == null ? null : Globals.TheTeamColorManager[color];
             bool succeeded = Globals.TheTilesetManager.GetTeamColorTileData(building.Type.GraphicsSource, icon, teamColor, out Tile tile, true, false);
             building.DrawFrameCache = icon;
             Point location = new Point(topLeft.X * tileSize.Width, topLeft.Y * tileSize.Height);
@@ -707,7 +728,7 @@ namespace MobiusEditor.Render
                     int maxOverlayIcon = Globals.TheTilesetManager.GetTileDataLength(building.Type.FactoryOverlay);
                     overlayIcon = maxOverlayIcon / 2;
                 }
-                Globals.TheTilesetManager.GetTeamColorTileData(building.Type.FactoryOverlay, overlayIcon, Globals.TheTeamColorManager[building.House?.BuildingTeamColor], out factoryOverlayTile, false, false);
+                Globals.TheTilesetManager.GetTeamColorTileData(building.Type.FactoryOverlay, overlayIcon, teamColor, out factoryOverlayTile, false, false);
             }
             void render(Graphics g)
             {
@@ -790,10 +811,24 @@ namespace MobiusEditor.Render
             return icon;
         }
 
-        public static RenderInfo RenderInfantry(Point topLeft, Size tileSize, Infantry infantry, InfantryStoppingType infantryStoppingType, bool fullOpaque)
+        public static RenderInfo RenderInfantry(Map map, Point topLeft, Size tileSize, Infantry infantry, InfantryStoppingType infantryStoppingType, bool fullOpaque)
         {
             int icon = HumanShape[Facing32[infantry.Direction.ID]];
-            ITeamColor teamColor = infantry.Type.CanRemap ? Globals.TheTeamColorManager[infantry.House?.UnitTeamColor] : null;
+            string color = null;
+            if (map != null)
+            {
+                House house = infantry.House == null ? null : map.Houses.FirstOrDefault(h => h.Type.ID == infantry.House.ID);
+                if (infantry.Type.CanRemap && house != null)
+                {
+                    color = infantry.Type.BuildingRemap ? (house.BuildingTeamColor ?? house.UnitTeamColor) : house.UnitTeamColor;
+                }
+            }
+            // Fall back to type defaults.
+            if (color == null && infantry.House != null && infantry.Type.CanRemap)
+            {
+                color = infantry.Type.BuildingRemap ? (infantry.House.BuildingTeamColor ?? infantry.House.UnitTeamColor) : infantry.House.UnitTeamColor;
+            }
+            ITeamColor teamColor = color == null ? null : Globals.TheTeamColorManager[color];
             Tile tile = null;
             // InfantryType.Init() should have taken care of RA's classic civilian remap mess at this point, and remapped all cached source graphics.
             bool success = Globals.TheTilesetManager.GetTeamColorTileData(infantry.Type.GraphicsSource, icon, teamColor, out tile, true, false);
@@ -858,7 +893,7 @@ namespace MobiusEditor.Render
             return new RenderInfo(new Point(topLeft.X * Globals.PixelWidth + offset.X, topLeft.Y * Globals.PixelHeight + offset.Y), render, infantry, !success);
         }
 
-        public static RenderInfo RenderUnit(GameInfo gameInfo, Point topLeft, Size tileSize, Unit unit, bool fullOpaque)
+        public static RenderInfo RenderUnit(GameInfo gameInfo, Map map, Point topLeft, Size tileSize, Unit unit, bool fullOpaque)
         {
             int icon = 0;
             int bodyFrames = 0;
@@ -928,16 +963,21 @@ namespace MobiusEditor.Render
                 }
             }
             // Get House color.
-            ITeamColor teamColor = null;
-            if (unit.House != null && unit.Type.CanRemap)
+            string color = null;
+            if (map != null)
             {
-                string teamColorName;
-                if (!unit.House.OverrideTeamColors.TryGetValue(unit.Type.Name, out teamColorName))
+                House house = unit.House == null ? null : map.Houses.FirstOrDefault(h => h.Type.ID == unit.House.ID);
+                if (unit.Type.CanRemap && house != null)
                 {
-                    teamColorName = unit.House?.UnitTeamColor;
+                    color = unit.Type.BuildingRemap ? (house.BuildingTeamColor ?? house.UnitTeamColor) : house.UnitTeamColor;
                 }
-                teamColor = Globals.TheTeamColorManager[teamColorName];
             }
+            // Fall back to type defaults.
+            if (color == null && unit.House != null && unit.Type.CanRemap)
+            {
+                color = unit.Type.BuildingRemap ? (unit.House.BuildingTeamColor ?? unit.House.UnitTeamColor) : unit.House.UnitTeamColor;
+            }
+            ITeamColor teamColor = color == null ? null : Globals.TheTeamColorManager[color];
             // Get body frame
             bool succeeded = Globals.TheTilesetManager.GetTeamColorTileData(unit.Type.Name, icon, teamColor, out Tile tile, true, false);
             unit.DrawFrameCache = icon;
@@ -1187,10 +1227,10 @@ namespace MobiusEditor.Render
                 alphaFactor *= Globals.PreviewAlphaFloat;
             }
             alphaFactor = alphaFactor.Restrict(0, 1);
-            int mpId = soloMission ? -1 : Waypoint.GetMpIdFromFlag(waypoint.Flag);
+            int mpId = soloMission ? -1 : Waypoint.GetMpIdFromFlag(waypoint.Flags);
             Bitmap image = null;
             bool noCrop = false;
-            if (waypoint.Flag.HasFlag(WaypointFlag.CrateSpawn))
+            if (waypoint.Flags.HasFlag(WaypointFlag.CrateSpawn))
             {
                 isDefaultIcon = false;
                 tileGraphics = "scrate";
@@ -1297,7 +1337,7 @@ namespace MobiusEditor.Render
         /// <summary>
         /// Gets the "center" render point on the cell for a vehicle, in classic pixels.
         /// </summary>
-        /// <returns>The render on the cell for a vehicle, in classic pixels.</returns>
+        /// <returns>The render point on the cell for a vehicle, in classic pixels.</returns>
         private static Point GetVehicleRenderPoint()
         {
             return new Point(Globals.PixelWidth / 2, Globals.PixelHeight / 2);
@@ -1306,7 +1346,7 @@ namespace MobiusEditor.Render
         /// <summary>
         /// Gets the "center" render point on the cell for an infantry unit, in classic pixels.
         /// </summary>
-        /// <returns>The render on the cell for a infantry unit, in classic pixels.</returns>
+        /// <returns>The render point on the cell for a infantry unit, in classic pixels.</returns>
         private static Point GetInfantryRenderPoint(InfantryStoppingType ist)
         {
             return InfantryGroup.RenderPosition(ist, true);
@@ -1315,7 +1355,7 @@ namespace MobiusEditor.Render
         /// <summary>
         /// Gets the "center" render point on the cell for a Terrain decoration object, in classic pixels.
         /// </summary>
-        /// <returns>The render on the cell for a Terrain decoration object, in classic pixels.</returns>
+        /// <returns>The render point on the cell for a Terrain decoration object, in classic pixels.</returns>
         private static Point GetTerrainRenderPoint(Terrain terrain)
         {
             return terrain.Type.CenterPoint;
@@ -1324,8 +1364,7 @@ namespace MobiusEditor.Render
         /// <summary>
         /// Gets the "center" render point on the cell for a building, in classic pixels.
         /// </summary>
-        /// <returns>The render on the cell for a building, in classic pixels.</returns>
-
+        /// <returns>The render point on the cell for a building, in classic pixels.</returns>
         private static Point GetBuildingRenderPoint(Building building)
         {
             return GeneralUtils.GetOccupiedCenter(building.Type.BaseOccupyMask, new Size(Globals.PixelWidth, Globals.PixelHeight));
@@ -1334,7 +1373,7 @@ namespace MobiusEditor.Render
         /// <summary>
         /// Renders cell occupancy indicators as green squares around the cells given in <paramref name="renderList"/> onto the given <paramref name="graphics"/> object.
         /// </summary>
-        /// <typeparam name="T">Source type of the listed objects. Not actually used.</typeparam>
+        /// <typeparam name="T">Source type of the listed objects. Not actually used, since only cell numbers are taken from it.</typeparam>
         /// <param name="graphics">Graphics object to render on.</param>
         /// <param name="visibleCells">If given, only cells in the given area are painted.</param>
         /// <param name="tileSize">Size of the map tiles.</param>
@@ -1349,7 +1388,7 @@ namespace MobiusEditor.Render
         /// Renders cell occupancy indicators as squares around the cells given in <paramref name="renderList"/> onto
         /// the given <paramref name="graphics"/> object using the specified color.
         /// </summary>
-        /// <typeparam name="T">Source type of the listed objects. Not actually used.</typeparam>
+        /// <typeparam name="T">Source type of the listed objects. Not actually used, since only cell numbers are taken from it.</typeparam>
         /// <param name="graphics">Graphics object to render on.</param>
         /// <param name="visibleCells">If given, only cells in the given area are painted.</param>
         /// <param name="tileSize">Size of the map tiles.</param>
@@ -1361,6 +1400,16 @@ namespace MobiusEditor.Render
             RenderAllBoundsFromCell(graphics, visibleCells, tileSize, renderList.Select(tp => tp.Item1), metrics, boundsColor);
         }
 
+        /// <summary>
+        /// Renders cell occupancy indicators as squares around the cells given in <paramref name="renderList"/> onto
+        /// the given <paramref name="graphics"/> object using the specified color.
+        /// </summary>
+        /// <param name="graphics">Graphics object to render on.</param>
+        /// <param name="visibleCells">If given, only cells in the given area are painted.</param>
+        /// <param name="tileSize">Size of the map tiles.</param>
+        /// <param name="renderList"><see cref="IEnumerable{T}"/> containing the cell numbers to render.</param>
+        /// <param name="metrics">Cell metrics.</param>
+        /// <param name="boundsColor">Color to use.</param>
         public static void RenderAllBoundsFromCell(Graphics graphics, Rectangle visibleCells, Size tileSize, IEnumerable<int> renderList, CellMetrics metrics, Color boundsColor)
         {
             using (Pen boundsPen = new Pen(boundsColor, Math.Max(1, tileSize.Width / 16.0f)))
@@ -1500,7 +1549,7 @@ namespace MobiusEditor.Render
             foreach ((int cell, Overlay overlay) in map.Overlay)
             {
                 OverlayType ovlt = overlay.Type;
-                if (!ovlt.Flag.HasAnyFlags(types) || !map.Metrics.GetLocation(cell, out Point location)|| !visibleCells.Contains(location))
+                if (!ovlt.Flags.HasAnyFlags(types) || !map.Metrics.GetLocation(cell, out Point location)|| !visibleCells.Contains(location))
                 {
                     continue;
                 }
@@ -1636,7 +1685,8 @@ namespace MobiusEditor.Render
                             continue;
                         }
                     }
-                    Color outlineCol = Color.FromArgb(0x80, Globals.TheTeamColorManager.GetBaseColor(infantry.House?.UnitTeamColor));
+                    string color = GetOutlineColor(infantry.House, map);
+                    Color outlineCol = Color.FromArgb(0x80, Globals.TheTeamColorManager.GetBaseColor(color));
                     string infId = "outline_inf_" + infantry.Type.Name + '_' + ((int)ist) + '_' + infantry.Direction.ID + "_" + tileSize.Width + "x" + tileSize.Height;
                     RegionData paintAreaRel = Globals.TheShapeCacheManager.GetShape(infId);
                     if (paintAreaRel == null)
@@ -1645,7 +1695,7 @@ namespace MobiusEditor.Render
                         {
                             using (Graphics ig = Graphics.FromImage(bm))
                             {
-                                RenderInfantry(new Point(1, 1), tileSize, infantry, ist, true).RenderAction(ig);
+                                RenderInfantry(null, new Point(1, 1), tileSize, infantry, ist, true).RenderAction(ig);
                             }
                             paintAreaRel = ImageUtils.GetOutline(tileSize, bm, outlineThickness, alphaThreshold, Globals.UseClassicFiles);
                             Globals.TheShapeCacheManager.AddShape(infId, paintAreaRel);
@@ -1670,13 +1720,32 @@ namespace MobiusEditor.Render
         public static void RenderAllUnitOutlines(Graphics g, GameInfo gameInfo, Map map, Rectangle visibleCells, Size tileSize, bool onlyIfBehindObjects)
         {
             RenderAllObjectOutlines(g, gameInfo, map, map.Technos.OfType<Unit>(), visibleCells, tileSize, true,
-                (h) => h.UnitTeamColor, (gr, p, unt) => RenderUnit(gameInfo, new Point(1, 1), tileSize, unt, true).RenderAction(gr), Color.Black);
+                (h) => GetOutlineColor(h, map), (gr, p, unt) => RenderUnit(gameInfo, null, new Point(1, 1), tileSize, unt, true).RenderAction(gr), Color.Black);
         }
 
         public static void RenderAllBuildingOutlines(Graphics g, GameInfo gameInfo, Map map, Rectangle visibleCells, Size tileSize, double tileScale, bool onlyIfBehindObjects)
         {
             RenderAllObjectOutlines(g, gameInfo, map, map.Buildings.OfType<Building>(), visibleCells, tileSize, true,
-                (h) => h.BuildingTeamColor, (gr, p, bld) => RenderBuilding(gameInfo, null, p, tileSize, tileScale, bld, true).RenderAction(gr), Color.Black);
+                (h) => GetOutlineColor(h, map), (gr, p, bld) => RenderBuilding(gameInfo, null, p, tileSize, tileScale, bld, true).RenderAction(gr), Color.Black);
+        }
+
+        private static String GetOutlineColor(HouseType ht, Map map)
+        {
+            string color = null;
+            if (map != null && ht != null)
+            {
+                House house = map.Houses.FirstOrDefault(h => h.Type.ID == ht.ID);
+                if (house != null)
+                {
+                    color = house.OutlineColor;
+                }
+            }
+            // Fall back to type defaults.
+            if (color == null && ht != null)
+            {
+                color = ht.OutlineColor;
+            }
+            return color;
         }
 
         public static void RenderAllTerrainOutlines(Graphics g, GameInfo gameInfo, Map map, Rectangle visibleCells, Size tileSize, double tileScale, bool onlyIfBehindObjects)
@@ -1889,7 +1958,7 @@ namespace MobiusEditor.Render
             Rectangle renderArea = map.Metrics.Bounds;
             foreach (Waypoint waypoint in map.Waypoints)
             {
-                if (!waypoint.Point.HasValue || Waypoint.GetMpIdFromFlag(waypoint.Flag) == -1)
+                if (!waypoint.Point.HasValue || Waypoint.GetMpIdFromFlag(waypoint.Flags) == -1)
                 {
                     continue;
                 }
@@ -1943,7 +2012,7 @@ namespace MobiusEditor.Render
             for (int i = 0; i < map.Waypoints.Length; ++i)
             {
                 Waypoint waypoint = map.Waypoints[i];
-                int mpId = Waypoint.GetMpIdFromFlag(waypoint.Flag);
+                int mpId = Waypoint.GetMpIdFromFlag(waypoint.Flags);
                 if (!waypoint.Point.HasValue || mpId < 0 || !map.Metrics.GetCell(waypoint.Point.Value, out int cell))
                 {
                     continue;
@@ -1962,7 +2031,7 @@ namespace MobiusEditor.Render
                 foundFlags.Add(i);
             }
             // Create offsets if multiple flags are on the same cell.
-            flagWayPoints = flagWayPoints.OrderBy(w => Waypoint.GetMpIdFromFlag(w.Flag)).ToList();
+            flagWayPoints = flagWayPoints.OrderBy(w => Waypoint.GetMpIdFromFlag(w.Flags)).ToList();
             int offsetIncrease = highlightFlags ? 6 : 2;
             Dictionary<int, int> flagOverlapPoints = new Dictionary<int, int>();
             foreach (Waypoint waypoint in flagWayPoints)
@@ -2236,11 +2305,33 @@ namespace MobiusEditor.Render
             }
         }
 
+        /// <summary>
+        /// Renders all trigger labels on techno objects in default lime green.
+        /// </summary>
+        /// <param name="graphics">Graphics object to render on.</param>
+        /// <param name="gameInfo">GameInfo for the current game type.</param>
+        /// <param name="map">Map to get techno information from.</param>
+        /// <param name="visibleCells">Rectangle that is currently visible in the editor.</param>
+        /// <param name="tileSize">Tile size</param>
+        /// <param name="layersToRender">Visible layers; to ensure no labels are shown on techno objects that are not shown.</param>
         public static void RenderAllTechnoTriggers(Graphics graphics, GameInfo gameInfo, Map map, Rectangle visibleCells, Size tileSize, MapLayerFlag layersToRender)
         {
             RenderAllTechnoTriggers(graphics, gameInfo, map.Technos, map.Buildings, visibleCells, tileSize, layersToRender, Color.LimeGreen, null, false);
         }
 
+        /// <summary>
+        /// Renders all trigger labels on techno objects.
+        /// </summary>
+        /// <param name="graphics">Graphics object to render on.</param>
+        /// <param name="gameInfo">GameInfo for the current game type.</param>
+        /// <param name="mapTechnos">List of all non-building technos on the map.</param>
+        /// <param name="mapBuildings">List of all buildings on the map.</param>
+        /// <param name="visibleCells">Rectangle that is currently visible in the editor.</param>
+        /// <param name="tileSize">Tile size</param>
+        /// <param name="layersToRender">Visible layers; to ensure no labels are shown on techno objects that are not shown.</param>
+        /// <param name="color">Label color.</param>
+        /// <param name="toPick">Trigger name to filter on. This is used to render the selected trigger in a different color in a separate function call.</param>
+        /// <param name="excludePick">true to exclude the <paramref name="toPick"/> trigger, false to only render that one.</param>
         public static void RenderAllTechnoTriggers(Graphics graphics, GameInfo gameInfo, OccupierSet<ICellOccupier> mapTechnos, OccupierSet<ICellOccupier> mapBuildings, Rectangle visibleCells, Size tileSize, MapLayerFlag layersToRender, Color color, string toPick, bool excludePick)
         {
             string classicFontLarge = null;
@@ -2517,7 +2608,7 @@ namespace MobiusEditor.Render
         {
             if (homePoint == null)
             {
-                homePoint = map.Waypoints.FirstOrDefault(w => w.Flag.HasFlag(WaypointFlag.Home) && !w.IsPreview);
+                homePoint = map.Waypoints.FirstOrDefault(w => w.Flags.HasFlag(WaypointFlag.Home) && !w.IsPreview);
             }
             if (homePoint == null || !homePoint.Cell.HasValue)
             {
@@ -2546,7 +2637,7 @@ namespace MobiusEditor.Render
         public static void RenderAllBuildingEffectRadiuses(Graphics graphics, Map map, Rectangle visibleCells, Size tileSize, int effectRadius, Building selected)
         {
             foreach ((Point topLeft, Building building) in map.Buildings.OfType<Building>()
-                .Where(b => (b.Occupier.Type.Flag & BuildingTypeFlag.GapGenerator) != BuildingTypeFlag.None))
+                .Where(b => (b.Occupier.Type.Flags & BuildingTypeFlag.GapGenerator) != BuildingTypeFlag.None))
             {
                 RenderBuildingEffectRadius(graphics, visibleCells, tileSize, effectRadius, building, topLeft, selected);
             }
@@ -2554,7 +2645,7 @@ namespace MobiusEditor.Render
 
         public static void RenderBuildingEffectRadius(Graphics graphics, Rectangle visibleCells, Size tileSize, int effectRadius, Building building, Point topLeft, Building selected)
         {
-            if ((building.Type.Flag & BuildingTypeFlag.GapGenerator) != BuildingTypeFlag.GapGenerator)
+            if ((building.Type.Flags & BuildingTypeFlag.GapGenerator) != BuildingTypeFlag.GapGenerator)
             {
                 return;
             }
@@ -2586,7 +2677,7 @@ namespace MobiusEditor.Render
         public static void RenderAllUnitEffectRadiuses(Graphics graphics, Map map, Rectangle visibleCells, Size tileSize, int jamRadius, Unit selected)
         {
             foreach ((Point topLeft, Unit unit) in map.Technos.OfType<Unit>()
-                .Where(b => (b.Occupier.Type.Flag & (UnitTypeFlag.IsGapGenerator | UnitTypeFlag.IsJammer)) != UnitTypeFlag.None))
+                .Where(b => (b.Occupier.Type.Flags & (UnitTypeFlag.IsGapGenerator | UnitTypeFlag.IsJammer)) != UnitTypeFlag.None))
             {
                 RenderUnitEffectRadius(graphics, tileSize, jamRadius, unit, topLeft, visibleCells, selected);
             }
@@ -2594,8 +2685,8 @@ namespace MobiusEditor.Render
 
         public static void RenderUnitEffectRadius(Graphics graphics, Size tileSize, int jamRadius, Unit unit, Point cell, Rectangle visibleCells, Unit selected)
         {
-            bool isJammer = unit.Type.Flag.HasFlag(UnitTypeFlag.IsJammer);
-            bool isGapGen = unit.Type.Flag.HasFlag(UnitTypeFlag.IsGapGenerator);
+            bool isJammer = unit.Type.Flags.HasFlag(UnitTypeFlag.IsJammer);
+            bool isGapGen = unit.Type.Flags.HasFlag(UnitTypeFlag.IsGapGenerator);
             if (!isJammer && !isGapGen)
             {
                 return;
@@ -3075,7 +3166,7 @@ namespace MobiusEditor.Render
             LandType clearLand = LandType.Clear;
             // Fetch the terrain type for clear terrain on this theater.
             IEnumerable<Point> points = visibleCells.Points();
-            TemplateType clear = plugin.Map.TemplateTypes.Where(t => t.Flag.HasFlag(TemplateTypeFlag.Clear)).FirstOrDefault();
+            TemplateType clear = plugin.Map.TemplateTypes.Where(t => t.Flags.HasFlag(TemplateTypeFlag.Clear)).FirstOrDefault();
             clearLand = clear.LandTypes.Length > 0 ? clear.LandTypes[0] : LandType.Clear;
             HashSet<LandType> usedLandTypes = plugin.Map.UsedLandTypes;
             Dictionary<LandType, Color> landColorsMapping = GetLandColorsMapping();

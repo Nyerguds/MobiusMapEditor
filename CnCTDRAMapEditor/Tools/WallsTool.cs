@@ -131,6 +131,7 @@ namespace MobiusEditor.Tools
         private void MapPanel_MouseLeave(object sender, EventArgs e)
         {
             ExitPlacementMode();
+            MapPanel_MouseUp(sender, new MouseEventArgs(MouseButtons.None, 0, 0, 0, 0));
         }
 
         private void MapPanel_MouseWheel(object sender, MouseEventArgs e)
@@ -462,6 +463,7 @@ namespace MobiusEditor.Tools
             this.mapPanel.MouseMove += MapPanel_MouseMove;
             this.mapPanel.MouseLeave += MapPanel_MouseLeave;
             this.mapPanel.MouseWheel += MapPanel_MouseWheel;
+            this.mapPanel.LostFocus += MapPanel_MouseLeave;
             this.mapPanel.SuspendMouseZoomKeys = Keys.Control;
             (this.mapPanel as Control).KeyDown += WallTool_KeyDown;
             (this.mapPanel as Control).KeyUp += WallTool_KeyUp;
@@ -487,6 +489,7 @@ namespace MobiusEditor.Tools
             this.mapPanel.MouseMove -= MapPanel_MouseMove;
             this.mapPanel.MouseLeave -= MapPanel_MouseLeave;
             this.mapPanel.MouseWheel -= MapPanel_MouseWheel;
+            this.mapPanel.LostFocus -= MapPanel_MouseLeave;
             this.mapPanel.SuspendMouseZoomKeys = Keys.None;
             (this.mapPanel as Control).KeyDown -= WallTool_KeyDown;
             (this.mapPanel as Control).KeyUp -= WallTool_KeyUp;

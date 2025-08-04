@@ -162,6 +162,7 @@ namespace MobiusEditor.Tools
         private void MapPanel_MouseLeave(object sender, EventArgs e)
         {
             ExitPlacementMode();
+            MapPanel_MouseUp(sender, new MouseEventArgs(MouseButtons.None, 0, 0, 0, 0));
         }
 
         private void MapPanel_MouseWheel(object sender, MouseEventArgs e)
@@ -428,19 +429,20 @@ namespace MobiusEditor.Tools
         public override void Activate()
         {
             base.Activate();
-            this.Deactivate(true);
-            this.mapPanel.MouseDown += MapPanel_MouseDown;
-            this.mapPanel.MouseUp += MapPanel_MouseUp;
-            this.mapPanel.MouseLeave += MapPanel_MouseLeave;
-            this.mapPanel.MouseWheel += MapPanel_MouseWheel;
-            this.mapPanel.SuspendMouseZoomKeys = Keys.Control;
-            (this.mapPanel as Control).KeyDown += ResourceTool_KeyDown;
-            (this.mapPanel as Control).KeyUp += ResourcesTool_KeyUpDown;
-            this.navigationWidget.BoundsMouseCellChanged += MouseoverWidget_MouseCellChanged;
-            this.url.Undone += Url_UndoRedoDone;
-            this.url.Redone += Url_UndoRedoDone;
-            this.UpdateStatus();
-            this.RefreshPreviewPanel();
+            Deactivate(true);
+            mapPanel.MouseDown += MapPanel_MouseDown;
+            mapPanel.MouseUp += MapPanel_MouseUp;
+            mapPanel.MouseLeave += MapPanel_MouseLeave;
+            mapPanel.MouseWheel += MapPanel_MouseWheel;
+            mapPanel.LostFocus += MapPanel_MouseLeave;
+            mapPanel.SuspendMouseZoomKeys = Keys.Control;
+            (mapPanel as Control).KeyDown += ResourceTool_KeyDown;
+            (mapPanel as Control).KeyUp += ResourcesTool_KeyUpDown;
+            navigationWidget.BoundsMouseCellChanged += MouseoverWidget_MouseCellChanged;
+            url.Undone += Url_UndoRedoDone;
+            url.Redone += Url_UndoRedoDone;
+            UpdateStatus();
+            RefreshPreviewPanel();
         }
 
         public override void Deactivate()
@@ -455,16 +457,17 @@ namespace MobiusEditor.Tools
                 ExitPlacementMode();
                 base.Deactivate();
             }
-            this.mapPanel.MouseDown -= MapPanel_MouseDown;
-            this.mapPanel.MouseUp -= MapPanel_MouseUp;
-            this.mapPanel.MouseLeave -= MapPanel_MouseLeave;
-            this.mapPanel.MouseWheel -= MapPanel_MouseWheel;
-            this.mapPanel.SuspendMouseZoomKeys = Keys.None;
-            (this.mapPanel as Control).KeyDown -= ResourceTool_KeyDown;
-            (this.mapPanel as Control).KeyUp -= ResourcesTool_KeyUpDown;
-            this.navigationWidget.BoundsMouseCellChanged -= MouseoverWidget_MouseCellChanged;
-            this.url.Undone -= Url_UndoRedoDone;
-            this.url.Redone -= Url_UndoRedoDone;
+            mapPanel.MouseDown -= MapPanel_MouseDown;
+            mapPanel.MouseUp -= MapPanel_MouseUp;
+            mapPanel.MouseLeave -= MapPanel_MouseLeave;
+            mapPanel.MouseWheel -= MapPanel_MouseWheel;
+            mapPanel.LostFocus -= MapPanel_MouseLeave;
+            mapPanel.SuspendMouseZoomKeys = Keys.None;
+            (mapPanel as Control).KeyDown -= ResourceTool_KeyDown;
+            (mapPanel as Control).KeyUp -= ResourcesTool_KeyUpDown;
+            navigationWidget.BoundsMouseCellChanged -= MouseoverWidget_MouseCellChanged;
+            url.Undone -= Url_UndoRedoDone;
+            url.Redone -= Url_UndoRedoDone;
         }
 
         #region IDisposable Support

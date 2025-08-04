@@ -79,7 +79,7 @@ namespace MobiusEditor.Model
         public string Name { get; set; }
         public string ShortName { get; set; }
 
-        public WaypointFlag Flag { get; set; }
+        public WaypointFlag Flags { get; set; }
 
         public int? Cell { get; set; }
         public Point? Point => !Cell.HasValue || Cell == -1 || Metrics == null ? null : (Point?)new Point(Cell.Value % Metrics.Width, Cell.Value / Metrics.Width);
@@ -91,7 +91,7 @@ namespace MobiusEditor.Model
             Metrics = metrics;
             Name = name;
             ShortName = shortName;
-            Flag = flag;
+            Flags = flag;
             Cell = cell;
         }
 

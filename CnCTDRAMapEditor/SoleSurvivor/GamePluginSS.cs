@@ -262,7 +262,7 @@ namespace MobiusEditor.SoleSurvivor
             return Validate(saveType, forResave, forWarnings, true);
         }
 
-        protected override List<string> ResetMissionRules(INI extraIniText, bool forFootprintTest, out bool footPrintsChanged)
+        protected override List<string> ResetMissionRules(INI extraIniText, bool forFootprintTest, out bool footPrintsChanged, HashSet<Point> refreshPoints)
         {
             footPrintsChanged = false;
             return new List<string>();
@@ -301,7 +301,7 @@ namespace MobiusEditor.SoleSurvivor
             }
             //info.Add(string.Format(maximums, "team types", Map.TeamTypes.Count, gi.MaxTeamsClassic));
             //info.Add(string.Format(maximums, "triggers", Map.Triggers.Count, gi.MaxTriggersClassic));
-            int startPoints = Map.Waypoints.Count(w => w.Cell.HasValue && w.Flag.HasFlag(WaypointFlag.PlayerStart));
+            int startPoints = Map.Waypoints.Count(w => w.Cell.HasValue && w.Flags.HasFlag(WaypointFlag.PlayerStart));
             info.Add(string.Format("Number of set starting points: {0}.", startPoints));
             return info;
         }

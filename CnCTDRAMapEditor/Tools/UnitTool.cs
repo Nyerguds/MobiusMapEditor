@@ -288,6 +288,7 @@ namespace MobiusEditor.Tools
         private void MapPanel_MouseLeave(object sender, EventArgs e)
         {
             ExitPlacementMode();
+            MapPanel_MouseUp(sender, new MouseEventArgs(MouseButtons.None, 0, 0, 0, 0));
         }
 
         private void MapPanel_MouseWheel(object sender, MouseEventArgs e)
@@ -601,7 +602,7 @@ namespace MobiusEditor.Tools
                 using (var g = Graphics.FromImage(unitPreview))
                 {
                     MapRenderer.SetRenderSettings(g, Globals.PreviewSmoothScale);
-                    RenderInfo render = MapRenderer.RenderUnit(plugin.GameInfo, new Point(1, 1), Globals.PreviewTileSize, mockUnit, false);
+                    RenderInfo render = MapRenderer.RenderUnit(plugin.GameInfo, map, new Point(1, 1), Globals.PreviewTileSize, mockUnit, false);
                     if (render.RenderedObject != null)
                     {
                         render.RenderAction(g);
@@ -721,20 +722,21 @@ namespace MobiusEditor.Tools
         public override void Activate()
         {
             base.Activate();
-            this.Deactivate(true);
-            this.mockUnit.PropertyChanged += MockUnit_PropertyChanged;
-            this.mapPanel.MouseDown += MapPanel_MouseDown;
-            this.mapPanel.MouseUp += MapPanel_MouseUp;
-            this.mapPanel.MouseDoubleClick += MapPanel_MouseDoubleClick;
-            this.mapPanel.MouseMove += MapPanel_MouseMove;
-            this.mapPanel.MouseLeave += MapPanel_MouseLeave;
-            this.mapPanel.MouseWheel += MapPanel_MouseWheel;
-            this.mapPanel.SuspendMouseZoomKeys = Keys.Control;
-            (this.mapPanel as Control).KeyDown += UnitTool_KeyDown;
-            (this.mapPanel as Control).KeyUp += UnitTool_KeyUp;
-            this.navigationWidget.BoundsMouseCellChanged += MouseoverWidget_MouseCellChanged;
-            this.UpdateStatus();
-            this.RefreshPreviewPanel();
+            Deactivate(true);
+            mockUnit.PropertyChanged += MockUnit_PropertyChanged;
+            mapPanel.MouseDown += MapPanel_MouseDown;
+            mapPanel.MouseUp += MapPanel_MouseUp;
+            mapPanel.MouseDoubleClick += MapPanel_MouseDoubleClick;
+            mapPanel.MouseMove += MapPanel_MouseMove;
+            mapPanel.MouseLeave += MapPanel_MouseLeave;
+            mapPanel.MouseWheel += MapPanel_MouseWheel;
+            mapPanel.LostFocus += MapPanel_MouseLeave;
+            mapPanel.SuspendMouseZoomKeys = Keys.Control;
+            (mapPanel as Control).KeyDown += UnitTool_KeyDown;
+            (mapPanel as Control).KeyUp += UnitTool_KeyUp;
+            navigationWidget.BoundsMouseCellChanged += MouseoverWidget_MouseCellChanged;
+            UpdateStatus();
+            RefreshPreviewPanel();
         }
 
         public override void Deactivate()
@@ -749,17 +751,18 @@ namespace MobiusEditor.Tools
                 ExitPlacementMode();
                 base.Deactivate();
             }
-            this.mockUnit.PropertyChanged -= MockUnit_PropertyChanged;
-            this.mapPanel.MouseDown -= MapPanel_MouseDown;
-            this.mapPanel.MouseUp -= MapPanel_MouseUp;
-            this.mapPanel.MouseDoubleClick -= MapPanel_MouseDoubleClick;
-            this.mapPanel.MouseMove -= MapPanel_MouseMove;
-            this.mapPanel.MouseLeave -= MapPanel_MouseLeave;
-            this.mapPanel.MouseWheel -= MapPanel_MouseWheel;
-            this.mapPanel.SuspendMouseZoomKeys = Keys.None;
-            (this.mapPanel as Control).KeyDown -= UnitTool_KeyDown;
-            (this.mapPanel as Control).KeyUp -= UnitTool_KeyUp;
-            this.navigationWidget.BoundsMouseCellChanged -= MouseoverWidget_MouseCellChanged;
+            mockUnit.PropertyChanged -= MockUnit_PropertyChanged;
+            mapPanel.MouseDown -= MapPanel_MouseDown;
+            mapPanel.MouseUp -= MapPanel_MouseUp;
+            mapPanel.MouseDoubleClick -= MapPanel_MouseDoubleClick;
+            mapPanel.MouseMove -= MapPanel_MouseMove;
+            mapPanel.MouseLeave -= MapPanel_MouseLeave;
+            mapPanel.MouseWheel -= MapPanel_MouseWheel;
+            mapPanel.LostFocus -= MapPanel_MouseLeave;
+            mapPanel.SuspendMouseZoomKeys = Keys.None;
+            (mapPanel as Control).KeyDown -= UnitTool_KeyDown;
+            (mapPanel as Control).KeyUp -= UnitTool_KeyUp;
+            navigationWidget.BoundsMouseCellChanged -= MouseoverWidget_MouseCellChanged;
         }
 
         #region IDisposable Support

@@ -25,11 +25,13 @@ namespace MobiusEditor.Model
         /// <summary>No flags set.</summary>
         None          /**/ = 0,
         /// <summary>This is a House for special purposes that doesn't actually exist as playable side in the game, meaning it should not be included in normal lists.</summary>
-        Special       /**/ = 1 << 1,
+        Civilian      /**/ = 1 << 1,
+        /// <summary>This is a House for special purposes that doesn't actually exist as playable side in the game, meaning it should not be included in normal lists.</summary>
+        Special       /**/ = 1 << 2,
         /// <summary>This House type can be used in the House alliances lists.</summary>
-        ForAlliances  /**/ = 1 << 2,
+        ForAlliances  /**/ = 1 << 3,
         /// <summary>This is a special empty House, used if the plugin does not assign any House to unbuilt structures. This will typically be marked as Special too.</summary>
-        BaseHouse    /**/ = 1 << 3,
+        BaseHouse     /**/ = 1 << 4,
     }
 
     [DebuggerDisplay("{Name}")]
@@ -38,32 +40,33 @@ namespace MobiusEditor.Model
         public int ID { get; private set; }
         public string Name { get; private set; }
         public string DisplayName { get { return nameId == null ? Name : Globals.TheGameTextManager[this.nameId]; } }
+        public bool IsCivilianHouse => Flags.HasFlag(HouseTypeFlag.Civilian);
+        public HouseTypeFlag Flags { get; private set; }
         public string UnitTeamColor { get; private set; }
         public string BuildingTeamColor { get; private set; }
-        public HouseTypeFlag Flags { get; private set; }
-        public IDictionary<string, string> OverrideTeamColors { get; private set; }
+        public string OutlineColor { get; private set; }
         private string nameId;
 
-        public HouseType(int id, string name, string nameId, HouseTypeFlag flags, string unitTeamColor, string buildingTeamColor, params (string type, string teamColor)[] overrideTeamColors)
+        public HouseType(int id, string name, string nameId, HouseTypeFlag flags, string unitTeamColor, string buildingTeamColor, string outlineColor)
         {
-            this.ID = id;
-            this.Name = name;
+            ID = id;
+            Name = name;
             this.nameId = nameId;
-            this.Flags = flags;
+            Flags = flags;
             // Alliances not supported for house IDs larger than 32.
             if (id >= 32) Flags &= ~HouseTypeFlag.ForAlliances;
-            this.UnitTeamColor = unitTeamColor;
-            this.BuildingTeamColor = buildingTeamColor;
-            this.OverrideTeamColors = overrideTeamColors.ToDictionary(x => x.type, x => x.teamColor);
+            UnitTeamColor = unitTeamColor;
+            BuildingTeamColor = buildingTeamColor ?? UnitTeamColor;
+            OutlineColor = outlineColor ?? BuildingTeamColor;
         }
 
         public HouseType(int id, string name, string nameId, HouseTypeFlag flags, string teamColor)
-            : this(id, name, nameId, flags, teamColor, teamColor)
+            : this(id, name, nameId, flags, teamColor, teamColor, teamColor)
         {
         }
 
         public HouseType(int id, string name, HouseTypeFlag flags, string teamColor)
-            : this(id, name, null, flags, teamColor, teamColor)
+            : this(id, name, null, flags, teamColor, teamColor, teamColor)
         {
         }
 

@@ -65,8 +65,9 @@ namespace MobiusEditor.Interface
         /// </summary>
         /// <param name="extraIniText">The extra ini text to store</param>
         /// <param name="footPrintsChanged">Returns true if any building footprints were changed as a result of the given ini rule tweaks</param>
+        /// <param name="refreshPoints">Returns the points that need to be refreshed on the map as a result of the given ini rule tweaks.</param>
         /// <returns>Any errors that occurred while parsing <paramref name="extraIniText"/>, or null if nothing went wrong.</returns>
-        IEnumerable<string> SetExtraIniText(string extraIniText, out bool footPrintsChanged);
+        IEnumerable<string> SetExtraIniText(string extraIniText, out bool footPrintsChanged, out HashSet<Point> refreshPoints);
 
         /// <summary>Test if setting extra ini text will result in footprint changes.</summary>
         /// <param name="extraIniText">The extra ini text to evaluate</param>

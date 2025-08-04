@@ -270,6 +270,7 @@ namespace MobiusEditor.Tools
         private void MapPanel_MouseLeave(object sender, EventArgs e)
         {
             ExitPlacementMode();
+            MapPanel_MouseUp(sender, new MouseEventArgs(MouseButtons.None, 0, 0, 0, 0));
         }
 
         private void MapPanel_MouseMove(object sender, MouseEventArgs e)
@@ -749,20 +750,21 @@ namespace MobiusEditor.Tools
         public override void Activate()
         {
             base.Activate();
-            this.Deactivate(true);
-            this.mockSmudge.PropertyChanged += MockSmudge_PropertyChanged;
-            this.mapPanel.MouseDown += MapPanel_MouseDown;
-            this.mapPanel.MouseUp += MapPanel_MouseUp;
-            this.mapPanel.MouseMove += MapPanel_MouseMove;
-            this.mapPanel.MouseDoubleClick += MapPanel_MouseDoubleClick;
-            this.mapPanel.MouseLeave += MapPanel_MouseLeave;
-            this.mapPanel.MouseWheel += MapPanel_MouseWheel;
-            this.mapPanel.SuspendMouseZoomKeys = Keys.Control;
-            (this.mapPanel as Control).KeyDown += SmudgeTool_KeyDown;
-            (this.mapPanel as Control).KeyUp += SmudgeTool_KeyUp;
-            this.navigationWidget.BoundsMouseCellChanged += MouseoverWidget_MouseCellChanged;
-            this.UpdateStatus();
-            this.RefreshPreviewPanel();
+            Deactivate(true);
+            mockSmudge.PropertyChanged += MockSmudge_PropertyChanged;
+            mapPanel.MouseDown += MapPanel_MouseDown;
+            mapPanel.MouseUp += MapPanel_MouseUp;
+            mapPanel.MouseMove += MapPanel_MouseMove;
+            mapPanel.MouseDoubleClick += MapPanel_MouseDoubleClick;
+            mapPanel.MouseLeave += MapPanel_MouseLeave;
+            mapPanel.MouseWheel += MapPanel_MouseWheel;
+            mapPanel.LostFocus += MapPanel_MouseLeave;
+            mapPanel.SuspendMouseZoomKeys = Keys.Control;
+            (mapPanel as Control).KeyDown += SmudgeTool_KeyDown;
+            (mapPanel as Control).KeyUp += SmudgeTool_KeyUp;
+            navigationWidget.BoundsMouseCellChanged += MouseoverWidget_MouseCellChanged;
+            UpdateStatus();
+            RefreshPreviewPanel();
         }
 
         public override void Deactivate()
@@ -777,17 +779,18 @@ namespace MobiusEditor.Tools
                 ExitPlacementMode();
                 base.Deactivate();
             }
-            this.mockSmudge.PropertyChanged -= MockSmudge_PropertyChanged;
-            this.mapPanel.MouseDown -= MapPanel_MouseDown;
-            this.mapPanel.MouseDown -= MapPanel_MouseUp;
-            this.mapPanel.MouseMove -= MapPanel_MouseMove;
-            this.mapPanel.MouseDoubleClick -= MapPanel_MouseDoubleClick;
-            this.mapPanel.MouseLeave -= MapPanel_MouseLeave;
-            this.mapPanel.MouseWheel -= MapPanel_MouseWheel;
-            this.mapPanel.SuspendMouseZoomKeys = Keys.None;
-            (this.mapPanel as Control).KeyDown -= SmudgeTool_KeyDown;
-            (this.mapPanel as Control).KeyUp -= SmudgeTool_KeyUp;
-            this.navigationWidget.BoundsMouseCellChanged -= MouseoverWidget_MouseCellChanged;
+            mockSmudge.PropertyChanged -= MockSmudge_PropertyChanged;
+            mapPanel.MouseDown -= MapPanel_MouseDown;
+            mapPanel.MouseDown -= MapPanel_MouseUp;
+            mapPanel.MouseMove -= MapPanel_MouseMove;
+            mapPanel.MouseDoubleClick -= MapPanel_MouseDoubleClick;
+            mapPanel.MouseLeave -= MapPanel_MouseLeave;
+            mapPanel.MouseWheel -= MapPanel_MouseWheel;
+            mapPanel.LostFocus -= MapPanel_MouseLeave;
+            mapPanel.SuspendMouseZoomKeys = Keys.None;
+            (mapPanel as Control).KeyDown -= SmudgeTool_KeyDown;
+            (mapPanel as Control).KeyUp -= SmudgeTool_KeyUp;
+            navigationWidget.BoundsMouseCellChanged -= MouseoverWidget_MouseCellChanged;
         }
 
         #region IDisposable Support

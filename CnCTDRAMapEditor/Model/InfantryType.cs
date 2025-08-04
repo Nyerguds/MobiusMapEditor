@@ -30,13 +30,14 @@ namespace MobiusEditor.Model
         public string GraphicsSource { get; set; }
         public string DisplayName { get; private set; }
         public string OwnerHouse { get; private set; }
-        public UnitTypeFlag Flag { get; private set; }
-        public bool IsArmed => Flag.HasFlag(UnitTypeFlag.IsArmed);
+        public UnitTypeFlag Flags { get; private set; }
+        public bool IsArmed => Flags.HasFlag(UnitTypeFlag.IsArmed);
         public bool IsAircraft => false;
         public bool IsFixedWing => false;
-        public bool IsExpansionOnly => Flag.HasFlag(UnitTypeFlag.IsExpansionUnit);
+        public bool IsExpansionOnly => Flags.HasFlag(UnitTypeFlag.IsExpansionUnit);
         public bool IsHarvester => false;
-        public bool CanRemap => !Flag.HasFlag(UnitTypeFlag.NoRemap);
+        public bool CanRemap => !Flags.HasFlag(UnitTypeFlag.NoRemap);
+        public bool BuildingRemap => Flags.HasFlag(UnitTypeFlag.BuildingRemap);
         public string ClassicGraphicsSource { get; set; }
         public byte[] ClassicGraphicsRemap { get; set; }
         public bool GraphicsFound { get; private set; }
@@ -51,7 +52,7 @@ namespace MobiusEditor.Model
             GraphicsSource = name;
             nameId = textId;
             OwnerHouse = ownerHouse;
-            Flag = flags;
+            Flags = flags;
             ClassicGraphicsSource = remappedFrom;
             ClassicGraphicsRemap = remapTable;
         }
@@ -134,7 +135,7 @@ namespace MobiusEditor.Model
             using (Graphics g = Graphics.FromImage(infantryThumbnail))
             {
                 MapRenderer.SetRenderSettings(g, Globals.PreviewSmoothScale);
-                RenderInfo render = MapRenderer.RenderInfantry(Point.Empty, Globals.PreviewTileSize, mockInfantry, InfantryStoppingType.Center, false);
+                RenderInfo render = MapRenderer.RenderInfantry(null, Point.Empty, Globals.PreviewTileSize, mockInfantry, InfantryStoppingType.Center, false);
                 if (render.RenderedObject != null)
                 {
                     render.RenderAction(g);

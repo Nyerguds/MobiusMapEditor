@@ -280,6 +280,7 @@ namespace MobiusEditor.Tools
         private void MapPanel_MouseLeave(object sender, EventArgs e)
         {
             ExitPlacementMode();
+            MapPanel_MouseUp(sender, new MouseEventArgs(MouseButtons.None, 0, 0, 0, 0));
         }
 
         private void MapPanel_MouseWheel(object sender, MouseEventArgs e)
@@ -613,19 +614,20 @@ namespace MobiusEditor.Tools
         {
             base.Activate();
             Deactivate(true);
-            this.jumpToButton.Click += JumpToButton_Click;
+            jumpToButton.Click += JumpToButton_Click;
             plugin.Map.TriggersUpdated += Triggers_CollectionChanged;
-            this.mapPanel.MouseDown += MapPanel_MouseDown;
-            this.mapPanel.MouseUp += MapPanel_MouseUp;
-            this.mapPanel.MouseMove += MapPanel_MouseMove;
-            this.mapPanel.MouseLeave += MapPanel_MouseLeave;
-            this.mapPanel.MouseWheel += MapPanel_MouseWheel;
-            this.mapPanel.SuspendMouseZoomKeys = Keys.Control;
-            (this.mapPanel as Control).KeyDown += CellTriggersTool_KeyDown;
-            (this.mapPanel as Control).KeyUp += CellTriggersTool_KeyUp;
-            this.navigationWidget.BoundsMouseCellChanged += MouseoverWidget_MouseCellChanged;
-            this.url.Undone += Url_UndoRedoDone;
-            this.url.Redone += Url_UndoRedoDone;
+            mapPanel.MouseDown += MapPanel_MouseDown;
+            mapPanel.MouseUp += MapPanel_MouseUp;
+            mapPanel.MouseMove += MapPanel_MouseMove;
+            mapPanel.MouseLeave += MapPanel_MouseLeave;
+            mapPanel.MouseWheel += MapPanel_MouseWheel;
+            mapPanel.LostFocus += MapPanel_MouseLeave;
+            mapPanel.SuspendMouseZoomKeys = Keys.Control;
+            (mapPanel as Control).KeyDown += CellTriggersTool_KeyDown;
+            (mapPanel as Control).KeyUp += CellTriggersTool_KeyUp;
+            navigationWidget.BoundsMouseCellChanged += MouseoverWidget_MouseCellChanged;
+            url.Undone += Url_UndoRedoDone;
+            url.Redone += Url_UndoRedoDone;
             UpdateStatus();
         }
 
@@ -641,19 +643,20 @@ namespace MobiusEditor.Tools
                 ExitPlacementMode();
                 base.Deactivate();
             }
-            this.jumpToButton.Click -= JumpToButton_Click;
+            jumpToButton.Click -= JumpToButton_Click;
             plugin.Map.TriggersUpdated -= Triggers_CollectionChanged;
-            this.mapPanel.MouseDown -= MapPanel_MouseDown;
-            this.mapPanel.MouseUp -= MapPanel_MouseUp;
-            this.mapPanel.MouseMove -= MapPanel_MouseMove;
-            this.mapPanel.MouseLeave -= MapPanel_MouseLeave;
-            this.mapPanel.MouseWheel -= MapPanel_MouseWheel;
-            this.mapPanel.SuspendMouseZoomKeys = Keys.None;
-            (this.mapPanel as Control).KeyDown -= CellTriggersTool_KeyDown;
-            (this.mapPanel as Control).KeyUp -= CellTriggersTool_KeyUp;
-            this.navigationWidget.BoundsMouseCellChanged -= MouseoverWidget_MouseCellChanged;
-            this.url.Undone -= Url_UndoRedoDone;
-            this.url.Redone -= Url_UndoRedoDone;
+            mapPanel.MouseDown -= MapPanel_MouseDown;
+            mapPanel.MouseUp -= MapPanel_MouseUp;
+            mapPanel.MouseMove -= MapPanel_MouseMove;
+            mapPanel.MouseLeave -= MapPanel_MouseLeave;
+            mapPanel.MouseWheel -= MapPanel_MouseWheel;
+            mapPanel.LostFocus -= MapPanel_MouseLeave;
+            mapPanel.SuspendMouseZoomKeys = Keys.None;
+            (mapPanel as Control).KeyDown -= CellTriggersTool_KeyDown;
+            (mapPanel as Control).KeyUp -= CellTriggersTool_KeyUp;
+            navigationWidget.BoundsMouseCellChanged -= MouseoverWidget_MouseCellChanged;
+            url.Undone -= Url_UndoRedoDone;
+            url.Redone -= Url_UndoRedoDone;
         }
 
         #region IDisposable Support

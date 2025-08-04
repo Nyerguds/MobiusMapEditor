@@ -577,7 +577,7 @@ namespace MobiusEditor.Model
             for (int i = 0; i < wp.Length; ++i)
             {
                 // Deep clone with current metrics, to allow showing waypoints as cell coordinates.
-                Waypoints[i] = new Waypoint(wp[i].Name, wp[i].ShortName, wp[i].Flag, Metrics, wp[i].Cell);
+                Waypoints[i] = new Waypoint(wp[i].Name, wp[i].ShortName, wp[i].Flags, Metrics, wp[i].Cell);
             }
             DropZoneRadius = dropZoneRadius;
             GapRadius = gapRadius;
@@ -587,7 +587,7 @@ namespace MobiusEditor.Model
             // Optimisation: checks on what is inside the given data, used to prevent unnecessary logic from executing.
             ConcreteOverlaysAvailable = OverlayTypes.Any(ovl => ovl.IsConcrete);
             CrateOverlaysAvailable = OverlayTypes.Any(ovl => ovl.IsCrate);
-            FlareWaypointAvailable = Waypoints.Any(wpt => wpt.Flag.HasFlag(WaypointFlag.Flare));
+            FlareWaypointAvailable = Waypoints.Any(wpt => wpt.Flags.HasFlag(WaypointFlag.Flare));
             ExpansionUnitsAvailable = BuildingTypes.Any(tt => tt.IsExpansionOnly)
                 || AllInfantryTypes.Any(tt => tt.IsExpansionOnly)
                 || TerrainTypes.Any(tt => tt.IsExpansionOnly)
@@ -1200,7 +1200,7 @@ namespace MobiusEditor.Model
                 replaceTypes[kvp.Key] = tile;
                 if (tile != null)
                 {
-                    if (tile.Flag.HasFlag(TemplateTypeFlag.Group))
+                    if (tile.Flags.HasFlag(TemplateTypeFlag.Group))
                     {
                         tile = tileIcon >= tile.GroupTiles.Length ?
                             null : TemplateTypes.Where(t => t.Name == tile.GroupTiles[tileIcon]).FirstOrDefault();
@@ -2072,7 +2072,7 @@ namespace MobiusEditor.Model
             for (int i = 0; i < Waypoints.Length; ++i)
             {
                 Waypoint waypoint = Waypoints[i];
-                if (waypoint.Flag.HasFlag(WaypointFlag.PlayerStart))
+                if (waypoint.Flags.HasFlag(WaypointFlag.PlayerStart))
                 {
                     string newName = isSolo ? i.ToString() : String.Format("P{0}", i);
                     Waypoints[i].Name = newName;
@@ -2133,7 +2133,7 @@ namespace MobiusEditor.Model
                     Infantry[] inf = infantryGroup.Infantry;
                     for (int i = 0; i < inf.Length; ++i)
                     {
-                        if (inf[i] != null && inf[i].Type.Flag.HasFlag(UnitTypeFlag.IsExpansionUnit))
+                        if (inf[i] != null && inf[i].Type.Flags.HasFlag(UnitTypeFlag.IsExpansionUnit))
                         {
                             inf[i] = null;
                             changed = true;
@@ -2608,6 +2608,14 @@ namespace MobiusEditor.Model
             }
         }
 
+        public void ClearEvents()
+        {
+            WaypointsUpdated = null;
+            TriggersUpdated = null;
+            RulesChanged = null;
+            MapContentsChanged = null;
+        }
+
         /// <summary>Gets a view of the initial viewport at the start of a mission</summary>
         /// <param name="homeWpIsCenter">True if the "Home" waypoint indicates the center of the viewport, not the top left corner.</param>
         /// <param name="dos">Get the closeup DOS 13x8 cells viewport, rather than the win95 26x16 one.</param>
@@ -2616,7 +2624,7 @@ namespace MobiusEditor.Model
         /// <returns>A rectangle representing the starting position of a mission.</returns>
         public Rectangle GetSoloViewport(bool homeWpIsCenter, bool dos, bool square, bool focusPlayerUnits)
         {
-            Waypoint startPoint = Waypoints.FirstOrDefault(wp => wp.Flag.HasFlag(WaypointFlag.Home));
+            Waypoint startPoint = Waypoints.FirstOrDefault(wp => wp.Flags.HasFlag(WaypointFlag.Home));
             return GetSoloViewport(homeWpIsCenter, startPoint, dos, square, focusPlayerUnits);
         }
 

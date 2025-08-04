@@ -57,6 +57,7 @@ namespace MobiusEditor.Model
         /// <summary>Is a resource.</summary>
         Resource        /**/ = TiberiumOrGold | Gems,
     }
+
     [DebuggerDisplay("{Name}")]
     public class OverlayType : ICellOccupier, IBrowsableType, ICellOverlapper
     {
@@ -64,7 +65,7 @@ namespace MobiusEditor.Model
         public string Name { get; private set; }
         public string DisplayName { get; private set; }
         public bool ExistsInTheater { get; private set; }
-        public OverlayTypeFlag Flag { get; private set; }
+        public OverlayTypeFlag Flags { get; private set; }
         public Bitmap Thumbnail { get; set; }
         public string GraphicsSource { get; private set; }
         public int ForceTileNr { get; private set; }
@@ -75,41 +76,41 @@ namespace MobiusEditor.Model
 
         public Rectangle OverlapBounds => new Rectangle(0, 0, 1, 1);
         public int ZOrder => -1;
-        public bool IsResource => (this.Flag & (OverlayTypeFlag.TiberiumOrGold | OverlayTypeFlag.Gems)) != OverlayTypeFlag.None;
-        public bool IsTiberiumOrGold => (this.Flag & OverlayTypeFlag.TiberiumOrGold) != OverlayTypeFlag.None;
-        public bool IsGem => (this.Flag & OverlayTypeFlag.Gems) != OverlayTypeFlag.None;
-        public bool IsWall => (this.Flag & OverlayTypeFlag.Wall) != OverlayTypeFlag.None;
-        public bool IsPavement => (this.Flag & OverlayTypeFlag.Pavement) != OverlayTypeFlag.None;
-        public bool IsSolid => (this.Flag & OverlayTypeFlag.Solid) != OverlayTypeFlag.None;
-        public bool IsConcrete => (this.Flag & OverlayTypeFlag.Concrete) != OverlayTypeFlag.None;
-        public bool IsCrate => (this.Flag & OverlayTypeFlag.Crate) != OverlayTypeFlag.None;
-        public bool IsFlag => (this.Flag & OverlayTypeFlag.FlagPlace) != OverlayTypeFlag.None;
-        public bool IsGross => (this.Flag & OverlayTypeFlag.Gross) != OverlayTypeFlag.None;
-        public bool IsFootballField => (this.Flag & OverlayTypeFlag.FootballField) != OverlayTypeFlag.None;
+        public bool IsResource => (this.Flags & (OverlayTypeFlag.TiberiumOrGold | OverlayTypeFlag.Gems)) != OverlayTypeFlag.None;
+        public bool IsTiberiumOrGold => (this.Flags & OverlayTypeFlag.TiberiumOrGold) != OverlayTypeFlag.None;
+        public bool IsGem => (this.Flags & OverlayTypeFlag.Gems) != OverlayTypeFlag.None;
+        public bool IsWall => (this.Flags & OverlayTypeFlag.Wall) != OverlayTypeFlag.None;
+        public bool IsPavement => (this.Flags & OverlayTypeFlag.Pavement) != OverlayTypeFlag.None;
+        public bool IsSolid => (this.Flags & OverlayTypeFlag.Solid) != OverlayTypeFlag.None;
+        public bool IsConcrete => (this.Flags & OverlayTypeFlag.Concrete) != OverlayTypeFlag.None;
+        public bool IsCrate => (this.Flags & OverlayTypeFlag.Crate) != OverlayTypeFlag.None;
+        public bool IsFlag => (this.Flags & OverlayTypeFlag.FlagPlace) != OverlayTypeFlag.None;
+        public bool IsGross => (this.Flags & OverlayTypeFlag.Gross) != OverlayTypeFlag.None;
+        public bool IsFootballField => (this.Flags & OverlayTypeFlag.FootballField) != OverlayTypeFlag.None;
         private string nameId;
 
         /// <summary>
         /// Defines that it is placeable under the "overlay" category (and not resource or wall)
         /// </summary>
-        public bool IsOverlay => (this.Flag & (OverlayTypeFlag.Wall | OverlayTypeFlag.TiberiumOrGold | OverlayTypeFlag.Gems | OverlayTypeFlag.Unplaceable)) == OverlayTypeFlag.None;
+        public bool IsOverlay => (this.Flags & (OverlayTypeFlag.Wall | OverlayTypeFlag.TiberiumOrGold | OverlayTypeFlag.Gems | OverlayTypeFlag.Unplaceable)) == OverlayTypeFlag.None;
 
-        public OverlayType(int id, string name, string textId, OverlayTypeFlag flag, string graphicsSource, int forceTileNr)
+        public OverlayType(int id, string name, string textId, OverlayTypeFlag flags, string graphicsSource, int forceTileNr)
         {
             this.ID = id;
             this.Name = name;
             this.GraphicsSource = graphicsSource == null ? name : graphicsSource;
             this.ForceTileNr = forceTileNr;
             this.nameId = textId;
-            this.Flag = flag;
+            this.Flags = flags;
         }
 
-        public OverlayType(int id, string name, string textId, OverlayTypeFlag flag, int forceTileNr)
-            : this(id, name, textId, flag, null, forceTileNr)
+        public OverlayType(int id, string name, string textId, OverlayTypeFlag flags, int forceTileNr)
+            : this(id, name, textId, flags, null, forceTileNr)
         {
         }
 
-        public OverlayType(int id, string name, string textId, OverlayTypeFlag flag)
-            : this(id, name, textId, flag, null, -1)
+        public OverlayType(int id, string name, string textId, OverlayTypeFlag flags)
+            : this(id, name, textId, flags, null, -1)
         {
         }
 

@@ -84,15 +84,15 @@ namespace MobiusEditor.Model
         public Bitmap Thumbnail { get; set; }
         public bool Initialised { get; set; }
         public bool ExistsInTheater { get; set; }
-        public TemplateTypeFlag Flag { get; private set; }
+        public TemplateTypeFlag Flags { get; private set; }
         public Dictionary<string, bool[,]> MaskOverrides { get; private set; }
         private LandType[] landsDefault;
         public LandType[] LandTypes { get; private set; }
         private bool extraTilesFoundOn1x1;
-        public bool IsRandom => (this.extraTilesFoundOn1x1 || (this.Flag & TemplateTypeFlag.RandomCell) != TemplateTypeFlag.None)
+        public bool IsRandom => (this.extraTilesFoundOn1x1 || (this.Flags & TemplateTypeFlag.RandomCell) != TemplateTypeFlag.None)
                                     && this.IconWidth == 1 && this.IconHeight == 1;
-        public bool IsGroup => (this.Flag & TemplateTypeFlag.Group) == TemplateTypeFlag.Group;
-        public bool IsGrouped => (this.Flag & TemplateTypeFlag.IsGrouped) == TemplateTypeFlag.IsGrouped;
+        public bool IsGroup => (this.Flags & TemplateTypeFlag.Group) == TemplateTypeFlag.Group;
+        public bool IsGrouped => (this.Flags & TemplateTypeFlag.IsGrouped) == TemplateTypeFlag.IsGrouped;
 
         /// <summary>
         /// On template types with the 'Group' flag, this needs to contains the list of all the tiles that are part of the group.
@@ -115,9 +115,9 @@ namespace MobiusEditor.Model
         /// <param name="iconWidth">Width in cells.</param>
         /// <param name="iconHeight">Height in cells.</param>
         /// <param name="landsDefault">Defaults for the terrain types for each cell. See <see cref="LandTypesMapping"/> for the characters to use.</param>
-        /// <param name="flag">Indicates special terrain types.</param>
+        /// <param name="flags">Indicates special terrain types.</param>
         /// <param name="maskOverrides">Overrides the shape for different theaters. An empty string is used as default.</param>
-        private TemplateType(ushort id, string name, int iconWidth, int iconHeight, string landsDefault, TemplateTypeFlag flag, Dictionary<string, bool[,]> maskOverrides)
+        private TemplateType(ushort id, string name, int iconWidth, int iconHeight, string landsDefault, TemplateTypeFlag flags, Dictionary<string, bool[,]> maskOverrides)
         {
             ID = id;
             Name = name;
@@ -126,7 +126,7 @@ namespace MobiusEditor.Model
             NumIcons = IconWidth * IconHeight;
             ThumbnailIconWidth = IconWidth;
             ThumbnailIconHeight = IconHeight;
-            Flag = flag;
+            Flags = flags;
             MaskOverrides = new Dictionary<string, bool[,]>(StringComparer.OrdinalIgnoreCase);
             if (maskOverrides != null)
             {
@@ -151,9 +151,9 @@ namespace MobiusEditor.Model
         /// <param name="iconWidth">Width in cells.</param>
         /// <param name="iconHeight">Height in cells.</param>
         /// <param name="landsDefault">Defaults for the terrain types for each cell. See <see cref="LandTypesMapping"/> for the characters to use.</param>
-        /// <param name="flag">Indicates special terrain types.</param>
-        public TemplateType(ushort id, string name, int iconWidth, int iconHeight, string landsDefault, TemplateTypeFlag flag)
-            : this(id, name, iconWidth, iconHeight, landsDefault, flag, null)
+        /// <param name="flags">Indicates special terrain types.</param>
+        public TemplateType(ushort id, string name, int iconWidth, int iconHeight, string landsDefault, TemplateTypeFlag flags)
+            : this(id, name, iconWidth, iconHeight, landsDefault, flags, null)
         {
         }
 
@@ -165,13 +165,13 @@ namespace MobiusEditor.Model
         /// <param name="iconWidth">Width in cells.</param>
         /// <param name="iconHeight">Height in cells.</param>
         /// <param name="landsDefault">Defaults for the terrain types for each cell. See <see cref="LandTypesMapping"/> for the characters to use.</param>
-        /// <param name="flag">Indicates special terrain types.</param>
+        /// <param name="flags">Indicates special terrain types.</param>
         /// <param name="maskDefault">Default tile usage mask to use for any theaters not overridden by <paramref name="maskOverrides"/>. Indices with '0' are removed from the tiles. Spaces are ignored and can be added for visual separation.</param>
         /// <param name="maskOverrides">Mask override per theater, for tiles that contain differing numbers of tiles in different theaters.</param>
-        public TemplateType(ushort id, string name, int iconWidth, int iconHeight, string landsDefault, TemplateTypeFlag flag, string maskDefault, Dictionary<string, string> maskOverrides)
-            : this(id, name, iconWidth, iconHeight, landsDefault, flag, null)
+        public TemplateType(ushort id, string name, int iconWidth, int iconHeight, string landsDefault, TemplateTypeFlag flags, string maskDefault, Dictionary<string, string> maskOverrides)
+            : this(id, name, iconWidth, iconHeight, landsDefault, flags, null)
         {
-            bool isRandom = NumIcons == 1 && (flag & TemplateTypeFlag.RandomCell) != TemplateTypeFlag.None;
+            bool isRandom = NumIcons == 1 && (flags & TemplateTypeFlag.RandomCell) != TemplateTypeFlag.None;
             // Mask override for tiles that contain too many graphics in the Remaster. Indices with '0' are removed from the tiles.
             // Spaces are ignored and can be added for visual separation.
             if (maskDefault != null)
@@ -271,7 +271,7 @@ namespace MobiusEditor.Model
             {
                 equivs.Add(name);
                 this.EquivalentOffset = equivalentOffset;
-                this.Flag = TemplateTypeFlag.HasEquivalents;
+                this.Flags = TemplateTypeFlag.HasEquivalents;
             }
             this.GroupTiles = equivs == null ? new string[0] : equivs.ToArray();
         }
@@ -394,14 +394,14 @@ namespace MobiusEditor.Model
 
         public LandType GetLandType(int icon)
         {
-            if ((Flag & (TemplateTypeFlag.Clear | TemplateTypeFlag.RandomCell)) != TemplateTypeFlag.None)
+            if ((Flags & (TemplateTypeFlag.Clear | TemplateTypeFlag.RandomCell)) != TemplateTypeFlag.None)
                 icon = 0;
             return icon >= 0 && this.LandTypes != null && icon < this.LandTypes.Length ? this.LandTypes[icon] : LandType.Clear;
         }
 
         public string GetLandTypesString(char fillerChar, char separatorChar)
         {
-            if ((this.Flag & (TemplateTypeFlag.Clear | TemplateTypeFlag.RandomCell)) != TemplateTypeFlag.None)
+            if ((this.Flags & (TemplateTypeFlag.Clear | TemplateTypeFlag.RandomCell)) != TemplateTypeFlag.None)
             {
                 LandStringsMapping.TryGetValue(this.GetLandType(0), out char lt);
                 return lt.ToString();
@@ -478,10 +478,10 @@ namespace MobiusEditor.Model
         {
             this.ExistsInTheater = false;
             this.Initialised = false;
-            bool isGroup = Flag.HasFlag(TemplateTypeFlag.Group);
+            bool isGroup = Flags.HasFlag(TemplateTypeFlag.Group);
             bool[,] mask = null;
             LandType[] landTypes = null;
-            bool isRandom = Flag.HasFlag(TemplateTypeFlag.RandomCell);
+            bool isRandom = Flags.HasFlag(TemplateTypeFlag.RandomCell);
             bool maskInit = false;
             bool fileInit = false;
             Bitmap oldImage = Thumbnail;
@@ -503,7 +503,7 @@ namespace MobiusEditor.Model
             }
             this.extraTilesFoundOn1x1 = false;
             // This allows mods to add 'random' tiles to existing 1x1 tiles. Check excludes 'Clear' terrain and items already defined as random.
-            if (IconWidth == 1 & IconHeight == 1 && !Flag.HasFlag(TemplateTypeFlag.Clear) && (!isRandom || fileInit) && !isGroup)
+            if (IconWidth == 1 & IconHeight == 1 && !Flags.HasFlag(TemplateTypeFlag.Clear) && (!isRandom || fileInit) && !isGroup)
             {
                 if (Globals.TheTilesetManager.GetTileDataLength(this.Name) > 1)
                 {
@@ -638,7 +638,7 @@ namespace MobiusEditor.Model
         {
             usageMask = null;
             landTypes = null;
-            if (Flag.HasFlag(TemplateTypeFlag.Group))
+            if (Flags.HasFlag(TemplateTypeFlag.Group))
             {
                 return false;
             }
@@ -733,7 +733,7 @@ namespace MobiusEditor.Model
 
         public Point GetFirstValidIcon()
         {
-            bool isRandom = (Flag & TemplateTypeFlag.RandomCell) != TemplateTypeFlag.None;
+            bool isRandom = (Flags & TemplateTypeFlag.RandomCell) != TemplateTypeFlag.None;
             for (int y = 0; y < ThumbnailIconHeight; ++y)
             {
                 for (int x = 0; x < ThumbnailIconWidth; ++x)

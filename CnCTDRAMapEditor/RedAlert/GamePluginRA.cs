@@ -312,18 +312,19 @@ namespace MobiusEditor.RedAlert
             return extraTextIni.ToString();
         }
 
-        public IEnumerable<string> SetExtraIniText(string extraIniText, out bool footPrintsChanged)
+        public IEnumerable<string> SetExtraIniText(string extraIniText, out bool footPrintsChanged, out HashSet<Point> refreshPoints)
         {
-            return SetExtraIniText(extraIniText, this.Map.BasicSection.SoloMission, this.Map.BasicSection.ExpansionEnabled, false, out footPrintsChanged);
+            return SetExtraIniText(extraIniText, this.Map.BasicSection.SoloMission, this.Map.BasicSection.ExpansionEnabled, false, out footPrintsChanged, out refreshPoints);
         }
 
         public IEnumerable<string> TestSetExtraIniText(string extraIniText, bool isSolo, bool expansionEnabled, out bool footPrintsChanged)
         {
-            return SetExtraIniText(extraIniText, isSolo, expansionEnabled, true, out footPrintsChanged);
+            return SetExtraIniText(extraIniText, isSolo, expansionEnabled, true, out footPrintsChanged, out _);
         }
 
-        public List<string> SetExtraIniText(string extraIniText, bool isSolo, bool expansionEnabled, bool forFootprintTest, out bool footPrintsChanged)
+        public List<string> SetExtraIniText(string extraIniText, bool isSolo, bool expansionEnabled, bool forFootprintTest, out bool footPrintsChanged, out HashSet<Point> refreshPoints)
         {
+            refreshPoints = forFootprintTest ? null : new HashSet<Point>();
             INI extraTextIni = new INI();
             try
             {
@@ -334,7 +335,7 @@ namespace MobiusEditor.RedAlert
                 footPrintsChanged = false;
                 return null;
             }
-            List<string> errors = ResetMissionRules(extraTextIni, isSolo, expansionEnabled, forFootprintTest, out footPrintsChanged);
+            List<string> errors = ResetMissionRules(extraTextIni, isSolo, expansionEnabled, forFootprintTest, out footPrintsChanged, refreshPoints);
             if (!forFootprintTest)
             {
                 extraSections = extraTextIni.Sections.Count == 0 ? null : extraTextIni.Sections;
@@ -346,20 +347,20 @@ namespace MobiusEditor.RedAlert
         {
             if (this.rulesIni != null)
             {
-                UpdateRules(rulesIni, IniRules, this.Map, false);
+                UpdateRules(rulesIni, IniRules, this.Map, false, null);
             }
             if (expansionEnabled)
             {
                 if (this.aftermathRulesIni != null)
                 {
-                    UpdateRules(aftermathRulesIni, IniAftermath, this.Map, false);
+                    UpdateRules(aftermathRulesIni, IniAftermath, this.Map, false, null);
                 }
                 if (this.aftermathMpRulesIni != null && !isSolo)
                 {
-                    UpdateRules(aftermathMpRulesIni, IniAftrMulti, this.Map, false);
+                    UpdateRules(aftermathMpRulesIni, IniAftrMulti, this.Map, false, null);
                 }
             }
-            List<string> newErrors = UpdateRules(iniText, IniMap, this.Map, false);
+            List<string> newErrors = UpdateRules(iniText, IniMap, this.Map, false, null);
             if (newErrors.Count > 0)
             {
                 modified = true;
@@ -377,7 +378,7 @@ namespace MobiusEditor.RedAlert
         /// <returns>Any errors in parsing the <paramref name="extraIniText"/> contents.</returns>
         private List<string> ResetMissionRules(INI extraIniText)
         {
-            return ResetMissionRules(extraIniText, this.Map.BasicSection.SoloMission, this.Map.BasicSection.ExpansionEnabled, false, out _);
+            return ResetMissionRules(extraIniText, this.Map.BasicSection.SoloMission, this.Map.BasicSection.ExpansionEnabled, false, out _, null);
         }
 
         /// <summary>
@@ -391,7 +392,7 @@ namespace MobiusEditor.RedAlert
         /// <param name="forFootprintTest">Don't apply changes, just test the result for <paramref name="footPrintsChanged"/></param>
         /// <param name="footPrintsChanged">Returns true if any building footprints were changed as a result of the ini rule changes.</param>
         /// <returns>Any errors in parsing the <paramref name="extraIniText"/> contents.</returns>
-        private List<string> ResetMissionRules(INI extraIniText, bool isSolo, bool expansionEnabled, bool forFootprintTest, out bool footPrintsChanged)
+        private List<string> ResetMissionRules(INI extraIniText, bool isSolo, bool expansionEnabled, bool forFootprintTest, out bool footPrintsChanged, HashSet<Point> refreshPoints)
         {
             if (extraIniText != null && !forFootprintTest)
             {
@@ -400,17 +401,17 @@ namespace MobiusEditor.RedAlert
             Dictionary<string, bool> bibBackups = Map.BuildingTypes.ToDictionary(b => b.Name, b => b.HasBib, StringComparer.OrdinalIgnoreCase);
             if (this.rulesIni != null)
             {
-                UpdateRules(rulesIni, IniRules, this.Map, forFootprintTest);
+                UpdateRules(rulesIni, IniRules, this.Map, forFootprintTest, refreshPoints);
             }
             if (expansionEnabled)
             {
                 if (this.aftermathRulesIni != null)
                 {
-                    UpdateRules(aftermathRulesIni, IniAftermath,this.Map, forFootprintTest);
+                    UpdateRules(aftermathRulesIni, IniAftermath,this.Map, forFootprintTest, refreshPoints);
                 }
                 if (this.aftermathMpRulesIni != null && !isSolo)
                 {
-                    UpdateRules(aftermathMpRulesIni, IniAftrMulti, this.Map, forFootprintTest);
+                    UpdateRules(aftermathMpRulesIni, IniAftrMulti, this.Map, forFootprintTest, refreshPoints);
                 }
             }
             // save the buildings as they are without the map's own rule tweaks.
@@ -418,7 +419,7 @@ namespace MobiusEditor.RedAlert
             List<string> errors = null;
             if (extraIniText != null)
             {
-                errors = UpdateRules(extraIniText, IniMap, this.Map, forFootprintTest);
+                errors = UpdateRules(extraIniText, IniMap, this.Map, forFootprintTest, refreshPoints);
             }
             footPrintsChanged = false;
             foreach (BuildingType bType in Map.BuildingTypes)
@@ -510,16 +511,16 @@ namespace MobiusEditor.RedAlert
             List<string> errors = new List<string>();
             // This returns errors in original rules files. Ignore for now.
             this.rulesIni = ReadRulesFile(Globals.TheArchiveManager.ReadFileClassic(IniRules));
-            errors.AddRange(UpdateRules(rulesIni, IniRules, this.Map, false));
+            errors.AddRange(UpdateRules(rulesIni, IniRules, this.Map, false, null));
             this.aftermathRulesIni = ReadRulesFile(Globals.TheArchiveManager.ReadFileClassic(IniAftermath));
             if (this.Map.BasicSection.ExpansionEnabled && this.aftermathRulesIni != null)
             {
-                errors.AddRange(UpdateRules(aftermathRulesIni, IniAftermath, this.Map, false));
+                errors.AddRange(UpdateRules(aftermathRulesIni, IniAftermath, this.Map, false, null));
             }
             this.aftermathMpRulesIni = ReadRulesFile(Globals.TheArchiveManager.ReadFileClassic(IniAftrMulti));
             if (this.aftermathMpRulesIni != null && this.Map.BasicSection.ExpansionEnabled && !this.Map.BasicSection.SoloMission)
             {
-                errors.AddRange(UpdateRules(aftermathMpRulesIni, IniAftrMulti, this.Map, false));
+                errors.AddRange(UpdateRules(aftermathMpRulesIni, IniAftrMulti, this.Map, false, null));
             }
             // save the buildings as they are without the map's own rule tweaks.
             bareRuleBuildings = this.Map.BuildingTypes.Select(b => b.Clone()).ToDictionary(b => b.Name, StringComparer.OrdinalIgnoreCase);
@@ -753,7 +754,7 @@ namespace MobiusEditor.RedAlert
             List<string> errors = new List<string>();
             Map.BeginUpdate();
             // Fetch some rules.ini information
-            errors.AddRange(UpdateBuildingRules(ini, IniMap, this.Map, false));
+            errors.AddRange(UpdateBuildingRules(ini, IniMap, this.Map, false, null));
             // Just gonna remove this; I assume it'll be invalid after a re-save anyway.
             ini.Sections.Extract("Digest");
             HouseType player = this.LoadBasic(ini);
@@ -1228,7 +1229,7 @@ namespace MobiusEditor.RedAlert
                             cellNr++;
                             continue;
                         }
-                        if (templateType.Flag.HasFlag(TemplateTypeFlag.Clear) || templateType.Flag.HasFlag(TemplateTypeFlag.Group))
+                        if (templateType.Flags.HasFlag(TemplateTypeFlag.Clear) || templateType.Flags.HasFlag(TemplateTypeFlag.Group))
                         {
                             // No explicitly set Clear terrain allowed. Also no explicitly set versions allowed of the "group" dummy entries.
                             templateType = null;
@@ -1317,7 +1318,7 @@ namespace MobiusEditor.RedAlert
             bool tileFFValidForTheater = templateTypes.Length > 0xFF && (templateTypes[0xFF]?.ExistsInTheater ?? false);
             if (oldClearCount > 0 && (!tileFFValidForTheater || oldClearOutside > (width * height - Map.Bounds.Width * Map.Bounds.Height) * 8 / 10))
             {
-                TemplateType clear = Map.TemplateTypes.Where(tt => tt.Flag.HasFlag(TemplateTypeFlag.Clear)).FirstOrDefault();
+                TemplateType clear = Map.TemplateTypes.Where(tt => tt.Flags.HasFlag(TemplateTypeFlag.Clear)).FirstOrDefault();
                 bool clearIsPassable = clear == null || !clear.ExistsInTheater || this.IsFullyLandUnitPassable(clear.LandTypes[0]);
                 // This is an old map. Clear any 255 tile.
                 // If clear terrain is not passable, detect passable areas that touch the outside border, and add spawnable areas there. Remove all the rest.
@@ -1327,7 +1328,7 @@ namespace MobiusEditor.RedAlert
                 {
                     // Don't bother doing this if clear terrain is passable; then this data is never used.
                     clearFallBack = Map.TemplateTypes.Where(tt => tt.ExistsInTheater && tt.IconWidth == 1 && tt.IconHeight == 1
-                        && tt.LandTypes[0] == LandType.Clear && (tt.Flag & TemplateTypeFlag.DefaultFill) == TemplateTypeFlag.DefaultFill).FirstOrDefault();
+                        && tt.LandTypes[0] == LandType.Clear && (tt.Flags & TemplateTypeFlag.DefaultFill) == TemplateTypeFlag.DefaultFill).FirstOrDefault();
                     if (clearFallBack == null)
                     {
                         clearFallBack = Map.TemplateTypes.Where(tt => tt.ExistsInTheater && tt.IconWidth == 1 && tt.IconHeight == 1
@@ -2893,7 +2894,7 @@ namespace MobiusEditor.RedAlert
         /// <param name="forFootprintTest">Run in test mode, where bibs are changed but nothing is actually updated on the map.</param>
         /// <param name="footPrintsChanged">Returns true of the rule changes modified any building footprint sizes.</param>
         /// <returns>Any errors returned by the parsing process.</returns>
-        private List<string> UpdateRules(INI ini, string iniName, Map map, bool forFootprintTest)
+        private List<string> UpdateRules(INI ini, string iniName, Map map, bool forFootprintTest, HashSet<Point> refreshPoints)
         {
             List<string> errors = new List<string>();
             if (ini == null)
@@ -2907,7 +2908,7 @@ namespace MobiusEditor.RedAlert
                     errors.AddRange(this.UpdateLandTypeRules(ini, iniName, map));
                     errors.AddRange(this.UpdateGeneralRules(ini, iniName, map));
                 }
-                errors.AddRange(UpdateBuildingRules(ini, iniName, map, forFootprintTest));
+                errors.AddRange(UpdateBuildingRules(ini, iniName, map, forFootprintTest, refreshPoints));
             }
             return errors;
         }
@@ -3002,11 +3003,10 @@ namespace MobiusEditor.RedAlert
             return null;
         }
 
-        private static IEnumerable<string> UpdateBuildingRules(INI ini, string iniName, Map map, bool forFootPrintTest)
+        private static IEnumerable<string> UpdateBuildingRules(INI ini, string iniName, Map map, bool forFootPrintTest, HashSet<Point> refreshPoints)
         {
             List<string> errors = new List<string>();
             Dictionary<string, BuildingType> originals = BuildingTypes.GetTypes().ToDictionary(b => b.Name, StringComparer.OrdinalIgnoreCase);
-            HashSet<Point> refreshPoints = new HashSet<Point>();
             List<(Point Location, Building Occupier)> buildings = map.Buildings.OfType<Building>()
                  .OrderBy(pb => pb.Location.Y * map.Metrics.Width + pb.Location.X).ToList();
             // Remove all buildings
@@ -3014,7 +3014,10 @@ namespace MobiusEditor.RedAlert
             {
                 foreach ((Point p, Building b) in buildings)
                 {
-                    refreshPoints.UnionWith(OccupierSet.GetOccupyPoints(p, b));
+                    if (refreshPoints != null)
+                    {
+                        refreshPoints.UnionWith(OccupierSet.GetOccupyPoints(p, b));
+                    }
                     map.Buildings.Remove(b);
                 }
             }
@@ -3038,7 +3041,10 @@ namespace MobiusEditor.RedAlert
                 {
                     if (!forFootPrintTest)
                     {
-                        refreshPoints.UnionWith(ChangeBib(map, buildings, bType, orig.HasBib));
+                        if (refreshPoints != null)
+                        {
+                            refreshPoints.UnionWith(ChangeBib(map, buildings, bType, orig.HasBib));
+                        }
                     }
                     else if (bType.HasBib != orig.HasBib)
                     {
@@ -3080,7 +3086,10 @@ namespace MobiusEditor.RedAlert
                 bool hasBib = bldSettings.Keys.Contains("Bib") ? bld.Bib : orig.HasBib;
                 if (!forFootPrintTest)
                 {
-                    refreshPoints.UnionWith(ChangeBib(map, buildings, bType, hasBib));
+                    if (refreshPoints != null)
+                    {
+                        refreshPoints.UnionWith(ChangeBib(map, buildings, bType, hasBib));
+                    }
                 }
                 else if (bType.HasBib != hasBib)
                 {
@@ -3094,10 +3103,12 @@ namespace MobiusEditor.RedAlert
             // Try re-adding the buildings.
             foreach ((Point p, Building b) in buildings)
             {
-                refreshPoints.UnionWith(OccupierSet.GetOccupyPoints(p, b));
+                if (refreshPoints != null)
+                {
+                    refreshPoints.UnionWith(OccupierSet.GetOccupyPoints(p, b));
+                }
                 map.Buildings.Add(p, b);
             }
-            map.NotifyRulesChanges(refreshPoints);
             return errors;
         }
 
@@ -3780,7 +3791,7 @@ namespace MobiusEditor.RedAlert
                     for (int x = 0; x < Map.Metrics.Width; ++x)
                     {
                         Template template = Map.Templates[y, x];
-                        if (template != null && (template.Type.Flag & TemplateTypeFlag.Clear) == TemplateTypeFlag.None)
+                        if (template != null && (template.Type.Flags & TemplateTypeFlag.Clear) == TemplateTypeFlag.None)
                         {
                             writer.Write((ushort)template.Type.ID);
                         }
@@ -3795,7 +3806,7 @@ namespace MobiusEditor.RedAlert
                     for (int x = 0; x < Map.Metrics.Width; ++x)
                     {
                         Template template = Map.Templates[y, x];
-                        if (template != null && (template.Type.Flag & TemplateTypeFlag.Clear) == TemplateTypeFlag.None)
+                        if (template != null && (template.Type.Flags & TemplateTypeFlag.Clear) == TemplateTypeFlag.None)
                         {
                             writer.Write((byte)template.Icon);
                         }
@@ -3832,7 +3843,7 @@ namespace MobiusEditor.RedAlert
             writer.WriteStartArray();
             if (!Map.BasicSection.SoloMission)
             {
-                foreach (Waypoint waypoint in Map.Waypoints.Where(w => w.Flag.HasFlag(WaypointFlag.PlayerStart)
+                foreach (Waypoint waypoint in Map.Waypoints.Where(w => w.Flags.HasFlag(WaypointFlag.PlayerStart)
                     && w.Cell.HasValue && Map.Metrics.GetLocation(w.Cell.Value, out Point p) && Map.Bounds.Contains(p)))
                 {
                     writer.WriteValue(waypoint.Cell.Value);
@@ -3841,7 +3852,7 @@ namespace MobiusEditor.RedAlert
             else
             {
                 // Probably useless, but better than the player start points.
-                foreach (Waypoint waypoint in Map.Waypoints.Where(w => w.Flag.HasFlag(WaypointFlag.Home)
+                foreach (Waypoint waypoint in Map.Waypoints.Where(w => w.Flags.HasFlag(WaypointFlag.Home)
                     && w.Cell.HasValue && Map.Metrics.GetLocation(w.Cell.Value, out Point p) && Map.Bounds.Contains(p)))
                 {
                     writer.WriteValue(waypoint.Cell.Value);
@@ -3860,9 +3871,9 @@ namespace MobiusEditor.RedAlert
             }
             GameInfo gi = GameInfo;
             List<string> errors = new List<string>();
-            int numStartPoints = Map.Waypoints.Count(w => w.Flag.HasFlag(WaypointFlag.PlayerStart) && w.Cell.HasValue
+            int numStartPoints = Map.Waypoints.Count(w => w.Flags.HasFlag(WaypointFlag.PlayerStart) && w.Cell.HasValue
                 && Map.Metrics.GetLocation(w.Cell.Value, out Point pt) && Map.Bounds.Contains(pt));
-            int numBadPoints = Map.Waypoints.Count(w => w.Flag.HasFlag(WaypointFlag.PlayerStart) && w.Cell.HasValue
+            int numBadPoints = Map.Waypoints.Count(w => w.Flags.HasFlag(WaypointFlag.PlayerStart) && w.Cell.HasValue
                 && Map.Metrics.GetLocation(w.Cell.Value, out Point pt) && !Map.Bounds.Contains(pt));
             if (Globals.EnforceObjectMaximums)
             {
@@ -3918,7 +3929,7 @@ namespace MobiusEditor.RedAlert
             }
             else
             {
-                Waypoint homeWaypoint = Map.Waypoints.Where(w => w.Flag.HasFlag(WaypointFlag.Home)).FirstOrDefault();
+                Waypoint homeWaypoint = Map.Waypoints.Where(w => w.Flags.HasFlag(WaypointFlag.Home)).FirstOrDefault();
                 if ((!homeWaypoint.Cell.HasValue || !Map.Metrics.GetLocation(homeWaypoint.Cell.Value, out Point p) || !Map.Bounds.Contains(p)))
                 {
                     errors.Add("Single-player maps need the Home waypoint to be placed, inside the map bounds.");
@@ -3946,8 +3957,8 @@ namespace MobiusEditor.RedAlert
             {
                 errors.Add("Map name is empty. If you continue, the filename will be filled in as map name.\n");
             }
-            UnitType[] antUnitTypes = Map.UnitTypes.Where(un => (un.Flag & UnitTypeFlag.NoRules) != 0).ToArray();
-            BuildingType[] antBuildingTypes = Map.BuildingTypes.Where(bl => (bl.Flag & BuildingTypeFlag.NoRules) != 0).ToArray();
+            UnitType[] antUnitTypes = Map.UnitTypes.Where(un => (un.Flags & UnitTypeFlag.NoRules) != 0).ToArray();
+            BuildingType[] antBuildingTypes = Map.BuildingTypes.Where(bl => (bl.Flags & BuildingTypeFlag.NoRules) != 0).ToArray();
             string[] antWeapons = { "Mandible" };
             CheckMissingRules(errors, null, antUnitTypes, null, antBuildingTypes, antWeapons);
             if (errors.Count > 0)
@@ -4200,7 +4211,7 @@ namespace MobiusEditor.RedAlert
             {
                 info.Add(String.Empty);
                 info.Add("Multiplayer info:");
-                int startPoints = Map.Waypoints.Count(w => w.Cell.HasValue && w.Flag.HasFlag(WaypointFlag.PlayerStart));
+                int startPoints = Map.Waypoints.Count(w => w.Cell.HasValue && w.Flags.HasFlag(WaypointFlag.PlayerStart));
                 info.Add(string.Format("Number of set starting points: {0}.", startPoints));
             }
             HashSet<int> usedWaypoints = new HashSet<int>();
@@ -4260,7 +4271,7 @@ namespace MobiusEditor.RedAlert
             string edGlobalsNotChStr = String.Join(", ", alteredGlobals.Where(g => !checkedGlobals.Contains(g)).OrderBy(g => g).Select(g => g.ToString()).ToArray());
             WaypointFlag toIgnore = WaypointFlag.Home | WaypointFlag.Reinforce | WaypointFlag.Special;
             string unusedWaypointsStr = String.Join(", ", setWaypoints.OrderBy(w => w)
-                .Where(w => (Map.Waypoints[w].Flag & toIgnore) == WaypointFlag.None
+                .Where(w => (Map.Waypoints[w].Flags & toIgnore) == WaypointFlag.None
                             && !usedWaypoints.Contains(w)).Select(w => Map.Waypoints[w].Name).ToArray());
             // Prevent illegal data in triggers/teams from crashing the function by adding a range check.
             int maxWp = Map.Waypoints.Length;
@@ -5272,6 +5283,7 @@ namespace MobiusEditor.RedAlert
                     catch { /* ignore */ }
                     // Dispose of cached images in type objects. This is non-destructive; the type objects themselves don't actually get disposed.
                     Map.ResetCachedGraphics();
+                    Map.ClearEvents();
                 }
                 disposedValue = true;
             }

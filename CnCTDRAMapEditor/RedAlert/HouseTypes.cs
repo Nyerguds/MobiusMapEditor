@@ -31,7 +31,7 @@ namespace MobiusEditor.RedAlert
         public static readonly HouseType Turkey = new HouseType(7, "Turkey", "TEXT_FACTION_NAME_FACTION_10", HouseTypeFlag.ForAlliances, "TURKEY");
         public static readonly HouseType Good = new HouseType(8, "GoodGuy", "TEXT_FACTION_NAME_FACTION_1", HouseTypeFlag.ForAlliances, "GOOD");
         public static readonly HouseType Bad = new HouseType(9, "BadGuy", "TEXT_FACTION_NAME_FACTION_2", HouseTypeFlag.ForAlliances, "BAD");
-        public static readonly HouseType Neutral = new HouseType(10, "Neutral", "TEXT_UNIT_TITLE_CIVILIAN", HouseTypeFlag.ForAlliances, "NEUTRAL");
+        public static readonly HouseType Neutral = new HouseType(10, "Neutral", "TEXT_UNIT_TITLE_CIVILIAN", HouseTypeFlag.ForAlliances | HouseTypeFlag.Civilian, "NEUTRAL");
         public static readonly HouseType Special = new HouseType(11, "Special", "TEXT_FACTION_NAME_FACTION_JURASSIC", HouseTypeFlag.ForAlliances, "SPECIAL");
         public static readonly HouseType Multi1 = new HouseType(12, "Multi1", HouseTypeFlag.ForAlliances, "MULTI1"); // yellow
         public static readonly HouseType Multi2 = new HouseType(13, "Multi2", HouseTypeFlag.ForAlliances, "MULTI2"); // teal

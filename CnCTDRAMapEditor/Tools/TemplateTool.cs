@@ -142,7 +142,7 @@ namespace MobiusEditor.Tools
                     // Get clear terrain from list entries.
                     foreach (ListViewItem item in templateTypeListView.Items)
                     {
-                        if (item.Tag is TemplateType tt && tt.Flag == TemplateTypeFlag.Clear)
+                        if (item.Tag is TemplateType tt && tt.Flags == TemplateTypeFlag.Clear)
                         {
                             value = tt;
                             break;
@@ -234,7 +234,7 @@ namespace MobiusEditor.Tools
                 return m.Success ? m.Groups[1].Value : string.Empty;
             }
             TheaterType theater = plugin.Map.Theater;
-            TemplateType clear = plugin.Map.TemplateTypes.Where(t => t.Flag.HasFlag(TemplateTypeFlag.Clear)).FirstOrDefault();
+            TemplateType clear = plugin.Map.TemplateTypes.Where(t => t.Flags.HasFlag(TemplateTypeFlag.Clear)).FirstOrDefault();
             if (clear.Thumbnail == null || !clear.Initialised)
             {
                 // Clear should ALWAYS be initialised and available, even if missing.
@@ -249,8 +249,8 @@ namespace MobiusEditor.Tools
             }
             var templateTypes = plugin.Map.TemplateTypes
                 .Where(t => t.Thumbnail != null && (!Globals.FilterTheaterObjects || t.ExistsInTheater)
-                    && !t.Flag.HasFlag(TemplateTypeFlag.Clear)
-                    && !t.Flag.HasFlag(TemplateTypeFlag.IsGrouped))
+                    && !t.Flags.HasFlag(TemplateTypeFlag.Clear)
+                    && !t.Flags.HasFlag(TemplateTypeFlag.IsGrouped))
                 .OrderBy(t => t.Name, expl)
                 .GroupBy(t => templateCategory(t)).OrderBy(g => g.Key, expl);
             List<Bitmap> templateTypeImages = new List<Bitmap>();
@@ -595,7 +595,7 @@ namespace MobiusEditor.Tools
             TemplateType selected = SelectedTemplateType;
             if (button == MouseButtons.Left)
             {
-                if (selected == null || selected.Flag.HasFlag(TemplateTypeFlag.Clear))
+                if (selected == null || selected.Flags.HasFlag(TemplateTypeFlag.Clear))
                 {
                     RemoveTemplate(navigationWidget.ActualMouseCell);
                 }
@@ -633,7 +633,7 @@ namespace MobiusEditor.Tools
             if (place || is1x1)
             {
                 TemplateType toFind = map.Templates[currentCell]?.Type;
-                if (toFind != null && toFind.Flag.HasFlag(TemplateTypeFlag.IsGrouped) && toFind.GroupTiles.Length == 1)
+                if (toFind != null && toFind.Flags.HasFlag(TemplateTypeFlag.IsGrouped) && toFind.GroupTiles.Length == 1)
                 {
                     string owningType = toFind.GroupTiles[0];
                     TemplateType group = map.TemplateTypes.Where(t => t.Name.Equals(owningType, StringComparison.InvariantCultureIgnoreCase)).FirstOrDefault();
@@ -662,7 +662,7 @@ namespace MobiusEditor.Tools
                 // Detect any group types inside it and get the full list.
                 foreach (TemplateType tp in typesToFind)
                 {
-                    if (tp != null && tp.Flag.HasFlag(TemplateTypeFlag.IsGrouped) && tp.GroupTiles.Length == 1)
+                    if (tp != null && tp.Flags.HasFlag(TemplateTypeFlag.IsGrouped) && tp.GroupTiles.Length == 1)
                     {
                         string owningType = tp.GroupTiles[0];
                         TemplateType group = map.TemplateTypes.Where(t => t.Name.Equals(owningType, StringComparison.InvariantCultureIgnoreCase)).FirstOrDefault();
@@ -739,7 +739,7 @@ namespace MobiusEditor.Tools
             undoTemplates.Clear();
             redoTemplates.Clear();
             // Prevent it from placing down actual clear terrain.
-            bool isClear = clear || selected.Flag.HasFlag(TemplateTypeFlag.Clear);
+            bool isClear = clear || selected.Flags.HasFlag(TemplateTypeFlag.Clear);
             if (isClear || icon.HasValue || is1x1)
             {
                 foreach (Point fill in fillPoints)
@@ -839,6 +839,7 @@ namespace MobiusEditor.Tools
         private void MapPanel_MouseLeave(object sender, EventArgs e)
         {
             ExitAllModes();
+            MapPanel_MouseUp(sender, new MouseEventArgs(MouseButtons.None, 0, 0, 0, 0));
         }
 
         private void MapPanel_MouseWheel(object sender, MouseEventArgs e)
@@ -1131,7 +1132,7 @@ namespace MobiusEditor.Tools
                 }
                 // Consider placing an alternate if something is already placed, and the selected tile has alternates.
                 if (Globals.TileDragRandomize && redoTemplates.Count > 0
-                    && selected.Flag.HasFlag(TemplateTypeFlag.HasEquivalents)
+                    && selected.Flags.HasFlag(TemplateTypeFlag.HasEquivalents)
                     && selected.GroupTiles != null && selected.GroupTiles.Length > 0)
                 {
                     // Remove last-placed from possible placed tiles so each new placed one is unique.
@@ -1177,7 +1178,7 @@ namespace MobiusEditor.Tools
             {
                 return;
             }
-            bool isGroup = selected.Flag.HasFlag(TemplateTypeFlag.Group);
+            bool isGroup = selected.Flags.HasFlag(TemplateTypeFlag.Group);
             if (selectedIcon.HasValue)
             {
                 if (templates.Metrics.GetCell(location, out int cell))
@@ -1243,13 +1244,13 @@ namespace MobiusEditor.Tools
                                 if (diversify && selected.NumIcons > 4)
                                 {
                                     Template adjNorth = templates.Adjacent(location, FacingType.North);
-                                    if (adjNorth != null && adjNorth.Type.Flag.HasFlag(TemplateTypeFlag.IsGrouped)
+                                    if (adjNorth != null && adjNorth.Type.Flags.HasFlag(TemplateTypeFlag.IsGrouped)
                                         && adjNorth.Type.GroupTiles[0] == selected.Name)
                                     {
                                         used.Add(adjNorth.Type.ID);
                                     }
                                     Template adjWest = templates.Adjacent(location, FacingType.West);
-                                    if (adjWest != null && adjWest.Type.Flag.HasFlag(TemplateTypeFlag.IsGrouped)
+                                    if (adjWest != null && adjWest.Type.Flags.HasFlag(TemplateTypeFlag.IsGrouped)
                                         && adjWest.Type.GroupTiles[0] == selected.Name)
                                     {
                                         used.Add(adjWest.Type.ID);
@@ -1617,7 +1618,7 @@ namespace MobiusEditor.Tools
             bool groupOwned = false;
             if (template != null)
             {
-                if (template.Type.Flag.HasFlag(TemplateTypeFlag.IsGrouped) && template.Type.GroupTiles.Length == 1)
+                if (template.Type.Flags.HasFlag(TemplateTypeFlag.IsGrouped) && template.Type.GroupTiles.Length == 1)
                 {
                     groupOwned = true;
                     string owningType = template.Type.GroupTiles[0];
@@ -2022,6 +2023,7 @@ namespace MobiusEditor.Tools
             this.mapPanel.MouseMove += MapPanel_MouseMove;
             this.mapPanel.MouseLeave += MapPanel_MouseLeave;
             this.mapPanel.MouseWheel += MapPanel_MouseWheel;
+            this.mapPanel.LostFocus += MapPanel_MouseLeave;
             this.mapPanel.SuspendMouseZoomKeys = Keys.Control;
             (this.mapPanel as Control).KeyDown += TemplateTool_KeyDown;
             (this.mapPanel as Control).KeyUp += TemplateTool_KeyUp;
@@ -2051,6 +2053,7 @@ namespace MobiusEditor.Tools
             this.mapPanel.MouseMove -= MapPanel_MouseMove;
             this.mapPanel.MouseLeave -= MapPanel_MouseLeave;
             this.mapPanel.MouseWheel -= MapPanel_MouseWheel;
+            this.mapPanel.LostFocus -= MapPanel_MouseLeave;
             this.mapPanel.SuspendMouseZoomKeys = Keys.None;
             (this.mapPanel as Control).KeyDown -= TemplateTool_KeyDown;
             (this.mapPanel as Control).KeyUp -= TemplateTool_KeyUp;

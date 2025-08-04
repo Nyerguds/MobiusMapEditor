@@ -172,7 +172,7 @@ namespace MobiusEditor.Tools
                 {
                     foreach (Waypoint wp in RenderMap.Waypoints)
                     {
-                        if (wp.Cell.HasValue && metr.GetLocation(wp.Cell.Value, out Point pt) && wp.Flag.HasFlag(WaypointFlag.FootballField))
+                        if (wp.Cell.HasValue && metr.GetLocation(wp.Cell.Value, out Point pt) && wp.Flags.HasFlag(WaypointFlag.FootballField))
                         {
                             points.UnionWith(new Rectangle(pt.X - 1, pt.Y - 1, 4, 3).Points());
                         }

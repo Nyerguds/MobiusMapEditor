@@ -18,6 +18,7 @@ using System.Collections;
 using System.Collections.Generic;
 using System.ComponentModel;
 using System.Diagnostics;
+using System.Drawing;
 using System.Globalization;
 using System.Linq;
 
@@ -171,6 +172,15 @@ namespace MobiusEditor.Model
 
         [DefaultValue(0)]
         public int Credits { get; set; } = 0;
+
+        [NonSerializedINIKey]
+        public virtual string UnitTeamColor => Type.UnitTeamColor;
+
+        [NonSerializedINIKey]
+        public virtual string BuildingTeamColor => Type.BuildingTeamColor;
+
+        [NonSerializedINIKey]
+        public virtual string OutlineColor => Type.OutlineColor;
 
         public House(HouseType type)
         {

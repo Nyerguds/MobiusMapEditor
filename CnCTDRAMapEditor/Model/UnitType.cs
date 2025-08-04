@@ -35,16 +35,18 @@ namespace MobiusEditor.Model
         IsArmed         /**/ = 1 << 3,
         /// <summary>Can harvest resources. This affects the default orders for placing it on the map.</summary>
         IsHarvester     /**/ = 1 << 4,
-        /// <summary>Does not change its colors to that of its owning house..</summary>
+        /// <summary>Does not change its colors to that of its owning house.</summary>
         NoRemap         /**/ = 1 << 5,
+        /// <summary>Uses the buildings remap of the owning House.</summary>
+        BuildingRemap   /**/ = 1 << 6,
         /// <summary>Is a unit that is filtered out of the lists if expansion units are disabled.</summary>
-        IsExpansionUnit /**/ = 1 << 6,
+        IsExpansionUnit /**/ = 1 << 7,
         /// <summary>Can show a mobile gap area-of-effect radius indicator.</summary>
-        IsGapGenerator  /**/ = 1 << 7,
+        IsGapGenerator  /**/ = 1 << 8,
         /// <summary>Can show a radar jamming area-of-effect radius indicator.</summary>
-        IsJammer        /**/ = 1 << 8,
+        IsJammer        /**/ = 1 << 9,
         /// <summary>This type typically has no rules present in the rules file, and needs specific checks on that.</summary>
-        NoRules         /**/ = 1 << 9,
+        NoRules         /**/ = 1 << 10,
     }
 
     [Flags]
@@ -108,7 +110,7 @@ namespace MobiusEditor.Model
         public override bool IsGroundUnit => false;
         public override bool IsAircraft => true;
         public override bool IsVessel => false;
-        public override bool IsFixedWing => Flag.HasFlag(UnitTypeFlag.IsFixedWing);
+        public override bool IsFixedWing => Flags.HasFlag(UnitTypeFlag.IsFixedWing);
 
         public AircraftType(int id, string name, string textId, string ownerHouse, FrameUsage bodyFrameUsage, FrameUsage turrFrameUsage, string turret, string turret2, int turrOffset, int turretY, UnitTypeFlag flags)
             : base(id, name, textId, ownerHouse, bodyFrameUsage, turrFrameUsage, turret, turret2, turrOffset, turretY, flags)
@@ -157,7 +159,7 @@ namespace MobiusEditor.Model
         public string SecondTurret { get; private set; }
         public int TurretOffset { get; private set; }
         public int TurretY { get; private set; }
-        public UnitTypeFlag Flag { get; private set; }
+        public UnitTypeFlag Flags { get; private set; }
         public FrameUsage BodyFrameUsage { get; private set; }
         public FrameUsage TurretFrameUsage { get; private set; }
         public Rectangle OverlapBounds => new Rectangle(-1, -1, 3, 3);
@@ -172,12 +174,13 @@ namespace MobiusEditor.Model
         public abstract bool IsAircraft { get; }
         public abstract bool IsVessel { get; }
         public abstract bool IsFixedWing { get; }
-        public bool HasTurret => Flag.HasFlag(UnitTypeFlag.HasTurret);
-        public bool HasDoubleTurret => Flag.HasFlag(UnitTypeFlag.HasDoubleTurret);
-        public bool IsArmed => Flag.HasFlag(UnitTypeFlag.IsArmed);
-        public bool IsHarvester => Flag.HasFlag(UnitTypeFlag.IsHarvester);
-        public bool IsExpansionOnly => Flag.HasFlag(UnitTypeFlag.IsExpansionUnit);
-        public bool CanRemap => !Flag.HasFlag(UnitTypeFlag.NoRemap);
+        public bool HasTurret => Flags.HasFlag(UnitTypeFlag.HasTurret);
+        public bool HasDoubleTurret => Flags.HasFlag(UnitTypeFlag.HasDoubleTurret);
+        public bool IsArmed => Flags.HasFlag(UnitTypeFlag.IsArmed);
+        public bool IsHarvester => Flags.HasFlag(UnitTypeFlag.IsHarvester);
+        public bool IsExpansionOnly => Flags.HasFlag(UnitTypeFlag.IsExpansionUnit);
+        public bool CanRemap => !Flags.HasFlag(UnitTypeFlag.NoRemap);
+        public bool BuildingRemap => Flags.HasFlag(UnitTypeFlag.BuildingRemap);
         public bool GraphicsFound { get; private set; }
         private string nameId;
 
@@ -194,7 +197,7 @@ namespace MobiusEditor.Model
             SecondTurret = hasTurret && flags.HasFlag(UnitTypeFlag.HasDoubleTurret) ? turret2 : null;
             TurretOffset = turrOffset;
             TurretY = turretY;
-            Flag = flags;
+            Flags = flags;
             BodyFrameUsage = bodyFrameUsage;
             TurretFrameUsage = turrFrameUsage;
         }
@@ -254,7 +257,7 @@ namespace MobiusEditor.Model
                 using (Graphics g = Graphics.FromImage(bigThumbnail))
                 {
                     MapRenderer.SetRenderSettings(g, Globals.PreviewSmoothScale);
-                    RenderInfo render = MapRenderer.RenderUnit(gameInfo, new Point(1, 1), Globals.PreviewTileSize, mockUnit, false);
+                    RenderInfo render = MapRenderer.RenderUnit(gameInfo, null, new Point(1, 1), Globals.PreviewTileSize, mockUnit, false);
                     if (render.RenderedObject != null)
                     {
                         render.RenderAction(g);

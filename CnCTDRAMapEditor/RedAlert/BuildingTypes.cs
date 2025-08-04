@@ -59,13 +59,13 @@ namespace MobiusEditor.RedAlert
         public static readonly BuildingType FakeShipYard = new BuildingType(34, "syrf", "TEXT_STRUCTURE_RA_SYRF", 0, 2, true, 3, 3, null, "Greece", "syrd", BuildingTypeFlag.Fake);
         public static readonly BuildingType FakeSubPen = new BuildingType(35, "spef", "TEXT_STRUCTURE_RA_SPEF", 0, 2, true, 3, 3, null, "USSR", "spen", BuildingTypeFlag.Fake);
         public static readonly BuildingType FakeCommand = new BuildingType(36, "domf", "TEXT_STRUCTURE_RA_DOMF", 0, 2, true, 2, 2, null, "Greece", "dome", BuildingTypeFlag.Bib | BuildingTypeFlag.Fake);
-        // Added "walls-as-buildings"
-        public static readonly BuildingType Sandbag = new BuildingType(37, "sbag", "TEXT_STRUCTURE_RA_SBAG", 0, 0, false, 1, 1, null, "Greece", BuildingTypeFlag.Wall | BuildingTypeFlag.NoRemap);
-        public static readonly BuildingType Cyclone = new BuildingType(38, "cycl", "TEXT_STRUCTURE_RA_CYCL", 0, 0, false, 1, 1, null, "Greece", BuildingTypeFlag.Wall | BuildingTypeFlag.NoRemap);
-        public static readonly BuildingType Brick = new BuildingType(39, "brik", "TEXT_STRUCTURE_RA_BRIK", 0, 0, false, 1, 1, null, "Greece", BuildingTypeFlag.Wall | BuildingTypeFlag.NoRemap);
-        public static readonly BuildingType Barbwire = new BuildingType(40, "barb", "TEXT_STRUCTURE_RA_BARB", 0, 0, false, 1, 1, null, "Greece", BuildingTypeFlag.Wall | BuildingTypeFlag.NoRemap);
-        public static readonly BuildingType Wood = new BuildingType(41, "wood", "TEXT_STRUCTURE_RA_WOOD", 0, 0, false, 1, 1, null, "Greece", BuildingTypeFlag.Wall | BuildingTypeFlag.NoRemap);
-        public static readonly BuildingType Fence = new BuildingType(42, "fenc", "TEXT_STRUCTURE_RA_FENC", 0, 0, false, 1, 1, null, "Greece", BuildingTypeFlag.Wall | BuildingTypeFlag.NoRemap);
+        // Placing walls as buildings apparently crashes in RA, so, let's disable that...
+        // public static readonly BuildingType Sandbag = new BuildingType(37, "sbag", "TEXT_STRUCTURE_RA_SBAG", 0, 0, false, 1, 1, null, "Greece", BuildingTypeFlag.Wall | BuildingTypeFlag.NoRemap);
+        // public static readonly BuildingType Cyclone = new BuildingType(38, "cycl", "TEXT_STRUCTURE_RA_CYCL", 0, 0, false, 1, 1, null, "Greece", BuildingTypeFlag.Wall | BuildingTypeFlag.NoRemap);
+        // public static readonly BuildingType Brick = new BuildingType(39, "brik", "TEXT_STRUCTURE_RA_BRIK", 0, 0, false, 1, 1, null, "Greece", BuildingTypeFlag.Wall | BuildingTypeFlag.NoRemap);
+        // public static readonly BuildingType Barbwire = new BuildingType(40, "barb", "TEXT_STRUCTURE_RA_BARB", 0, 0, false, 1, 1, null, "Greece", BuildingTypeFlag.Wall | BuildingTypeFlag.NoRemap);
+        // public static readonly BuildingType Wood = new BuildingType(41, "wood", "TEXT_STRUCTURE_RA_WOOD", 0, 0, false, 1, 1, null, "Greece", BuildingTypeFlag.Wall | BuildingTypeFlag.NoRemap);
+        // public static readonly BuildingType Fence = new BuildingType(42, "fenc", "TEXT_STRUCTURE_RA_FENC", 0, 0, false, 1, 1, null, "Greece", BuildingTypeFlag.Wall | BuildingTypeFlag.NoRemap);
         // Mines
         public static readonly BuildingType AVMine = new BuildingType(43, "minv", "TEXT_STRUCTURE_RA_MINV", 0, 0, false, 1, 1, null, "Greece", BuildingTypeFlag.SingleFrame);
         public static readonly BuildingType APMine = new BuildingType(44, "minp", "TEXT_STRUCTURE_RA_MINP", 0, 0, false, 1, 1, null, "Greece", BuildingTypeFlag.SingleFrame);

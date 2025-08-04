@@ -276,16 +276,16 @@ namespace MobiusEditor.Tools
                 switch (e.KeyCode)
                 {
                     case Keys.F:
-                        newVal = Enumerable.Range(0, map.Waypoints.Length).Cast<int?>().Where(i => (map.Waypoints[i.Value].Flag & WaypointFlag.Flare) == WaypointFlag.Flare).FirstOrDefault();
+                        newVal = Enumerable.Range(0, map.Waypoints.Length).Cast<int?>().Where(i => (map.Waypoints[i.Value].Flags & WaypointFlag.Flare) == WaypointFlag.Flare).FirstOrDefault();
                         break;
                     case Keys.H:
-                        newVal = Enumerable.Range(0, map.Waypoints.Length).Cast<int?>().Where(i => (map.Waypoints[i.Value].Flag & WaypointFlag.Home) == WaypointFlag.Home).FirstOrDefault();
+                        newVal = Enumerable.Range(0, map.Waypoints.Length).Cast<int?>().Where(i => (map.Waypoints[i.Value].Flags & WaypointFlag.Home) == WaypointFlag.Home).FirstOrDefault();
                         break;
                     case Keys.R:
-                        newVal = Enumerable.Range(0, map.Waypoints.Length).Cast<int?>().Where(i => (map.Waypoints[i.Value].Flag & WaypointFlag.Reinforce) == WaypointFlag.Reinforce).FirstOrDefault();
+                        newVal = Enumerable.Range(0, map.Waypoints.Length).Cast<int?>().Where(i => (map.Waypoints[i.Value].Flags & WaypointFlag.Reinforce) == WaypointFlag.Reinforce).FirstOrDefault();
                         break;
                     case Keys.S:
-                        newVal = Enumerable.Range(0, map.Waypoints.Length).Cast<int?>().Where(i => (map.Waypoints[i.Value].Flag & WaypointFlag.Special) == WaypointFlag.Special).FirstOrDefault();
+                        newVal = Enumerable.Range(0, map.Waypoints.Length).Cast<int?>().Where(i => (map.Waypoints[i.Value].Flags & WaypointFlag.Special) == WaypointFlag.Special).FirstOrDefault();
                         break;
                 }
             }
@@ -340,7 +340,7 @@ namespace MobiusEditor.Tools
 
         private Rectangle GetRefreshCells(Waypoint waypoint, Point toRefresh)
         {
-            if (Layers.HasFlag(MapLayerFlag.FootballArea) && waypoint != null && waypoint.Flag.HasFlag(WaypointFlag.FootballField))
+            if (Layers.HasFlag(MapLayerFlag.FootballArea) && waypoint != null && waypoint.Flags.HasFlag(WaypointFlag.FootballField))
             {
                 return new Rectangle(toRefresh.X - 1, toRefresh.Y - 1, 4, 3);
             }
@@ -513,7 +513,7 @@ namespace MobiusEditor.Tools
             if (previewMap.Waypoints.Length == map.Waypoints.Length + 1)
             {
                 selectedIndex = map.Waypoints.Length;
-                previewMap.Waypoints[selectedIndex] = new Waypoint(orig.Name, orig.ShortName, orig.Flag, orig.Metrics);
+                previewMap.Waypoints[selectedIndex] = new Waypoint(orig.Name, orig.ShortName, orig.Flags, orig.Metrics);
             }
             previewMap.Waypoints[selectedIndex].Cell = cell;
             previewMap.Waypoints[selectedIndex].IsPreview = true;
@@ -532,7 +532,10 @@ namespace MobiusEditor.Tools
             Waypoint dummySelected = null;
             Waypoint[] selectedRange = selected != null ? new [] { selected } : new Waypoint[] { };
             // Render those here so they are put over the opaque redraw of the current waypoint.
-            MapRenderer.RenderAllTechnoTriggers(graphics, gameInfo, plugin.Map, visibleCells, Globals.MapTileSize, Layers);
+            if (Layers.HasFlag(MapLayerFlag.TechnoTriggers))
+            {
+                MapRenderer.RenderAllTechnoTriggers(graphics, gameInfo, plugin.Map, visibleCells, Globals.MapTileSize, Layers);
+            }
             if (selected != null)
             {
                 if (placementMode && selectedIndex >= 0)
@@ -542,12 +545,12 @@ namespace MobiusEditor.Tools
                 }
             }
             // Render Home waypoint box.
-            if (plugin.Map.BasicSection.SoloMission && (Layers.HasFlag(MapLayerFlag.HomeAreaBox) || selected.Flag.HasFlag(WaypointFlag.Home)))
+            if (plugin.Map.BasicSection.SoloMission && (Layers.HasFlag(MapLayerFlag.HomeAreaBox) || selected.Flags.HasFlag(WaypointFlag.Home)))
             {
-                Waypoint home = previewMap.Waypoints.FirstOrDefault(w => w.Flag.HasFlag(WaypointFlag.Home) && !w.IsPreview);
-                bool renderDummy = dummySelected != null && dummySelected.Cell.HasValue && dummySelected.Flag.HasFlag(WaypointFlag.Home)
+                Waypoint home = previewMap.Waypoints.FirstOrDefault(w => w.Flags.HasFlag(WaypointFlag.Home) && !w.IsPreview);
+                bool renderDummy = dummySelected != null && dummySelected.Cell.HasValue && dummySelected.Flags.HasFlag(WaypointFlag.Home)
                     && (home == null || !home.Cell.HasValue || dummySelected.Cell.Value != home.Cell.Value);
-                Color color = selected.Flag.HasFlag(WaypointFlag.Home) && !renderDummy ? Color.Yellow : Color.Orange;
+                Color color = selected.Flags.HasFlag(WaypointFlag.Home) && !renderDummy ? Color.Yellow : Color.Orange;
                 if (home.Cell.HasValue)
                 {
                     MapRenderer.RenderHomeWayPointBox(graphics, plugin, map, boundRenderCells, Globals.MapTileSize, home, color);
@@ -590,37 +593,38 @@ namespace MobiusEditor.Tools
 
         public override void UpdateStatus()
         {
-            WaypointFlag flag = WaypointFlag.None;
+            WaypointFlag flags = WaypointFlag.None;
             Waypoint[] wps = map.Waypoints;
             int wplen = map.Waypoints.Length;
             // Collect all existing flags in the list.
             for (int i = 0; i < wplen; ++i) {
-                flag |= wps[i].Flag;
+                flags |= wps[i].Flags;
             }
             List<string> specialKeys = new List<string>();
-            if (flag.HasFlag(WaypointFlag.Flare))
+            if (flags.HasFlag(WaypointFlag.Flare))
             {
                 specialKeys.Add("F");
             }
-            if (flag.HasFlag(WaypointFlag.Home))
+            if (flags.HasFlag(WaypointFlag.Home))
             {
                 specialKeys.Add("H");
             }
-            if (flag.HasFlag(WaypointFlag.Reinforce))
+            if (flags.HasFlag(WaypointFlag.Reinforce))
             {
                 specialKeys.Add("R");
             }
-            if (flag.HasFlag(WaypointFlag.Special))
+            if (flags.HasFlag(WaypointFlag.Special))
             {
                 specialKeys.Add("S");
             }
+            string special = String.Join("/", specialKeys);
             if (placementMode)
             {
-                statusLbl.Text = "Left-Click to set cell waypoint, Right-Click to clear cell waypoint, " + String.Join("/", specialKeys) + " to select a special waypoint";
+                statusLbl.Text = "Left-Click to set cell waypoint, Right-Click to clear cell waypoint, " + special + " to select a special waypoint";
             }
             else
             {
-                statusLbl.Text = "Shift to enter placement mode, Left-Click or Right-Click to pick cell waypoint, Shift + " + String.Join("/", specialKeys) + " to select a special waypoint, Enter to jump to cell waypoint location";
+                statusLbl.Text = "Shift to enter placement mode, Left-Click or Right-Click to pick cell waypoint, Shift + " + special + " to select a special waypoint, Enter to jump to cell waypoint location";
             }
         }
 
