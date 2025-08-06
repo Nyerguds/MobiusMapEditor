@@ -32,8 +32,8 @@ Released on 08 Jul 2022 at 21:37 UTC
 * Added "Add" buttons in triggers and team types dialogs.
 * Fixed tab order in triggers and team types dialogs.
 * Fixed crash in "already exists" messages for triggers and team types.
-* Randomised tiberium on save, like the original WW editor does. (This is purely cosmetic; the game re-randomises it on map load.)
-* Added ability to place bibs as smudge type. They won't show their full size in the editor at the moment, though.
+* Randomised tiberium on save, like the original WW editor does. (This is purely cosmetic; the game re-randomises it on map load.) \[NOTE: changed to fixed seed in v1.6.0.0\]
+* Added ability to place bibs as smudge type. They only show up as a top-left corner though. \[NOTE: properly implemented in v1.4.3.0\]
 
 ### v1.4.0.1:
 
@@ -671,6 +671,7 @@ Released on 22 Sep 2024 at 15:00 GMT
 * Fixed trigger changes on Terrain objects not immediately refreshing the map.
 * Fixed an internal issue with the unit/infantry/building properties popup not cleaning up its internal resources after closing.
 * Waypoints now use the "Select" cursor graphics as indicator on the map, rather than the green beacon that was barely visible behind the text.
+* Map resources randomisation now uses a fixed seed, retaining the variety while preventing the resources from becoming completely different on each resave.
 
 ### v1.6.1.0:
 
@@ -689,7 +690,7 @@ Unreleased
 * Added option "IgnoreShadowOverlap" to not draw overlap outlines on objects that are only overlapped by shadows.
 * Added option "EnforceTriggerTypes" that can be disabled to allow any triggers on any object types. This is mainly for research purposes.
 * Fixed bug that when the option to show crates on top is enabled, they were still outlined by the "outlines on overlapped objects" function, despite never being overlapped.
-* Removed randomness from RA resources on save, to optimise compression of the OverlayPack ini section. Both the editor and the game re-apply it on load anyway.
+* Removed randomness from RA map resources on save, to optimise compression of the OverlayPack ini section. Both the editor and the game re-apply it on load anyway.
 * Fixed bug where opening and confirming the map setting without making any changes would clear the map's "modified" status.
 * Fixed crash when trying to publish a freshly opened new map with no content added at all.
 * Fixed crash when trying to publish a map opened from mix file. It will now always require being saved to disc first.
@@ -725,5 +726,7 @@ Unreleased
 * Smudge objects can now be bulk-removed by moving around the cursor while the right mouse button is pressed down.
 * Right-clicking on placed down buildings that have overlay equivalents, or vice versa (such as the fields and haystacks) will now select the corresponding item even if the item you clicked is the other type version.
 * Added support for the expanded House colours in C&C1 accesible by putting ColorScheme / SecondaryScheme / RadarScheme in the ini under the house's settings section. This only works in Classic graphics.
-* If the editor loses focus while dragging an object, this will no longer prevent the undo action for that drag operation from being stored.
+* If the editor loses focus while dragging an object, this will no longer prevent the undo action for that drag operation from being stored. It will instead immediately end the drag operation at the current mouse position.
 * Removed the ability to place walls as structures (by disabling "OverlayWallsOnly") in Red Alert maps; it simply crashes the game.
+* Fixed an issue where certain options or rules changes in the Map dialog would not refresh on the map afterwards.
+* Improved teamtype tooltips in the Triggers window to show the full list of orders they execute.

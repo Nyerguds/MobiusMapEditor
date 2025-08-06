@@ -60,9 +60,11 @@ namespace MobiusEditor.Dialogs
         private readonly ITechnoType defaultTeam;
         private readonly TeamMission defaultMission;
         private readonly ToolTipFixer ttf;
+        private string initialTeam;
 
-        public TeamTypesDialog(IGamePlugin plugin)
+        public TeamTypesDialog(IGamePlugin plugin, string selectteam)
         {
+            initialTeam = selectteam;
             this.plugin = plugin;
             maxTeams = plugin.GameInfo.MaxTeams;
             technoTypes = plugin.Map.TeamTechnoTypes;
@@ -778,6 +780,22 @@ namespace MobiusEditor.Dialogs
         private void TeamTypesDialog_Shown(object sender, EventArgs e)
         {
             CalcListColSizes();
+            if (initialTeam == null)
+            {
+                return;
+            }
+            foreach (ListViewItem lvi in teamTypesListView.Items)
+            {
+                TeamType team = lvi.Tag as TeamType;
+                if (team == null) {
+                    continue;
+                }
+                if (initialTeam.Equals(team.Name, StringComparison.OrdinalIgnoreCase))
+                {
+                    teamTypesListView.SelectedIndices.Clear();
+                    lvi.Selected = true;
+                }
+            }
         }
     }
 }

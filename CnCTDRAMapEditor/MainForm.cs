@@ -1516,7 +1516,7 @@ namespace MobiusEditor
                 return;
             }
             ClearActiveTool();
-            using (TeamTypesDialog ttd = new TeamTypesDialog(plugin))
+            using (TeamTypesDialog ttd = new TeamTypesDialog(plugin, null))
             {
                 ttd.StartPosition = FormStartPosition.CenterParent;
                 if (ttd.ShowDialog(this) == DialogResult.OK)
@@ -1688,8 +1688,6 @@ namespace MobiusEditor
                         }
                         // These changes can affect a whole lot of tools.
                         url.Track(undoAction, redoAction, ToolType.Terrain | ToolType.Infantry | ToolType.Unit | ToolType.Building | ToolType.CellTrigger);
-                        // No longer a full refresh, since celltriggers function is no longer disabled when no triggers are found.
-                        mapPanel.Invalidate();
                     }
                 }
             }

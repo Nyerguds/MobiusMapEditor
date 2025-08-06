@@ -692,6 +692,7 @@ namespace MobiusEditor.Dialogs
             this.cmbTrigger.MouseEnter += new System.EventHandler(this.CmbTrigger_MouseEnter);
             this.cmbTrigger.MouseLeave += new System.EventHandler(this.HideToolTip);
             this.cmbTrigger.MouseMove += new System.Windows.Forms.MouseEventHandler(this.CmbTrigger_MouseMove);
+            this.cmbTrigger.SelectedIndexChanged += new System.EventHandler(this.CmbTrigger_SelectedIndexChanged);
             // 
             // lblPriority
             // 

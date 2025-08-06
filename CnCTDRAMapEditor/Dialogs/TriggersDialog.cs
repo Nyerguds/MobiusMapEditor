@@ -1427,13 +1427,9 @@ namespace MobiusEditor.Dialogs
         private string GetTeamLabel(string teamtypeName)
         {
             TeamType teamtype = plugin.Map.TeamTypes.FirstOrDefault(t => t.Name == teamtypeName);
-            if (teamtype != null && teamtype.Classes.Count > 0)
+            if (teamtype != null)
             {
-                string[] classes = teamtype.Classes.Where(cl => cl.Count > 0).Select(cl => String.Format("{0}:{1}", cl.Type.Name, cl.Count)).ToArray();
-                if (classes.Length > 0)
-                {
-                    return teamtype.House + ": " + String.Join(", ", classes);
-                }
+                return teamtype.GetSummaryLabel(true);
             }
             return null;
         }
