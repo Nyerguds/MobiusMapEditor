@@ -52,7 +52,8 @@ namespace MobiusEditor.Tools.Dialogs
         protected override void InitializeInternal(MapPanel mapPanel, MapLayerFlag activeLayers, ToolStripStatusLabel toolStatusLabel, ToolTip mouseToolTip,
             IGamePlugin plugin, UndoRedoList<UndoRedoEventArgs, ToolType> undoRedoList)
         {
-            Tool = new WaypointsTool(mapPanel, activeLayers, toolStatusLabel, cmbWaypoints, btnJumpTo, cmbTeamTypes, btnJumpToTeam, btnEditTeam, btnModeSwitch, plugin, undoRedoList);
+            Tool = new WaypointsTool(mapPanel, activeLayers, toolStatusLabel, cmbWaypoints, btnJumpTo, cmbTeamRoutes, btnJumpToRoutePoint,
+                lblCurrentRoutePoint, btnEditTeam, btnModeSwitch, plugin, undoRedoList);
             Tool.OnTeamTypeChanged += Tool_OnTeamTypeChanged;
             Tool.OnModeChanged += Tool_OnModeChanged;
             Tool.DoTeamTypeEdit += Tool_DoTeamTypeEdit;
@@ -87,23 +88,24 @@ namespace MobiusEditor.Tools.Dialogs
             lblWaypoint.Visible = !routesMode;
             cmbWaypoints.Visible = !routesMode;
             lblRoute.Visible = routesMode;
-            cmbTeamTypes.Visible = routesMode;
+            cmbTeamRoutes.Visible = routesMode;
             btnJumpTo.Visible = !routesMode;
-            btnJumpToTeam.Visible = routesMode;
+            btnJumpToRoutePoint.Visible = routesMode;
             btnEditTeam.Visible = routesMode;
-            AcceptButton = routesMode ? btnJumpToTeam : btnJumpTo;
+            lblCurrentRoutePoint.Visible = routesMode;
+            AcceptButton = routesMode ? btnJumpToRoutePoint : btnJumpTo;
             ResumeLayout();
         }
 
         private void Tool_OnTeamTypeChanged(object sender, EventArgs e)
         {
             Point pt = MousePosition;
-            Point cmbPos = cmbTeamTypes.PointToScreen(Point.Empty);
-            Rectangle cmbTrigRect = new Rectangle(cmbPos, cmbTeamTypes.Size);
+            Point cmbPos = cmbTeamRoutes.PointToScreen(Point.Empty);
+            Rectangle cmbTrigRect = new Rectangle(cmbPos, cmbTeamRoutes.Size);
             if (cmbTrigRect.Contains(pt))
             {
-                this.toolTip1.Hide(cmbTeamTypes);
-                CmbTeamTypes_MouseEnter(cmbTeamTypes, e);
+                this.toolTip1.Hide(cmbTeamRoutes);
+                CmbTeamTypes_MouseEnter(cmbTeamRoutes, e);
             }
         }
 

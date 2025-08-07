@@ -44,10 +44,11 @@ namespace MobiusEditor.Tools.Dialogs
         {
             this.components = new System.ComponentModel.Container();
             this.tableLayoutPanel = new System.Windows.Forms.TableLayoutPanel();
+            this.lblCurrentRoutePoint = new System.Windows.Forms.Label();
             this.btnEditTeam = new System.Windows.Forms.Button();
             this.lblMode = new System.Windows.Forms.Label();
-            this.btnJumpToTeam = new System.Windows.Forms.Button();
-            this.cmbTeamTypes = new MobiusEditor.Controls.ComboBoxSmartWidth();
+            this.btnJumpToRoutePoint = new System.Windows.Forms.Button();
+            this.cmbTeamRoutes = new MobiusEditor.Controls.ComboBoxSmartWidth();
             this.lblRoute = new System.Windows.Forms.Label();
             this.lblWaypoint = new System.Windows.Forms.Label();
             this.cmbWaypoints = new MobiusEditor.Controls.ComboBoxSmartWidth();
@@ -64,10 +65,11 @@ namespace MobiusEditor.Tools.Dialogs
             this.tableLayoutPanel.ColumnStyles.Add(new System.Windows.Forms.ColumnStyle());
             this.tableLayoutPanel.ColumnStyles.Add(new System.Windows.Forms.ColumnStyle(System.Windows.Forms.SizeType.Percent, 100F));
             this.tableLayoutPanel.ColumnStyles.Add(new System.Windows.Forms.ColumnStyle(System.Windows.Forms.SizeType.Absolute, 40F));
+            this.tableLayoutPanel.Controls.Add(this.lblCurrentRoutePoint, 0, 4);
             this.tableLayoutPanel.Controls.Add(this.btnEditTeam, 2, 3);
             this.tableLayoutPanel.Controls.Add(this.lblMode, 0, 0);
-            this.tableLayoutPanel.Controls.Add(this.btnJumpToTeam, 1, 4);
-            this.tableLayoutPanel.Controls.Add(this.cmbTeamTypes, 1, 3);
+            this.tableLayoutPanel.Controls.Add(this.btnJumpToRoutePoint, 1, 4);
+            this.tableLayoutPanel.Controls.Add(this.cmbTeamRoutes, 1, 3);
             this.tableLayoutPanel.Controls.Add(this.lblRoute, 0, 3);
             this.tableLayoutPanel.Controls.Add(this.lblWaypoint, 0, 1);
             this.tableLayoutPanel.Controls.Add(this.cmbWaypoints, 1, 1);
@@ -83,13 +85,25 @@ namespace MobiusEditor.Tools.Dialogs
             this.tableLayoutPanel.RowStyles.Add(new System.Windows.Forms.RowStyle());
             this.tableLayoutPanel.RowStyles.Add(new System.Windows.Forms.RowStyle());
             this.tableLayoutPanel.RowStyles.Add(new System.Windows.Forms.RowStyle(System.Windows.Forms.SizeType.Percent, 100F));
-            this.tableLayoutPanel.Size = new System.Drawing.Size(214, 81);
+            this.tableLayoutPanel.Size = new System.Drawing.Size(228, 81);
             this.tableLayoutPanel.TabIndex = 3;
+            // 
+            // lblCurrentRoutePoint
+            // 
+            this.lblCurrentRoutePoint.AutoSize = true;
+            this.lblCurrentRoutePoint.Dock = System.Windows.Forms.DockStyle.Fill;
+            this.lblCurrentRoutePoint.Location = new System.Drawing.Point(3, 108);
+            this.lblCurrentRoutePoint.Name = "lblCurrentRoutePoint";
+            this.lblCurrentRoutePoint.Size = new System.Drawing.Size(61, 27);
+            this.lblCurrentRoutePoint.TabIndex = 9;
+            this.lblCurrentRoutePoint.Text = "Current";
+            this.lblCurrentRoutePoint.TextAlign = System.Drawing.ContentAlignment.MiddleLeft;
+            this.lblCurrentRoutePoint.Visible = false;
             // 
             // btnEditTeam
             // 
             this.btnEditTeam.Dock = System.Windows.Forms.DockStyle.Top;
-            this.btnEditTeam.Location = new System.Drawing.Point(176, 83);
+            this.btnEditTeam.Location = new System.Drawing.Point(190, 83);
             this.btnEditTeam.Margin = new System.Windows.Forms.Padding(2);
             this.btnEditTeam.Name = "btnEditTeam";
             this.btnEditTeam.Size = new System.Drawing.Size(36, 23);
@@ -113,33 +127,33 @@ namespace MobiusEditor.Tools.Dialogs
             this.lblMode.Text = "&Mode";
             this.lblMode.TextAlign = System.Drawing.ContentAlignment.MiddleLeft;
             // 
-            // btnJumpToTeam
+            // btnJumpToRoutePoint
             // 
-            this.tableLayoutPanel.SetColumnSpan(this.btnJumpToTeam, 2);
-            this.btnJumpToTeam.Dock = System.Windows.Forms.DockStyle.Top;
-            this.btnJumpToTeam.Location = new System.Drawing.Point(69, 110);
-            this.btnJumpToTeam.Margin = new System.Windows.Forms.Padding(2);
-            this.btnJumpToTeam.Name = "btnJumpToTeam";
-            this.btnJumpToTeam.Size = new System.Drawing.Size(143, 23);
-            this.btnJumpToTeam.TabIndex = 5;
-            this.btnJumpToTeam.Text = "Jump to first";
-            this.btnJumpToTeam.TextAlign = System.Drawing.ContentAlignment.MiddleLeft;
-            this.btnJumpToTeam.UseVisualStyleBackColor = true;
-            this.btnJumpToTeam.Visible = false;
+            this.tableLayoutPanel.SetColumnSpan(this.btnJumpToRoutePoint, 2);
+            this.btnJumpToRoutePoint.Dock = System.Windows.Forms.DockStyle.Top;
+            this.btnJumpToRoutePoint.Location = new System.Drawing.Point(69, 110);
+            this.btnJumpToRoutePoint.Margin = new System.Windows.Forms.Padding(2);
+            this.btnJumpToRoutePoint.Name = "btnJumpToRoutePoint";
+            this.btnJumpToRoutePoint.Size = new System.Drawing.Size(157, 23);
+            this.btnJumpToRoutePoint.TabIndex = 5;
+            this.btnJumpToRoutePoint.Text = "Jump to first";
+            this.btnJumpToRoutePoint.TextAlign = System.Drawing.ContentAlignment.MiddleLeft;
+            this.btnJumpToRoutePoint.UseVisualStyleBackColor = true;
+            this.btnJumpToRoutePoint.Visible = false;
             // 
-            // cmbTeamTypes
+            // cmbTeamRoutes
             // 
-            this.cmbTeamTypes.Dock = System.Windows.Forms.DockStyle.Fill;
-            this.cmbTeamTypes.DropDownStyle = System.Windows.Forms.ComboBoxStyle.DropDownList;
-            this.cmbTeamTypes.FormattingEnabled = true;
-            this.cmbTeamTypes.Location = new System.Drawing.Point(70, 84);
-            this.cmbTeamTypes.Name = "cmbTeamTypes";
-            this.cmbTeamTypes.Size = new System.Drawing.Size(101, 21);
-            this.cmbTeamTypes.TabIndex = 4;
-            this.cmbTeamTypes.Visible = false;
-            this.cmbTeamTypes.MouseEnter += new System.EventHandler(this.CmbTeamTypes_MouseEnter);
-            this.cmbTeamTypes.MouseLeave += new System.EventHandler(this.HideToolTip);
-            this.cmbTeamTypes.MouseMove += new System.Windows.Forms.MouseEventHandler(this.CmbTrigger_MouseMove);
+            this.cmbTeamRoutes.Dock = System.Windows.Forms.DockStyle.Fill;
+            this.cmbTeamRoutes.DropDownStyle = System.Windows.Forms.ComboBoxStyle.DropDownList;
+            this.cmbTeamRoutes.FormattingEnabled = true;
+            this.cmbTeamRoutes.Location = new System.Drawing.Point(70, 84);
+            this.cmbTeamRoutes.Name = "cmbTeamRoutes";
+            this.cmbTeamRoutes.Size = new System.Drawing.Size(115, 21);
+            this.cmbTeamRoutes.TabIndex = 4;
+            this.cmbTeamRoutes.Visible = false;
+            this.cmbTeamRoutes.MouseEnter += new System.EventHandler(this.CmbTeamTypes_MouseEnter);
+            this.cmbTeamRoutes.MouseLeave += new System.EventHandler(this.HideToolTip);
+            this.cmbTeamRoutes.MouseMove += new System.Windows.Forms.MouseEventHandler(this.CmbTrigger_MouseMove);
             // 
             // lblRoute
             // 
@@ -172,7 +186,7 @@ namespace MobiusEditor.Tools.Dialogs
             this.cmbWaypoints.FormattingEnabled = true;
             this.cmbWaypoints.Location = new System.Drawing.Point(70, 30);
             this.cmbWaypoints.Name = "cmbWaypoints";
-            this.cmbWaypoints.Size = new System.Drawing.Size(141, 21);
+            this.cmbWaypoints.Size = new System.Drawing.Size(155, 21);
             this.cmbWaypoints.TabIndex = 1;
             // 
             // btnJumpTo
@@ -182,7 +196,7 @@ namespace MobiusEditor.Tools.Dialogs
             this.btnJumpTo.Location = new System.Drawing.Point(69, 56);
             this.btnJumpTo.Margin = new System.Windows.Forms.Padding(2);
             this.btnJumpTo.Name = "btnJumpTo";
-            this.btnJumpTo.Size = new System.Drawing.Size(143, 23);
+            this.btnJumpTo.Size = new System.Drawing.Size(157, 23);
             this.btnJumpTo.TabIndex = 2;
             this.btnJumpTo.Text = "Jump to";
             this.btnJumpTo.TextAlign = System.Drawing.ContentAlignment.MiddleLeft;
@@ -195,7 +209,7 @@ namespace MobiusEditor.Tools.Dialogs
             this.btnModeSwitch.Location = new System.Drawing.Point(69, 2);
             this.btnModeSwitch.Margin = new System.Windows.Forms.Padding(2);
             this.btnModeSwitch.Name = "btnModeSwitch";
-            this.btnModeSwitch.Size = new System.Drawing.Size(143, 23);
+            this.btnModeSwitch.Size = new System.Drawing.Size(157, 23);
             this.btnModeSwitch.TabIndex = 6;
             this.btnModeSwitch.Text = "Waypoint";
             this.btnModeSwitch.TextAlign = System.Drawing.ContentAlignment.MiddleLeft;
@@ -207,13 +221,13 @@ namespace MobiusEditor.Tools.Dialogs
             this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 13F);
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
             this.AutoSize = true;
-            this.ClientSize = new System.Drawing.Size(214, 81);
+            this.ClientSize = new System.Drawing.Size(228, 81);
             this.ControlBox = false;
             this.Controls.Add(this.tableLayoutPanel);
             this.FormBorderStyle = System.Windows.Forms.FormBorderStyle.FixedToolWindow;
             this.MaximizeBox = false;
             this.MinimizeBox = false;
-            this.MinimumSize = new System.Drawing.Size(145, 73);
+            this.MinimumSize = new System.Drawing.Size(230, 120);
             this.Name = "WaypointsToolDialog";
             this.ShowIcon = false;
             this.ShowInTaskbar = false;
@@ -232,12 +246,13 @@ namespace MobiusEditor.Tools.Dialogs
         private System.Windows.Forms.Label lblWaypoint;
         private MobiusEditor.Controls.ComboBoxSmartWidth cmbWaypoints;
         private System.Windows.Forms.Button btnJumpTo;
-        private Controls.ComboBoxSmartWidth cmbTeamTypes;
+        private Controls.ComboBoxSmartWidth cmbTeamRoutes;
         private System.Windows.Forms.Label lblRoute;
         private System.Windows.Forms.ToolTip toolTip1;
-        private System.Windows.Forms.Button btnJumpToTeam;
+        private System.Windows.Forms.Button btnJumpToRoutePoint;
         private System.Windows.Forms.Label lblMode;
         private System.Windows.Forms.Button btnModeSwitch;
         private System.Windows.Forms.Button btnEditTeam;
+        private System.Windows.Forms.Label lblCurrentRoutePoint;
     }
 }

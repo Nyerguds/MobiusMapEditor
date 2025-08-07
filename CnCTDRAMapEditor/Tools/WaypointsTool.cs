@@ -44,10 +44,12 @@ namespace MobiusEditor.Tools
         private readonly ComboBox waypointsCombo;
         private readonly Button jumpToButton;
         private readonly ComboBox routesCombo;
+        private readonly Label currentRoutePointLabel;
         private readonly Button editTeamButton;
         private readonly Button jumpToRouteButton;
         private const string JMP_FIRST = "Jump to start";
         private const string JMP_NEXT = "Jump to next";
+        private const string CURRENT = "Selected: ";
 
         private Map previewMap;
         protected override Map RenderMap => previewMap;
@@ -118,7 +120,7 @@ namespace MobiusEditor.Tools
         public event EventHandler DoTeamTypeEdit;
 
         public WaypointsTool(MapPanel mapPanel, MapLayerFlag layers, ToolStripStatusLabel statusLbl, ComboBox waypointsCombo, Button jumpToButton,
-            ComboBox routesCombo, Button jumpToRouteButton, Button editTeamButton, Button modeSwitchButton, IGamePlugin plugin, UndoRedoList<UndoRedoEventArgs, ToolType> url)
+            ComboBox routesCombo, Button jumpToRouteButton, Label currentRoutePointLabel, Button editTeamButton, Button modeSwitchButton, IGamePlugin plugin, UndoRedoList<UndoRedoEventArgs, ToolType> url)
             : base(mapPanel, layers, statusLbl, plugin, url)
         {
             previewMap = map;
@@ -132,6 +134,7 @@ namespace MobiusEditor.Tools
             this.routesCombo = routesCombo;
             this.routesCombo.DataSource = TeamType.None.Yield().Concat(plugin.Map.TeamTypes.Select(t => t.Name)).ToArray();
             this.routesCombo.SelectedIndexChanged += this.RoutesCombo_SelectedIndexChanged;
+            this.currentRoutePointLabel = currentRoutePointLabel;
             this.editTeamButton = editTeamButton;
             this.editTeamButton.Click += EditTeamButton_Click;
             this.jumpToRouteButton = jumpToRouteButton;
@@ -770,11 +773,13 @@ namespace MobiusEditor.Tools
             }
             jumpToRouteButton.Enabled = true;
             bool hasNext = currentPathPos > -1 && currentPathPos + 1 < currentPath.Count;
+            bool noCurr = waypointsCombo.SelectedIndex == -1;
             Waypoint[] wps = map.Waypoints;
-            Waypoint wp = hasNext ? currentPath[currentPathPos + 1] : currentPath[0];
-            string waypoint = wp.Flags.HasFlag(WaypointFlag.Temporary) ? ("#" + wp.Cell) :
-                Enumerable.Range(0, wps.Length).FirstOrDefault(i => wps[i] == wp).ToString();
+            Waypoint wpNext = hasNext ? currentPath[currentPathPos + 1] : currentPath[0];
+            string waypoint = wpNext.Flags.HasFlag(WaypointFlag.Temporary) ? ("#" + wpNext.Cell) :
+                (Enumerable.Range(0, wps.Length).Cast<int?>().FirstOrDefault(i => wps[(int)i] == wpNext)?.ToString() ?? "?");
             jumpToRouteButton.Text = (hasNext ? JMP_NEXT : JMP_FIRST) + " (" + waypoint + ")";
+            currentRoutePointLabel.Text = CURRENT + (noCurr ? "-" : waypointsCombo.SelectedIndex.ToString());
         }
 
         protected void JumpToWaypoint(Waypoint wp)
@@ -868,13 +873,14 @@ namespace MobiusEditor.Tools
             Waypoint[] suppressRange = selectedRange;
             Waypoint[] redRangeBounds = new Waypoint[0];
             Waypoint[] redRangeIndic = new Waypoint[0];
-            if (currentPath != null && currentPath.Count > 0)
+            Waypoint[] tracePath = currentPath == null ? null : currentPath.Where(wp => wp.Cell.HasValue).ToArray();
+            if (tracePath != null && tracePath.Length > 0)
             {
-                MapRenderer.RenderWaypointsPath(graphics, map, visibleCells, Globals.MapTileSize, currentPath);
-                suppressRange = selectedRange.Concat(currentPath).ToArray();
-                redRangeBounds = currentPath.Where(wp => !selectedRange.Contains(wp)).ToArray();
-                redRangeIndic = currentPath.ToArray();
-                selectedRange = selectedRange.Where(wp => !currentPath.Contains(wp)).ToArray();
+                MapRenderer.RenderWaypointsPath(graphics, map, visibleCells, Globals.MapTileSize, tracePath);
+                suppressRange = selectedRange.Concat(tracePath).ToArray();
+                redRangeBounds = tracePath.Where(wp => !selectedRange.Contains(wp)).ToArray();
+                redRangeIndic = tracePath.ToArray();
+                selectedRange = selectedRange.Where(wp => !tracePath.Contains(wp)).ToArray();
             }
             MapRenderer.RenderAllBoundsFromCell(graphics, boundRenderCells, Globals.MapTileSize,
                 map.Waypoints.Where(wp => !suppressRange.Contains(wp) && wp.Cell.HasValue).Select(wp => wp.Cell.Value), map.Metrics, Color.Orange);

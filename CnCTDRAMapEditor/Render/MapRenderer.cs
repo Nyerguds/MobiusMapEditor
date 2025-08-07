@@ -2633,9 +2633,9 @@ namespace MobiusEditor.Render
             }
         }
 
-        public static void RenderWaypointsPath(Graphics graphics, Map map, Rectangle visibleCells, Size tileSize, List<Waypoint> waypoints)
+        public static void RenderWaypointsPath(Graphics graphics, Map map, Rectangle visibleCells, Size tileSize, IEnumerable<Waypoint> waypoints)
         {
-            if (waypoints == null || waypoints.Count < 2)
+            if (waypoints == null || waypoints.Count() < 2)
             {
                 return;
             }
