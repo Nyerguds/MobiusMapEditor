@@ -31,10 +31,10 @@ namespace MobiusEditor.Tools.Dialogs
         public ITool GetTool() => Tool;
         public void SetTool(ITool value) => Tool = (T)value;
 
-        private PropertyInfo defaultPositionPropertySettingInfo;
-        private Point? startLocation;
-        private Rectangle? parentBounds;
-        Form parentForm;
+        protected PropertyInfo defaultPositionPropertySettingInfo;
+        protected Point? startLocation;
+        protected Rectangle? parentBounds;
+        protected Form parentForm;
 
         public ToolDialog(Form parentForm)
         {

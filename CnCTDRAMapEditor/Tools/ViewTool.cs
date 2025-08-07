@@ -48,8 +48,10 @@ namespace MobiusEditor.Tools
 
         protected readonly Map map;
 
+        public MapPanel MapPanel => mapPanel;
         protected readonly MapPanel mapPanel;
         protected readonly ToolStripStatusLabel statusLbl;
+        public UndoRedoList<UndoRedoEventArgs, ToolType> Url => url;
         protected readonly UndoRedoList<UndoRedoEventArgs, ToolType> url;
         protected readonly NavigationWidget navigationWidget;
 

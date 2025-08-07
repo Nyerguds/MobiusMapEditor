@@ -1392,6 +1392,44 @@ namespace MobiusEditor.Model
             }
         }
 
+        public List<Waypoint> GetTeamTypeRoute(string teamType)
+        {
+            List<Waypoint> points = new List<Waypoint>();
+            if (teamType == null)
+            {
+                return points;
+            }
+            TeamType team = TeamTypes.FirstOrDefault(t => teamType.Equals(t.Name, StringComparison.OrdinalIgnoreCase));
+            if (team == null || team.Missions.Count == 0)
+            {
+                return points;
+            }
+            foreach (TeamTypeMission ttm in team.Missions)
+            {
+                Waypoint pt = null;
+                TeamMissionArgType argt = ttm.Mission.ArgType;
+                int val = ttm.Argument;
+                if (argt == TeamMissionArgType.Waypoint)
+                {
+                    if (val >= 0 && val < Waypoints.Length)
+                        pt = Waypoints[val];
+                }
+                else if (argt == TeamMissionArgType.MapCell)
+                {
+                    // Special case: "move to cell" action. Create dummy waypoint for this.
+                    if (val >= 0 && val < Metrics.Length)
+                    {
+                        pt = new Waypoint("##", WaypointFlag.Temporary, Metrics, val);
+                    }
+                }
+                if (pt != null)
+                {
+                    points.Add(pt);
+                }
+            }
+            return points;
+        }
+
         public Map Clone(bool forPreview)
         {
             Waypoint[] wpPreview = new Waypoint[Waypoints.Length + (forPreview ? 1 : 0)];

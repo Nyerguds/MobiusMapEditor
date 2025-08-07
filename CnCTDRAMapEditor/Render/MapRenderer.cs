@@ -25,7 +25,6 @@ using System.Drawing.Imaging;
 using System.Drawing.Text;
 using System.Linq;
 using System.Text;
-using System.Windows.Forms;
 
 namespace MobiusEditor.Render
 {
@@ -2631,6 +2630,38 @@ namespace MobiusEditor.Render
                         graphics.DrawRectangle(boundsPen, bounds);
                     }
                 }
+            }
+        }
+
+        public static void RenderWaypointsPath(Graphics graphics, Map map, Rectangle visibleCells, Size tileSize, List<Waypoint> waypoints)
+        {
+            if (waypoints == null || waypoints.Count < 2)
+            {
+                return;
+            }
+            List<PointF> points = waypoints.Where(wp => wp.Point.HasValue)
+                .Select(wp => new PointF(wp.Point.Value.X * tileSize.Width + tileSize.Width / 2, wp.Point.Value.Y * tileSize.Height + tileSize.Height / 2))
+                .ToList();
+            RectangleF rect = new RectangleF(
+                visibleCells.X * tileSize.Width,
+                visibleCells.Y * tileSize.Height,
+                visibleCells.Width * tileSize.Width,
+                visibleCells.Height * tileSize.Height);
+            PointF previous = points[0];
+            for (int i = 1; i < points.Count; ++i)
+            {
+                PointF current = points[i];
+                PointF point1 = previous;
+                PointF point2 = current;
+                if (LineUtils.CohenSutherlandLineClip(rect, ref point1, ref point2))
+                {
+                    float penSize = Math.Max(1f, tileSize.Width / 16.0f);
+                    using (Pen pathPen = new Pen(Color.Red, penSize))
+                    {
+                        graphics.DrawLine(pathPen, point1, point2);
+                    }
+                }
+                previous = current;
             }
         }
 

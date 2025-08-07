@@ -730,3 +730,4 @@ Unreleased
 * Removed the ability to place walls as structures (by disabling "OverlayWallsOnly") in Red Alert maps; it simply crashes the game.
 * Fixed an issue where certain options or rules changes in the Map dialog would not refresh on the map afterwards.
 * Improved teamtype tooltips in the Triggers window to show the full list of orders they execute.
+* Added routes editing mode into the Waypoints tool, allowing easy visualisation and editing of waypoint paths used by teamtypes.

@@ -14,6 +14,7 @@
 // with this program. If not, see https://github.com/electronicarts/CnC_Remastered_Collection
 using MobiusEditor.Controls;
 using MobiusEditor.Controls.ControlsList;
+using MobiusEditor.Event;
 using MobiusEditor.Interface;
 using MobiusEditor.Model;
 using MobiusEditor.Utility;
@@ -61,6 +62,64 @@ namespace MobiusEditor.Dialogs
         private readonly TeamMission defaultMission;
         private readonly ToolTipFixer ttf;
         private string initialTeam;
+
+        public static void ShowTeamTypesEditor(IWin32Window owner, IGamePlugin plugin, UndoRedoList<UndoRedoEventArgs, ToolType> url, string teamtypeName)
+        {
+            using (TeamTypesDialog ttd = new TeamTypesDialog(plugin, teamtypeName))
+            {
+                ttd.StartPosition = FormStartPosition.CenterParent;
+                if (ttd.ShowDialog(owner) == DialogResult.OK)
+                {
+                    List<TeamType> oldTeamTypes = plugin.Map.TeamTypes.ToList();
+                    // Clone of old triggers
+                    List<Trigger> oldTriggers = plugin.Map.Triggers.Select(tr => tr.Clone()).ToList();
+                    plugin.Map.TeamTypes.Clear();
+                    plugin.Map.ApplyTeamTypeRenames(ttd.RenameActions);
+                    // Triggers in their new state after the teamtype item renames.
+                    List<Trigger> newTriggers = plugin.Map.Triggers.Select(tr => tr.Clone()).ToList();
+                    plugin.Map.TeamTypes.AddRange(ttd.TeamTypes.OrderBy(t => t.Name, new ExplorerComparer()).Select(t => t.Clone()));
+                    List<TeamType> newTeamTypes = plugin.Map.TeamTypes.ToList();
+                    bool origEmptyState = plugin.Empty;
+                    void undoAction(UndoRedoEventArgs ev)
+                    {
+                        DialogResult dr = MessageBox.Show(ev.MapPanel, "This will undo all teamtype editing actions you performed. Are you sure you want to continue?",
+                            "Warning", MessageBoxButtons.YesNo, MessageBoxIcon.Warning);
+                        if (dr == DialogResult.No)
+                        {
+                            ev.Cancelled = true;
+                        }
+                        else if (ev.Plugin != null)
+                        {
+                            ev.Map.Triggers = oldTriggers;
+                            ev.Map.TeamTypes.Clear();
+                            ev.Map.TeamTypes.AddRange(oldTeamTypes);
+                            ev.Plugin.Empty = origEmptyState;
+                            ev.Plugin.Dirty = !ev.NewStateIsClean;
+                        }
+                    }
+                    void redoAction(UndoRedoEventArgs ev)
+                    {
+                        DialogResult dr = MessageBox.Show(ev.MapPanel, "This will redo all teamtype editing actions you undid. Are you sure you want to continue?",
+                            "Warning", MessageBoxButtons.YesNo, MessageBoxIcon.Warning);
+                        if (dr == DialogResult.No)
+                        {
+                            ev.Cancelled = true;
+                        }
+                        else if (ev.Plugin != null)
+                        {
+                            ev.Map.TeamTypes.Clear();
+                            ev.Map.TeamTypes.AddRange(newTeamTypes);
+                            ev.Map.Triggers = newTriggers;
+                            // Redo can never restore the "empty" state, but CAN be the point at which a save was done.
+                            ev.Plugin.Empty = false;
+                            ev.Plugin.Dirty = !ev.NewStateIsClean;
+                        }
+                    }
+                    url.Track(undoAction, redoAction, ToolType.Waypoint);
+                    plugin.Dirty = true;
+                }
+            }
+        }
 
         public TeamTypesDialog(IGamePlugin plugin, string selectteam)
         {
@@ -784,8 +843,10 @@ namespace MobiusEditor.Dialogs
             {
                 return;
             }
+            int index = -1;
             foreach (ListViewItem lvi in teamTypesListView.Items)
             {
+                index++;
                 TeamType team = lvi.Tag as TeamType;
                 if (team == null) {
                     continue;
@@ -794,6 +855,8 @@ namespace MobiusEditor.Dialogs
                 {
                     teamTypesListView.SelectedIndices.Clear();
                     lvi.Selected = true;
+                    teamTypesListView.EnsureVisible(index);
+                    break;
                 }
             }
         }

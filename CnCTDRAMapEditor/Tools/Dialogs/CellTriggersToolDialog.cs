@@ -58,14 +58,16 @@ namespace MobiusEditor.Tools.Dialogs
             lblTriggerTypesInfo.Image = infoImage;
             lblTriggerTypesInfo.ImageAlign = ContentAlignment.MiddleCenter;
         }
+
 #if !EDITMODE
         protected override void InitializeInternal(MapPanel mapPanel, MapLayerFlag activeLayers, ToolStripStatusLabel toolStatusLabel, ToolTip mouseToolTip,
             IGamePlugin plugin, UndoRedoList<UndoRedoEventArgs, ToolType> undoRedoList)
         {
             Tool = new CellTriggersTool(mapPanel, activeLayers, toolStatusLabel, cmbTrigger, btnJumpTo, plugin, undoRedoList);
-            Tool.OnTriggerChanged += this.Tool_OnTriggerChanged;
+            Tool.OnTriggerChanged += Tool_OnTriggerChanged;
         }
 #endif
+
         private void Tool_OnTriggerChanged(object sender, EventArgs e)
         {
             Point pt = MousePosition;
@@ -88,7 +90,9 @@ namespace MobiusEditor.Tools.Dialogs
         private void LblTriggerTypesInfo_MouseEnter(object sender, EventArgs e)
         {
             Control target = sender as Control;
+#if !EDITMODE
             ShowToolTip(target, Tool.TriggerInfoToolTip);
+#endif
         }
 
         private void LblTriggerTypesInfo_MouseMove(object sender, MouseEventArgs e)

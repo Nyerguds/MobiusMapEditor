@@ -1034,12 +1034,12 @@ namespace MobiusEditor.Dialogs
                                 break;
                             case RedAlert.EventTypes.TEVENT_LEAVES_MAP:
                                 eventValueComboBox.Visible = true;
-                                var teamData = TeamType.None.Yield().Concat(plugin.Map.TeamTypes.Select(t => t.Name)).ToArray();
+                                string[] teamData = TeamType.None.Yield().Concat(plugin.Map.TeamTypes.Select(t => t.Name)).ToArray();
                                 eventValueComboBox.DataSource = teamData;
                                 eventValueComboBox.DataBindings.Add("SelectedItem", triggerEvent, "Team"); correctedData = 0;
                                 correctedData = 0;
                                 triggerEvent.Data = correctedData;
-                                string correctedTeam = teamData.Contains(team, StringComparer.OrdinalIgnoreCase) ? team : TeamType.None;
+                                string correctedTeam = teamData.FirstOrDefault(tm => tm.Equals(team, StringComparison.OrdinalIgnoreCase)) ?? TeamType.None;
                                 triggerEvent.Team = correctedTeam;
                                 eventValueComboBox.SelectedItem = correctedTeam;
                                 break;
@@ -1179,7 +1179,7 @@ namespace MobiusEditor.Dialogs
                                 actionValueComboBox.Visible = true;
                                 string[] teamData = TeamType.None.Yield().Concat(plugin.Map.TeamTypes.Select(t => t.Name)).ToArray();
                                 actionValueComboBox.DataSource = teamData;
-                                string correctedTeam = teamData.Contains(team, StringComparer.OrdinalIgnoreCase) ? team : TeamType.None;
+                                string correctedTeam = teamData.FirstOrDefault(tm => tm.Equals(team, StringComparison.OrdinalIgnoreCase)) ?? TeamType.None;
                                 triggerAction.Team = correctedTeam;
                                 actionValueComboBox.DataBindings.Add("SelectedItem", triggerAction, "Team");
                                 actionValueComboBox.SelectedItem = correctedTeam;

@@ -1516,64 +1516,7 @@ namespace MobiusEditor
                 return;
             }
             ClearActiveTool();
-            using (TeamTypesDialog ttd = new TeamTypesDialog(plugin, null))
-            {
-                ttd.StartPosition = FormStartPosition.CenterParent;
-                if (ttd.ShowDialog(this) == DialogResult.OK)
-                {
-                    List<TeamType> oldTeamTypes = plugin.Map.TeamTypes.ToList();
-                    // Clone of old triggers
-                    List<Trigger> oldTriggers = plugin.Map.Triggers.Select(tr => tr.Clone()).ToList();
-                    plugin.Map.TeamTypes.Clear();
-                    plugin.Map.ApplyTeamTypeRenames(ttd.RenameActions);
-                    // Triggers in their new state after the teamtype item renames.
-                    List<Trigger> newTriggers = plugin.Map.Triggers.Select(tr => tr.Clone()).ToList();
-                    plugin.Map.TeamTypes.AddRange(ttd.TeamTypes.OrderBy(t => t.Name, new ExplorerComparer()).Select(t => t.Clone()));
-                    List<TeamType> newTeamTypes = plugin.Map.TeamTypes.ToList();
-                    bool origEmptyState = plugin.Empty;
-                    void undoAction(UndoRedoEventArgs ev)
-                    {
-                        ClearActiveTool();
-                        DialogResult dr = MessageBox.Show(this, "This will undo all teamtype editing actions you performed. Are you sure you want to continue?",
-                            "Warning", MessageBoxButtons.YesNo, MessageBoxIcon.Warning);
-                        if (dr == DialogResult.No)
-                        {
-                            ev.Cancelled = true;
-                        }
-                        else if (ev.Plugin != null)
-                        {
-                            ev.Map.Triggers = oldTriggers;
-                            ev.Map.TeamTypes.Clear();
-                            ev.Map.TeamTypes.AddRange(oldTeamTypes);
-                            ev.Plugin.Empty = origEmptyState;
-                            ev.Plugin.Dirty = !ev.NewStateIsClean;
-                        }
-                        RefreshActiveTool(true);
-                    }
-                    void redoAction(UndoRedoEventArgs ev)
-                    {
-                        ClearActiveTool();
-                        DialogResult dr = MessageBox.Show(this, "This will redo all teamtype editing actions you undid. Are you sure you want to continue?",
-                            "Warning", MessageBoxButtons.YesNo, MessageBoxIcon.Warning);
-                        if (dr == DialogResult.No)
-                        {
-                            ev.Cancelled = true;
-                        }
-                        else if (ev.Plugin != null)
-                        {
-                            ev.Map.TeamTypes.Clear();
-                            ev.Map.TeamTypes.AddRange(newTeamTypes);
-                            ev.Map.Triggers = newTriggers;
-                            // Redo can never restore the "empty" state, but CAN be the point at which a save was done.
-                            ev.Plugin.Empty = false;
-                            ev.Plugin.Dirty = !ev.NewStateIsClean;
-                        }
-                        RefreshActiveTool(true);
-                    }
-                    url.Track(undoAction, redoAction, ToolType.None);
-                    plugin.Dirty = true;
-                }
-            }
+            TeamTypesDialog.ShowTeamTypesEditor(this, plugin, url, null);
             RefreshActiveTool(true);
         }
 

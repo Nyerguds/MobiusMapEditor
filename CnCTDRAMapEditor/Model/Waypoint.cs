@@ -28,16 +28,17 @@ namespace MobiusEditor.Model
         Special       /**/ = 1 << 3,
         CrateSpawn    /**/ = 1 << 4,
         FootballField /**/ = 1 << 5,
-        PlayerStart   /**/ = 1 << 6,
+        Temporary     /**/ = 1 << 6,
+        PlayerStart   /**/ = 1 << 7,
         // Never referenced, but used internally by the flags system. These eight must be reserved on the bits directly following PlayerStart.
-        PlayerStart1  /**/ = PlayerStart | 1 << 7,
-        PlayerStart2  /**/ = PlayerStart | 1 << 8,
-        PlayerStart3  /**/ = PlayerStart | 1 << 9,
-        PlayerStart4  /**/ = PlayerStart | 1 << 10,
-        PlayerStart5  /**/ = PlayerStart | 1 << 11,
-        PlayerStart6  /**/ = PlayerStart | 1 << 12,
-        PlayerStart7  /**/ = PlayerStart | 1 << 13,
-        PlayerStart8  /**/ = PlayerStart | 1 << 14,
+        PlayerStart1  /**/ = PlayerStart | 1 << 8,
+        PlayerStart2  /**/ = PlayerStart | 1 << 9,
+        PlayerStart3  /**/ = PlayerStart | 1 << 10,
+        PlayerStart4  /**/ = PlayerStart | 1 << 11,
+        PlayerStart5  /**/ = PlayerStart | 1 << 12,
+        PlayerStart6  /**/ = PlayerStart | 1 << 13,
+        PlayerStart7  /**/ = PlayerStart | 1 << 14,
+        PlayerStart8  /**/ = PlayerStart | 1 << 15,
     }
 
     public class Waypoint : INamedType
