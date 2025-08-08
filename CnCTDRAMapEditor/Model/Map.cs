@@ -1392,39 +1392,111 @@ namespace MobiusEditor.Model
             }
         }
 
-        public List<Waypoint> GetTeamTypeRoute(string teamType)
+        /// <summary>
+        /// Transforms the given teamtype orders list into a list of points forming a route on the map.
+        /// The additional <paramref name="validWayPoints"/> outputs which points on the map correspond to valid waypoints.
+        /// If a valid point exists in the output list, but it is null in <paramref name="validWayPoints"/>, this point is
+        /// the first valid location found after an order to loop back to an earlier order.
+        /// </summary>
+        /// <param name="teamType">The teamtype for which to retrieve the route.</param>
+        /// <param name="validWayPoints">A list matching the output list, in which a positive number indicates a waypoint number,
+        /// -1 indicates a raw cell number, and null is not a real location but a loop order.</param>
+        /// <returns>A list of map cells the route goes through. Null entries are either empty waypoints, or not orders that can be transformed into a location.</returns>
+        public List<int?> GetTeamTypeRoute(string teamType, out List<int?> validWayPoints)
         {
-            List<Waypoint> points = new List<Waypoint>();
+            
             if (teamType == null)
             {
-                return points;
+                validWayPoints = null;
+                return null;
             }
             TeamType team = TeamTypes.FirstOrDefault(t => teamType.Equals(t.Name, StringComparison.OrdinalIgnoreCase));
-            if (team == null || team.Missions.Count == 0)
+            if (team == null)
+            {
+                validWayPoints = null;
+                return null;
+            }
+            return GetTeamTypeRoute(team.Missions, out validWayPoints);
+        }
+
+        /// <summary>
+        /// Transforms the given teamtype orders list into a list of points forming a route on the map.
+        /// The additional <paramref name="validWayPoints"/> outputs which points on the map correspond to valid waypoints.
+        /// If a valid point exists in the output list, but it is null in <paramref name="validWayPoints"/>, this point is
+        /// the first valid location found after an order to loop back to an earlier order.
+        /// </summary>
+        /// <param name="orders">The list of teamtype orders.</param>
+        /// <param name="validWayPoints">A list matching the output list, in which a positive number indicates a waypoint number,
+        /// -1 indicates a raw cell number, and null is not a real location but a loop order.</param>
+        /// <returns>A list of map cells the route goes through. Null entries are either empty waypoints, or not orders that can be transformed into a location.</returns>
+        public List<int?> GetTeamTypeRoute(List<TeamTypeMission> orders, out List<int?> validWayPoints)
+        {
+            List<int?> points = new List<int?>();
+            validWayPoints = new List<int?>();
+            if (orders == null)
             {
                 return points;
             }
-            foreach (TeamTypeMission ttm in team.Missions)
+            Waypoint[] wps = Waypoints;
+            bool killLoop = false;
+            for (int i = 0; i < orders.Count; ++i)
             {
-                Waypoint pt = null;
-                TeamMissionArgType argt = ttm.Mission.ArgType;
-                int val = ttm.Argument;
-                if (argt == TeamMissionArgType.Waypoint)
+                int? cell = null;
+                int? validWp = null;
+                TeamTypeMission ttm = orders[i];
+                TeamMissionArgType tmArgTp = ttm.Mission.ArgType;
+                int tmArg = ttm.Argument;
+                switch (tmArgTp)
                 {
-                    if (val >= 0 && val < Waypoints.Length)
-                        pt = Waypoints[val];
+                    case TeamMissionArgType.Waypoint:
+                        validWp = tmArg;
+                        if (tmArg >= 0 && tmArg < wps.Length) cell = wps[tmArg].Cell;
+                        break;
+                    case TeamMissionArgType.MapCell:
+                        validWp = -1;
+                        if (tmArg >= 0 && tmArg < Metrics.Length) cell = tmArg;
+                        break;
+                    case TeamMissionArgType.MissionNumber:
+                        int endPoint = tmArg > i ? orders.Count : i;
+                        // looping back invalidates any following instructions.
+                        killLoop = tmArg <= i;
+                        if (!killLoop)
+                        {
+                            // if jumping ahead, skip items in loop.
+                            i = tmArg - 1;
+                        }
+                        bool foundLoopPoint = false;
+                        for (int j = tmArg; j < endPoint; ++j)
+                        {
+                            TeamTypeMission ttm2 = orders[j];
+                            TeamMissionArgType tmArgTp2 = ttm2.Mission.ArgType;
+                            int tmArg2 = ttm2.Argument;
+                            switch (tmArgTp2)
+                            {
+                                case TeamMissionArgType.Waypoint:
+                                    foundLoopPoint = true;
+                                    if (tmArg2 >= 0 && tmArg2 < wps.Length) cell = wps[tmArg2].Cell;
+                                    break;
+                                case TeamMissionArgType.MapCell:
+                                    foundLoopPoint = true;
+                                    if (tmArg2 >= 0 && tmArg2 < Metrics.Length) cell = tmArg2;
+                                    break;
+                                case TeamMissionArgType.MissionNumber:
+                                    foundLoopPoint = true;
+                                    break;
+                            }
+                            if (foundLoopPoint)
+                            {
+                                break;
+                            }
+                        }
+                        break;
                 }
-                else if (argt == TeamMissionArgType.MapCell)
+                points.Add(cell);
+                validWayPoints.Add(validWp);
+                if (killLoop)
                 {
-                    // Special case: "move to cell" action. Create dummy waypoint for this.
-                    if (val >= 0 && val < Metrics.Length)
-                    {
-                        pt = new Waypoint("##", WaypointFlag.Temporary, Metrics, val);
-                    }
-                }
-                if (pt != null)
-                {
-                    points.Add(pt);
+                    break;
                 }
             }
             return points;

@@ -55,6 +55,7 @@ namespace MobiusEditor
             // Fine tuning
             ZoomToBoundsOnLoad = Properties.Settings.Default.ZoomToBoundsOnLoad;
             RememberToolData = Properties.Settings.Default.RememberToolData;
+            AllowDeleteRoutePoints = Properties.Settings.Default.AllowDeleteRoutePoints;
             //MapScale / MapScaleClassic: auto-selected in MapScale property.
             //PreviewScale / PreviewScaleClassic: auto-selected in PreviewScale property.
             //ObjectToolItemSizeMultiplier/TemplateToolTextureSizeMultiplier/MaxMapTileTextureSize: used in controls directly.
@@ -181,6 +182,7 @@ namespace MobiusEditor
 
         public static bool ZoomToBoundsOnLoad { get; private set; }
         public static bool RememberToolData { get; private set; }
+        public static bool AllowDeleteRoutePoints { get; private set; }
 
         private static double MinScale => 1.0 / Math.Min(OriginalTileWidth, OriginalTileHeight);
         private static double MapTileScaleRaw => UseClassicFiles ? Properties.Settings.Default.MapScaleClassic : Properties.Settings.Default.MapScale;

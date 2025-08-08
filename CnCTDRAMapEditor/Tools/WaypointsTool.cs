@@ -87,7 +87,8 @@ namespace MobiusEditor.Tools
                         {
                             lastSelectedIndexWp = index;
                             waypointsCombo.SelectedIndex = index;
-                            currentPath = null;
+                            currentPathWaypoints = null;
+                            currentPathCells = null;
                             currentPathPos = -1;
                         }
                     }
@@ -97,7 +98,8 @@ namespace MobiusEditor.Tools
                     routesMode = false;
                     lastSelectedIndexWp = 0;
                     lastSelectedIndexRt = 0;
-                    currentPath = null;
+                    currentPathWaypoints = null;
+                    currentPathCells = null;
                     currentPathPos = -1;
                     waypointsCombo.SelectedIndex = 0;
                 }
@@ -113,7 +115,8 @@ namespace MobiusEditor.Tools
         }
         
         public String TeamTypeToolTip { get; private set; }
-        private List<Waypoint> currentPath = null;
+        private List<int?> currentPathCells = null;
+        private List<int?> currentPathWaypoints = null;
         private int currentPathPos = -1;
         public event EventHandler OnTeamTypeChanged;
         public event EventHandler OnModeChanged;
@@ -327,6 +330,14 @@ namespace MobiusEditor.Tools
             waypointsCombo.DataSource = wp.ToArray();
             this.waypointsCombo.SelectedIndexChanged += this.WaypointsCombo_SelectedIndexChanged;
             waypointsCombo.SelectedIndex = selected;
+            if (routesMode)
+            {
+                // refresh path contents without resetting current path position.
+                // This is necessary to adjust the cells of loop orders, since they don't link to the actual waypoint object.
+                string teamname = routesCombo.SelectedItem as string;
+                TeamType team = TeamType.GetTeamType(teamname, plugin.Map);
+                currentPathCells = map.GetTeamTypeRoute(teamname, out currentPathWaypoints);
+            }
             if (oldPoint.HasValue)
             {
                 mapPanel.Invalidate(map, GetRefreshCells(waypoint, oldPoint.Value));
@@ -337,6 +348,10 @@ namespace MobiusEditor.Tools
         private void RemoveWaypoint(Point location)
         {
             if (!map.Metrics.GetCell(location, out int cell))
+            {
+                return;
+            }
+            if (routesMode && !Globals.AllowDeleteRoutePoints)
             {
                 return;
             }
@@ -475,31 +490,30 @@ namespace MobiusEditor.Tools
             }
             if (newVal.HasValue && curVal != newVal.Value)
             {
-                List<Waypoint> oldPath = currentPath;
-                Waypoint oldWp = null;
-                if (oldPath != null && oldPath.Count > 0)
+                int? oldWpi = null;
+                if (placementMode)
                 {
-                    int oldPathPoint = currentPathPos;
-                    if (oldPathPoint < 0 | oldPathPoint >= oldPath.Count)
+                    int pathPos = currentPathPos;
+                    if (pathPos == -1)
                     {
-                        oldPathPoint = -1;
-                        SelectPathWaypoint(false, false);
-                        oldPathPoint = 0;
+                        pathPos = GetNextPathPoint(pathPos);
                     }
-                    oldWp = oldPath[oldPathPoint];
+                    oldWpi = pathPos == -1 ? null : currentPathWaypoints[pathPos];
                 }
                 lastSelectedIndexRt = newVal.Value;
                 routesCombo.SelectedIndex = newVal.Value;
-                List<Waypoint> newPath = currentPath;
-                Waypoint newWp = null;
-                if (newPath != null && newPath.Count > 0)
-                {
-                    newWp = newPath[0];
-                }
-
                 if (placementMode)
                 {
+                    int pathPos = currentPathPos;
+                    if (pathPos == -1)
+                    {
+                        pathPos = GetNextPathPoint(pathPos);
+                    }
+                    int? newWpi = pathPos == -1 ? null : currentPathWaypoints[pathPos];
+                    Waypoint[] mwp = map.Waypoints;
+                    Waypoint oldWp = !oldWpi.HasValue || oldWpi.Value < 0 || oldWpi.Value >= mwp.Length ? null : mwp[oldWpi.Value];
                     mapPanel.Invalidate(map, GetRefreshCells(oldWp, navigationWidget.MouseCell));
+                    Waypoint newWp = !newWpi.HasValue || newWpi.Value < 0 || newWpi.Value >= mwp.Length ? null : mwp[newWpi.Value];
                     mapPanel.Invalidate(map, GetRefreshCells(newWp, navigationWidget.MouseCell));
                 }
             }
@@ -511,8 +525,8 @@ namespace MobiusEditor.Tools
             {
                 return;
             }
-            // in route mode, only allow moving hte points of the current route.
-            if (routesMode && (currentPath == null || currentPath.Count == 0 || currentPath.All(wp => wp.Flags.HasFlag(WaypointFlag.Temporary))))
+            // in route mode, only allow moving the points of the current route.
+            if (routesMode && (currentPathWaypoints == null || currentPathWaypoints.All(wp => !wp.HasValue || wp.Value == -1)))
             {
                 return;
             }
@@ -556,14 +570,14 @@ namespace MobiusEditor.Tools
             {
                 Waypoint[] wp = map.Waypoints;
                 List<int> foundIndices = new List<int>();
-                int curSelIndex = waypointsCombo.SelectedIndex;
+                int si = waypointsCombo.SelectedIndex;
                 int curIndex = -1;
                 for (var i = 0; i < wp.Length; ++i)
                 {
                     if (wp[i].Cell == cell)
                     {
                         foundIndices.Add(i);
-                        if (i == curSelIndex)
+                        if (i == si)
                             curIndex = foundIndices.Count - 1;
                     }
                 }
@@ -572,10 +586,10 @@ namespace MobiusEditor.Tools
                     // The clicked cell was not a waypoint.
                     return;
                 }
-                int newSelectedIndex;
+                int nsi;
                 if (foundIndices.Count == 1 || curIndex == -1)
                 {
-                    newSelectedIndex = foundIndices[0];
+                    nsi = foundIndices[0];
                 }
                 else
                 {
@@ -584,17 +598,18 @@ namespace MobiusEditor.Tools
                         nextIndex = foundIndices.Count - 1;
                     else if (nextIndex >= foundIndices.Count)
                         nextIndex = 0;
-                    newSelectedIndex = foundIndices[nextIndex];
+                    nsi = foundIndices[nextIndex];
                 }
-                lastSelectedIndexWp = newSelectedIndex;
+                lastSelectedIndexWp = nsi;
+                // in routesMode, SelectPathWaypoint already does this, so no need to do it twice.
                 if (!routesMode)
                 {
-                    waypointsCombo.SelectedIndex = newSelectedIndex;
+                    waypointsCombo.SelectedIndex = nsi;
                 }
-                Waypoint selected = map.Waypoints[newSelectedIndex];
-                if (routesMode && currentPath != null && currentPath.Count > 0)
+                Waypoint selected = map.Waypoints[nsi];
+                if (routesMode && currentPathCells != null && currentPathCells.Count > 0)
                 {
-                    int? index = Enumerable.Range(0, currentPath.Count).Cast<int?>().FirstOrDefault(i => currentPath[(int)i] == selected);
+                    int? index = si == -1 ? null : Enumerable.Range(0, currentPathWaypoints.Count).Cast<int?>().FirstOrDefault(i => currentPathWaypoints[(int)i] == nsi);
                     currentPathPos = index.GetValueOrDefault(-1);
                     SelectPathWaypoint(false, false);
                 }
@@ -664,18 +679,9 @@ namespace MobiusEditor.Tools
         private void RoutesCombo_SelectedIndexChanged(object sender, EventArgs e)
         {
             string selected = routesCombo.SelectedItem as string;
-            bool hasTeam = selected != null && !TeamType.None.Equals(selected, StringComparison.OrdinalIgnoreCase);
-            if (hasTeam)
-            {
-                currentPath = plugin.Map.GetTeamTypeRoute(selected);
-                currentPathPos = -1;
-            }
-            else
-            {
-                currentPath = null;
-                currentPathPos = -1;
-            }
-            editTeamButton.Enabled = hasTeam;
+            currentPathCells = map.GetTeamTypeRoute(selected, out currentPathWaypoints);
+            currentPathPos = -1;
+            editTeamButton.Enabled = currentPathCells != null;
             SelectPathWaypoint(false, false);
             TeamType teamtype = selected == null ? null : plugin.Map.TeamTypes.FirstOrDefault(tt => tt.Name.Equals(selected, StringComparison.OrdinalIgnoreCase));
             TeamTypeToolTip = teamtype?.GetSummaryLabel(true);
@@ -696,18 +702,20 @@ namespace MobiusEditor.Tools
         private void ModeSwitchButton_Click(object sender, EventArgs e)
         {
             routesMode = !routesMode;
-            Waypoint selected = waypointsCombo.SelectedIndex == -1 ? null : map.Waypoints[waypointsCombo.SelectedIndex];
+            int si = waypointsCombo.SelectedIndex;
+            Waypoint sel = si == -1 ? null : map.Waypoints[si];
             if (!routesMode)
             {
-                currentPath = null;
+                currentPathWaypoints = null;
+                currentPathCells = null;
                 currentPathPos = -1;
             }
             else
             {
                 RoutesCombo_SelectedIndexChanged(this, new EventArgs());
-                if (currentPath != null && currentPath.Count > 0 && selected != null)
+                if (currentPathCells != null && currentPathCells.Count > 0 && sel != null)
                 {
-                    int? index = Enumerable.Range(0, currentPath.Count).Cast<int?>().FirstOrDefault(i => currentPath[(int)i] == selected);
+                    int? index = si == -1 ? null : Enumerable.Range(0, currentPathWaypoints.Count).Cast<int?>().FirstOrDefault(i => currentPathWaypoints[(int)i] == si);
                     currentPathPos = index.GetValueOrDefault(-1);
                 }
                 else
@@ -717,7 +725,7 @@ namespace MobiusEditor.Tools
                 }
                 SelectPathWaypoint(false, false);
             }
-            mapPanel.Invalidate(map, GetRefreshCells(selected, navigationWidget.MouseCell));
+            mapPanel.Invalidate(map, GetRefreshCells(sel, navigationWidget.MouseCell));
             OnModeChanged?.Invoke(this, new EventArgs());
         }
 
@@ -732,65 +740,163 @@ namespace MobiusEditor.Tools
 
         protected void SelectPathWaypoint(bool increment, bool jumpTo)
         {
-            if (currentPath == null || currentPath.Count == 0)
+            // no points found. Abort.
+            if (currentPathCells == null || currentPathCells.Count == 0)
             {
                 currentPathPos = -1;
                 AdjustRouteButton();
                 return;
             }
-            int currentPathPoint = currentPathPos;
-            if (increment)
+            int cpp = increment ? GetNextPathPoint(currentPathPos) : currentPathPos;
+
+            if (cpp == -1)
             {
-                currentPathPoint++;
+                if (!increment)
+                {
+                    // This is an inital pre-jump state. Find if a valid point exists.
+                    cpp = GetNextPathPoint(cpp);
+                }
+                if (cpp == -1)
+                {
+                    // GetNextPathPoint found nothing valid. Abort.
+                    currentPathPos = -1;
+                    AdjustRouteButton();
+                    return;
+                }
             }
-            if (currentPathPoint < 0 | currentPathPoint >= currentPath.Count)
+            // cpp should be at a valid value now.
+            int? waypoint = currentPathWaypoints[cpp];
+            int? cell = currentPathCells[cpp];
+            Waypoint wp = null;
+            if (waypoint.HasValue)
             {
-                currentPathPoint = 0;
+                // could be -1 for a "move to cell"; in that case nothing happens.
+                int wpval = waypoint.Value;
+                if (wpval >= 0 && wpval < map.Waypoints.Length)
+                {
+                    wp = map.Waypoints[wpval];
+                }                    
             }
-            Waypoint wp = currentPath[currentPathPoint];
-            if (!wp.Flags.HasFlag(WaypointFlag.Temporary))
+            // if a valid waypoint was found, select it.
+            if (wp != null)
             {
                 waypointsCombo.SelectedItem = wp;
             }
+            int selectedWp = waypointsCombo.SelectedIndex;
+            // if no waypoint was found, and the current selected waypoint is nowhere in the route,
+            // select the first valid route waypoint instead.
+            if (wp == null && (selectedWp == -1 || !currentPathWaypoints.Any(wpi => wpi == selectedWp)))
+            {
+                int validWp = GetNextPathPoint(-1);
+                int firstValid = validWp;
+                while (validWp != -1 && !currentPathWaypoints[validWp].HasValue || currentPathWaypoints[validWp].Value == -1)
+                {
+                    validWp = GetNextPathPoint(validWp);
+                    // avoid looping back to the front.
+                    if (firstValid == validWp)
+                    {
+                        break;
+                    }
+                }
+                if (validWp != -1 && currentPathWaypoints[validWp].HasValue && currentPathWaypoints[validWp].Value != -1)
+                {
+                    waypointsCombo.SelectedIndex = currentPathWaypoints[validWp].Value;
+                }
+            }
             if (jumpTo)
             {
-                JumpToWaypoint(wp);
+                if (wp != null)
+                {
+                    JumpToWaypoint(wp);
+                }
+                else if (cell.HasValue)
+                {
+                    JumpToCell(cell.Value);
+                }
             }
             if (increment)
             {
-                currentPathPos = currentPathPoint >= currentPath.Count ? -1 : currentPathPoint;
+                currentPathPos = cpp;
             }
             AdjustRouteButton();
         }
 
+        private int GetNextPathPoint(int currentPathPos)
+        {
+            // remove illegal values
+            int pathlen = currentPathWaypoints.Count;
+            int cpp = Math.Max(0, currentPathPos + 1);
+            // skip non-waypoint orders.
+            while (cpp < pathlen && currentPathWaypoints[cpp] == null)
+            {
+                cpp++;
+            }
+            // exceed: loop to start, find first valid again
+            if (cpp >= pathlen)
+            {
+                cpp = 0;
+                // skip non-waypoint orders.
+                while (cpp < pathlen && currentPathWaypoints[cpp] == null)
+                {
+                    cpp++;
+                }
+            }
+            // the only case in which this returns -1 is if there are no valid points to continue to.
+            if (cpp >= pathlen)
+            {
+                cpp = -1;
+            }
+            return cpp;
+        }
+
         protected void AdjustRouteButton()
         {
-            if (currentPath == null || currentPath.Count == 0)
+            if (currentPathCells == null || currentPathCells.Count == 0 || currentPathCells.All(c => !c.HasValue))
             {
-                jumpToRouteButton.Text = JMP_NEXT;
+                jumpToRouteButton.Text = JMP_FIRST;
                 jumpToRouteButton.Enabled = false;
                 return;
             }
-            jumpToRouteButton.Enabled = true;
-            bool hasNext = currentPathPos > -1 && currentPathPos + 1 < currentPath.Count;
-            bool noCurr = waypointsCombo.SelectedIndex == -1;
+            
+            int routeNext = GetNextPathPoint(currentPathPos);
+            jumpToRouteButton.Enabled = routeNext != -1;
+            // true if the next point is not a loop back to the start
+            bool hasNext = currentPathPos != -1 && routeNext > currentPathPos;
             Waypoint[] wps = map.Waypoints;
-            Waypoint wpNext = hasNext ? currentPath[currentPathPos + 1] : currentPath[0];
-            string waypoint = wpNext.Flags.HasFlag(WaypointFlag.Temporary) ? ("#" + wpNext.Cell) :
-                (Enumerable.Range(0, wps.Length).Cast<int?>().FirstOrDefault(i => wps[(int)i] == wpNext)?.ToString() ?? "?");
-            jumpToRouteButton.Text = (hasNext ? JMP_NEXT : JMP_FIRST) + " (" + waypoint + ")";
+            // contains a valid waypoint, or -1 for a cell number.
+            int? wpNext = routeNext == -1 ? null : currentPathWaypoints[routeNext];
+            string waypoint;
+            if (wpNext == -1)
+            {
+                int? cell = currentPathCells[routeNext];
+                waypoint = cell.HasValue ? ("#" + cell.Value) : "?";
+            }
+            else if (wpNext == null)
+            {
+                waypoint = "?";
+            }
+            else
+            {
+                waypoint = wpNext.ToString();
+            }
+            jumpToRouteButton.Text = (hasNext ? JMP_NEXT : JMP_FIRST) + " (" + waypoint+")";
+            bool noCurr = waypointsCombo.SelectedIndex == -1;
             currentRoutePointLabel.Text = CURRENT + (noCurr ? "-" : waypointsCombo.SelectedIndex.ToString());
         }
 
         protected void JumpToWaypoint(Waypoint wp)
         {
-            int cell = wp.Cell.GetValueOrDefault(-1);
-            if (cell == -1)
+            JumpToCell(wp?.Cell);
+        }
+
+        protected void JumpToCell(int? cell)
+        {
+            if (!cell.HasValue)
             {
                 return;
             }
             Point cellPoint;
-            if (!RenderMap.Metrics.GetLocation(cell, out cellPoint))
+            if (!RenderMap.Metrics.GetLocation(cell.Value, out cellPoint))
             {
                 return;
             }
@@ -855,7 +961,7 @@ namespace MobiusEditor.Tools
                 }
             }
             // Render Home waypoint box.
-            if (plugin.Map.BasicSection.SoloMission && (Layers.HasFlag(MapLayerFlag.HomeAreaBox) || selected.Flags.HasFlag(WaypointFlag.Home)))
+            if (plugin.Map.BasicSection.SoloMission && (Layers.HasFlag(MapLayerFlag.HomeAreaBox) || (selected != null && selected.Flags.HasFlag(WaypointFlag.Home))))
             {
                 Waypoint home = previewMap.Waypoints.FirstOrDefault(w => w.Flags.HasFlag(WaypointFlag.Home) && !w.IsPreview);
                 bool renderDummy = dummySelected != null && dummySelected.Cell.HasValue && dummySelected.Flags.HasFlag(WaypointFlag.Home)
@@ -873,10 +979,28 @@ namespace MobiusEditor.Tools
             Waypoint[] suppressRange = selectedRange;
             Waypoint[] redRangeBounds = new Waypoint[0];
             Waypoint[] redRangeIndic = new Waypoint[0];
-            Waypoint[] tracePath = currentPath == null ? null : currentPath.Where(wp => wp.Cell.HasValue).ToArray();
-            if (tracePath != null && tracePath.Length > 0)
+            if (routesMode && currentPathCells != null && currentPathWaypoints != null && currentPathCells.Any(wp => wp.HasValue))
             {
-                MapRenderer.RenderWaypointsPath(graphics, map, visibleCells, Globals.MapTileSize, tracePath);
+                Waypoint[] wps = plugin.Map.Waypoints;
+                MapRenderer.RenderWaypointsPath(graphics, map, visibleCells, Globals.MapTileSize, currentPathCells, currentPathWaypoints);
+                List<Waypoint> tracePath = new List<Waypoint>();
+                for (int i = 0; i < currentPathWaypoints.Count; ++i)
+                {
+                    int? cpw = currentPathWaypoints[i];
+                    int? cpc = currentPathCells[i];
+                    if (!cpw.HasValue || cpw.Value > wps.Length)
+                    {
+                        continue;
+                    }
+                    if (cpw.Value >= 0)
+                    {
+                        tracePath.Add(wps[cpw.Value]);
+                    }
+                    else if (cpw.Value == -1 && cpc.HasValue)
+                    {
+                        tracePath.Add(new Waypoint("##", map.Metrics, cpc));
+                    }  
+                }
                 suppressRange = selectedRange.Concat(tracePath).ToArray();
                 redRangeBounds = tracePath.Where(wp => !selectedRange.Contains(wp)).ToArray();
                 redRangeIndic = tracePath.ToArray();

@@ -27,13 +27,13 @@ namespace MobiusEditor.Model
 
         public int Height { get; private set; }
 
+        public int Length { get; private set; }
+
         public Point TopLeft => Point.Empty;
 
         public Size Size => new Size(Width, Height);
 
         public Rectangle Bounds => new Rectangle(TopLeft, Size);
-
-        public int Length => Width * Height;
 
         public bool Contains(Point location) => Contains(location.X, location.Y);
 
@@ -45,6 +45,7 @@ namespace MobiusEditor.Model
         {
             Width = width;
             Height = height;
+            Length = Width * Height;
         }
 
         public CellMetrics(Size size)

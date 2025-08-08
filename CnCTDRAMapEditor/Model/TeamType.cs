@@ -162,6 +162,15 @@ namespace MobiusEditor.Model
             return teamtype == null || teamtype.Equals(None, StringComparison.OrdinalIgnoreCase);
         }
 
+        public static TeamType GetTeamType(string name, Map map)
+        {
+            if (String.IsNullOrEmpty(name) || None.Equals(name, StringComparison.OrdinalIgnoreCase))
+            {
+                return null;
+            }
+            return map?.TeamTypes?.FirstOrDefault(t => name.Equals(t.Name, StringComparison.OrdinalIgnoreCase));
+        }
+
         public string Name { get; set; }
 
         public HouseType House { get; set; }

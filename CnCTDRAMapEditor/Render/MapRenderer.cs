@@ -2633,35 +2633,58 @@ namespace MobiusEditor.Render
             }
         }
 
-        public static void RenderWaypointsPath(Graphics graphics, Map map, Rectangle visibleCells, Size tileSize, IEnumerable<Waypoint> waypoints)
+        public static void RenderWaypointsPath(Graphics graphics, Map map, Rectangle visibleCells, Size tileSize, List<int?> cellRoute, List<int?> validWayPoints)
         {
-            if (waypoints == null || waypoints.Count() < 2)
+            if (cellRoute == null || validWayPoints == null || cellRoute.Count != validWayPoints.Count)
             {
                 return;
             }
-            List<PointF> points = waypoints.Where(wp => wp.Point.HasValue)
-                .Select(wp => new PointF(wp.Point.Value.X * tileSize.Width + tileSize.Width / 2, wp.Point.Value.Y * tileSize.Height + tileSize.Height / 2))
-                .ToList();
+            // Made as nullable to keep it synchronised with the input list, so properties of the original waypoints can still be checked.
+            List<PointF?> points = new List<PointF?>();
+            foreach (int? cell in cellRoute)
+            {
+                PointF? pt = null;
+                Point? p = cell.HasValue ? map.Metrics.GetLocation(cell.Value) : null;
+                if (p.HasValue)
+                {
+                    pt = new PointF(p.Value.X * tileSize.Width + tileSize.Width / 2, p.Value.Y * tileSize.Height + tileSize.Height / 2);
+                }
+                points.Add(pt);
+            }
+            // Can't draw lines without at least two points.
+            if (points.Where(p => p.HasValue).Count() < 2)
+            {
+                return;
+            }
             RectangleF rect = new RectangleF(
                 visibleCells.X * tileSize.Width,
                 visibleCells.Y * tileSize.Height,
                 visibleCells.Width * tileSize.Width,
                 visibleCells.Height * tileSize.Height);
-            PointF previous = points[0];
-            for (int i = 1; i < points.Count; ++i)
+            // will always succeed; we already tested that at least two exist.
+            int first = Enumerable.Range(0, points.Count).FirstOrDefault(i => points[i].HasValue);
+            PointF previous = points[first].Value;
+            float penSize = Math.Max(1f, tileSize.Width / 16.0f);
+            using (Pen pathPen = new Pen(Color.Red, penSize))
             {
-                PointF current = points[i];
-                PointF point1 = previous;
-                PointF point2 = current;
-                if (LineUtils.CohenSutherlandLineClip(rect, ref point1, ref point2))
+                pathPen.DashCap = DashCap.Round;
+                for (int i = first + 1; i < points.Count; ++i)
                 {
-                    float penSize = Math.Max(1f, tileSize.Width / 16.0f);
-                    using (Pen pathPen = new Pen(Color.Red, penSize))
+                    if (!points[i].HasValue)
                     {
+                        continue;
+                    }
+                    PointF current = points[i].Value;
+                    PointF point1 = previous;
+                    PointF point2 = current;
+                    bool isLoop = validWayPoints[i] == null;
+                    if (LineUtils.CohenSutherlandLineClip(rect, ref point1, ref point2))
+                    {
+                        pathPen.DashStyle = isLoop ? DashStyle.Dash : DashStyle.Solid;
                         graphics.DrawLine(pathPen, point1, point2);
                     }
+                    previous = current;
                 }
-                previous = current;
             }
         }
 
