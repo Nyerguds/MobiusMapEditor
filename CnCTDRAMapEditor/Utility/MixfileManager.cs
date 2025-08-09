@@ -14,6 +14,7 @@
 using System;
 using System.Collections;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.IO;
 using System.Linq;
 using System.Text.RegularExpressions;
@@ -24,6 +25,8 @@ namespace MobiusEditor.Utility
 {
     public class MixfileManager : IArchiveManager
     {
+
+        [DebuggerDisplay("{Name}")]
         private class MixInfo
         {
             public string Name { get; set; }

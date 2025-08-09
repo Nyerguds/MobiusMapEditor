@@ -54,6 +54,16 @@ namespace MobiusEditor.Dialogs
             public IntPtr lParam;
         }
 
+        private enum TreeNodes
+        {
+            Basic,
+            Crates,
+            Scenario,
+            Rules,
+            Briefing,
+            Players,
+        }
+
         private readonly IGamePlugin plugin;
         private readonly PropertyTracker<BasicSection> basicSettingsTracker;
         private readonly PropertyTracker<BriefingSection> briefingSettingsTracker;
@@ -99,21 +109,21 @@ namespace MobiusEditor.Dialogs
             this.currentSelection = settingsTreeView.SelectedNode?.Name;
             settingsTreeView.BeginUpdate();
             settingsTreeView.Nodes.Clear();
-            settingsTreeView.Nodes.Add("BASIC", "Basic");
+            settingsTreeView.Nodes.Add(nameof(TreeNodes.Basic), "Basic");
             if (this.plugin.GameInfo.GameType == GameType.RedAlert && isSoloMission)
             {
-                settingsTreeView.Nodes.Add("SCENARIO", "Scenario");
+                settingsTreeView.Nodes.Add(nameof(TreeNodes.Scenario), "Scenario");
             }
             if (this.plugin.GameInfo.GameType == GameType.SoleSurvivor)
             {
-                settingsTreeView.Nodes.Add("CRATES", "Crates");
+                settingsTreeView.Nodes.Add(nameof(TreeNodes.Crates), "Crates");
             }
-            settingsTreeView.Nodes.Add("RULES", "INI Rules && Tweaks");
+            settingsTreeView.Nodes.Add(nameof(TreeNodes.Rules), "INI Rules && Tweaks");
             if (this.plugin.GameInfo.GameType != GameType.SoleSurvivor)
             {
-                settingsTreeView.Nodes.Add("BRIEFING", "Briefing");
+                settingsTreeView.Nodes.Add(nameof(TreeNodes.Briefing), "Briefing");
             }
-            playersNode = settingsTreeView.Nodes.Add("Players");
+            playersNode = settingsTreeView.Nodes.Add(nameof(TreeNodes.Players), "Players");
             foreach (var player in this.plugin.Map.Houses)
             {
                 var playerNode = playersNode.Nodes.Add(player.Type.Name, player.Type.Name);
@@ -147,38 +157,42 @@ namespace MobiusEditor.Dialogs
                 try { ctrl.Dispose(); }
                 catch { /* ignore */ }
             }
-            this.currentSelection = settingsTreeView.SelectedNode?.Name;
-            switch (settingsTreeView.SelectedNode.Name)
+            string selected = settingsTreeView.SelectedNode?.Name;
+            currentSelection = selected;
+            switch (selected)
             {
-                case "BASIC":
+                case nameof(TreeNodes.Basic):
                     BasicSettings basicPanel = new BasicSettings(plugin, basicSettingsTracker);
                     settingsPanel.Controls.Add(basicPanel);
                     basicPanel.Dock = DockStyle.Fill;
                     break;
-                case "CRATES":
+                case nameof(TreeNodes.Crates):
                     // TODO make crates setting screen for SS.
                     CrateSettings cratesPanel = new CrateSettings(cratesSettingsTracker);
                     settingsPanel.Controls.Add(cratesPanel);
                     cratesPanel.Dock = DockStyle.Fill;
                     break;
-                case "SCENARIO":
+                case nameof(TreeNodes.Scenario):
                     ScenarioSettings scenPanel = new ScenarioSettings(basicSettingsTracker);
                     settingsPanel.Controls.Add(scenPanel);
                     scenPanel.Dock = DockStyle.Fill;
                     break;
-                case "RULES":
+                case nameof(TreeNodes.Rules):
                     RulesSettings rulesPanel = new RulesSettings(ExtraIniText, this.plugin.GameInfo.GameType == GameType.RedAlert);
                     rulesPanel.TextNeedsUpdating += this.RulesPanel_TextNeedsUpdating;
                     settingsPanel.Controls.Add(rulesPanel);
                     rulesPanel.Dock = DockStyle.Fill;
                      break;
-                case "BRIEFING":
+                case nameof(TreeNodes.Briefing):
                     BriefingSettings briefPanel = new BriefingSettings(plugin, briefingSettingsTracker);
                     settingsPanel.Controls.Add(briefPanel);
                     briefPanel.Dock = DockStyle.Fill;
                     break;
+                case nameof(TreeNodes.Players):
+                case null:
+                    break;
                 default:
-                    var player = plugin.Map.Houses.Where(h => h.Type.Name == settingsTreeView.SelectedNode.Name).FirstOrDefault();
+                    var player = plugin.Map.Houses.Where(h => h.Type.Name == selected).FirstOrDefault();
                     if (player != null)
                     {
                         PlayerSettings playerPanel = new PlayerSettings(plugin, houseSettingsTrackers[player]);

@@ -332,7 +332,7 @@ namespace MobiusEditor.Model
             string[] missions = Missions.Select(ms => String.Format("{0}: {1}", ms.Mission.Mission?.TrimEnd('.'), ms.GetFormattedArgument())).ToArray();
             if (!withLineBreaks)
             {
-                return House.Name + ": " + String.Join(", ", classes) + " → " + String.Join(", ", missions);
+                return House.Name + ": " + String.Join(", ", classes) + " → " + (missions.Length == 0 ? "<none>" :  String.Join(", ", missions));
             }
             const int BREAKLEN = 50;
             List<string> lines = new List<string>();
@@ -359,6 +359,10 @@ namespace MobiusEditor.Model
                 line.Clear();
             }
             line.Append(" → ");
+            if (missions.Length == 0)
+            {
+                line.Append("<none>");
+            }
             for (int i = 0; i < missions.Length; ++i)
             {
                 if (line.Length > BREAKLEN)

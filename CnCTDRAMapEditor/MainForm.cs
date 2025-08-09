@@ -1413,6 +1413,7 @@ namespace MobiusEditor
             }
             bool wasSolo = plugin.Map.BasicSection.SoloMission;
             bool wasExpanded = plugin.Map.BasicSection.ExpansionEnabled;
+            string oldBase = plugin.Map.BasicSection.BasePlayer;
             PropertyTracker<BasicSection> basicSettings = new PropertyTracker<BasicSection>(plugin.Map.BasicSection);
             PropertyTracker<BriefingSection> briefingSettings = new PropertyTracker<BriefingSection>(plugin.Map.BriefingSection);
             PropertyTracker<SoleSurvivor.CratesSection> cratesSettings = null;
@@ -1486,6 +1487,21 @@ namespace MobiusEditor
                         }
                         // Maybe make more advanced logic to check if any bibs changed, and don't clear if not needed?
                         hasChanges = true;
+                    }
+                    if (!String.Equals(oldBase, plugin.Map.BasicSection.BasePlayer))
+                    {
+                        IEnumerable<Point> basePoints = plugin.Map.Buildings
+                            .OfType<Building>()
+                            .Where(lo => !lo.Occupier.IsPrebuilt)
+                            .SelectMany(lo => OccupierSet.GetOccupyPoints(lo.Location, lo.Occupier)).Distinct();
+                        if (basePoints.Count() > 0)
+                        {
+                            if (refreshPoints == null)
+                            {
+                                refreshPoints = new HashSet<Point>();
+                            }
+                            refreshPoints.UnionWith(basePoints);
+                        }
                     }
                     if (hasChanges)
                     {

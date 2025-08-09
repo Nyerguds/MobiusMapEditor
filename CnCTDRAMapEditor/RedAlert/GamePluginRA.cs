@@ -345,22 +345,19 @@ namespace MobiusEditor.RedAlert
 
         private void SetMissionRules(INI iniText, bool isSolo, bool expansionEnabled, List<string> errors, ref bool modified)
         {
-            if (this.rulesIni != null)
-            {
-                UpdateRules(rulesIni, IniRules, this.Map, false, null);
-            }
+            UpdateRules(rulesIni, IniRules, false, Map, false, null);
             if (expansionEnabled)
             {
                 if (this.aftermathRulesIni != null)
                 {
-                    UpdateRules(aftermathRulesIni, IniAftermath, this.Map, false, null);
+                    UpdateRules(aftermathRulesIni, IniAftermath, true, Map, false, null);
                 }
                 if (this.aftermathMpRulesIni != null && !isSolo)
                 {
-                    UpdateRules(aftermathMpRulesIni, IniAftrMulti, this.Map, false, null);
+                    UpdateRules(aftermathMpRulesIni, IniAftrMulti, true, Map, false, null);
                 }
             }
-            List<string> newErrors = UpdateRules(iniText, IniMap, this.Map, false, null);
+            List<string> newErrors = UpdateRules(iniText, IniMap, true, Map, false, null);
             if (newErrors.Count > 0)
             {
                 modified = true;
@@ -399,19 +396,16 @@ namespace MobiusEditor.RedAlert
                 CleanIniContents(extraIniText);
             }
             Dictionary<string, bool> bibBackups = Map.BuildingTypes.ToDictionary(b => b.Name, b => b.HasBib, StringComparer.OrdinalIgnoreCase);
-            if (this.rulesIni != null)
-            {
-                UpdateRules(rulesIni, IniRules, this.Map, forFootprintTest, refreshPoints);
-            }
+            UpdateRules(rulesIni, IniRules, false, Map, forFootprintTest, refreshPoints);
             if (expansionEnabled)
             {
-                if (this.aftermathRulesIni != null)
+                if (aftermathRulesIni != null)
                 {
-                    UpdateRules(aftermathRulesIni, IniAftermath,this.Map, forFootprintTest, refreshPoints);
+                    UpdateRules(aftermathRulesIni, IniAftermath, true, Map, forFootprintTest, refreshPoints);
                 }
                 if (this.aftermathMpRulesIni != null && !isSolo)
                 {
-                    UpdateRules(aftermathMpRulesIni, IniAftrMulti, this.Map, forFootprintTest, refreshPoints);
+                    UpdateRules(aftermathMpRulesIni, IniAftrMulti, true, Map, forFootprintTest, refreshPoints);
                 }
             }
             // save the buildings as they are without the map's own rule tweaks.
@@ -419,7 +413,7 @@ namespace MobiusEditor.RedAlert
             List<string> errors = null;
             if (extraIniText != null)
             {
-                errors = UpdateRules(extraIniText, IniMap, this.Map, forFootprintTest, refreshPoints);
+                errors = UpdateRules(extraIniText, IniMap, true, Map, forFootprintTest, refreshPoints);
             }
             footPrintsChanged = false;
             foreach (BuildingType bType in Map.BuildingTypes)
@@ -488,13 +482,23 @@ namespace MobiusEditor.RedAlert
         private INI aftermathMpRulesIni;
 
         // Any time a new plugin is made it starts with these defaults. They are then further adapted by the rule reads.
-        private readonly LandIniSection LandClear = new LandIniSection(90, 80, 60, 00, true);
-        private readonly LandIniSection LandRough = new LandIniSection(80, 70, 40, 00, false);
-        private readonly LandIniSection LandRoad = new LandIniSection(100, 100, 100, 00, true);
-        private readonly LandIniSection LandWater = new LandIniSection(00, 00, 00, 100, false);
-        private readonly LandIniSection LandRock = new LandIniSection(00, 00, 00, 00, false);
-        private readonly LandIniSection LandBeach = new LandIniSection(80, 70, 40, 00, false);
-        private readonly LandIniSection LandRiver = new LandIniSection(00, 00, 00, 00, false);
+
+        private static LandIniSection BaseLandClear = new LandIniSection(90, 80, 60, 00, true);
+        private static LandIniSection BaseLandRough = new LandIniSection(80, 70, 40, 00, false);
+        private static LandIniSection BaseLandRoad = new LandIniSection(100, 100, 100, 00, true);
+        private static LandIniSection BaseLandWater = new LandIniSection(00, 00, 00, 100, false);
+        private static LandIniSection BaseLandRock = new LandIniSection(00, 00, 00, 00, false);
+        private static LandIniSection BaseLandBeach = new LandIniSection(80, 70, 40, 00, false);
+        private static LandIniSection BaseLandRiver = new LandIniSection(00, 00, 00, 00, false);
+
+        private readonly LandIniSection LandClear = BaseLandClear.Clone();
+        private readonly LandIniSection LandRough = BaseLandRough.Clone();
+        private readonly LandIniSection LandRoad = BaseLandRoad.Clone();
+        private readonly LandIniSection LandWater = BaseLandWater.Clone();
+        private readonly LandIniSection LandRock = BaseLandRock.Clone();
+        private readonly LandIniSection LandBeach = BaseLandBeach.Clone();
+        private readonly LandIniSection LandRiver = BaseLandRiver.Clone();
+
 
         public static bool CheckForRAMap(INI contents)
         {
@@ -510,17 +514,17 @@ namespace MobiusEditor.RedAlert
         {
             List<string> errors = new List<string>();
             // This returns errors in original rules files. Ignore for now.
-            this.rulesIni = ReadRulesFile(Globals.TheArchiveManager.ReadFileClassic(IniRules));
-            errors.AddRange(UpdateRules(rulesIni, IniRules, this.Map, false, null));
-            this.aftermathRulesIni = ReadRulesFile(Globals.TheArchiveManager.ReadFileClassic(IniAftermath));
-            if (this.Map.BasicSection.ExpansionEnabled && this.aftermathRulesIni != null)
+            rulesIni = ReadRulesFile(Globals.TheArchiveManager.ReadFileClassic(IniRules));
+            errors.AddRange(UpdateRules(rulesIni, IniRules, false, Map, false, null));
+            aftermathRulesIni = ReadRulesFile(Globals.TheArchiveManager.ReadFileClassic(IniAftermath));
+            if (Map.BasicSection.ExpansionEnabled && aftermathRulesIni != null)
             {
-                errors.AddRange(UpdateRules(aftermathRulesIni, IniAftermath, this.Map, false, null));
+                errors.AddRange(UpdateRules(aftermathRulesIni, IniAftermath, true, Map, false, null));
             }
-            this.aftermathMpRulesIni = ReadRulesFile(Globals.TheArchiveManager.ReadFileClassic(IniAftrMulti));
-            if (this.aftermathMpRulesIni != null && this.Map.BasicSection.ExpansionEnabled && !this.Map.BasicSection.SoloMission)
+            aftermathMpRulesIni = ReadRulesFile(Globals.TheArchiveManager.ReadFileClassic(IniAftrMulti));
+            if (aftermathMpRulesIni != null && this.Map.BasicSection.ExpansionEnabled && !this.Map.BasicSection.SoloMission)
             {
-                errors.AddRange(UpdateRules(aftermathMpRulesIni, IniAftrMulti, this.Map, false, null));
+                errors.AddRange(UpdateRules(aftermathMpRulesIni, IniAftrMulti, true, Map, false, null));
             }
             // save the buildings as they are without the map's own rule tweaks.
             bareRuleBuildings = this.Map.BuildingTypes.Select(b => b.Clone()).ToDictionary(b => b.Name, StringComparer.OrdinalIgnoreCase);
@@ -753,8 +757,6 @@ namespace MobiusEditor.RedAlert
         {
             List<string> errors = new List<string>();
             Map.BeginUpdate();
-            // Fetch some rules.ini information
-            errors.AddRange(UpdateBuildingRules(ini, IniMap, this.Map, false, null));
             // Just gonna remove this; I assume it'll be invalid after a re-save anyway.
             ini.Sections.Extract("Digest");
             HouseType player = this.LoadBasic(ini);
@@ -2261,6 +2263,11 @@ namespace MobiusEditor.RedAlert
                     {
                         basePlayer = basePlayerLookup;
                     }
+                    else if ("ITALY".Equals(basePlayerStr, StringComparison.OrdinalIgnoreCase))
+                    {
+                        basePlayer = HouseTypes.Ukraine;
+                        errors.Add(string.Format("Base section has obsolete house '{0}'; substituting with '{1}'.", basePlayerStr, basePlayer.Name));
+                    }
                 }
             }
             Map.BasicSection.BasePlayer = basePlayer.Name;
@@ -2892,43 +2899,49 @@ namespace MobiusEditor.RedAlert
         /// <param name="ini">ini file</param>
         /// <param name="map">Current map; used for ini parsing.</param>
         /// <param name="forFootprintTest">Run in test mode, where bibs are changed but nothing is actually updated on the map.</param>
-        /// <param name="footPrintsChanged">Returns true of the rule changes modified any building footprint sizes.</param>
         /// <returns>Any errors returned by the parsing process.</returns>
-        private List<string> UpdateRules(INI ini, string iniName, Map map, bool forFootprintTest, HashSet<Point> refreshPoints)
+        private List<string> UpdateRules(INI ini, string iniName, bool cumulative, Map map, bool forFootprintTest, HashSet<Point> refreshPoints)
         {
             List<string> errors = new List<string>();
+            if (!forFootprintTest)
+            {
+                errors.AddRange(this.UpdateLandTypeRules(ini, iniName, cumulative, map));
+                errors.AddRange(this.UpdateGeneralRules(ini, iniName, cumulative, map));
+            }
+            errors.AddRange(UpdateBuildingRules(ini, iniName, cumulative, map, forFootprintTest, refreshPoints));
             if (ini == null)
             {
-                errors.Add("Rules file is null!");
-            }
-            else
-            {
-                if (!forFootprintTest)
-                {
-                    errors.AddRange(this.UpdateLandTypeRules(ini, iniName, map));
-                    errors.AddRange(this.UpdateGeneralRules(ini, iniName, map));
-                }
-                errors.AddRange(UpdateBuildingRules(ini, iniName, map, forFootprintTest, refreshPoints));
+                // ignore actual errors.
+                errors.Clear();
+                errors.Add("Rules file \"" + iniName + "\" is null!");
             }
             return errors;
         }
 
-        private List<string> UpdateLandTypeRules(INI ini, string iniName, Map map)
+        private List<string> UpdateLandTypeRules(INI ini, string iniName, bool cumulative, Map map)
         {
             List<string> errors = new List<string>();
-            this.ReadLandType(ini, iniName, map, "Clear", LandClear, errors);
-            this.ReadLandType(ini, iniName, map, "Rough", LandRough, errors);
-            this.ReadLandType(ini, iniName, map, "Road", LandRoad, errors);
-            this.ReadLandType(ini, iniName, map, "Water", LandWater, errors);
-            this.ReadLandType(ini, iniName, map, "Rock", LandRock, errors);
-            this.ReadLandType(ini, iniName, map, "Beach", LandBeach, errors);
-            this.ReadLandType(ini, iniName, map, "River", LandRiver, errors);
+            this.ReadLandType(ini, iniName, map, "Clear", LandClear, cumulative ? null : BaseLandClear, errors);
+            this.ReadLandType(ini, iniName, map, "Rough", LandRough, cumulative ? null : BaseLandClear, errors);
+            this.ReadLandType(ini, iniName, map, "Road", LandRoad, cumulative ? null : BaseLandClear, errors);
+            this.ReadLandType(ini, iniName, map, "Water", LandWater, cumulative ? null : BaseLandClear, errors);
+            this.ReadLandType(ini, iniName, map, "Rock", LandRock, cumulative ? null : BaseLandClear, errors);
+            this.ReadLandType(ini, iniName, map, "Beach", LandBeach, cumulative ? null : BaseLandClear, errors);
+            this.ReadLandType(ini, iniName, map, "River", LandRiver, cumulative ? null : BaseLandClear, errors);
             return errors;
         }
 
-        private void ReadLandType(INI ini, string iniName, Map map, string landType, LandIniSection landRules, List<string> errors)
+        private void ReadLandType(INI ini, string iniName, Map map, string landType, LandIniSection landRules, LandIniSection baseLandRules, List<string> errors)
         {
-            if (ini == null || landRules == null)
+            if (landRules == null)
+            {
+                return;
+            }
+            if (baseLandRules != null)
+            {
+                landRules.CloneFrom(baseLandRules);
+            }
+            if (ini == null)
             {
                 return;
             }
@@ -2944,7 +2957,7 @@ namespace MobiusEditor.RedAlert
                 {
                     foreach ((string iniKey, string error) in parseErrors)
                     {
-                        errors.Add("Tules error on [" + landType + "] in "+ iniName + ": " + error.TrimEnd('.') + ". Value for \"" + iniKey + "\" is ignored.");
+                        errors.Add("Rules error on [" + landType + "] in "+ iniName + ": " + error.TrimEnd('.') + ". Value for \"" + iniKey + "\" is ignored.");
                     }
                 }
             }
@@ -2958,25 +2971,25 @@ namespace MobiusEditor.RedAlert
             }
         }
 
-        private IEnumerable<string> UpdateGeneralRules(INI ini, string iniName, Map map)
+        private IEnumerable<string> UpdateGeneralRules(INI ini, string iniName, bool cumulative, Map map)
         {
             List<string> errors = new List<string>();
             int? goldVal = GetIntRulesValue(ini, iniName, "General", "GoldValue", false, errors);
-            map.TiberiumOrGoldValue = goldVal ?? Constants.DefaultGoldValue;
+            map.TiberiumOrGoldValue = goldVal ?? (cumulative ? map.TiberiumOrGoldValue : Constants.DefaultGoldValue);
             int? gemVal = GetIntRulesValue(ini, iniName, "General", "GemValue", false, errors);
-            map.GemValue = gemVal ?? Constants.DefaultGemValue;
+            map.GemValue = gemVal ?? (cumulative ? map.GemValue : Constants.DefaultGemValue);
             int? radius = GetIntRulesValue(ini, iniName, "General", "DropZoneRadius", false, errors);
-            map.DropZoneRadius = radius ?? Constants.DefaultDropZoneRadius;
+            map.DropZoneRadius = radius ?? (cumulative ? map.DropZoneRadius :  Constants.DefaultDropZoneRadius);
             int? gapRadius = GetIntRulesValue(ini, iniName, "General", "GapRadius", false, errors);
-            map.GapRadius = gapRadius ?? Constants.DefaultGapRadius;
+            map.GapRadius = gapRadius ?? (cumulative ? map.GapRadius : Constants.DefaultGapRadius);
             int? jamRadius = GetIntRulesValue(ini, iniName, "General", "RadarJamRadius", false, errors);
-            map.RadarJamRadius = jamRadius ?? Constants.DefaultJamRadius;
+            map.RadarJamRadius = jamRadius ?? (cumulative ? map.RadarJamRadius : Constants.DefaultJamRadius);
             return errors;
         }
 
         private int? GetIntRulesValue(INI ini, string iniName, string sec, string key, bool percentage, List<string> errors)
         {
-            INISection section = ini.Sections[sec];
+            INISection section = ini?.Sections[sec];
             if (section == null)
             {
                 return null;
@@ -3003,10 +3016,11 @@ namespace MobiusEditor.RedAlert
             return null;
         }
 
-        private static IEnumerable<string> UpdateBuildingRules(INI ini, string iniName, Map map, bool forFootPrintTest, HashSet<Point> refreshPoints)
+        private static IEnumerable<string> UpdateBuildingRules(INI ini, string iniName, bool cumulative, Map map, bool forFootPrintTest, HashSet<Point> refreshPoints)
         {
             List<string> errors = new List<string>();
-            Dictionary<string, BuildingType> originals = BuildingTypes.GetTypes().ToDictionary(b => b.Name, StringComparer.OrdinalIgnoreCase);
+            IEnumerable<BuildingType> origs = cumulative ? map.BuildingTypes.Select(b => b.Clone()) : BuildingTypes.GetTypes();
+            Dictionary<string, BuildingType> originals = origs.ToDictionary(b => b.Name, StringComparer.OrdinalIgnoreCase);
             List<(Point Location, Building Occupier)> buildings = map.Buildings.OfType<Building>()
                  .OrderBy(pb => pb.Location.Y * map.Metrics.Width + pb.Location.X).ToList();
             // Remove all buildings
@@ -3014,10 +3028,8 @@ namespace MobiusEditor.RedAlert
             {
                 foreach ((Point p, Building b) in buildings)
                 {
-                    if (refreshPoints != null)
-                    {
-                        refreshPoints.UnionWith(OccupierSet.GetOccupyPoints(p, b));
-                    }
+                    // this currently refreshes way too much... should proably fix that.
+                    refreshPoints?.UnionWith(OccupierSet.GetOccupyPoints(p, b));
                     map.Buildings.Remove(b);
                 }
             }
@@ -3028,7 +3040,7 @@ namespace MobiusEditor.RedAlert
                 {
                     continue;
                 }
-                INISection bldSettings = ini[bType.Name];
+                INISection bldSettings = ini == null ? null : ini[bType.Name];
                 // Reset
                 if (!forFootPrintTest)
                 {
@@ -3041,10 +3053,8 @@ namespace MobiusEditor.RedAlert
                 {
                     if (!forFootPrintTest)
                     {
-                        if (refreshPoints != null)
-                        {
-                            refreshPoints.UnionWith(ChangeBib(map, buildings, bType, orig.HasBib));
-                        }
+                        IEnumerable<Point> updpoints = ChangeBib(map, buildings, bType, orig.HasBib);
+                        refreshPoints?.UnionWith(updpoints);
                     }
                     else if (bType.HasBib != orig.HasBib)
                     {
@@ -3086,10 +3096,8 @@ namespace MobiusEditor.RedAlert
                 bool hasBib = bldSettings.Keys.Contains("Bib") ? bld.Bib : orig.HasBib;
                 if (!forFootPrintTest)
                 {
-                    if (refreshPoints != null)
-                    {
-                        refreshPoints.UnionWith(ChangeBib(map, buildings, bType, hasBib));
-                    }
+                    IEnumerable<Point> updpoints = ChangeBib(map, buildings, bType, hasBib);
+                    refreshPoints?.UnionWith(updpoints);
                 }
                 else if (bType.HasBib != hasBib)
                 {
@@ -3103,10 +3111,7 @@ namespace MobiusEditor.RedAlert
             // Try re-adding the buildings.
             foreach ((Point p, Building b) in buildings)
             {
-                if (refreshPoints != null)
-                {
-                    refreshPoints.UnionWith(OccupierSet.GetOccupyPoints(p, b));
-                }
+                refreshPoints?.UnionWith(OccupierSet.GetOccupyPoints(p, b));
                 map.Buildings.Add(p, b);
             }
             return errors;

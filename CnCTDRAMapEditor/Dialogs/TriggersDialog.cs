@@ -167,8 +167,8 @@ namespace MobiusEditor.Dialogs
             lblTooLong.Visible = SelectedTrigger != null && SelectedTrigger.Name != null && SelectedTrigger.Name.Length > maxLength;
             if (SelectedTrigger != null)
             {
-                houseComboBox.DataBindings.Add("SelectedItem", SelectedTrigger, "House");
-                persistenceComboBox.DataBindings.Add("SelectedValue", SelectedTrigger, "PersistentType");
+                houseComboBox.DataBindings.Add("SelectedValue", SelectedTrigger, "House", true, DataSourceUpdateMode.OnPropertyChanged);
+                persistenceComboBox.DataBindings.Add("SelectedValue", SelectedTrigger, "PersistentType", true, DataSourceUpdateMode.OnPropertyChanged);
                 // Set event 1
                 TriggerEvent evt1 = SelectedTrigger.Event1.Clone();
                 event1ComboBox.SelectedItem = SelectedTrigger.Event1.EventType;
@@ -187,7 +187,7 @@ namespace MobiusEditor.Dialogs
                 {
                     case GameType.TiberianDawn:
                     case GameType.SoleSurvivor:
-                        teamComboBox.DataBindings.Add("SelectedItem", SelectedTrigger.Action1, "Team");
+                        teamComboBox.DataBindings.Add("SelectedValue", SelectedTrigger.Action1, "Team", true, DataSourceUpdateMode.OnPropertyChanged);
                         string teamDescrTd = GetTeamLabel(SelectedTrigger.Action1.Team);
                         if (teamDescrTd != null && teamComboBox.ClientRectangle.Contains(teamComboBox.PointToClient(Cursor.Position)))
                         {
@@ -195,7 +195,7 @@ namespace MobiusEditor.Dialogs
                         }
                         break;
                     case GameType.RedAlert:
-                        typeComboBox.DataBindings.Add("SelectedValue", SelectedTrigger, "EventControl");
+                        typeComboBox.DataBindings.Add("SelectedValue", SelectedTrigger, "EventControl", true, DataSourceUpdateMode.OnPropertyChanged);
                         // Set event 2
                         TriggerEvent evt2 = SelectedTrigger.Event2.Clone();
                         event2ComboBox.SelectedItem = SelectedTrigger.Event2.EventType;
@@ -1006,7 +1006,7 @@ namespace MobiusEditor.Dialogs
                                 eventValueComboBox.DataSource = bldData;
                                 correctedData = ListItem.CheckInList(data, bldData);
                                 triggerEvent.Data = correctedData;
-                                eventValueComboBox.DataBindings.Add("SelectedValue", triggerEvent, "Data");
+                                eventValueComboBox.DataBindings.Add("SelectedValue", triggerEvent, "Data", true, DataSourceUpdateMode.OnPropertyChanged);
                                 eventValueComboBox.SelectedValue = correctedData;
                                 break;
                             default:
@@ -1036,7 +1036,7 @@ namespace MobiusEditor.Dialogs
                                 eventValueComboBox.Visible = true;
                                 string[] teamData = TeamType.None.Yield().Concat(plugin.Map.TeamTypes.Select(t => t.Name)).ToArray();
                                 eventValueComboBox.DataSource = teamData;
-                                eventValueComboBox.DataBindings.Add("SelectedItem", triggerEvent, "Team"); correctedData = 0;
+                                eventValueComboBox.DataBindings.Add("SelectedValue", triggerEvent, "Team", true, DataSourceUpdateMode.OnPropertyChanged);
                                 correctedData = 0;
                                 triggerEvent.Data = correctedData;
                                 string correctedTeam = teamData.FirstOrDefault(tm => tm.Equals(team, StringComparison.OrdinalIgnoreCase)) ?? TeamType.None;
@@ -1061,7 +1061,7 @@ namespace MobiusEditor.Dialogs
                                 eventValueComboBox.DataSource = houseData;
                                 correctedData = ListItem.CheckInList(data, houseData);
                                 triggerEvent.Data = correctedData;
-                                eventValueComboBox.DataBindings.Add("SelectedValue", triggerEvent, "Data");
+                                eventValueComboBox.DataBindings.Add("SelectedValue", triggerEvent, "Data", true, DataSourceUpdateMode.OnPropertyChanged);
                                 eventValueComboBox.SelectedValue = correctedData;
                                 break;
                             case RedAlert.EventTypes.TEVENT_BUILDING_EXISTS:
@@ -1073,7 +1073,7 @@ namespace MobiusEditor.Dialogs
                                 eventValueComboBox.DataSource = bldData;
                                 correctedData = ListItem.CheckInList(data, bldData);
                                 triggerEvent.Data = correctedData;
-                                eventValueComboBox.DataBindings.Add("SelectedValue", triggerEvent, "Data");
+                                eventValueComboBox.DataBindings.Add("SelectedValue", triggerEvent, "Data", true, DataSourceUpdateMode.OnPropertyChanged);
                                 eventValueComboBox.SelectedValue = correctedData;
                                 break;
                             case RedAlert.EventTypes.TEVENT_BUILD_UNIT:
@@ -1084,7 +1084,7 @@ namespace MobiusEditor.Dialogs
                                 eventValueComboBox.DataSource = unitData;
                                 correctedData = ListItem.CheckInList(data, unitData);
                                 triggerEvent.Data = correctedData;
-                                eventValueComboBox.DataBindings.Add("SelectedValue", triggerEvent, "Data");
+                                eventValueComboBox.DataBindings.Add("SelectedValue", triggerEvent, "Data", true, DataSourceUpdateMode.OnPropertyChanged);
                                 eventValueComboBox.SelectedValue = correctedData;
                                 break;
                             case RedAlert.EventTypes.TEVENT_BUILD_INFANTRY:
@@ -1095,7 +1095,7 @@ namespace MobiusEditor.Dialogs
                                 eventValueComboBox.DataSource = infData;
                                 correctedData = ListItem.CheckInList(data, infData);
                                 triggerEvent.Data = correctedData;
-                                eventValueComboBox.DataBindings.Add("SelectedValue", triggerEvent, "Data");
+                                eventValueComboBox.DataBindings.Add("SelectedValue", triggerEvent, "Data", true, DataSourceUpdateMode.OnPropertyChanged);
                                 eventValueComboBox.SelectedValue = correctedData;
                                 break;
                             case RedAlert.EventTypes.TEVENT_BUILD_AIRCRAFT:
@@ -1107,7 +1107,7 @@ namespace MobiusEditor.Dialogs
                                 eventValueComboBox.DataSource = airData;
                                 correctedData = ListItem.CheckInList(data, airData);
                                 triggerEvent.Data = correctedData;
-                                eventValueComboBox.DataBindings.Add("SelectedValue", triggerEvent, "Data");
+                                eventValueComboBox.DataBindings.Add("SelectedValue", triggerEvent, "Data", true, DataSourceUpdateMode.OnPropertyChanged);
                                 eventValueComboBox.SelectedValue = correctedData;
                                 break;
                             case RedAlert.EventTypes.TEVENT_NUNITS_DESTROYED:
@@ -1181,7 +1181,7 @@ namespace MobiusEditor.Dialogs
                                 actionValueComboBox.DataSource = teamData;
                                 string correctedTeam = teamData.FirstOrDefault(tm => tm.Equals(team, StringComparison.OrdinalIgnoreCase)) ?? TeamType.None;
                                 triggerAction.Team = correctedTeam;
-                                actionValueComboBox.DataBindings.Add("SelectedItem", triggerAction, "Team");
+                                actionValueComboBox.DataBindings.Add("SelectedValue", triggerAction, "Team", true, DataSourceUpdateMode.OnPropertyChanged);
                                 actionValueComboBox.SelectedItem = correctedTeam;
                                 string teamTooltip = GetTeamLabel(correctedTeam);
                                 actionArgType = ArgType.TeamType;
@@ -1205,7 +1205,7 @@ namespace MobiusEditor.Dialogs
                                 actionValueComboBox.DataSource = houseData;
                                 correctedData = ListItem.CheckInList(data, houseData);
                                 triggerAction.Data = correctedData;
-                                actionValueComboBox.DataBindings.Add("SelectedValue", triggerAction, "Data");
+                                actionValueComboBox.DataBindings.Add("SelectedValue", triggerAction, "Data", true, DataSourceUpdateMode.OnPropertyChanged);
                                 actionValueComboBox.SelectedValue = correctedData;
                                 break;
                             case RedAlert.ActionTypes.TACTION_FORCE_TRIGGER:
@@ -1215,7 +1215,7 @@ namespace MobiusEditor.Dialogs
                                 actionValueComboBox.DataSource = trigsData;
                                 string correctedTrigger = trigsData.Contains(trig, StringComparer.OrdinalIgnoreCase) ? trig : Trigger.None;
                                 triggerAction.Trigger = correctedTrigger;
-                                actionValueComboBox.DataBindings.Add("SelectedItem", triggerAction, "Trigger");
+                                actionValueComboBox.DataBindings.Add("SelectedValue", triggerAction, "Trigger", true, DataSourceUpdateMode.OnPropertyChanged);
                                 actionValueComboBox.SelectedItem = correctedTrigger;
                                 actionArgType = ArgType.Trigger;
                                 string trigTooltip = RefreshTriggerLabel(correctedTrigger);
@@ -1237,7 +1237,7 @@ namespace MobiusEditor.Dialogs
                                 actionValueComboBox.DataSource = wpsData;
                                 correctedData = ListItem.CheckInList(data, wpsData);
                                 triggerAction.Data = correctedData;
-                                actionValueComboBox.DataBindings.Add("SelectedValue", triggerAction, "Data");
+                                actionValueComboBox.DataBindings.Add("SelectedValue", triggerAction, "Data", true, DataSourceUpdateMode.OnPropertyChanged);
                                 actionValueComboBox.SelectedValue = correctedData;
                                 break;
                             case RedAlert.ActionTypes.TACTION_1_SPECIAL:
@@ -1251,7 +1251,7 @@ namespace MobiusEditor.Dialogs
                                 actionValueComboBox.DataSource = superData;
                                 correctedData = ListItem.CheckInList(data, superData);
                                 triggerAction.Data = correctedData;
-                                actionValueComboBox.DataBindings.Add("SelectedValue", triggerAction, "Data");
+                                actionValueComboBox.DataBindings.Add("SelectedValue", triggerAction, "Data", true, DataSourceUpdateMode.OnPropertyChanged);
                                 actionValueComboBox.SelectedValue = correctedData;
                                 break;
                             case RedAlert.ActionTypes.TACTION_PLAY_MUSIC:
@@ -1268,7 +1268,7 @@ namespace MobiusEditor.Dialogs
                                 actionValueComboBox.DataSource = musData;
                                 correctedData = ListItem.CheckInList(data, musData);
                                 triggerAction.Data = correctedData;
-                                actionValueComboBox.DataBindings.Add("SelectedValue", triggerAction, "Data");
+                                actionValueComboBox.DataBindings.Add("SelectedValue", triggerAction, "Data", true, DataSourceUpdateMode.OnPropertyChanged);
                                 actionValueComboBox.SelectedValue = correctedData;
                                 break;
                             case RedAlert.ActionTypes.TACTION_PLAY_MOVIE:
@@ -1287,7 +1287,7 @@ namespace MobiusEditor.Dialogs
                                 actionValueComboBox.DataSource = movData;
                                 correctedData = ListItem.CheckInList(data, movData);
                                 triggerAction.Data = correctedData;
-                                actionValueComboBox.DataBindings.Add("SelectedValue", triggerAction, "Data");
+                                actionValueComboBox.DataBindings.Add("SelectedValue", triggerAction, "Data", true, DataSourceUpdateMode.OnPropertyChanged);
                                 actionValueComboBox.SelectedValue = correctedData;
                                 break;
                             case RedAlert.ActionTypes.TACTION_PLAY_SOUND:
@@ -1300,7 +1300,7 @@ namespace MobiusEditor.Dialogs
                                 actionValueComboBox.DataSource = vocData;
                                 correctedData = ListItem.CheckInList(data, vocData);
                                 triggerAction.Data = correctedData;
-                                actionValueComboBox.DataBindings.Add("SelectedValue", triggerAction, "Data");
+                                actionValueComboBox.DataBindings.Add("SelectedValue", triggerAction, "Data", true, DataSourceUpdateMode.OnPropertyChanged);
                                 actionValueComboBox.SelectedValue = correctedData;
                                 break;
                             case RedAlert.ActionTypes.TACTION_PLAY_SPEECH:
@@ -1313,7 +1313,7 @@ namespace MobiusEditor.Dialogs
                                 actionValueComboBox.DataSource = voxData;
                                 correctedData = ListItem.CheckInList(data, voxData);
                                 triggerAction.Data = correctedData;
-                                actionValueComboBox.DataBindings.Add("SelectedValue", triggerAction, "Data");
+                                actionValueComboBox.DataBindings.Add("SelectedValue", triggerAction, "Data", true, DataSourceUpdateMode.OnPropertyChanged);
                                 actionValueComboBox.SelectedValue = correctedData;
                                 break;
                             case RedAlert.ActionTypes.TACTION_PREFERRED_TARGET:
@@ -1324,7 +1324,7 @@ namespace MobiusEditor.Dialogs
                                 actionValueComboBox.DataSource = quarryData;
                                 correctedData = ListItem.CheckInList(data, quarryData);
                                 triggerAction.Data = correctedData;
-                                actionValueComboBox.DataBindings.Add("SelectedValue", triggerAction, "Data");
+                                actionValueComboBox.DataBindings.Add("SelectedValue", triggerAction, "Data", true, DataSourceUpdateMode.OnPropertyChanged);
                                 actionValueComboBox.SelectedValue = correctedData;
                                 break;
                             case RedAlert.ActionTypes.TACTION_BASE_BUILDING:
@@ -1335,7 +1335,7 @@ namespace MobiusEditor.Dialogs
                                 actionValueComboBox.DataSource = trueFalseData;
                                 correctedData = ListItem.CheckInList(data, trueFalseData);
                                 triggerAction.Data = correctedData;
-                                actionValueComboBox.DataBindings.Add("SelectedValue", triggerAction, "Data");
+                                actionValueComboBox.DataBindings.Add("SelectedValue", triggerAction, "Data", true, DataSourceUpdateMode.OnPropertyChanged);
                                 actionValueComboBox.SelectedValue = correctedData;
                                 break;
                             case RedAlert.ActionTypes.TACTION_TEXT_TRIGGER:
@@ -1347,7 +1347,7 @@ namespace MobiusEditor.Dialogs
                                 actionValueComboBox.DataSource = txtData;
                                 correctedData = ListItem.CheckInList(data, txtData);
                                 triggerAction.Data = correctedData;
-                                actionValueComboBox.DataBindings.Add("SelectedValue", triggerAction, "Data");
+                                actionValueComboBox.DataBindings.Add("SelectedValue", triggerAction, "Data", true, DataSourceUpdateMode.OnPropertyChanged);
                                 actionValueComboBox.SelectedValue = correctedData;
                                 break;
                             case RedAlert.ActionTypes.TACTION_ADD_TIMER:

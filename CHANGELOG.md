@@ -725,9 +725,12 @@ Unreleased
 * Smudge objects can now be painted by dragging the mouse around. Like for the map tiles, this logic prevents overlapping placement when drag-placing multi-cell objects such as the bibs.
 * Smudge objects can now be bulk-removed by moving around the cursor while the right mouse button is pressed down.
 * Right-clicking on placed down buildings that have overlay equivalents, or vice versa (such as the fields and haystacks) will now select the corresponding item even if the item you clicked is the other type version.
-* Added support for the expanded House colours in C&C1 accesible by putting ColorScheme / SecondaryScheme / RadarScheme in the ini under the house's settings section. This only works in Classic graphics.
+* Added support for the expanded House colors in C&C1 accesible by putting ColorScheme / SecondaryScheme / RadarScheme in the ini under the house's settings section. This only works in Classic graphics.
 * If the editor loses focus while dragging an object, this will no longer prevent the undo action for that drag operation from being stored. It will instead immediately end the drag operation at the current mouse position.
 * Removed the ability to place walls as structures (by disabling "OverlayWallsOnly") in Red Alert maps; it simply crashes the game.
 * Fixed an issue where certain options or rules changes in the Map dialog would not refresh on the map afterwards.
 * Improved teamtype tooltips in the Triggers window to show the full list of orders they execute.
 * Added routes editing mode into the Waypoints tool, allowing easy visualisation and editing of waypoint paths used by teamtypes.
+* Changing the "Base" House in the Map setting for Red Alert maps now properly refreshes the colors of the unbuilt buildings.
+* In the Triggers editor, changes in dropdowns made using the mouse scrollwheel will now always save correctly.
+* Fixed Red Alert rules reading ignoring the read rules.ini values and always resetting to defaults when reading embedded map rules. The rules information is now properly cumulative.
