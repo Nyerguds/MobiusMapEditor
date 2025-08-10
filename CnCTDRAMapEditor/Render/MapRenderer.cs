@@ -2691,7 +2691,7 @@ namespace MobiusEditor.Render
         public static void RenderAllBuildingEffectRadiuses(Graphics graphics, Map map, Rectangle visibleCells, Size tileSize, int effectRadius, Building selected)
         {
             foreach ((Point topLeft, Building building) in map.Buildings.OfType<Building>()
-                .Where(b => (b.Occupier.Type.Flags & BuildingTypeFlag.GapGenerator) != BuildingTypeFlag.None))
+                .Where(b => b.Occupier.Type.IsGapGenerator))
             {
                 RenderBuildingEffectRadius(graphics, visibleCells, tileSize, effectRadius, building, topLeft, selected);
             }
@@ -2699,7 +2699,7 @@ namespace MobiusEditor.Render
 
         public static void RenderBuildingEffectRadius(Graphics graphics, Rectangle visibleCells, Size tileSize, int effectRadius, Building building, Point topLeft, Building selected)
         {
-            if ((building.Type.Flags & BuildingTypeFlag.GapGenerator) != BuildingTypeFlag.GapGenerator)
+            if (!building.Type.IsGapGenerator)
             {
                 return;
             }
@@ -2731,7 +2731,7 @@ namespace MobiusEditor.Render
         public static void RenderAllUnitEffectRadiuses(Graphics graphics, Map map, Rectangle visibleCells, Size tileSize, int jamRadius, Unit selected)
         {
             foreach ((Point topLeft, Unit unit) in map.Technos.OfType<Unit>()
-                .Where(b => (b.Occupier.Type.Flags & (UnitTypeFlag.IsGapGenerator | UnitTypeFlag.IsJammer)) != UnitTypeFlag.None))
+                .Where(b => b.Occupier.Type.IsGapGenerator || b.Occupier.Type.IsJammer))
             {
                 RenderUnitEffectRadius(graphics, tileSize, jamRadius, unit, topLeft, visibleCells, selected);
             }
@@ -2739,8 +2739,8 @@ namespace MobiusEditor.Render
 
         public static void RenderUnitEffectRadius(Graphics graphics, Size tileSize, int jamRadius, Unit unit, Point cell, Rectangle visibleCells, Unit selected)
         {
-            bool isJammer = unit.Type.Flags.HasFlag(UnitTypeFlag.IsJammer);
-            bool isGapGen = unit.Type.Flags.HasFlag(UnitTypeFlag.IsGapGenerator);
+            bool isJammer = unit.Type.IsJammer;
+            bool isGapGen = unit.Type.IsGapGenerator;
             if (!isJammer && !isGapGen)
             {
                 return;

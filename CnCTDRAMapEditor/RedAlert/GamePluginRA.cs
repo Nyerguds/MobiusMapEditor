@@ -447,9 +447,11 @@ namespace MobiusEditor.RedAlert
             extraIniText.Sections.Remove("Steam");
             extraIniText.Sections.Remove("TeamTypes");
             extraIniText.Sections.Remove("Trigs");
+            extraIniText.Sections.Remove("Template");
             extraIniText.Sections.Remove("MapPack");
             extraIniText.Sections.Remove("Terrain");
             extraIniText.Sections.Remove("OverlayPack");
+            extraIniText.Sections.Remove("Overlay");
             extraIniText.Sections.Remove("Smudge");
             extraIniText.Sections.Remove("Units");
             extraIniText.Sections.Remove("Aircraft");
@@ -502,7 +504,37 @@ namespace MobiusEditor.RedAlert
 
         public static bool CheckForRAMap(INI contents)
         {
-            return INITools.CheckForIniInfo(contents, "Basic", "NewINIFormat", "3");
+            return GetNewIniFormat(contents) >= 0;
+        }
+
+        private static int GetNewIniFormat(INI contents) 
+        {
+            const string NEWFORMAT = "NewIniFormat";
+            const string NEW = "New";
+            // if neither key is found, this returns -1.
+            string iniFormatStr = null;
+            INISection section = contents?["Basic"];
+            if (section != null)
+            {
+                if (section.Keys.Contains(NEWFORMAT))
+                {
+                    iniFormatStr = section[NEWFORMAT];
+                }
+                else if (section.Keys.Contains(NEW))
+                {
+                    iniFormatStr = section[NEW];
+                }
+            }
+            if (iniFormatStr == null)
+            {
+                return -1;
+            }
+            int newIniFormat;
+            if (Int32.TryParse(iniFormatStr, out newIniFormat))
+            {
+                newIniFormat = Math.Max(0, newIniFormat);
+            }
+            return newIniFormat;
         }
 
         static GamePluginRA()
@@ -581,7 +613,7 @@ namespace MobiusEditor.RedAlert
             BasicSection basicSection = new BasicSection();
             basicSection.SetDefault();
             IEnumerable<HouseType> houseTypes = HouseTypes.GetTypes();
-            basicSection.Player = houseTypes.Where(ht => !ht.Flags.HasFlag(HouseTypeFlag.Special)).First().Name;
+            basicSection.Player = houseTypes.Where(ht => !ht.IsSpecial).First().Name;
             basicSection.BasePlayer = HouseTypes.GetClassicOpposingPlayer(basicSection.Player);
             string[] cellEventTypes =
             {
@@ -761,6 +793,7 @@ namespace MobiusEditor.RedAlert
             ini.Sections.Extract("Digest");
             HouseType player = this.LoadBasic(ini);
             bool expansionEnabled = LoadAftermath(ini);
+            int newIniFormat = GetNewIniFormat(ini);
             LoadMapInfo(ini, errors, ref modified);
             LoadSteamInfo(ini);
             List<TeamType> teamTypes = this.LoadTeamTypes(ini, errors, ref modified);
@@ -782,6 +815,13 @@ namespace MobiusEditor.RedAlert
             // Terrain objects in RA have no triggers.
             //HashSet<string> checkTerrTrigs = Trigger.None.Yield().Concat(Map.FilterTerrainTriggers(triggers).Select(t => t.Name)).ToHashSet(StringComparer.OrdinalIgnoreCase);
             LoadTerrain(ini, errors, ref modified);
+            if (newIniFormat > 1)
+            {
+                LoadOverlayPack(ini, errors, ref modified);
+            }
+            // Original game checks this as "if (NewINIFormat < 2 || ini.Is_Present("Overlay"))"
+            // which is fairly pointless; if the section exists, it'll get read, and if it
+            // doesn't, nothing will be found in it, regardless of the NewINIFormat value.
             LoadOverlay(ini, errors, ref modified);
             LoadWaypoints(ini, errors, ref modified);
             HashSet<string> checkCellTrigs = Map.FilterCellTriggers(triggers).Select(t => t.Name).ToHashSet(StringComparer.OrdinalIgnoreCase);
@@ -2445,7 +2485,7 @@ namespace MobiusEditor.RedAlert
             }
         }
 
-        private void LoadOverlay(INI ini, List<string> errors, ref bool modified)
+        private void LoadOverlayPack(INI ini, List<string> errors, ref bool modified)
         {
             INISection overlayPackSection = ini.Sections.Extract("OverlayPack");
             if (overlayPackSection == null)
@@ -2510,6 +2550,66 @@ namespace MobiusEditor.RedAlert
                     continue;
                 }
                 Map.Overlay[i] = new Overlay { Type = overlayType, Icon = 0 };
+            }
+        }
+
+        private void LoadOverlay(INI ini, List<string> errors, ref bool modified)
+        {
+            INISection overlaySection = ini.Sections.Extract("Overlay");
+            if (overlaySection == null)
+            {
+                return;
+            }
+            int lastLine = Map.Metrics.Height - 1;
+            foreach (KeyValuePair<string, string> kvp in overlaySection)
+            {
+                int cell;
+                if (!int.TryParse(kvp.Key, out cell))
+                {
+                    errors.Add(string.Format("Cell for overlay cannot be parsed. Key: '{0}', value: '{1}'; skipping.", kvp.Key, kvp.Value));
+                    modified = true;
+                    continue;
+                }
+                if (!Map.Metrics.GetLocation(cell, out Point point))
+                {
+                    errors.Add(string.Format("Cell for overlay is not inside the map bounds. Key: '{0}', value: '{1}'; skipping.", kvp.Key, kvp.Value));
+                    modified = true;
+                    continue;
+                }
+                if (point.Y == 0 || point.Y == lastLine)
+                {
+                    errors.Add(string.Format("Overlay can not be placed on the first and or last lines of the map. Key: '{0}', value: '{1}'; skipping.", kvp.Key, kvp.Value));
+                    modified = true;
+                    continue;
+                }
+                OverlayType overlayType = Map.OverlayTypes.Where(t => t.Equals(kvp.Value)).FirstOrDefault();
+                if (overlayType == null)
+                {
+                    errors.Add(string.Format("Overlay '{0}' references unknown overlay.", kvp.Value));
+                    modified = true;
+                    continue;
+                }
+                if (Globals.FilterTheaterObjects && !overlayType.ExistsInTheater)
+                {
+                    errors.Add(string.Format("Overlay '{0}' is not available in the set theater; skipping.", overlayType.Name));
+                    modified = true;
+                    continue;
+                }
+                if ((overlayType.IsWall || overlayType.IsSolid) && Map.Buildings.ObjectAt(cell, out ICellOccupier techno))
+                {
+                    string desc = overlayType.IsWall ? "Wall" : "Solid overlay";
+                    if (techno is Building building)
+                    {
+                        errors.Add(string.Format("{0} '{1}' overlaps structure '{2}' at cell {3}; skipping.", desc, overlayType.Name, building.Type.Name, cell));
+                    }
+                    else
+                    {
+                        errors.Add(string.Format("{0} '{1}' overlaps unknown techno in cell {2}; skipping.", desc, overlayType.Name, cell));
+                    }
+                    modified = true;
+                    continue;
+                }
+                Map.Overlay[cell] = new Overlay { Type = overlayType, Icon = 0 };
             }
         }
 
@@ -2643,7 +2743,7 @@ namespace MobiusEditor.RedAlert
             string defaultEdge = Globals.MapEdges.FirstOrDefault() ?? string.Empty;
             foreach (Model.House house in Map.Houses)
             {
-                if (house.Type.Flags.HasFlag(HouseTypeFlag.Special))
+                if (house.Type.IsSpecial)
                 {
                     continue;
                 }
@@ -3613,7 +3713,16 @@ namespace MobiusEditor.RedAlert
                     waypointsSection[i.ToString()] = waypoint.Cell.Value.ToString();
                 }
             }
-            foreach (Model.House house in Map.Houses.Where(h => !h.Type.Flags.HasFlag(HouseTypeFlag.Special)).OrderBy(h => h.Type.ID))
+            SaveHouses(ini);
+            SaveIniBriefing(ini);
+            SaveMapPack(ini);
+            SaveOverlayPack(ini);
+            
+        }
+
+        private void SaveHouses(INI ini)
+        {
+            foreach (Model.House house in Map.Houses.Where(h => !h.Type.IsSpecial).OrderBy(h => h.Type.ID))
             {
                 House gameHouse = (House)house;
                 bool enabled = house.Enabled;
@@ -3637,41 +3746,6 @@ namespace MobiusEditor.RedAlert
                         houseSection["Allies"] = String.Join(",", alliesBuild.ToArray());
                     }
                 }
-            }
-            SaveIniBriefing(ini);
-            SaveMapPack(ini);
-            byte? goldToUse = (byte?)Map.OverlayTypes.FirstOrDefault(ovl => ovl.IsTiberiumOrGold)?.ID;
-            byte? gemToUse = (byte?)Map.OverlayTypes.FirstOrDefault(ovl => ovl.IsGem)?.ID;
-            using (MemoryStream stream = new MemoryStream())
-            {
-                using (BinaryWriter writer = new BinaryWriter(stream, Encoding.UTF8, true))
-                {
-                    for (int i = 0; i < Map.Metrics.Length; ++i)
-                    {
-                        Overlay overlay = Map.Overlay[i];
-                        if (overlay != null)
-                        {
-                            byte id = (byte)overlay.Type.ID;
-                            // reduce to single type for better compression
-                            if (overlay.Type.IsTiberiumOrGold && goldToUse.HasValue)
-                            {
-                                id = goldToUse.Value;
-                            }
-                            if (overlay.Type.IsGem && gemToUse.HasValue)
-                            {
-                                id = gemToUse.Value;
-                            }
-                            writer.Write(id);
-                        }
-                        else
-                        {
-                            writer.Write(byte.MaxValue);
-                        }
-                    }
-                }
-                stream.Flush();
-                ini.Sections.Remove("OverlayPack");
-                INITools.CompressLCWSection(ini.Sections.Add("OverlayPack"), stream.ToArray());
             }
         }
 
@@ -3826,6 +3900,45 @@ namespace MobiusEditor.RedAlert
             }
         }
 
+        private void SaveOverlayPack(INI ini)
+        {
+            byte? goldToUse = (byte?)Map.OverlayTypes.FirstOrDefault(ovl => ovl.IsTiberiumOrGold)?.ID;
+            byte? gemToUse = (byte?)Map.OverlayTypes.FirstOrDefault(ovl => ovl.IsGem)?.ID;
+            byte[] overlayPack;
+            using (MemoryStream stream = new MemoryStream())
+            {
+                using (BinaryWriter writer = new BinaryWriter(stream, Encoding.UTF8, true))
+                {
+                    for (int i = 0; i < Map.Metrics.Length; ++i)
+                    {
+                        Overlay overlay = Map.Overlay[i];
+                        if (overlay != null)
+                        {
+                            byte id = (byte)overlay.Type.ID;
+                            // reduce to single type for better compression
+                            if (overlay.Type.IsTiberiumOrGold && goldToUse.HasValue)
+                            {
+                                id = goldToUse.Value;
+                            }
+                            if (overlay.Type.IsGem && gemToUse.HasValue)
+                            {
+                                id = gemToUse.Value;
+                            }
+                            writer.Write(id);
+                        }
+                        else
+                        {
+                            writer.Write(byte.MaxValue);
+                        }
+                    }
+                }
+                stream.Flush();
+                overlayPack = stream.ToArray();
+            }
+            ini.Sections.Remove("OverlayPack");
+            INITools.CompressLCWSection(ini.Sections.Add("OverlayPack"), overlayPack);
+        }
+
         private void SaveMapPreview(Stream stream, bool renderAll)
         {
             Map.GenerateMapPreview(this).Save(stream);
@@ -3962,8 +4075,8 @@ namespace MobiusEditor.RedAlert
             {
                 errors.Add("Map name is empty. If you continue, the filename will be filled in as map name.\n");
             }
-            UnitType[] antUnitTypes = Map.UnitTypes.Where(un => (un.Flags & UnitTypeFlag.NoRules) != 0).ToArray();
-            BuildingType[] antBuildingTypes = Map.BuildingTypes.Where(bl => (bl.Flags & BuildingTypeFlag.NoRules) != 0).ToArray();
+            UnitType[] antUnitTypes = Map.UnitTypes.Where(un => un.HasNoRules).ToArray();
+            BuildingType[] antBuildingTypes = Map.BuildingTypes.Where(bl => bl.hasNoRules).ToArray();
             string[] antWeapons = { "Mandible" };
             CheckMissingRules(errors, null, antUnitTypes, null, antBuildingTypes, antWeapons);
             if (errors.Count > 0)

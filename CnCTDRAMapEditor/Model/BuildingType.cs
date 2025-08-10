@@ -42,7 +42,7 @@ namespace MobiusEditor.Model
         GapGenerator     /**/ = 1 << 7,
         /// <summary>Do not show this building in the lists if its graphics were not found in the currently loaded theater.</summary>
         TheaterDependent /**/ = 1 << 8,
-        /// <summary>This building type is a wall. Only show if placing walls as buildings is enabled.</summary>
+        /// <summary>This building type is a wall. Normally always handled as overlay, not as building.</summary>
         Wall             /**/ = 1 << 9,
         /// <summary>This type typically has no rules present in the rules file, and needs specific checks on that.</summary>
         NoRules          /**/ = 1 << 10,
@@ -85,6 +85,7 @@ namespace MobiusEditor.Model
         /// <summary>Actual footprint of the building, without bibs involved.</summary>
         public bool[,] BaseOccupyMask { get; private set; }
         public Size Size => BaseOccupyMask.GetDimensions();
+        /// <summary>Has a bib attached.</summary>
         public bool HasBib
         {
             get { return Flags.HasFlag(BuildingTypeFlag.Bib); }
@@ -104,21 +105,34 @@ namespace MobiusEditor.Model
         }
 
         public string OwnerHouse { get; private set; }
-        public bool IsTheaterDependent => Flags.HasFlag(BuildingTypeFlag.TheaterDependent);
         public string FactoryOverlay { get; private set; }
         public Bitmap Thumbnail { get; set; }
         public bool ExistsInTheater { get; set; }
-        public bool IsArmed => false; // Not actually true, but irrelevant for practical purposes; their Mission is not set in the ini file.
+        public bool IsArmed => false; // Not always true, but irrelevant for practical purposes; their Mission is not set in the ini file.
         public bool IsAircraft => false;
         public bool IsFixedWing => false;
         public bool IsHarvester => false;
         public bool IsExpansionOnly => false;
-
+        
+        /// <summary>Produces structures.</summary>
+        public bool IsFactory => Flags.HasFlag(BuildingTypeFlag.Factory);
+        /// <summary>Is a fake building.</summary>
         public bool IsFake => Flags.HasFlag(BuildingTypeFlag.Fake);
+        /// <summary>Has a rotating turret, and accepts a Facing value in the ini file.</summary>
         public bool HasTurret => Flags.HasFlag(BuildingTypeFlag.Turret);
+        /// <summary>Only has a single frame of graphics.</summary>
         public bool IsSingleFrame => Flags.HasFlag(BuildingTypeFlag.SingleFrame);
+        /// <summary>Does not adjust to house colors.</summary>
         public bool CanRemap => !Flags.HasFlag(BuildingTypeFlag.NoRemap);
+        /// <summary>Do not show this building in the lists if its graphics were not found in the currently loaded theater.</summary>
+        public bool IsTheaterDependent => Flags.HasFlag(BuildingTypeFlag.TheaterDependent);
+        /// <summary>Can show a gap area-of-effect radius indicator.</summary>
+        public bool IsGapGenerator => Flags.HasAnyFlags(BuildingTypeFlag.GapGenerator);
+        /// <summary>This building type is a wall. Normally always handled as overlay, not as building.</summary>
         public bool IsWall => Flags.HasFlag(BuildingTypeFlag.Wall);
+        /// <summary>This type typically has no rules present in the rules file, and needs specific checks on that.</summary>
+        public bool hasNoRules => Flags.HasFlag(BuildingTypeFlag.NoRules);
+
         public bool GraphicsFound { get; private set; }
         /// <summary>
         /// Value for Z-sorting; can be used to make buildings specifically show as "flatter" than others so pieces sticking out at the top don't overlap objects on these cells.

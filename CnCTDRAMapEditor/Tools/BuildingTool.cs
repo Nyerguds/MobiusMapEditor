@@ -242,7 +242,7 @@ namespace MobiusEditor.Tools
             {
                 // Fix for House "None" set on unbuilt buildings.
                 HouseType newHouse = mockBuilding.House;
-                if (newHouse == null || newHouse.Flags.HasFlag(HouseTypeFlag.BaseHouse | HouseTypeFlag.Special))
+                if (newHouse == null || (newHouse.IsBaseHouse && newHouse.IsSpecial))
                 {
                     string opposing = plugin.GameInfo.GetClassicOpposingPlayer(plugin.Map.BasicSection.Player);
                     newHouse = plugin.Map.Houses.Where(h => h.Type.Equals(opposing)).FirstOrDefault()?.Type ?? plugin.Map.Houses.First().Type;
@@ -934,7 +934,7 @@ namespace MobiusEditor.Tools
             }
             else if (neutralOverlay)
             {
-                HouseType neutral = map.Houses.FirstOrDefault(h => h.Type.IsCivilianHouse)?.Type ?? mockBuilding.House;
+                HouseType neutral = map.Houses.FirstOrDefault(h => h.Type.IsCivilian)?.Type ?? mockBuilding.House;
                 mockBuilding.Strength = 0x100;
                 mockBuilding.Direction = map.BuildingDirectionTypes.FirstOrDefault();
                 mockBuilding.Trigger = Trigger.None;

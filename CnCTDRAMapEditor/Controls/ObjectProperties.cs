@@ -474,7 +474,7 @@ namespace MobiusEditor.Controls
             {
                 // Fix for restoring "None" to a normal House. Only needed for TD.
                 HouseType selected = houseComboBox.SelectedValue as HouseType;
-                if (selected != null && selected.Flags.HasFlag(HouseTypeFlag.BaseHouse | HouseTypeFlag.Special))
+                if (selected != null && selected.IsBaseHouse && selected.IsSpecial)
                 {
                     houseComboBox.DataBindings.Clear();
                     ListItem<HouseType>[] houses = Plugin.Map.Houses.Select(t => new ListItem<HouseType>(t.Type, t.Type.Name)).ToArray();

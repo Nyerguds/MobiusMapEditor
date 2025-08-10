@@ -13,9 +13,7 @@
 // GNU General Public License along with permitted additional restrictions
 // with this program. If not, see https://github.com/electronicarts/CnC_Remastered_Collection
 using System;
-using System.Collections.Generic;
 using System.Diagnostics;
-using System.Linq;
 
 namespace MobiusEditor.Model
 {
@@ -24,7 +22,7 @@ namespace MobiusEditor.Model
     {
         /// <summary>No flags set.</summary>
         None          /**/ = 0,
-        /// <summary>This is a House for special purposes that doesn't actually exist as playable side in the game, meaning it should not be included in normal lists.</summary>
+        /// <summary>This is the Neutral side house. This information can be used to get a default House for certain neutral objects.</summary>
         Civilian      /**/ = 1 << 1,
         /// <summary>This is a House for special purposes that doesn't actually exist as playable side in the game, meaning it should not be included in normal lists.</summary>
         Special       /**/ = 1 << 2,
@@ -40,7 +38,14 @@ namespace MobiusEditor.Model
         public int ID { get; private set; }
         public string Name { get; private set; }
         public string DisplayName { get { return nameId == null ? Name : Globals.TheGameTextManager[this.nameId]; } }
-        public bool IsCivilianHouse => Flags.HasFlag(HouseTypeFlag.Civilian);
+        /// <summary>This is the Neutral side house. This information can be used to get a default House for certain neutral objects.</summary>
+        public bool IsCivilian => Flags.HasFlag(HouseTypeFlag.Civilian);
+        /// <summary>This is a House for special purposes that doesn't actually exist as playable side in the game, meaning it should not be included in normal lists.</summary>
+        public bool IsSpecial => Flags.HasFlag(HouseTypeFlag.Special);
+        /// <summary>This House type can be used in the House alliances lists.</summary>
+        public bool IsForAlliances => Flags.HasFlag(HouseTypeFlag.ForAlliances);
+        /// <summary>This is a special empty House, used if the plugin does not assign any House to unbuilt structures. This will typically be marked as Special too.</summary>
+        public bool IsBaseHouse => Flags.HasFlag(HouseTypeFlag.BaseHouse);
         public HouseTypeFlag Flags { get; private set; }
         public string UnitTeamColor { get; private set; }
         public string BuildingTeamColor { get; private set; }

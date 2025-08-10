@@ -31,12 +31,13 @@ namespace MobiusEditor.Model
         public string DisplayName { get; private set; }
         public string OwnerHouse { get; private set; }
         public UnitTypeFlag Flags { get; private set; }
-        public bool IsArmed => Flags.HasFlag(UnitTypeFlag.IsArmed);
+        public bool IsArmed => Flags.HasFlag(UnitTypeFlag.Armed);
         public bool IsAircraft => false;
         public bool IsFixedWing => false;
-        public bool IsExpansionOnly => Flags.HasFlag(UnitTypeFlag.IsExpansionUnit);
+        public bool IsExpansionOnly => Flags.HasFlag(UnitTypeFlag.ExpansionOnly);
         public bool IsHarvester => false;
         public bool CanRemap => !Flags.HasFlag(UnitTypeFlag.NoRemap);
+        /// <summary>Uses the buildings remap of the owning House.</summary>
         public bool BuildingRemap => Flags.HasFlag(UnitTypeFlag.BuildingRemap);
         public string ClassicGraphicsSource { get; set; }
         public byte[] ClassicGraphicsRemap { get; set; }

@@ -508,7 +508,7 @@ namespace MobiusEditor.Model
             HouseType = houseType;
             HouseType[] allHouseTypes = houseTypes.ToArray();
             HouseTypesIncludingSpecials = houseTypes.ToArray();
-            HouseTypes = allHouseTypes.Where(h => !h.Flags.HasFlag(HouseTypeFlag.Special)).ToArray();
+            HouseTypes = allHouseTypes.Where(h => !h.IsSpecial).ToArray();
             FlagColors = flagColors == null ? new ITeamColor[8] : flagColors;
             TheaterTypes = new List<TheaterType>(theaterTypes);
             TemplateTypes = new List<TemplateType>(templateTypes);
@@ -564,14 +564,14 @@ namespace MobiusEditor.Model
             TeamTypes = new List<TeamType>();
             House[] allHouses = allHouseTypes.Select(t => { House h = (House)Activator.CreateInstance(HouseType, t); h.SetDefault(); return h; }).ToArray();
             HousesIncludingSpecials = allHouses;
-            Houses = allHouses.Where(h => !h.Type.Flags.HasFlag(HouseTypeFlag.Special)).ToArray();
+            Houses = allHouses.Where(h => !h.Type.IsSpecial).ToArray();
             // Build houses list for allies. Special houses not shown in the normal houses lists (e.g. 'Allies' and 'Soviet') are put first.
-            List<House> housesAlly = allHouses.Where(h => h.Type.Flags.HasFlag(HouseTypeFlag.ForAlliances)).ToList();
-            List<House> housesAllySpecial = housesAlly.Where(h => h.Type.Flags.HasFlag(HouseTypeFlag.Special)).OrderBy(h => h.Type.ID).ToList();
-            List<House> housesAllyNormal = housesAlly.Where(h => !h.Type.Flags.HasFlag(HouseTypeFlag.Special)).OrderBy(h => h.Type.ID).ToList();
+            List<House> housesAlly = allHouses.Where(h => h.Type.IsForAlliances).ToList();
+            List<House> housesAllySpecial = housesAlly.Where(h => h.Type.IsSpecial).OrderBy(h => h.Type.ID).ToList();
+            List<House> housesAllyNormal = housesAlly.Where(h => !h.Type.IsSpecial).OrderBy(h => h.Type.ID).ToList();
             // put special types at the start.
             HousesForAlliances = housesAllySpecial.Concat(housesAllyNormal).ToArray();
-            HouseNone = allHouses.Where(h => h.Type.Flags.HasFlag(HouseTypeFlag.Special | HouseTypeFlag.BaseHouse)).FirstOrDefault();
+            HouseNone = allHouses.Where(h => h.Type.IsSpecial && h.Type.IsBaseHouse).FirstOrDefault();
             Waypoint[] wp = waypoints.ToArray();
             Waypoints = new Waypoint[wp.Length];
             for (int i = 0; i < wp.Length; ++i)
@@ -2243,7 +2243,7 @@ namespace MobiusEditor.Model
                     Infantry[] inf = infantryGroup.Infantry;
                     for (int i = 0; i < inf.Length; ++i)
                     {
-                        if (inf[i] != null && inf[i].Type.Flags.HasFlag(UnitTypeFlag.IsExpansionUnit))
+                        if (inf[i] != null && inf[i].Type.IsExpansionOnly)
                         {
                             inf[i] = null;
                             changed = true;

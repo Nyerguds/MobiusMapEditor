@@ -26,25 +26,25 @@ namespace MobiusEditor.Model
         /// <summary>No flags set.</summary>
         None            /**/ = 0,
         /// <summary>Is a fixed-wing airplane. This affects the default orders for placing it on the map.</summary>
-        IsFixedWing     /**/ = 1 << 0,
+        FixedWing     /**/ = 1 << 0,
         /// <summary>Has a turret drawn on the unit.</summary>
-        HasTurret       /**/ = 1 << 1,
+        Turret       /**/ = 1 << 1,
         /// <summary>Needs to render two turrets. Requires a <see cref="UnitType.TurretOffset"/> greater than zero, which will be applied to the second turret with 180° added to the rotated position.</summary>
-        HasDoubleTurret /**/ = 1 << 2,
+        DoubleTurret /**/ = 1 << 2,
         /// <summary>Can attack units. This affects the default orders for placing it on the map.</summary>
-        IsArmed         /**/ = 1 << 3,
+        Armed         /**/ = 1 << 3,
         /// <summary>Can harvest resources. This affects the default orders for placing it on the map.</summary>
-        IsHarvester     /**/ = 1 << 4,
+        Harvester     /**/ = 1 << 4,
         /// <summary>Does not change its colors to that of its owning house.</summary>
         NoRemap         /**/ = 1 << 5,
         /// <summary>Uses the buildings remap of the owning House.</summary>
         BuildingRemap   /**/ = 1 << 6,
         /// <summary>Is a unit that is filtered out of the lists if expansion units are disabled.</summary>
-        IsExpansionUnit /**/ = 1 << 7,
+        ExpansionOnly /**/ = 1 << 7,
         /// <summary>Can show a mobile gap area-of-effect radius indicator.</summary>
-        IsGapGenerator  /**/ = 1 << 8,
+        GapGenerator  /**/ = 1 << 8,
         /// <summary>Can show a radar jamming area-of-effect radius indicator.</summary>
-        IsJammer        /**/ = 1 << 9,
+        Jammer        /**/ = 1 << 9,
         /// <summary>This type typically has no rules present in the rules file, and needs specific checks on that.</summary>
         NoRules         /**/ = 1 << 10,
     }
@@ -110,7 +110,7 @@ namespace MobiusEditor.Model
         public override bool IsGroundUnit => false;
         public override bool IsAircraft => true;
         public override bool IsVessel => false;
-        public override bool IsFixedWing => Flags.HasFlag(UnitTypeFlag.IsFixedWing);
+        public override bool IsFixedWing => Flags.HasFlag(UnitTypeFlag.FixedWing);
 
         public AircraftType(int id, string name, string textId, string ownerHouse, FrameUsage bodyFrameUsage, FrameUsage turrFrameUsage, string turret, string turret2, int turrOffset, int turretY, UnitTypeFlag flags)
             : base(id, name, textId, ownerHouse, bodyFrameUsage, turrFrameUsage, turret, turret2, turrOffset, turretY, flags)
@@ -174,13 +174,23 @@ namespace MobiusEditor.Model
         public abstract bool IsAircraft { get; }
         public abstract bool IsVessel { get; }
         public abstract bool IsFixedWing { get; }
-        public bool HasTurret => Flags.HasFlag(UnitTypeFlag.HasTurret);
-        public bool HasDoubleTurret => Flags.HasFlag(UnitTypeFlag.HasDoubleTurret);
-        public bool IsArmed => Flags.HasFlag(UnitTypeFlag.IsArmed);
-        public bool IsHarvester => Flags.HasFlag(UnitTypeFlag.IsHarvester);
-        public bool IsExpansionOnly => Flags.HasFlag(UnitTypeFlag.IsExpansionUnit);
+        /// <summary>Has a turret drawn on the unit.</summary>
+        public bool HasTurret => Flags.HasFlag(UnitTypeFlag.Turret);
+        /// <summary>Needs to render two turrets. Requires a <see cref="UnitType.TurretOffset"/> greater than zero, which will be applied to the second turret with 180° added to the rotated position.</summary>
+        public bool HasDoubleTurret => Flags.HasFlag(UnitTypeFlag.DoubleTurret);
+        public bool IsArmed => Flags.HasFlag(UnitTypeFlag.Armed);
+        public bool IsHarvester => Flags.HasFlag(UnitTypeFlag.Harvester);
         public bool CanRemap => !Flags.HasFlag(UnitTypeFlag.NoRemap);
+        /// <summary>Uses the buildings remap of the owning House.</summary>
         public bool BuildingRemap => Flags.HasFlag(UnitTypeFlag.BuildingRemap);
+        public bool IsExpansionOnly => Flags.HasFlag(UnitTypeFlag.ExpansionOnly);
+        /// <summary>Can show a mobile gap area-of-effect radius indicator.</summary>
+        public bool IsGapGenerator => Flags.HasFlag(UnitTypeFlag.GapGenerator);
+        /// <summary>Can show a radar jamming area-of-effect radius indicator.</summary>
+        public bool IsJammer => Flags.HasFlag(UnitTypeFlag.Jammer);
+        /// <summary>This type typically has no rules present in the rules file, and needs specific checks on that.</summary>
+        public bool HasNoRules => Flags.HasFlag(UnitTypeFlag.NoRules);
+
         public bool GraphicsFound { get; private set; }
         private string nameId;
 
@@ -192,9 +202,9 @@ namespace MobiusEditor.Model
             Name = name;
             nameId = textId;
             OwnerHouse = ownerHouse;
-            bool hasTurret = flags.HasFlag(UnitTypeFlag.HasTurret);
+            bool hasTurret = flags.HasFlag(UnitTypeFlag.Turret);
             Turret = hasTurret ? turret : null;
-            SecondTurret = hasTurret && flags.HasFlag(UnitTypeFlag.HasDoubleTurret) ? turret2 : null;
+            SecondTurret = hasTurret && flags.HasFlag(UnitTypeFlag.DoubleTurret) ? turret2 : null;
             TurretOffset = turrOffset;
             TurretY = turretY;
             Flags = flags;
