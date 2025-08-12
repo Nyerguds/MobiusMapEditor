@@ -1575,7 +1575,11 @@ namespace MobiusEditor.Render
             foreach (InfantryStoppingType ist in toCheck)
             {
                 Infantry inf = group.Infantry[(int)ist];
-                inf.IsOverlapped = IsOverlapped(map, location, false, ist, inf.InfantryGroup, inf.DrawOrderCache);
+                if (inf == null)
+                {
+                    continue;
+                }
+                inf.IsOverlapped = IsOverlapped(map, location, false, ist, group, inf.DrawOrderCache);
             }
         }
 
