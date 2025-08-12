@@ -770,7 +770,7 @@ namespace MobiusEditor.Model
                 // Harvesting one gem stage fills one bail, plus 3 extra bails. Last stage is 0 (due to that bug), but still gets the extra bails.
                 if (Globals.ApplyHarvestBug)
                 {
-                    totalResources += value.Type.IsGem ? thickness * GemValue + GemValue * 3 : thickness * TiberiumOrGoldValue;
+                    totalResources += value.Type.IsGem ? thickness * GemValue + (thickness + 1) * GemValue * 3 : thickness * TiberiumOrGoldValue;
                 }
                 else
                 {
