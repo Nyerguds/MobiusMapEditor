@@ -34,7 +34,7 @@ namespace MobiusEditor.Model
         public Rectangle OverlapBounds => Type.OverlapBounds;
         public int ZOrder => Type.ZOrder;
         /// <summary>This flag is set after the paint operation to indicate whether this object is overlapped.</summary>
-        public bool Isoverlapped { get; set; }
+        public bool IsOverlapped { get; set; }
 
         public bool IsPreview { get; set; }
 

@@ -1566,7 +1566,7 @@ namespace MobiusEditor.Render
             }
             // To show an outline, something needs to be overlapped, the total overlapped sub-cells must be at least half of the visible content,
             // and  at least 3/4th of the graphics-occupied cells need to be at least partially overlapped.
-            overlay.Isoverlapped = overlappedSubPositions > 0 && overlappedSubPositions * 2 >= occupiedSubPositions;
+            overlay.IsOverlapped = overlappedSubPositions > 0 && overlappedSubPositions * 2 >= occupiedSubPositions;
         }
 
         public static void CheckInfantryOverlap(Map map, InfantryGroup group, Point location)
@@ -1664,7 +1664,7 @@ namespace MobiusEditor.Render
                 {
                     continue;
                 }
-                if (onlyIfBehindObjects && !overlay.Isoverlapped)
+                if (onlyIfBehindObjects && !overlay.IsOverlapped)
                 {
                     continue;
                 }

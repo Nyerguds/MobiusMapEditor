@@ -42,7 +42,7 @@ namespace MobiusEditor.Model
         Pavement        /**/ = 1 << 6,
         /// <summary>Needs to use the special concrete pavement connection logic.</summary>
         Concrete        /**/ = 1 << 7,
-        /// <summary>Is a solid object that obstructs placement.</summary>
+        /// <summary>Is a solid object that obstructs placement. Do not use for walls; they have a separate flag:</summary>
         Solid           /**/ = 1 << 8,
         /// <summary>Is a special type saved as duplicate lines of a different type.</summary>
         RoadSpecial     /**/ = 1 << 9,
