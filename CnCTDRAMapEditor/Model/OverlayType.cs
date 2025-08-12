@@ -76,32 +76,32 @@ namespace MobiusEditor.Model
 
         public Rectangle OverlapBounds => new Rectangle(0, 0, 1, 1);
         public int ZOrder => -1;
-        public bool IsResource => (this.Flags & (OverlayTypeFlag.TiberiumOrGold | OverlayTypeFlag.Gems)) != OverlayTypeFlag.None;
-        public bool IsTiberiumOrGold => (this.Flags & OverlayTypeFlag.TiberiumOrGold) != OverlayTypeFlag.None;
-        public bool IsGem => (this.Flags & OverlayTypeFlag.Gems) != OverlayTypeFlag.None;
-        public bool IsWall => (this.Flags & OverlayTypeFlag.Wall) != OverlayTypeFlag.None;
-        public bool IsPavement => (this.Flags & OverlayTypeFlag.Pavement) != OverlayTypeFlag.None;
-        public bool IsSolid => (this.Flags & OverlayTypeFlag.Solid) != OverlayTypeFlag.None;
-        public bool IsConcrete => (this.Flags & OverlayTypeFlag.Concrete) != OverlayTypeFlag.None;
-        public bool IsCrate => (this.Flags & OverlayTypeFlag.Crate) != OverlayTypeFlag.None;
-        public bool IsFlag => (this.Flags & OverlayTypeFlag.FlagPlace) != OverlayTypeFlag.None;
-        public bool IsGross => (this.Flags & OverlayTypeFlag.Gross) != OverlayTypeFlag.None;
-        public bool IsFootballField => (this.Flags & OverlayTypeFlag.FootballField) != OverlayTypeFlag.None;
+        public bool IsResource => (Flags & (OverlayTypeFlag.TiberiumOrGold | OverlayTypeFlag.Gems)) != OverlayTypeFlag.None;
+        public bool IsTiberiumOrGold => (Flags & OverlayTypeFlag.TiberiumOrGold) != OverlayTypeFlag.None;
+        public bool IsGem => (Flags & OverlayTypeFlag.Gems) != OverlayTypeFlag.None;
+        public bool IsWall => (Flags & OverlayTypeFlag.Wall) != OverlayTypeFlag.None;
+        public bool IsPavement => (Flags & OverlayTypeFlag.Pavement) != OverlayTypeFlag.None;
+        public bool IsSolid => (Flags & OverlayTypeFlag.Solid) != OverlayTypeFlag.None;
+        public bool IsConcrete => (Flags & OverlayTypeFlag.Concrete) != OverlayTypeFlag.None;
+        public bool IsCrate => (Flags & OverlayTypeFlag.Crate) != OverlayTypeFlag.None;
+        public bool IsFlag => (Flags & OverlayTypeFlag.FlagPlace) != OverlayTypeFlag.None;
+        public bool IsGross => (Flags & OverlayTypeFlag.Gross) != OverlayTypeFlag.None;
+        public bool IsFootballField => (Flags & OverlayTypeFlag.FootballField) != OverlayTypeFlag.None;
         private string nameId;
 
         /// <summary>
         /// Defines that it is placeable under the "overlay" category (and not resource or wall)
         /// </summary>
-        public bool IsOverlay => (this.Flags & (OverlayTypeFlag.Wall | OverlayTypeFlag.TiberiumOrGold | OverlayTypeFlag.Gems | OverlayTypeFlag.Unplaceable)) == OverlayTypeFlag.None;
+        public bool IsOverlay => (Flags & (OverlayTypeFlag.Wall | OverlayTypeFlag.TiberiumOrGold | OverlayTypeFlag.Gems | OverlayTypeFlag.Unplaceable)) == OverlayTypeFlag.None;
 
         public OverlayType(int id, string name, string textId, OverlayTypeFlag flags, string graphicsSource, int forceTileNr)
         {
-            this.ID = id;
-            this.Name = name;
-            this.GraphicsSource = graphicsSource == null ? name : graphicsSource;
-            this.ForceTileNr = forceTileNr;
-            this.nameId = textId;
-            this.Flags = flags;
+            ID = id;
+            Name = name;
+            GraphicsSource = graphicsSource == null ? name : graphicsSource;
+            ForceTileNr = forceTileNr;
+            nameId = textId;
+            Flags = flags;
         }
 
         public OverlayType(int id, string name, string textId, OverlayTypeFlag flags, int forceTileNr)

@@ -171,9 +171,9 @@ namespace MobiusEditor.Utility
             return p;
         }
 
-        public static Size GetDimensions(this bool[,] mask)
+        public static Size GetDimensions<T>(this T[,] twoDimArr)
         {
-            return mask == null ? Size.Empty : new Size(mask.GetLength(1), mask.GetLength(0));
+            return twoDimArr == null ? Size.Empty : new Size(twoDimArr.GetLength(1), twoDimArr.GetLength(0));
         }
 
         public static IEnumerable<Point> Points(this Rectangle rectangle)

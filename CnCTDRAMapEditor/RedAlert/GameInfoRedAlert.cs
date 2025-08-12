@@ -174,7 +174,7 @@ namespace MobiusEditor.RedAlert
 
         public override Bitmap GetWaypointIcon()
         {
-            return Globals.TheTilesetManager.GetTile("beacon", 0, "mouse", 15, null);
+            return Globals.TheTilesetManager.GetTexture(@"DATA\ART\TEXTURES\SRGB\ICON_SELECT_FRIENDLY_X2_00.DDS", "mouse", 15, true);
         }
 
         public override Bitmap GetCellTriggerIcon()
