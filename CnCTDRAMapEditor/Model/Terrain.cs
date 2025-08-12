@@ -40,6 +40,7 @@ namespace MobiusEditor.Model
         public int ZOrder => Type.ZOrder;
         public int DrawOrderCache { get; set; }
         public int DrawFrameCache { get; set; }
+        public bool IsOverlapped { get; set; }
 
         private string trigger = Model.Trigger.None;
         public string Trigger { get => trigger; set => SetField(ref trigger, value); }

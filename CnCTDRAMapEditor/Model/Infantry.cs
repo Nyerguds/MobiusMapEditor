@@ -62,6 +62,7 @@ namespace MobiusEditor.Model
         public bool IsPreview { get; set; }
         public int DrawOrderCache { get; set; }
         public int DrawFrameCache { get; set; }
+        public bool IsOverlapped { get; set; }
 
         public Infantry(InfantryGroup infantryGroup)
         {

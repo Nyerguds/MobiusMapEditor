@@ -40,6 +40,7 @@ namespace MobiusEditor.Model
         public int ZOrder => Type.ZOrder;
         public int DrawOrderCache { get; set; }
         public int DrawFrameCache { get; set; }
+        public bool IsOverlapped { get; set; }
 
         private HouseType house;
         public HouseType House { get => house; set => SetField(ref house, value); }

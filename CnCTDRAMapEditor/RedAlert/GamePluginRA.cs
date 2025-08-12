@@ -791,9 +791,9 @@ namespace MobiusEditor.RedAlert
             Map.BeginUpdate();
             // Just gonna remove this; I assume it'll be invalid after a re-save anyway.
             ini.Sections.Extract("Digest");
+            int newIniFormat = GetNewIniFormat(ini);
             HouseType player = this.LoadBasic(ini);
             bool expansionEnabled = LoadAftermath(ini);
-            int newIniFormat = GetNewIniFormat(ini);
             LoadMapInfo(ini, errors, ref modified);
             LoadSteamInfo(ini);
             List<TeamType> teamTypes = this.LoadTeamTypes(ini, errors, ref modified);

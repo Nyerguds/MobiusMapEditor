@@ -288,6 +288,9 @@ namespace MobiusEditor.Render
             graphics.InterpolationMode = backupInterpolationMode;
             graphics.SmoothingMode = backupSmoothingMode;
             graphics.PixelOffsetMode = backupPixelOffsetMode;
+            List<(Overlay, Point)> paintedOverlay = new List<(Overlay, Point)>();
+            List<(InfantryGroup, Point)> paintedInfantry = new List<(InfantryGroup, Point)>();
+            List<(ITechno, Point)> paintedTechnos = new List<(ITechno, Point)>();
             // Attached bibs are counted under Buildings, not Smudge.
             if ((layers & MapLayerFlag.Buildings) != MapLayerFlag.None)
             {
@@ -331,6 +334,7 @@ namespace MobiusEditor.Render
                     if (paintAsWall || paintAsResource || paintAsOverlay)
                     {
                         overlappingRenderList.Add(RenderOverlay(gameInfo, location, map.Bounds, tileSize, tileScale, overlay, false));
+                        paintedOverlay.Add((overlay, location));
                     }
                 }
             }
@@ -345,6 +349,7 @@ namespace MobiusEditor.Render
                         continue;
                     }
                     overlappingRenderList.Add(RenderBuilding(gameInfo, map, topLeft, tileSize, tileScale, building, false));
+                    paintedTechnos.Add((building, topLeft));
                 }
             }
             if ((layers & MapLayerFlag.Infantry) != MapLayerFlag.None)
@@ -366,6 +371,7 @@ namespace MobiusEditor.Render
                         }
                         overlappingRenderList.Add(RenderInfantry(map, topLeft, tileSize, infantry, ist, false));
                     }
+                    paintedInfantry.Add((infantryGroup, topLeft));
                 }
             }
             if ((layers & MapLayerFlag.Units) != MapLayerFlag.None)
@@ -379,6 +385,7 @@ namespace MobiusEditor.Render
                         continue;
                     }
                     overlappingRenderList.Add(RenderUnit(gameInfo, map, topLeft, tileSize, unit, false));
+                    paintedTechnos.Add((unit, topLeft));
                 }
             }
             if ((layers & MapLayerFlag.Terrain) != MapLayerFlag.None)
@@ -390,6 +397,7 @@ namespace MobiusEditor.Render
                         continue;
                     }
                     overlappingRenderList.Add(RenderTerrain(topLeft, tileSize, tileScale, terrain, false));
+                    paintedTechnos.Add((terrain, topLeft));
                 }
             }
             bool renderWaypoints = (layers & MapLayerFlag.Waypoints) != MapLayerFlag.None;
@@ -432,6 +440,18 @@ namespace MobiusEditor.Render
                 {
                     info.RenderedObject.DrawOrderCache = paintOrder++;
                 }
+            }
+            foreach ((Overlay overlay, Point location) in paintedOverlay)
+            {
+                CheckOverlayOverlap(map, overlay, location);
+            }
+            foreach ((InfantryGroup ig, Point location) in paintedInfantry)
+            {
+                CheckInfantryOverlap(map, ig, location);
+            }
+            foreach ((ITechno techno, Point location) in paintedTechnos)
+            {
+                CheckTechnoOverlap(map, techno, location);
             }
             if (disposeCacheManager)
             {
@@ -1521,6 +1541,94 @@ namespace MobiusEditor.Render
             }
         }
 
+        public static void CheckOverlayOverlap(Map map, Overlay overlay, Point location)
+        {
+            OverlayType ovlt = overlay.Type;
+            if (ovlt.ContentMask == null)
+            {
+                return;
+            }
+            int occupiedSubPositions = 0;
+            int overlappedSubPositions = 0;
+            bool[] opaqueCellMask = ovlt.ContentMask[0, 0];
+            InfantryStoppingType[] toCheck = Enum.GetValues(typeof(InfantryStoppingType)).Cast<InfantryStoppingType>().ToArray();
+            foreach (InfantryStoppingType ist in toCheck)
+            {
+                if (!opaqueCellMask[(int)ist])
+                {
+                    continue;
+                }
+                occupiedSubPositions++;
+                if (IsOverlapped(map, location, true, ist, overlay, -1))
+                {
+                    overlappedSubPositions++;
+                }
+            }
+            // To show an outline, something needs to be overlapped, the total overlapped sub-cells must be at least half of the visible content,
+            // and  at least 3/4th of the graphics-occupied cells need to be at least partially overlapped.
+            overlay.Isoverlapped = overlappedSubPositions > 0 && overlappedSubPositions * 2 >= occupiedSubPositions;
+        }
+
+        public static void CheckInfantryOverlap(Map map, InfantryGroup group, Point location)
+        {
+            InfantryStoppingType[] toCheck = Enum.GetValues(typeof(InfantryStoppingType)).Cast<InfantryStoppingType>().ToArray();
+            foreach (InfantryStoppingType ist in toCheck)
+            {
+                Infantry inf = group.Infantry[(int)ist];
+                inf.IsOverlapped = IsOverlapped(map, location, false, ist, inf.InfantryGroup, inf.DrawOrderCache);
+            }
+        }
+
+        public static void CheckTechnoOverlap(Map map, ITechno techno, Point location)
+        {
+            if (techno is ICellOverlapper drawnObj && techno is ICellOccupier placedObj) {
+
+                // This is a visibility check; check cells that are deemed "visible".
+                bool[,][] opaqueMask = drawnObj.ContentMask;
+                bool[,] occupyMask = placedObj.OccupyMask;
+                int paintOrder = techno.DrawOrderCache;
+                int maskY = opaqueMask == null ? 0 : opaqueMask.GetLength(0);
+                int maskX = opaqueMask == null ? 0 : opaqueMask.GetLength(1);
+                // If not in currently viewed area, ignore.
+                Rectangle objBounds = new Rectangle(location, placedObj.OccupyMask.GetDimensions());
+                // Select actual map points for all visible points in opaqueMask
+                Point[] opaquePoints = Enumerable.Range(0, maskY).SelectMany(nrY => Enumerable.Range(0, maskX).Select(nrX => new Point(nrX, nrY))).ToArray()
+                    .Where(pt => opaqueMask[pt.Y, pt.X] != null && opaqueMask[pt.Y, pt.X].Length > 0 && opaqueMask[pt.Y, pt.X].Any(b => b)).ToArray();
+                // Cells occupancy is a measure of "important" cells; those with their center occupied.
+                int overlappedCells = 0;
+                // Subpositions gives an overall measure of how much of the object is covered.
+                int occupiedSubPositions = 0;
+                int overlappedSubPositions = 0;
+                foreach (Point opaquePoint in opaquePoints)
+                {
+                    Point realPoint = new Point(location.X + opaquePoint.X, location.Y + opaquePoint.Y);
+                    InfantryStoppingType[] toCheck = Enum.GetValues(typeof(InfantryStoppingType)).Cast<InfantryStoppingType>().ToArray();
+                    bool[] opaqueCellMask = opaqueMask[opaquePoint.Y, opaquePoint.X];
+                    bool cellIsOverlapped = false;
+                    foreach (InfantryStoppingType ist in toCheck)
+                    {
+                        if (!opaqueCellMask[(int)ist])
+                        {
+                            continue;
+                        }
+                        occupiedSubPositions++;
+                        if (IsOverlapped(map, realPoint, false, ist, drawnObj, paintOrder))
+                        {
+                            overlappedSubPositions++;
+                            cellIsOverlapped = true;
+                        }
+                    }
+                    if (cellIsOverlapped)
+                    {
+                        overlappedCells++;
+                    }
+                }
+                // To show an outline, something needs to be overlapped, the total overlapped sub-cells must be at least half of the visible content,
+                // and  at least 3/4th of the graphics-occupied cells need to be at least partially overlapped.
+                techno.IsOverlapped = overlappedSubPositions > 0 && overlappedSubPositions * 2 >= occupiedSubPositions && overlappedCells * 4 / 3 >= opaquePoints.Length;
+            }
+        }
+
         public static void RenderAllCrateOutlines(Graphics g, GameInfo gameInfo, Map map, Rectangle visibleCells, Size tileSize, double tileScale, bool onlyIfBehindObjects)
         {
             RenderAllOverlayOutlines(g, gameInfo, map, visibleCells, tileSize, tileScale, OverlayTypeFlag.WoodCrate, onlyIfBehindObjects, Globals.OutlineColorCrateWood);
@@ -1552,34 +1660,9 @@ namespace MobiusEditor.Render
                 {
                     continue;
                 }
-                if (onlyIfBehindObjects)
+                if (onlyIfBehindObjects && !overlay.Isoverlapped)
                 {
-                    if (overlay.Type.ContentMask == null) {
-                        continue;
-                    }
-                    int occupiedSubPositions = 0;
-                    int overlappedSubPositions = 0;
-                    bool[] opaqueCellMask = overlay.Type.ContentMask[0, 0];
-                    InfantryStoppingType[] toCheck = Enum.GetValues(typeof(InfantryStoppingType)).Cast<InfantryStoppingType>().ToArray();
-                    foreach (InfantryStoppingType ist in toCheck)
-                    {
-                        if (!opaqueCellMask[(int)ist])
-                        {
-                            continue;
-                        }
-                        occupiedSubPositions++;
-                        if (IsOverlapped(map, location, true, ist, overlay, -1))
-                        {
-                            overlappedSubPositions++;
-                        }
-                    }
-                    // To show an outline, something needs to be overlapped, the total overlapped sub-cells must be at least half of the visible content,
-                    // and  at least 3/4th of the graphics-occupied cells need to be at least partially overlapped.
-                    bool showOutline = overlappedSubPositions > 0 && overlappedSubPositions * 2 >= occupiedSubPositions;
-                    if (!showOutline)
-                    {
-                        continue;
-                    }
+                    continue;
                 }
                 includedCells.Add(cell);
                 includedPoints.Add(location, overlay);
@@ -1677,12 +1760,9 @@ namespace MobiusEditor.Render
                     {
                         continue;
                     }
-                    if (onlyIfBehindObjects)
+                    if (onlyIfBehindObjects && !infantry.IsOverlapped)
                     {
-                        if (!IsOverlapped(map, location, false, ist, infantryGroup, infantry.DrawOrderCache))
-                        {
-                            continue;
-                        }
+                        continue;
                     }
                     string color = GetOutlineColor(infantry.House, map);
                     Color outlineCol = Color.FromArgb(0x80, Globals.TheTeamColorManager.GetBaseColor(color));
@@ -1777,60 +1857,21 @@ namespace MobiusEditor.Render
             visibleCells.Inflate(1, 1);
             foreach ((Point objLocation, T placedObj) in occupiers.OrderBy(i => map.Metrics.GetCell(i.Location)))
             {
-                // This is a visibility check; check cells that are deemed "visible".
-                bool[,][] opaqueMask = placedObj.ContentMask;
-                bool[,] occupyMask = placedObj.OccupyMask;
-                int paintOrder = placedObj.DrawOrderCache;
-                int maskY = opaqueMask == null ? 0 : opaqueMask.GetLength(0);
-                int maskX = opaqueMask == null ? 0 : opaqueMask.GetLength(1);
                 // If not in currently viewed area, ignore.
                 Rectangle objBounds = new Rectangle(objLocation, placedObj.OccupyMask.GetDimensions());
                 if (!visibleCells.IntersectsWith(objBounds))
                 {
                     continue;
                 }
-                if (onlyIfBehindObjects)
+                // This is a visibility check; check cells that are deemed "visible".
+                if (onlyIfBehindObjects && !placedObj.IsOverlapped)
                 {
-                    // Select actual map points for all visible points in opaqueMask
-                    Point[] opaquePoints = Enumerable.Range(0, maskY).SelectMany(nrY => Enumerable.Range(0, maskX).Select(nrX => new Point(nrX, nrY))).ToArray()
-                        .Where(pt => opaqueMask[pt.Y, pt.X] != null && opaqueMask[pt.Y, pt.X].Length > 0 && opaqueMask[pt.Y, pt.X].Any(b => b)).ToArray();
-                    // Cells occupancy is a measure of "important" cells; those with their center occupied.
-                    int overlappedCells = 0;
-                    // Subpositions gives an overall measure of how much of the object is covered.
-                    int occupiedSubPositions = 0;
-                    int overlappedSubPositions = 0;
-                    foreach (Point opaquePoint in opaquePoints)
-                    {
-                        Point realPoint = new Point(objLocation.X + opaquePoint.X, objLocation.Y + opaquePoint.Y);
-                        InfantryStoppingType[] toCheck = Enum.GetValues(typeof(InfantryStoppingType)).Cast<InfantryStoppingType>().ToArray();
-                        bool[] opaqueCellMask = opaqueMask[opaquePoint.Y, opaquePoint.X];
-                        bool cellIsOverlapped = false;
-                        foreach (InfantryStoppingType ist in toCheck)
-                        {
-                            if (!opaqueCellMask[(int)ist])
-                            {
-                                continue;
-                            }
-                            occupiedSubPositions++;
-                            if (IsOverlapped(map, realPoint, false, ist, placedObj, paintOrder))
-                            {
-                                overlappedSubPositions++;
-                                cellIsOverlapped = true;
-                            }
-                        }
-                        if (cellIsOverlapped)
-                        {
-                            overlappedCells++;
-                        }
-                    }
-                    // To show an outline, something needs to be overlapped, the total overlapped sub-cells must be at least half of the visible content,
-                    // and  at least 3/4th of the graphics-occupied cells need to be at least partially overlapped.
-                    bool showOutline = overlappedSubPositions > 0 && overlappedSubPositions * 2 >= occupiedSubPositions && overlappedCells * 4 / 3 >= opaquePoints.Length;
-                    if (!showOutline)
-                    {
-                        continue;
-                    }
+                    continue;
                 }
+                bool[,][] opaqueMask = placedObj.ContentMask;
+                int maskY = opaqueMask == null ? 0 : opaqueMask.GetLength(0);
+                int maskX = opaqueMask == null ? 0 : opaqueMask.GetLength(1);
+                // If not in currently viewed area, ignore.
                 Size cellSize = new Size(maskX + 2, maskY + 2);
                 Color houseCol = fallbackColor;
                 if (placedObj.House != null && colorPick != null)

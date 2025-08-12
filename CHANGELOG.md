@@ -734,3 +734,4 @@ Unreleased
 * Changing the "Base" House in the Map setting for Red Alert maps now properly refreshes the colors of the unbuilt buildings.
 * In the Triggers editor, changes in dropdowns made using the mouse scrollwheel will now always save correctly.
 * Fixed Red Alert rules reading ignoring the read rules.ini values and always resetting to defaults when reading embedded map rules. The rules information is now properly cumulative.
+* Overlap checks are now only done once when the object is painted, vastly optimising editor responsiveness.

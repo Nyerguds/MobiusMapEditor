@@ -37,5 +37,7 @@ namespace MobiusEditor.Interface
         int DrawOrderCache { get; set; }
         /// <summary>Cached index of the frame of the object that was rendered. This is used for distinguishing outlines.</summary>
         int DrawFrameCache { get; set; }
+        /// <summary>This flag is set after the paint operation to indicate whether this object is overlapped.</summary>
+        bool IsOverlapped { get; set; }
     }
 }
