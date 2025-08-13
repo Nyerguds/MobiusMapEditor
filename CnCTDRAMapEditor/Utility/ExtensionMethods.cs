@@ -171,11 +171,22 @@ namespace MobiusEditor.Utility
             return p;
         }
 
+        /// <summary>
+        /// Returns the dimensions of the two-dimensional array, as Size. The first dimension is seen as the Y-value.
+        /// </summary>
+        /// <typeparam name="T">Type of the array.</typeparam>
+        /// <param name="twoDimArr">The two-dimensional array to evaluate.</param>
+        /// <returns>the dimensions of the two-dimensional array, as Size, with the first dimension as Y-value.</returns>
         public static Size GetDimensions<T>(this T[,] twoDimArr)
         {
             return twoDimArr == null ? Size.Empty : new Size(twoDimArr.GetLength(1), twoDimArr.GetLength(0));
         }
 
+        /// <summary>
+        /// Enumerates all the points inside a rectangle.
+        /// </summary>
+        /// <param name="rectangle">Rectangle to turn into points.</param>
+        /// <returns>The points inside the fiven rectangle.</returns>
         public static IEnumerable<Point> Points(this Rectangle rectangle)
         {
             for (var y = rectangle.Top; y < rectangle.Bottom; ++y)
@@ -189,7 +200,7 @@ namespace MobiusEditor.Utility
 
         /// <summary>
         /// Returns the points contained in a specified border of a given rectangle. The border is only considered to be inside the rectangle area.
-        /// If the thickness it exceeds Y/2 or X/2, the entire contents of the rectangle will be returned.
+        /// If the thickness exceeds Y/2 or X/2, the entire contents of the rectangle will be returned.
         /// </summary>
         /// <param name="rectangle">Rectangle</param>
         /// <param name="thickness">Thickness of the border inside the rectangle.</param>

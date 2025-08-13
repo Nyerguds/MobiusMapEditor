@@ -1867,7 +1867,6 @@ namespace MobiusEditor.Render
                 {
                     continue;
                 }
-                // This is a visibility check; check cells that are deemed "visible".
                 if (onlyIfBehindObjects && !placedObj.IsOverlapped)
                 {
                     continue;
@@ -1916,7 +1915,7 @@ namespace MobiusEditor.Render
         /// </summary>
         /// <param name="map">Map to check on.</param>
         /// <param name="location">Location to check for overlap.</param>
-        /// <param name="unitsAlwaysOverlap">True to immediately return true if the cell is occupied by units.</param>
+        /// <param name="unitsAlwaysOverlap">True to immediately return true if the cell is occupied by units. Used for checking overlay.</param>
         /// <param name="ist">When filled in, the overlapper is treated as infantry on that location.</param>
         /// <param name="objectToCheck">Object for which overlap is being checked. This object is automatically ignored in the objects it loops over to check for overlaps.</param>
         /// <param name="objectPaintOrder">Cached paint order of the object, to easily check if it can be overlapped at all.</param>

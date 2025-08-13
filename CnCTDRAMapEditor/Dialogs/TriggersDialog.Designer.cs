@@ -466,6 +466,10 @@ namespace MobiusEditor.Dialogs
             this.event1ValueComboBox.Name = "event1ValueComboBox";
             this.event1ValueComboBox.Size = new System.Drawing.Size(166, 21);
             this.event1ValueComboBox.TabIndex = 1;
+            this.event1ValueComboBox.SelectedIndexChanged += new System.EventHandler(this.Event1ValueComboBox_SelectedIndexChanged);
+            this.event1ValueComboBox.MouseEnter += new System.EventHandler(this.Event1ValueComboBox_MouseEnter);
+            this.event1ValueComboBox.MouseLeave += new System.EventHandler(this.ToolTipComboBox_MouseLeave);
+            this.event1ValueComboBox.MouseMove += new System.Windows.Forms.MouseEventHandler(this.Event1ValueComboBox_MouseMove);
             // 
             // event2Flp
             // 
@@ -508,6 +512,10 @@ namespace MobiusEditor.Dialogs
             this.event2ValueComboBox.Name = "event2ValueComboBox";
             this.event2ValueComboBox.Size = new System.Drawing.Size(166, 21);
             this.event2ValueComboBox.TabIndex = 1;
+            this.event2ValueComboBox.SelectedIndexChanged += new System.EventHandler(this.Event2ValueComboBox_SelectedIndexChanged);
+            this.event2ValueComboBox.MouseEnter += new System.EventHandler(this.Event2ValueComboBox_MouseEnter);
+            this.event2ValueComboBox.MouseLeave += new System.EventHandler(this.ToolTipComboBox_MouseLeave);
+            this.event2ValueComboBox.MouseMove += new System.Windows.Forms.MouseEventHandler(this.Event2ValueComboBox_MouseMove);
             // 
             // action1Flp
             // 

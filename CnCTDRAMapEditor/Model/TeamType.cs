@@ -324,20 +324,22 @@ namespace MobiusEditor.Model
 
         public string GetSummaryLabel(bool withLineBreaks)
         {
-            if (Classes.Count == 0)
-            {
-                return null;
-            }
             string[] classes = Classes.Where(cl => cl.Count > 0).Select(cl => String.Format("{0}: {1}", cl.Type.Name, cl.Count)).ToArray();
             string[] missions = Missions.Select(ms => String.Format("{0}: {1}", ms.Mission.Mission?.TrimEnd('.'), ms.GetFormattedArgument())).ToArray();
             if (!withLineBreaks)
             {
-                return House.Name + ": " + String.Join(", ", classes) + " → " + (missions.Length == 0 ? "<none>" :  String.Join(", ", missions));
+                return House.Name
+                    + ": " + (classes.Length == 0 ? "<none>" : String.Join(", ", classes))
+                    + " → " + (missions.Length == 0 ? "<none>" : String.Join(", ", missions));
             }
             const int BREAKLEN = 50;
             List<string> lines = new List<string>();
             StringBuilder line = new StringBuilder(House.Name);
             line.Append(": ");
+            if (classes.Length == 0)
+            {
+                line.Append("<none>");
+            }
             for (int i = 0; i < classes.Length; ++i)
             {
                 if (line.Length > BREAKLEN)
