@@ -243,6 +243,9 @@ namespace MobiusEditor.Render
                     Template template = map.Templates[topLeft];
                     TemplateType ttype = template?.Type ?? clear;
                     string name = ttype.Name;
+                    // Old code; produces incorrect tiling on megmaps. Retained for testing purposes.
+                    //map.Metrics.GetCell(topLeft, out int cell);
+                    //int icon = template?.Icon ?? ((cell & 0x03) | ((cell >> 4) & 0x0C));
                     // For clear terrain, calculate icon from 0-15 using map position.
                     int icon = template?.Icon ?? ((topLeft.X & 0x03) | (topLeft.Y & 0x03) << 2);
                     // If something is actually placed on the map, show it, even if it has no graphics.
@@ -2658,20 +2661,36 @@ namespace MobiusEditor.Render
                 return;
             }
             int targetCell = homePoint.Cell.Value;
-            bool IsCentered = plugin.GameInfo.HomeWaypointIsCenter;
-            Rectangle[] toRender = new Rectangle[]
+            GameInfo gi = plugin.GameInfo;
+            Rectangle vpSmall = plugin.Map.GetSoloViewport(gi.ViewportSizeSmall, gi.ViewportOffsetSmall, homePoint, false, false, tileSize);
+            Rectangle vpLarge = plugin.Map.GetSoloViewport(gi.ViewportSizeLarge, gi.ViewportOffsetLarge, homePoint, false, false, tileSize);
+            Rectangle[] viewports = new Rectangle[]
             {
-                plugin.Map.GetSoloViewport(IsCentered, homePoint, true, false, false),
-                plugin.Map.GetSoloViewport(IsCentered, homePoint, false, false, false)
+                vpSmall,
+                vpLarge,
+            };
+            Rectangle[] sidebars = new Rectangle[]
+            {
+                new Rectangle(vpSmall.TopRight(), gi.ViewportSidebarSmall.AdjustToScale(tileSize, Globals.PixelSize)),
+                new Rectangle(vpLarge.TopRight(), gi.ViewportSidebarLarge.AdjustToScale(tileSize, Globals.PixelSize)),
             };
             using (Pen boundsPen = new Pen(Color, Math.Max(1, tileSize.Width / 16.0f)))
             {
-                foreach (Rectangle rect in toRender)
+                boundsPen.DashStyle = DashStyle.Dash;
+                boundsPen.DashPattern = new float[] { 2.5F, 3.0F };
+                foreach (Rectangle rect in sidebars)
                 {
-                    if (visibleCells == null || visibleCells.IntersectsWith(rect))
+                    if (visibleCells == null || visibleCells.AdjustToScale(tileSize).IntersectsWith(rect) && rect.Size.Width > 0 && rect.Size.Height > 0)
                     {
-                        Rectangle bounds = new Rectangle(rect.X * tileSize.Width, rect.Y * tileSize.Height, rect.Width * tileSize.Width, rect.Height * tileSize.Height);
-                        graphics.DrawRectangle(boundsPen, bounds);
+                        graphics.DrawRectangle(boundsPen, rect);
+                    }
+                }
+                boundsPen.DashStyle = DashStyle.Solid;
+                foreach (Rectangle rect in viewports)
+                {
+                    if (visibleCells == null || visibleCells.AdjustToScale(tileSize).IntersectsWith(rect) && rect.Size.Width > 0 && rect.Size.Height > 0)
+                    {
+                        graphics.DrawRectangle(boundsPen, rect);
                     }
                 }
             }
@@ -2767,7 +2786,8 @@ namespace MobiusEditor.Render
                 }
                 int alphaFactorInt = (int)Math.Round(alphaFactor * 256).Restrict(0, 255);
                 Color alphacorr = Color.FromArgb(alphaFactorInt, circleColor);
-                RenderCircleDiagonals(graphics, tileSize, alphacorr, effectRadius, effectRadius, center);
+                Point[] points = GetEightCirclePoints(circleBounds, center);
+                RenderCircleDiagonals(graphics, tileSize, alphacorr, center, points);
                 DrawDashesCircle(graphics, circleBounds, tileSize, alphacorr, true, -1.25f, 2.5f);
             }
         }
@@ -2800,31 +2820,38 @@ namespace MobiusEditor.Render
             Color alphacorr = Color.FromArgb(alphaFactorInt, circleColor);
             if (isJammer)
             {
-                // uses map's Gap Generator range.
-                Rectangle circleCellBounds = GeneralUtils.GetBoxFromCenterCell(cell, 1, 1, jamRadius, jamRadius, new Size(1, 1), out _);
-                Rectangle circleBounds = GeneralUtils.GetBoxFromCenterCell(cell, 1, 1, jamRadius, jamRadius, tileSize, out Point center);
-                if (visibleCells.IntersectsWith(circleCellBounds))
+                // uses the radar jammer range from the rules.
+                if (jamRadius > 0)
                 {
-                    RenderCircleDiagonals(graphics, tileSize, alphacorr, jamRadius, jamRadius, center);
-                    DrawDashesCircle(graphics, circleBounds, tileSize, alphacorr, true, -1.25f, 2.5f);
+                    Rectangle circleCellBounds = GeneralUtils.GetBoxFromCenterCell(cell, 1, 1, jamRadius, jamRadius, new Size(1, 1), out _);
+                    Rectangle circleBounds = GeneralUtils.GetBoxFromCenterCell(cell, 1, 1, jamRadius, jamRadius, tileSize, out Point center);
+                    if (visibleCells.IntersectsWith(circleCellBounds))
+                    {
+                        Point[] points = GetEightCirclePoints(circleBounds, center);
+                        RenderCircleDiagonals(graphics, tileSize, alphacorr, center, points);
+                        // Westwood simplified Distance() to an octagonal shape, which is a bit wonky on large ranges like this.
+                        //DrawDashesCircle(graphics, circleBounds, tileSize, alphacorr, true, -1.25f, 2.5f);
+                        DrawDashesPolygon(graphics, circleBounds, tileSize, alphacorr, true, points);
+                    }
                 }
             }
             if (isGapGen)
             {
                 // uses specific 5x7 circle around the unit cell
-                int radiusX = 2;
-                int radiusY = 3;
+                double radiusX = 2.5;
+                double radiusY = 3.5;
                 Rectangle circleCellBounds = GeneralUtils.GetBoxFromCenterCell(cell, 1, 1, radiusX, radiusY, new Size(1, 1), out _);
                 Rectangle circleBounds = GeneralUtils.GetBoxFromCenterCell(cell, 1, 1, radiusX, radiusY, tileSize, out Point center);
                 if (visibleCells.IntersectsWith(circleCellBounds))
                 {
-                    RenderCircleDiagonals(graphics, tileSize, alphacorr, radiusX, radiusY, center);
+                    Point[] points = GetEightCirclePoints(circleBounds, center);
+                    RenderCircleDiagonals(graphics, tileSize, alphacorr, center, points);
                     DrawDashesCircle(graphics, circleBounds, tileSize, alphacorr, true, -1.25f, 2.5f);
                 }
             }
         }
 
-        private static void RenderCircleDiagonals(Graphics graphics, Size tileSize, Color paintColor, double radiusX, double radiusY, Point center)
+        private static void RenderCircleDiagonals(Graphics graphics, Size tileSize, Color paintColor, Point center, Point[] circlepoints)
         {
 
             float penSize = Math.Max(1.0f, tileSize.Width / 16.0f);
@@ -2832,22 +2859,33 @@ namespace MobiusEditor.Render
             {
                 linePen.DashPattern = new float[] { 1.0F, 4.0F, 6.0F, 4.0F };
                 linePen.DashCap = DashCap.Round;
-                int diamX = (int)Math.Round((radiusX * 2 + 1) * tileSize.Width);
-                int radX = diamX / 2;
-                int diamY = (int)Math.Round((radiusY * 2 + 1) * tileSize.Height);
-                int radY = diamY / 2;
-                double sinDistance = Math.Sin(Math.PI * 45 / 180.0);
-                int sinX = (int)Math.Round(radX * sinDistance);
-                int sinY = (int)Math.Round(radY * sinDistance);
-                graphics.DrawLine(linePen, center, new Point(center.X, center.Y - radY));
-                graphics.DrawLine(linePen, center, new Point(center.X - sinX, center.Y + sinY));
-                graphics.DrawLine(linePen, center, new Point(center.X + radX, center.Y));
-                graphics.DrawLine(linePen, center, new Point(center.X + sinX, center.Y + sinX));
-                graphics.DrawLine(linePen, center, new Point(center.X, center.Y + radY));
-                graphics.DrawLine(linePen, center, new Point(center.X + sinX, center.Y - sinY));
-                graphics.DrawLine(linePen, center, new Point(center.X - radX, center.Y));
-                graphics.DrawLine(linePen, center, new Point(center.X - sinX, center.Y - sinY));
+                for (int i = 0; i < circlepoints.Length; ++i)
+                {
+                    graphics.DrawLine(linePen, center, circlepoints[i]);
+                }
             }
+        }
+
+        private static Point[] GetEightCirclePoints(Rectangle circleBounds, Point center)
+        {
+            int diamX = circleBounds.Width;
+            int radX = diamX / 2;
+            int diamY = circleBounds.Height;
+            int radY = diamY / 2;
+            double sinDistance = Math.Sin(Math.PI * 45 / 180.0);
+            int sinX = (int)Math.Round(radX * sinDistance);
+            int sinY = (int)Math.Round(radY * sinDistance);
+            // These need to be in order to form a nice octagon for the radar jammer range.
+            return new Point[] {
+                /* N  */ new Point(center.X, center.Y - radY),
+                /* NE */ new Point(center.X + sinX, center.Y - sinY),
+                /* E  */ new Point(center.X + radX, center.Y),
+                /* SE */ new Point(center.X + sinX, center.Y + sinX),
+                /* S  */ new Point(center.X, center.Y + radY),
+                /* SW */ new Point(center.X - sinX, center.Y + sinY),
+                /* W  */ new Point(center.X - radX, center.Y),
+                /* NW */ new Point(center.X - sinX, center.Y - sinY),
+            };
         }
 
         public static void RenderAllWayPointRevealRadiuses(Graphics graphics, IGamePlugin plugin, Map map, Rectangle visibleCells, Size tileSize, Waypoint selectedItem)
@@ -2926,6 +2964,18 @@ namespace MobiusEditor.Render
                 {
                     graphics.DrawArc(circlePen, circleBounds, i, drawAngle);
                 }
+            }
+        }
+
+        public static void DrawDashesPolygon(Graphics graphics, Rectangle circleBounds, Size tileSize, Color circleColor, bool thickborder, Point[] points)
+        {
+            float penSize = Math.Max(1f, tileSize.Width / (thickborder ? 16.0f : 32.0f));
+            using (Pen circlePen = new Pen(circleColor, penSize))
+            {
+                float dashSize = tileSize.Width / 2;
+                circlePen.DashPattern = new float[] { dashSize, dashSize };
+                circlePen.DashCap = DashCap.Round;
+                graphics.DrawPolygon(circlePen, points);
             }
         }
 

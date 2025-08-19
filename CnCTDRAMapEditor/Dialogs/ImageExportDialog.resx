@@ -123,6 +123,7 @@
   <data name="chkOrigPalette.ToolTip" xml:space="preserve">
     <value>This matches the final image back to the original game colors.
 This is useful to reduce the file size, but does not 100% match the
-original sprites, since the editor renders everything as high color.</value>
+original sprites, since the editor renders everything as high color,
+and does not use the game's original shadow generating systems.</value>
   </data>
 </root>

@@ -82,7 +82,12 @@ namespace MobiusEditor.RedAlert
         public override int MaxTeams => Constants.MaxTeams;
         public override int HitPointsGreenMinimum => 128;
         public override int HitPointsYellowMinimum => 64;
-        public override bool HomeWaypointIsCenter => true;
+        public override Size ViewportSizeSmall => new Size(240, 192);
+        public override Size ViewportSidebarSmall => new Size(80,192);
+        public override Point ViewportOffsetSmall => new Point(-108, -84);
+        public override Size ViewportSizeLarge => new Size(480, 384);
+        public override Size ViewportSidebarLarge => new Size(160, 384); // Technically empty, but whatevs.
+        public override Point ViewportOffsetLarge => new Point(-228, -180);
         public override OverlayTypeFlag OverlayIconType => OverlayTypeFlag.Crate;
         public override Bitmap WorkshopPreviewGeneric => Properties.Resources.UI_CustomMissionPreviewDefault;
         public override Bitmap WorkshopPreviewGenericGame => Properties.Resources.RA_Head;

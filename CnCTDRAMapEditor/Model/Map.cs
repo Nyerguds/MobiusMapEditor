@@ -2732,37 +2732,47 @@ namespace MobiusEditor.Model
         /// <param name="square">Select a square inside the standard rectangular viewport.</param>
         /// <param name="focusPlayerUnits">If <paramref name="square"/> is true, move the square's horizontal position inside the full viewport to highlight where player units are.</param>
         /// <returns>A rectangle representing the starting position of a mission.</returns>
-        public Rectangle GetSoloViewport(bool homeWpIsCenter, bool dos, bool square, bool focusPlayerUnits)
+        public Rectangle GetSoloViewport(Size viewportSize, Point viewportOffset, bool square, bool focusPlayerUnits, Size cellSize)
         {
             Waypoint startPoint = Waypoints.FirstOrDefault(wp => wp.Flags.HasFlag(WaypointFlag.Home));
-            return GetSoloViewport(homeWpIsCenter, startPoint, dos, square, focusPlayerUnits);
+            return GetSoloViewport(viewportSize, viewportOffset, startPoint, square, focusPlayerUnits, cellSize);
         }
 
         /// <summary>Gets a view of the initial viewport at the start of a mission</summary>
-        /// <param name="homeWpIsCenter">True if the "Home" waypoint indicates the center of the viewport, not the top left corner.</param>
+        /// <param name="viewportSize">Size of the viewport, in old-cell pixels; see <see cref="Globals.PixelHeight"/> and <see cref="Globals.PixelWidth"/>.</param>
+        /// <param name="viewportOffset">Offset to move away from the start waypoint to get the viewport's the top-left corner.</param>
         /// <param name="startPoint">Waypoint to render the box from.</param>
-        /// <param name="dos">Get the closeup DOS 13x8 cells viewport, rather than the win95 26x16 one.</param>
         /// <param name="square">Select a square inside the standard rectangular viewport.</param>
         /// <param name="focusPlayerUnits">If <paramref name="square"/> is true, move the square's horizontal position inside the full viewport to highlight where player units are.</param>
-        /// <returns>A rectangle representing the starting position of a mission.</returns>
-        public Rectangle GetSoloViewport(bool homeWpIsCenter, Waypoint startPoint, bool dos, bool square, bool focusPlayerUnits)
+        /// <param name="cellSize">Cell size</param>
+        /// <returns>A rectangle representing the starting position of a mission, adjusted to the given <paramref name="cellSize"/>.</returns>
+        public Rectangle GetSoloViewport(Size viewportSize, Point viewportOffset, Waypoint startPoint, bool square, bool focusPlayerUnits, Size cellSize)
         {
-            int width = dos ? 13 : 26;
-            int height = dos ? 8 : 16;
+            int width = viewportSize.Width;
+            int height = viewportSize.Height;
             Point start = startPoint?.Point ?? Bounds.Location;
+            // Viewport is measured in old-timey pixels, so adjust the start position to that as well.
+            start.X *= Globals.PixelWidth;
+            start.Y *= Globals.PixelHeight;
             Rectangle viewportRect = new Rectangle(start, new Size(width, height));
-            if (startPoint != null && homeWpIsCenter)
+            if (startPoint != null)
             {
-                // Do -1 on both to 'remove' center cell itself. This means that in case of even numbers, the
-                // top and left edges will be rounded down in their distance in cells away from the center cell.
-                viewportRect.Offset((width - 1) / (-2), (height - 1) / (-2));
+                viewportRect.Offset(viewportOffset);
             }
+            Rectangle scaleMapBounds = Bounds.AdjustToScale(Globals.PixelSize, null);
+            Rectangle scaleFullBounds = Metrics.Bounds.AdjustToScale(Globals.PixelSize, null);
             if (!square)
             {
-                viewportRect = GeneralUtils.ConstrainToBounds(viewportRect, Bounds);
-                viewportRect = GeneralUtils.ConstrainToBounds(viewportRect, Metrics.Bounds);
-                return viewportRect;
+                viewportRect = GeneralUtils.ConstrainToBounds(viewportRect, scaleMapBounds);
+                viewportRect = GeneralUtils.ConstrainToBounds(viewportRect, scaleFullBounds);
+                return viewportRect.AdjustToScale(cellSize, Globals.PixelSize);
             }
+            // IN CELLS
+            Rectangle viewportRectScan = new Rectangle(
+                viewportRect.X / Globals.PixelWidth,
+                viewportRect.Y / Globals.PixelHeight,
+                (viewportRect.Width + Globals.PixelWidth / 2) / Globals.PixelWidth,
+                (viewportRect.Height + Globals.PixelHeight / 2) / Globals.PixelHeight);
             // Just to not short-circuit my brain...
             int squareWidth = height;
             List<Point> points = null;
@@ -2770,11 +2780,11 @@ namespace MobiusEditor.Model
             {
                 HouseType player = HouseTypes.Where(t => t.Equals(BasicSection.Player)).FirstOrDefault() ?? HouseTypes.First();
                 points = Technos
-                    .Where(t => viewportRect.Contains(t.Location)
+                    .Where(t => viewportRectScan.Contains(t.Location)
                     && ((t.Occupier as Unit)?.House == player || ((t.Occupier as InfantryGroup)?.Infantry.Any(i => i != null && i.House == player) ?? false)))
                     .Select(t => t.Location)
                     .Concat(Buildings.OfType<Building>().Where(b => b.Occupier.House == player)
-                        .SelectMany(b => OccupierSet.GetOccupyPoints(b.Location, b.Occupier.BaseOccupyMask).Where(p => viewportRect.Contains(p))))
+                        .SelectMany(b => OccupierSet.GetOccupyPoints(b.Location, b.Occupier.BaseOccupyMask).Where(p => viewportRectScan.Contains(p))))
                     .Where(p => Bounds.Contains(p)).Distinct().ToList();
             }
             Rectangle returnRect = viewportRect;
@@ -2789,14 +2799,14 @@ namespace MobiusEditor.Model
                 int minX = points.Min(p => p.X);
                 int maxX = points.Max(p => p.X) + 1;
                 int newCenter = minX + (maxX - minX) / 2;
-                int newX = newCenter - squareWidth / 2;
+                int newX = newCenter * cellSize.Width - squareWidth / 2;
                 returnRect.X = newX;
             }
             // New rect can shift to left or right, but not outside the full viewport bounds.
             returnRect = GeneralUtils.ConstrainToBounds(returnRect, viewportRect);
-            returnRect = GeneralUtils.ConstrainToBounds(returnRect, Bounds);
-            returnRect = GeneralUtils.ConstrainToBounds(returnRect, Metrics.Bounds);
-            return returnRect;
+            returnRect = GeneralUtils.ConstrainToBounds(returnRect, scaleMapBounds);
+            returnRect = GeneralUtils.ConstrainToBounds(returnRect, scaleFullBounds);
+            return returnRect.AdjustToScale(cellSize, Globals.PixelSize);
         }
     }
 }

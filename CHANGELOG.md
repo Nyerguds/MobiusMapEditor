@@ -735,3 +735,6 @@ Unreleased
 * In the Triggers editor, changes in dropdowns made using the mouse scrollwheel will now always save correctly.
 * Fixed Red Alert rules reading ignoring the read rules.ini values and always resetting to defaults when reading embedded map rules. The rules information is now properly cumulative.
 * Overlap checks are now only done once when the object is painted, vastly optimising editor responsiveness.
+* Fixed inaccuracies in the effect radiuses of units and buildings; a radius now starts at the center of the cell.
+* Fixed the radar jammer radius; since the distance calculation in the game is actually octagonal, it now shows an octagonal area of effect.
+* Improved the accuracy of the Home waypoint starting view box, with the sidebar area added only as extra info.

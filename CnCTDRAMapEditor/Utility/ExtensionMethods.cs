@@ -158,6 +158,21 @@ namespace MobiusEditor.Utility
             return new Point(rectangle.X, rectangle.Y);
         }
 
+        public static Point BottomLeft(this Rectangle rectangle)
+        {
+            return new Point(rectangle.X, rectangle.Y + rectangle.Height);
+        }
+
+        public static Point TopRight(this Rectangle rectangle)
+        {
+            return new Point(rectangle.X + rectangle.Width, rectangle.Y);
+        }
+
+        public static Point BottomRight(this Rectangle rectangle)
+        {
+            return new Point(rectangle.X + rectangle.Width, rectangle.Y + rectangle.Height);
+        }
+
         /// <summary>Returns a new point that is offset compared to the origin point.</summary>
         /// <remarks>Unlike <see cref="Point.Offset(int, int)"/>, this does not change the original point, but returns a new one.</remarks>
         /// <param name="origin">Origin point</param>
@@ -247,6 +262,61 @@ namespace MobiusEditor.Utility
                     yield return new Point(x, y);
                 }
             }
+        }
+
+        /// <summary>
+        /// Adjusts the given Rectangle to a different scale, including the origin point. For maximum precision, the <paramref name="multiplier"/>
+        /// is applied before the <paramref name="divisor"/>. If any of the arguments are null, they are considered to be (1, 1).
+        /// </summary>
+        /// <param name="rectangle">Rectangle to scale</param>
+        /// <param name="multiplier">Value with which to multiply all coordinates.</param>
+        /// <param name="divisor">Value by which to divide all coordinates.</param>
+        /// <returns>The rectangle, adjusted to the new scale.</returns>
+        public static Rectangle AdjustToScale(this Rectangle rectangle, Size? multiplier, Size? divisor = null)
+        {
+            int mulWidth = multiplier.HasValue ? multiplier.Value.Width : 1;
+            int mulHeight = multiplier.HasValue ? multiplier.Value.Height : 1;
+            int divWidth = divisor.HasValue ? divisor.Value.Width : 1;
+            int divHeight = divisor.HasValue ? divisor.Value.Height : 1;
+            return new Rectangle(
+                    rectangle.X * mulWidth / divWidth,
+                    rectangle.Y * mulHeight / divHeight,
+                    rectangle.Width * mulWidth / divWidth,
+                    rectangle.Height * mulHeight / divHeight);
+        }
+
+        /// <summary>
+        /// Adjusts the given Size to a different scale. For maximum precision, the <paramref name="multiplier"/>
+        /// is applied before the <paramref name="divisor"/>. If any of the arguments are null, they are considered to be (1, 1).
+        /// </summary>
+        /// <param name="size">Size to scale</param>
+        /// <param name="multiplier">Value with which to multiply all coordinates.</param>
+        /// <param name="divisor">Value by which to divide all coordinates.</param>
+        /// <returns>The rectangle, adjusted to the new scale.</returns>
+        public static Size AdjustToScale(this Size size, Size? multiplier, Size? divisor = null)
+        {
+            int mulWidth = multiplier.HasValue ? multiplier.Value.Width : 1;
+            int mulHeight = multiplier.HasValue ? multiplier.Value.Height : 1;
+            int divWidth = divisor.HasValue ? divisor.Value.Width : 1;
+            int divHeight = divisor.HasValue ? divisor.Value.Height : 1;
+            return new Size(size.Width * mulWidth / divWidth, size.Height * mulHeight / divHeight);
+        }
+
+        /// <summary>
+        /// Adjusts the given Point to a different scale. For maximum precision, the <paramref name="multiplier"/>
+        /// is applied before the <paramref name="divisor"/>. If any of the arguments are null, they are considered to be (1, 1).
+        /// </summary>
+        /// <param name="point">Point to scale</param>
+        /// <param name="multiplier">Value with which to multiply all coordinates.</param>
+        /// <param name="divisor">Value by which to divide all coordinates.</param>
+        /// <returns>The rectangle, adjusted to the new scale.</returns>
+        public static Point AdjustToScale(this Point point, Size? multiplier, Size? divisor = null)
+        {
+            int mulWidth = multiplier.HasValue ? multiplier.Value.Width : 1;
+            int mulHeight = multiplier.HasValue ? multiplier.Value.Height : 1;
+            int divWidth = divisor.HasValue ? divisor.Value.Width : 1;
+            int divHeight = divisor.HasValue ? divisor.Value.Height : 1;
+            return new Point(point.Width * mulWidth / divWidth, point.Height * mulHeight / divHeight);
         }
 
         public static IEnumerable<T> Yield<T>(this T item)

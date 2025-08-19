@@ -626,8 +626,18 @@ namespace MobiusEditor.Dialogs
             if (plugin.Map.BasicSection.SoloMission)
             {
                 string viewPortPath = Path.Combine(PreviewDirectory, "MissionStart.png");
-                Rectangle missionStart = plugin.Map.GetSoloViewport(gameInfo.HomeWaypointIsCenter, false, true, true);
-                using (Bitmap pr = plugin.Map.GenerateWorkshopPreview(plugin, missionStart).ToBitmap())
+                Size vpsLarge = gameInfo.ViewportSizeLarge;
+                Point offsLarge = gameInfo.ViewportOffsetLarge;
+                int offsLargeX = Math.Abs(offsLarge.X % Globals.PixelWidth);
+                // Cut off half cells at the full-cell boundaries; this will produce a square anyway.
+                if (offsLargeX != 0)
+                {
+                    offsLarge.X +=offsLargeX;
+                    vpsLarge.Width -= Globals.PixelWidth;
+                }
+                Rectangle missionStartLg = plugin.Map.GetSoloViewport(vpsLarge, offsLarge, true, true, Globals.PixelSize);
+                missionStartLg = missionStartLg.AdjustToScale(null, Globals.PixelSize);
+                using (Bitmap pr = plugin.Map.GenerateWorkshopPreview(plugin, missionStartLg).ToBitmap())
                 {
                     SaveMapImage(pr, viewPortPath);
                 }
@@ -638,7 +648,17 @@ namespace MobiusEditor.Dialogs
                 newTsmis.Add(tsMissionStart);
 
                 string viewPortPathDos = Path.Combine(PreviewDirectory, "MissionStartSmall.png");
-                Rectangle missionStartSm = plugin.Map.GetSoloViewport(gameInfo.HomeWaypointIsCenter, true, true, true);
+                Size vpsSmall = gameInfo.ViewportSizeSmall;
+                Point offsSmall = gameInfo.ViewportOffsetSmall;
+                int offsSmallX = Math.Abs(offsSmall.X % Globals.PixelWidth);
+                // Cut off half cells at the full-cell boundaries; this will produce a square anyway.
+                if (offsSmallX != 0)
+                {
+                    offsSmall.X += offsSmallX;
+                    vpsSmall.Width -= Globals.PixelWidth;
+                }
+                Rectangle missionStartSm = plugin.Map.GetSoloViewport(vpsSmall, offsSmall, true, true, Globals.PixelSize);
+                missionStartSm = missionStartSm.AdjustToScale(null, Globals.PixelSize);
                 using (Bitmap pr = plugin.Map.GenerateWorkshopPreview(plugin, missionStartSm).ToBitmap())
                 using (MemoryStream ms = new MemoryStream())
                 {

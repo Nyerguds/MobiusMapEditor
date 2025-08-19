@@ -145,6 +145,7 @@ namespace MobiusEditor
 
         public const int PixelWidth = 24;
         public const int PixelHeight = 24;
+        public static Size PixelSize => new Size(PixelWidth, PixelHeight);
 
         public static int ZOrderTop = 20;
         public static int ZOrderBelowTop = 19;

@@ -93,7 +93,12 @@ namespace MobiusEditor.TiberianDawn
         public override int MaxTeams => Constants.MaxTeams;
         public override int HitPointsGreenMinimum => 127;
         public override int HitPointsYellowMinimum => 63;
-        public override bool HomeWaypointIsCenter => false;
+        public override Size ViewportSizeSmall => new Size(240, 192);
+        public override Size ViewportSidebarSmall => new Size(80, 192);
+        public override Point ViewportOffsetSmall => new Point(0, 0);
+        public override Size ViewportSizeLarge => new Size(480, 384);
+        public override Size ViewportSidebarLarge => new Size(160, 384);
+        public override Point ViewportOffsetLarge => new Point(0, 0);
         public override OverlayTypeFlag OverlayIconType => OverlayTypeFlag.Crate;
         public override Bitmap WorkshopPreviewGeneric => Properties.Resources.UI_CustomMissionPreviewDefault;
         public override Bitmap WorkshopPreviewGenericGame => Properties.Resources.TD_Head;

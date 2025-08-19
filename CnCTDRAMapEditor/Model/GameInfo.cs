@@ -144,8 +144,18 @@ namespace MobiusEditor.Model
         public abstract int HitPointsGreenMinimum { get; }
         /// <summary>Threshold (1-256) at which the health bar colour changes from red to yellow in this game.</summary>
         public abstract int HitPointsYellowMinimum { get; }
-        /// <summary>Returns whether the Home waypoint indicates the center of the start viewport, or the top left corner.</summary>
-        public abstract bool HomeWaypointIsCenter { get; }
+        /// <summary>Returns the viewport size around the Home waypoint, for DOS resolution, in old pixels.</summary>
+        public abstract Size ViewportSizeSmall { get; }
+        /// <summary>Returns the extra sidebar part of the viewport size, for DOS resolution, in old pixels. This is always added to the left of the main viewport.</summary>
+        public abstract Size ViewportSidebarSmall { get; }
+        /// <summary>Returns the offset of the top-left corner of the viewport from the Home waypoint for DOS resolution, in old pixels.</summary>
+        public abstract Point ViewportOffsetSmall { get; }
+        /// <summary>Returns the viewport size around the Home waypoint, for Win95 resolution, in old pixels.</summary>
+        public abstract Size ViewportSizeLarge { get; }
+        /// <summary>Returns the extra sidebar part of the viewport size, for Win95 resolution, in old pixels. This is always added to the left of the main viewport.</summary>
+        public abstract Size ViewportSidebarLarge { get; }
+        /// <summary>Returns the offset of the top-left corner of the viewport from the Home waypoint for Win95 resolution, in old pixels.</summary>
+        public abstract Point ViewportOffsetLarge { get; }
         /// <summary>Preferred type of overlay to use as UI icon.</summary>
         public abstract OverlayTypeFlag OverlayIconType { get; }
         /// <summary>Generic image usable as Steam thumbnail.</summary>
