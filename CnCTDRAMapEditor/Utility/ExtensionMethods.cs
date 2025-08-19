@@ -312,11 +312,7 @@ namespace MobiusEditor.Utility
         /// <returns>The rectangle, adjusted to the new scale.</returns>
         public static Point AdjustToScale(this Point point, Size? multiplier, Size? divisor = null)
         {
-            int mulWidth = multiplier.HasValue ? multiplier.Value.Width : 1;
-            int mulHeight = multiplier.HasValue ? multiplier.Value.Height : 1;
-            int divWidth = divisor.HasValue ? divisor.Value.Width : 1;
-            int divHeight = divisor.HasValue ? divisor.Value.Height : 1;
-            return new Point(point.Width * mulWidth / divWidth, point.Height * mulHeight / divHeight);
+            return new Point(AdjustToScale(new Size(point), multiplier, divisor));
         }
 
         public static IEnumerable<T> Yield<T>(this T item)
