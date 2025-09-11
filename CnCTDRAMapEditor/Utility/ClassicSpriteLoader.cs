@@ -24,7 +24,7 @@ namespace MobiusEditor.Utility
     [Serializable]
     public class FileTypeLoadException : Exception
     {
-        /// <summary>USed to store the attempted load type in the Data dictionary to allow serialization.</summary>
+        /// <summary>Used to store the attempted load type in the Data dictionary to allow serialization.</summary>
         protected readonly string DataAttemptedLoadedType = "AttemptedLoadedType";
 
         /// <summary>File type that was attempted to be loaded and threw this exception.</summary>
@@ -62,7 +62,8 @@ namespace MobiusEditor.Utility
             // Build an easy lookup table for this, so no calculations are ever needed for it later.
             for (int i = 0; i < 64; ++i)
             {
-                ConvertToEightBit[i] = (byte)Math.Round(i * 255.0 / 63.0, MidpointRounding.AwayFromZero);
+                //ConvertToEightBit[i] = (byte)Math.Round(i * 255.0 / 63.0, MidpointRounding.AwayFromZero);
+                ConvertToEightBit[i] = (byte)((i << 2) | (i >> 4));
             }
         }
 

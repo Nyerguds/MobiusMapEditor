@@ -4,7 +4,7 @@
 
 **DO NOT unpack this in the C&C Remastered Collection's install folder.** It is absolutely unnecessary to overwrite any files of the installed game.
 
-Simply unpack the editor into a new folder on your disk somewhere. On first startup, it will automatically try to detect the folder in which the game is installed, and if it can't find it, it will show a dialog asking you to locate it. Note that this autodetect only works on Steam installations of the game.
+Simply unpack the editor into a new folder on your disk somewhere, and run `MobiusMapEditor.exe`. On first startup, it will automatically try to detect the folder in which the C&C Remastered Collection is installed, and if it can't find it, it will show a dialog asking you to locate it. Note that this autodetect only works on Steam installations of the game.
 
 If the C&C Remastered Collection is not installed on your PC, you can use the "Continue with classic graphics" button on the dialog to start the editor without the Remastered graphics. To suppress the "Select game path" dialog and instead automatically start with classic graphics, you can edit the config file in a text editor and enable the option to always use classic graphics. (See the "Configuration" section below.)
 
@@ -166,6 +166,7 @@ Starting from v1.6.0.0, the editor has the ability to open the original games' .
 
 * **ZoomToBoundsOnLoad**: Defaults to True. When enabled, causes the editor to zoom in to the map bounds when loading an existing map.
 * **RememberToolData**: Defaults to False. When enabled, the item selections and options on the tool windows will be remembered when opening a different map for the same game.
+* **AllowDeleteRoutePoints**: Defaults to False. When enabled, the Waypoints tool, when switched to Routes mode, will allow deleting waypoints of a route. This will not affect the Teamtype, though; it will jut clear a waypoint it refers to in its Orders list.
 * **MapScale**: Scaling multiplier for the size at which assets are rendered on the map. Scaling down the rendered map size will make the UI more responsive. Negative values will enable smooth scaling, which gives nicer graphics but will make the UI noticeable _less_ responsive. Defaults to 0.5.
 * **MapScaleClassic**: Scaling multiplier when using classic graphics. Defaults to 1.0.
 * **PreviewScale**: Scaling multiplier for the size at which assets are rendered on the preview tools. Negative values will enable smooth scaling, but this usually doesn't look good on the upscaled preview graphics. Defaults to 1.

@@ -307,6 +307,7 @@ namespace MobiusEditor.Model
         public readonly HashSet<string> TerrainActionTypes;
 
         public readonly string[] MissionTypes;
+        public readonly string[] MissionTypesBad;
 
         private const string defaultMission = "Guard";
         private readonly string inputMissionArmed;
@@ -470,6 +471,7 @@ namespace MobiusEditor.Model
         /// <param name="buildingActionTypes">The list of all action types applicable to buildings in this game.</param>
         /// <param name="terrainActionTypes">The list of all action types applicable to terrain in this game.</param>
         /// <param name="missionTypes">The list of all mission types (orders) supported by this game.</param>
+        /// <param name="missionTypesBad">The list of mission types (orders) which are supported by this game, but can't be assigned to objects in a mission.</param>
         /// <param name="armedMission">The default mission for armed units.</param>
         /// <param name="unarmedMission">The default mission for unarmed units.</param>
         /// <param name="harvestMission">The default mission for harvesting units.</param>
@@ -496,7 +498,7 @@ namespace MobiusEditor.Model
             IEnumerable<TerrainType> terrainTypes, IEnumerable<OverlayType> overlayTypes, IEnumerable<SmudgeType> smudgeTypes,
             IEnumerable<string> eventTypes, IEnumerable<string> cellEventTypes, IEnumerable<string> unitEventTypes, IEnumerable<string> buildingEventTypes, IEnumerable<string> terrainEventTypes,
             IEnumerable<string> actionTypes, IEnumerable<string> cellActionTypes, IEnumerable<string> unitActionTypes, IEnumerable<string> buildingActionTypes, IEnumerable<string> terrainActionTypes,
-            IEnumerable<string> missionTypes, string armedMission, string unarmedMission, string harvestMission, string aircraftMission,
+            IEnumerable<string> missionTypes, IEnumerable<string> missionTypesBad, string armedMission, string unarmedMission, string harvestMission, string aircraftMission,
             IEnumerable<DirectionType> unitDirectionTypes, IEnumerable<DirectionType> buildingDirectionTypes,
             IEnumerable<InfantryType> infantryTypes, IEnumerable<UnitType> unitTypes, IEnumerable<BuildingType> buildingTypes,
             IEnumerable<TeamMission> teamMissionTypes, IEnumerable<ITechnoType> teamTechnoTypes, IEnumerable<Waypoint> waypoints,
@@ -527,6 +529,7 @@ namespace MobiusEditor.Model
 
             ActionTypes = actionTypes.ToArray();
             MissionTypes = missionTypes.ToArray();
+            MissionTypesBad = missionTypesBad.ToArray();
             string defMission = MissionTypes.Where(m => m.Equals(defaultMission, StringComparison.OrdinalIgnoreCase)).FirstOrDefault() ?? MissionTypes.First();
             // Unfiltered originals, to ensure this remains correct when cloning.
             inputMissionArmed = armedMission;
@@ -1516,7 +1519,7 @@ namespace MobiusEditor.Model
                 FlagColors, TheaterTypes, TemplateTypes, TerrainTypes, OverlayTypes, SmudgeTypes,
                 EventTypes, CellEventTypes, UnitEventTypes, BuildingEventTypes, TerrainEventTypes,
                 ActionTypes, CellActionTypes, UnitActionTypes, BuildingActionTypes, TerrainActionTypes,
-                MissionTypes, inputMissionArmed, inputMissionUnarmed, inputMissionHarvest, inputMissionAircraft,
+                MissionTypes, MissionTypesBad, inputMissionArmed, inputMissionUnarmed, inputMissionHarvest, inputMissionAircraft,
                 UnitDirectionTypes, BuildingDirectionTypes, AllInfantryTypes, AllUnitTypes, BuildingTypes, TeamMissionTypes,
                 AllTeamTechnoTypes, wpPreview, MovieTypes, MovieEmpty, ThemeTypes, ThemeEmpty,
                 DropZoneRadius, GapRadius, RadarJamRadius, TiberiumOrGoldValue, GemValue)
@@ -1763,7 +1766,7 @@ namespace MobiusEditor.Model
             {
                 return DefaultMissionUnarmed;
             }
-            // Automatically switch from other default missions to the general 'Guard' one, but don't change custom-picked mission like 'Hunt4.
+            // Automatically switch from other default missions to the general 'Guard' one, but don't change custom-picked mission like 'Hunt'.
             if (currentMission == DefaultMissionHarvest || currentMission == DefaultMissionAircraft || currentMission == DefaultMissionUnarmed)
             {
                 return DefaultMissionArmed;
@@ -1771,12 +1774,12 @@ namespace MobiusEditor.Model
             return currentMission;
         }
 
-        public ICellOccupier FindBlockingObject(int cell, ICellOccupier obj, out int blockingCell, out int placementCell)
+        public ICellOccupier FindBlockingObject(int cell, ICellOccupier obj, bool buildingLayer, out int blockingCell, out int placementCell)
         {
-            return FindBlockingObject(cell, obj, out blockingCell, out placementCell, out _);
+            return FindBlockingObject(cell, obj, buildingLayer, out blockingCell, out placementCell, out _);
         }
 
-        public ICellOccupier FindBlockingObject(int cell, ICellOccupier obj, out int blockingCell, out int placementCell, out bool onBib)
+        public ICellOccupier FindBlockingObject(int cell, ICellOccupier obj, bool buildingLayer, out int blockingCell, out int placementCell, out bool onBib)
         {
             onBib = false;
             blockingCell = -1;
@@ -1807,15 +1810,14 @@ namespace MobiusEditor.Model
                                     placementCell = -1;
                                     return null;
                                 }
-                                ICellOccupier techno = Technos[targetCell];
-                                ICellOccupier b = Buildings[targetCell];
-                                if (techno != null || b != null)
+                                ICellOccupier techno = buildingLayer ? Buildings[targetCell] : Technos[targetCell];
+                                if (techno != null)
                                 {
                                     blockingCell = targetCell;
-                                    Point? blockingOrigin = techno != null ? Technos[techno] : Buildings[b];
+                                    Point? blockingOrigin = buildingLayer? Buildings[techno] : Technos[techno];
                                     placementCell = Metrics.GetCell(blockingOrigin.Value).Value;
                                     onBib = false;
-                                    return techno ?? b;
+                                    return techno;
                                 }
                             }
                             else if (y < ylenOcMask && x < xlenOcMask && occupyMask[y, x])
@@ -1880,7 +1882,7 @@ namespace MobiusEditor.Model
 
         public void CheckBuildingBlockingCell(int cell, BuildingType buildingType, List<string> errors, ref bool modified, string rebuildIndex)
         {
-            ICellOccupier techno = FindBlockingObject(cell, buildingType, out int blockingCell, out int placementcell, out bool isbib);
+            ICellOccupier techno = FindBlockingObject(cell, buildingType, true, out int blockingCell, out int placementcell, out bool isbib);
             string reportString;
             if (rebuildIndex != null)
             {

@@ -1004,14 +1004,14 @@ namespace MobiusEditor.Render
             bool succeeded = Globals.TheTilesetManager.GetTeamColorTileData(unit.Type.Name, icon, teamColor, out Tile tile, true, false);
             unit.DrawFrameCache = icon;
             Size imSize = tile.Image.Size;
-            Point originPoint = Point.Empty;
+            Point imOrigin = Point.Empty;
             int maxW = Globals.OriginalTileWidth * 3;
             int maxH = Globals.OriginalTileHeight * 3;
             if (imSize.Width > maxW || imSize.Height > maxH)
             {
-                originPoint = new Point(Math.Max(0, (imSize.Width - maxW) / 2), Math.Max(0, (imSize.Height - maxH) / 2));
-                imSize.Width = Math.Min(imSize.Width, maxW);
-                imSize.Height = Math.Min(imSize.Height, maxH);
+                imOrigin = new Point(Math.Max(0, (imSize.Width - maxW) / 2), Math.Max(0, (imSize.Height - maxH) / 2));
+                if (imSize.Width > maxW) imSize.Width = maxW;
+                if (imSize.Height > maxH) imSize.Height = maxH;
             }
             Point location =
                 new Point(topLeft.X * tileSize.Width, topLeft.Y * tileSize.Height) +
@@ -1019,7 +1019,6 @@ namespace MobiusEditor.Render
             Size renderSize = new Size(imSize.Width * tileSize.Width / Globals.OriginalTileWidth, imSize.Height * tileSize.Height / Globals.OriginalTileHeight);
             Rectangle renderRect = new Rectangle(new Point(0, 0), renderSize);
             Rectangle renderBounds = new Rectangle(location - new Size(renderSize.Width / 2, renderSize.Height / 2), renderSize);
-            // Turret handling
             Tile turretTile = null;
             Tile turret2Tile = null;
             Point turretAdjust = Point.Empty;
@@ -1120,47 +1119,65 @@ namespace MobiusEditor.Render
             }
             void render(Graphics g)
             {
+                // Combine body and turret to one image, then paint it. This is done because it might be semitransparent.
                 using (ImageAttributes imageAttributes = new ImageAttributes())
+                using (Bitmap unitBm = new Bitmap(renderBounds.Width, renderBounds.Height))
                 {
                     imageAttributes.SetColorMatrix(GetColorMatrix(Color.White, 1.0f, alphaFactor));
-                    // Combine body and turret to one image, then paint it. This is done because it might be semitransparent.
-                    using (Bitmap unitBm = new Bitmap(renderBounds.Width, renderBounds.Height))
+                    unitBm.SetResolution(96, 96);
+                    using (Graphics unitG = Graphics.FromImage(unitBm))
                     {
-                        unitBm.SetResolution(96, 96);
-                        using (Graphics unitG = Graphics.FromImage(unitBm))
+                        unitG.CopyRenderSettingsFrom(g);
+                        if (tile != null)
                         {
-                            unitG.CopyRenderSettingsFrom(g);
-                            if (tile != null)
+                            if (unit.Type.IsAircraft)
                             {
-                                unitG.DrawImage(tile.Image, renderRect, originPoint.X, originPoint.Y, imSize.Width, imSize.Height, GraphicsUnit.Pixel);
+                                int shiftX = tileSize.Width / Globals.PixelWidth;
+                                int shiftY = 2 * (tileSize.Height / Globals.PixelHeight);
+                                Point shadowPoint = new Point(renderRect.X + shiftX, renderRect.Y + shiftY);
+                                using (ImageAttributes shadowAttr = new ImageAttributes())
+                                {
+                                    ColorMatrix shadowMatrix = new ColorMatrix(new float[][]
+                                    {
+                                        new float[] {0, 0, 0, 0, 0},   // Red
+                                        new float[] {0, 0, 0, 0, 0},   // Green
+                                        new float[] {0, 0, 0, 0, 0},   // Blue
+                                        new float[] {0, 0, 0, 0.5f, 0},// Alpha (50% of original)
+                                        new float[] {0, 0, 0, 0, 1}    // Translation
+                                    });
+                                    shadowAttr.SetColorMatrix(shadowMatrix);
+                                    Rectangle shadowRect = new Rectangle(shadowPoint, renderRect.Size);
+                                    unitG.DrawImage(tile.Image, shadowRect, imOrigin.X, imOrigin.Y, imSize.Width, imSize.Height, GraphicsUnit.Pixel, shadowAttr);
+                                }
                             }
-                            if (unit.Type.HasTurret)
+                            unitG.DrawImage(tile.Image, renderRect, imOrigin.X, imOrigin.Y, imSize.Width, imSize.Height, GraphicsUnit.Pixel);
+                        }
+                        if (unit.Type.HasTurret)
+                        {
+                            Point center = new Point((renderRect.X + renderRect.Width) / 2, (renderRect.Y + renderRect.Height) / 2);
+                            void RenderTurret(Graphics ug, Tile turrTile, Point turrAdjust, Size tlSize)
                             {
-                                Point center = new Point(renderBounds.Width / 2, renderBounds.Height / 2);
-                                void RenderTurret(Graphics ug, Tile turrTile, Point turrAdjust, Size tlSize)
-                                {
-                                    Size turretSize = turrTile.Image.Size;
-                                    Size turretRenderSize = new Size(turretSize.Width * tlSize.Width / Globals.OriginalTileWidth, turretSize.Height * tlSize.Height / Globals.OriginalTileHeight);
-                                    Rectangle turrBounds = new Rectangle(center - new Size(turretRenderSize.Width / 2, turretRenderSize.Height / 2), turretRenderSize);
-                                    turrBounds.Offset(
-                                        turrAdjust.X * tlSize.Width / Globals.PixelWidth,
-                                        turrAdjust.Y * tlSize.Height / Globals.PixelHeight
-                                    );
-                                    ug.DrawImage(turrTile.Image, turrBounds, 0, 0, turrTile.Image.Width, turrTile.Image.Height, GraphicsUnit.Pixel);
-                                }
+                                Size turretSize = turrTile.Image.Size;
+                                Size turretRenderSize = new Size(turretSize.Width * tlSize.Width / Globals.OriginalTileWidth, turretSize.Height * tlSize.Height / Globals.OriginalTileHeight);
+                                Rectangle turrBounds = new Rectangle(center - new Size(turretRenderSize.Width / 2, turretRenderSize.Height / 2), turretRenderSize);
+                                turrBounds.Offset(
+                                    turrAdjust.X * tlSize.Width / Globals.PixelWidth,
+                                    turrAdjust.Y * tlSize.Height / Globals.PixelHeight
+                                );
+                                ug.DrawImage(turrTile.Image, turrBounds, 0, 0, turrTile.Image.Width, turrTile.Image.Height, GraphicsUnit.Pixel);
+                            }
 
-                                if (turretTile != null && turretTile.Image != null)
-                                {
-                                    RenderTurret(unitG, turretTile, turretAdjust, tileSize);
-                                }
-                                if (unit.Type.HasDoubleTurret && turret2Tile != null && turret2Tile.Image != null)
-                                {
-                                    RenderTurret(unitG, turret2Tile, turret2Adjust, tileSize);
-                                }
+                            if (turretTile != null && turretTile.Image != null)
+                            {
+                                RenderTurret(unitG, turretTile, turretAdjust, tileSize);
+                            }
+                            if (unit.Type.HasDoubleTurret && turret2Tile != null && turret2Tile.Image != null)
+                            {
+                                RenderTurret(unitG, turret2Tile, turret2Adjust, tileSize);
                             }
                         }
-                        g.DrawImage(unitBm, renderBounds, 0, 0, renderBounds.Width, renderBounds.Height, GraphicsUnit.Pixel, imageAttributes);
                     }
+                    g.DrawImage(unitBm, renderBounds, 0, 0, renderBounds.Width, renderBounds.Height, GraphicsUnit.Pixel, imageAttributes);
                 }
             }
             Point centerPoint = GetVehicleRenderPoint();

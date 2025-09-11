@@ -53,6 +53,7 @@ namespace MobiusEditor.Utility
         private IArchiveManager archiveManager;
         private TheaterType theater;
         private Color[] currentlyLoadedPalette;
+        private Color currentlyLoadedTransparent;
         private Color[] currentlyLoadedPaletteBare;
         private Color[] currentlyLoadedPaletteOrig;
 
@@ -83,7 +84,7 @@ namespace MobiusEditor.Utility
                 }
                 tiles.Clear();
             }
-            this.tileData.Clear();
+            tileData.Clear();
             this.theater = null;
             if (gameType != GameType.None && theater != null && (this.archiveManager.CurrentGameType != gameType || this.archiveManager.CurrentTheater != theater))
             {
@@ -92,15 +93,17 @@ namespace MobiusEditor.Utility
             this.theater = theater;
             Color[] pal = TeamRemapManager.GetPaletteForTheater(this.archiveManager, theater);
             int palLength = 0x100;
-            this.currentlyLoadedPaletteOrig = new Color[0x100];
-            this.currentlyLoadedPaletteBare = new Color[0x100];
-            this.currentlyLoadedPalette = new Color[0x100];
+            currentlyLoadedPaletteOrig = new Color[0x100];
+            currentlyLoadedPaletteBare = new Color[0x100];
+            currentlyLoadedPalette = new Color[0x100];
             for (int i = 0; i < pal.Length && i < palLength; ++i)
             {
-                this.currentlyLoadedPaletteOrig[i] = pal[i];
-                this.currentlyLoadedPaletteBare[i] = pal[i];
-                this.currentlyLoadedPalette[i] = pal[i];
+                currentlyLoadedPaletteOrig[i] = pal[i];
+                currentlyLoadedPaletteBare[i] = pal[i];
+                currentlyLoadedPalette[i] = pal[i];
             }
+            Color shadowCol = theater == null || theater.ClassicShadow == 0 ? Color.Black : pal[((theater.ClassicShadow & 0x0F)-1) | 0xF0];
+            currentlyLoadedTransparent = Color.FromArgb(0x80, shadowCol);
             ApplySpecialColors(this.currentlyLoadedPaletteBare, true, false);
             ApplySpecialColors(this.currentlyLoadedPalette, true, true);
         }
@@ -115,7 +118,7 @@ namespace MobiusEditor.Utility
             if (adjustShadow)
             {
                 // Set shadow color to semitransparent black. Classic fading table remapping is impossible for this since the editor's main bitmap is high color.
-                colors[4] = Color.FromArgb(0x80, Color.Black);
+                colors[4] = currentlyLoadedTransparent;
             }
         }
 

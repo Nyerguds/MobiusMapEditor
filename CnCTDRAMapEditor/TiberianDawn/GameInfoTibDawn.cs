@@ -149,6 +149,7 @@ namespace MobiusEditor.TiberianDawn
                 StartupLoader.TestMixExists(loadedFiles, loadErrors, prefix, "local.mix", "cclocal.mix");
                 StartupLoader.TestMixExists(loadedFiles, loadErrors, prefix, "conquer.mix");
             }
+            // Theaters
             foreach (TheaterType tdTheater in AllTheaters)
             {
                 StartupLoader.TestMixExists(loadedFiles, loadErrors, prefix, tdTheater, !tdTheater.IsModTheater);

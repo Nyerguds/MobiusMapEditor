@@ -32,7 +32,7 @@ Github can be a bit tricky to nagivate, but you can find the latest releases in 
 
 **DO NOT unpack this in the C&C Remastered Collection's install folder.** It is absolutely unnecessary to overwrite any files of the installed game.
 
-Simply unpack the editor into a new folder on your disk somewhere. On first startup, it will automatically try to detect the folder in which the game is installed, and if it can't find it, it will show a popup asking you to locate it. Note that this autodetect only works on Steam installations of the game.
+Simply unpack the editor into a new folder on your disk somewhere, and run `MobiusMapEditor.exe`. On first startup, it will automatically try to detect the folder in which the C&C Remastered Collection is installed, and if it can't find it, it will show a dialog asking you to locate it. Note that this autodetect only works on Steam installations of the game.
 
 It is advised to install the `GraphicsFixesTD` and `GraphicsFixesRA` mods, to fix errors and add missing bits in the Remastered graphics. The editor will use the mods automatically when they are installed, even if they are not enabled inside the game. You can find them on the Steam workshop ([GraphicsFixesTD](https://steamcommunity.com/sharedfiles/filedetails/?id=2844969675), [GraphicsFixesRA](https://steamcommunity.com/sharedfiles/filedetails/?id=2978875641)) and on ModDB ([GraphicsFixesTD](https://www.moddb.com/games/command-conquer-remastered/addons/graphicsfixestd), [GraphicsFixesRA](https://www.moddb.com/games/cc-red-alert-remastered/addons/graphicsfixesra)).
 

@@ -738,3 +738,7 @@ Unreleased
 * Fixed inaccuracies in the effect radiuses of units and buildings; a radius now starts at the center of the cell.
 * Fixed the radar jammer radius; since the distance calculation in the game is actually octagonal, it now shows an octagonal area of effect.
 * Improved the accuracy of the Home waypoint starting view box, with the sidebar area added only as extra info.
+* Unit orders that are in the game but aren't supported in the editor are now recognised and reported as such.
+* An unparseable "Direction" value on a unit in a mission will no longer cause it to skip the entire unit.
+* Added shadows under airplanes.
+* Fixed overlap detection for buildings still looking at technos to see what is blocking it, despite buildings being on their own separate layer now.

@@ -145,16 +145,16 @@ namespace MobiusEditor.RedAlert
             HashSet<string> loadedFiles = mfm.Select(s => Path.GetFileName(s)).ToHashSet(StringComparer.OrdinalIgnoreCase);
             string prefix = ShortName + ": ";
             // Allow loading without expansion files.
-            //TestMixExists(loadedFiles, loadErrors, prefix, "expand2.mix");
+            //StartupLoader.TestMixExists(loadedFiles, loadErrors, prefix, "expand2.mix");
             StartupLoader.TestMixExists(loadedFiles, loadErrors, prefix, "local.mix");
             if (!forRemaster)
             {
                 StartupLoader.TestMixExists(loadedFiles, loadErrors, prefix, "conquer.mix");
                 StartupLoader.TestMixExists(loadedFiles, loadErrors, prefix, "lores.mix");
                 // Allow loading without expansion files.
-                //TestMixExists(loadedFiles, loadErrors, prefix, "lores1.mix");
+                //StartupLoader.TestMixExists(loadedFiles, loadErrors, prefix, "lores1.mix");
             }
-            // Required theaters
+            // Theaters
             foreach (TheaterType raTheater in AllTheaters)
             {
                 StartupLoader.TestMixExists(loadedFiles, loadErrors, prefix, raTheater, !raTheater.IsModTheater);
@@ -166,8 +166,8 @@ namespace MobiusEditor.RedAlert
             }
             StartupLoader.TestFileExists(mfm, fileLoadErrors, prefix, "rules.ini");
             // Allow loading without expansion files.
-            //TestFileExists(mfm, loadErrors,prefix, "aftrmath.ini");
-            //TestFileExists(mfm, loadErrors,prefix, "mplayer.ini");
+            //StartupLoader.TestFileExists(mfm, loadErrors,prefix, "aftrmath.ini");
+            //StartupLoader.TestFileExists(mfm, loadErrors,prefix, "mplayer.ini");
         }
 
         public override string GetClassicOpposingPlayer(string player) => HouseTypes.GetClassicOpposingPlayer(player);

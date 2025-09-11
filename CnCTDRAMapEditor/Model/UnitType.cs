@@ -111,6 +111,8 @@ namespace MobiusEditor.Model
         public override bool IsAircraft => true;
         public override bool IsVessel => false;
         public override bool IsFixedWing => Flags.HasFlag(UnitTypeFlag.FixedWing);
+        public override Rectangle OverlapBounds => new Rectangle(-1, -1, 3, 3);
+        public override int ZOrder => Globals.ZOrderFlying;
 
         public AircraftType(int id, string name, string textId, string ownerHouse, FrameUsage bodyFrameUsage, FrameUsage turrFrameUsage, string turret, string turret2, int turrOffset, int turretY, UnitTypeFlag flags)
             : base(id, name, textId, ownerHouse, bodyFrameUsage, turrFrameUsage, turret, turret2, turrOffset, turretY, flags)
@@ -162,13 +164,13 @@ namespace MobiusEditor.Model
         public UnitTypeFlag Flags { get; private set; }
         public FrameUsage BodyFrameUsage { get; private set; }
         public FrameUsage TurretFrameUsage { get; private set; }
-        public Rectangle OverlapBounds => new Rectangle(-1, -1, 3, 3);
+        public virtual Rectangle OverlapBounds => new Rectangle(-1, -1, 3, 3);
         // Units are big enough to be visible even when partially overlapped, so they only count as overlapped if their center is overlapped.
-        public bool[,][] OverlapMask => new bool[1, 1][] { { new bool[] { true, false, false, false, false } } };
-        public bool[,][] ContentMask => OverlapMask;
-        public bool[,] OccupyMask => new bool[1, 1] { { true } };
-        public bool[,] BaseOccupyMask => new bool[1, 1] { { true } };
-        public int ZOrder => Globals.ZOrderDefault;
+        public virtual bool[,][] OverlapMask => new bool[1, 1][] { { new bool[] { true, false, false, false, false } } };
+        public virtual bool[,][] ContentMask => OverlapMask;
+        public virtual bool[,] OccupyMask => new bool[1, 1] { { true } };
+        public virtual bool[,] BaseOccupyMask => new bool[1, 1] { { true } };
+        public virtual int ZOrder => Globals.ZOrderDefault;
         public string OwnerHouse { get; private set; }
         public abstract bool IsGroundUnit { get; }
         public abstract bool IsAircraft { get; }

@@ -504,7 +504,7 @@ namespace MobiusEditor.TiberianDawn
                 TerrainTypes.GetTypes(), OverlayTypes.GetTypes(), SmudgeTypes.GetTypes(Globals.ConvertCraters),
                 EventTypes.GetTypes(), cellEventTypes, unitEventTypes, structureEventTypes, terrainEventTypes,
                 ActionTypes.GetTypes(), cellActionTypes, unitActionTypes, structureActionTypes, terrainActionTypes,
-                MissionTypes.GetTypes(), MissionTypes.MISSION_GUARD, MissionTypes.MISSION_STOP, MissionTypes.MISSION_HARVEST,
+                MissionTypes.GetTypes(), MissionTypes.GetUnassignableTypes(), MissionTypes.MISSION_GUARD, MissionTypes.MISSION_STOP, MissionTypes.MISSION_HARVEST,
                 MissionTypes.MISSION_UNLOAD, DirectionTypes.GetMainTypes(), DirectionTypes.GetAllTypes(), InfantryTypes.GetTypes(),
                 UnitTypes.GetTypes(Globals.DisableAirUnits), BuildingTypes.GetTypes(), TeamMissionTypes.GetTypes(),
                 fullTechnoTypes, waypoints, movieTypes, movieEmpty, themeEmpty.Yield().Concat(themeTypes), themeEmpty,
@@ -1559,10 +1559,10 @@ namespace MobiusEditor.TiberianDawn
                 int dirValue;
                 if (!Int32.TryParse(tokens[6], out dirValue))
                 {
-                    errors.Add(string.Format("Direction for infantry '{0}' on cell {1}, sub-position {2}, value '{3}', cannot be parsed; skipping.",
+                    errors.Add(string.Format("Direction for infantry '{0}' on cell {1}, sub-position {2}, value '{3}', cannot be parsed; clearing to 0.",
                         infantryType.Name, cell, stoppingPos, tokens[6]));
                     modified = true;
-                    continue;
+                    dirValue = 0;
                 }
                 DirectionType dirType = DirectionType.FindClosestDirectionType(dirValue, Map.UnitDirectionTypes);
                 if (dirType.ID != dirValue)
@@ -1603,7 +1603,7 @@ namespace MobiusEditor.TiberianDawn
                     House = Map.HouseTypes.Where(t => t.Equals(tokens[0])).FirstOrDefault(),
                     Strength = strength,
                     Direction = dirType,
-                    Mission = Map.MissionTypes.Where(t => t.Equals(tokens[5])).FirstOrDefault() ?? Map.GetDefaultMission(infantryType),
+                    Mission = Map.MissionTypes.Where(t => t.Equals(tokens[5])).FirstOrDefault(),
                     Trigger = tokens[7]
                 };
                 infantryGroup.Infantry[stoppingPos] = inf;
@@ -1614,6 +1614,15 @@ namespace MobiusEditor.TiberianDawn
                         inf.Type.Name, cell, stoppingPos, tokens[0], defHouse.Name));
                     modified = true;
                     inf.House = defHouse;
+                }
+                if (inf.Mission == null)
+                {
+                    string badOrder = Map.MissionTypesBad.Where(t => t.Equals(tokens[5], StringComparison.InvariantCultureIgnoreCase)).FirstOrDefault();
+                    string deforders = Map.GetDefaultMission(infantryType);
+                    string reason = badOrder != null ? "unsupported" : "unknown";
+                    errors.Add(string.Format("Infantry '{0}' on cell {1}, sub-position {2} references {3} orders '{4}'; changing to '{5}'.",
+                        inf.Type.Name, cell, stoppingPos, reason, badOrder ?? tokens[5], deforders));
+                    inf.Mission = deforders;
                 }
             }
         }
@@ -1680,9 +1689,9 @@ namespace MobiusEditor.TiberianDawn
                 int dirValue;
                 if (!Int32.TryParse(tokens[4], out dirValue))
                 {
-                    errors.Add(string.Format("Direction for unit '{0}' on cell {1}, value '{2}', cannot be parsed; skipping.", unitType.Name, cell, tokens[4]));
+                    errors.Add(string.Format("Direction for unit '{0}' on cell {1}, value '{2}', cannot be parsed; clearing to 0.", unitType.Name, cell, tokens[4]));
                     modified = true;
-                    continue;
+                    dirValue = 0;
                 }
                 DirectionType dirType = DirectionType.FindClosestDirectionType(dirValue, Map.UnitDirectionTypes);
                 if (dirType.ID != dirValue)
@@ -1697,19 +1706,30 @@ namespace MobiusEditor.TiberianDawn
                     House = Map.HouseTypes.Where(t => t.Equals(tokens[0])).FirstOrDefault(),
                     Strength = strength,
                     Direction = dirType,
-                    Mission = Map.MissionTypes.Where(t => t.Equals(tokens[5], StringComparison.InvariantCultureIgnoreCase)).FirstOrDefault() ?? Map.GetDefaultMission(unitType),
+                    Mission = Map.MissionTypes.Where(t => t.Equals(tokens[5], StringComparison.InvariantCultureIgnoreCase)).FirstOrDefault(),
                 };
                 if (newUnit.House == null)
                 {
                     HouseType defHouse = Map.HouseTypes.First();
-                    errors.Add(string.Format("Unit '{0}' on cell {1} references unknown house '{2}'; clearing to '{3}'.", newUnit.Type.Name, cell, tokens[0], defHouse.Name));
+                    errors.Add(string.Format("Unit '{0}' on cell {1} references unknown house '{2}'; clearing to '{3}'.",
+                        newUnit.Type.Name, cell, tokens[0], defHouse.Name));
                     modified = true;
                     newUnit.House = defHouse;
                 }
-                // "Rescue" and "Unload" both make the MCV deploy, but "Rescue" looks very strange in the editor, so we keep only one of them and convert the other.
-                if (MissionTypes.MISSION_RESCUE.Equals(tokens[5], StringComparison.InvariantCultureIgnoreCase) && newUnit.Type.Equals(UnitTypes.MCV))
+                if (newUnit.Mission == null)
                 {
-                    newUnit.Mission = MissionTypes.MISSION_UNLOAD;
+                    string badOrder = Map.MissionTypesBad.Where(t => t.Equals(tokens[5], StringComparison.InvariantCultureIgnoreCase)).FirstOrDefault();
+                    string deforders = Map.GetDefaultMission(unitType);
+                    if (newUnit.Type.Equals(UnitTypes.MCV) && badOrder == MissionTypes.MISSION_RESCUE)
+                    {
+                        // "Unload unpacks the MCV. "Hunt" looks for a nearby target and unpacks the MCV.
+                        // "Rescue" equates to "Hunt" in the code, bot clutters the list, so let's correct it to "Hunt".
+                        deforders = MissionTypes.MISSION_HUNT;
+                    }
+                    string reason = badOrder != null ? "unsupported" : "unknown";
+                    errors.Add(string.Format("Unit '{0}' on cell {1} references {2} orders '{3}'; changing to '{4}'.",
+                        newUnit.Type.Name, cell, reason, badOrder ?? tokens[5], deforders));
+                    newUnit.Mission = deforders;
                 }
                 if (!Map.Technos.Add(cell, newUnit))
                 {
@@ -1831,10 +1851,10 @@ namespace MobiusEditor.TiberianDawn
                 int dirValue;
                 if (!Int32.TryParse(tokens[4], out dirValue))
                 {
-                    errors.Add(string.Format("Direction for aircraft '{0}' on cell {1}, value '{2}', cannot be parsed; skipping.",
+                    errors.Add(string.Format("Direction for aircraft '{0}' on cell {1}, value '{2}', cannot be parsed; clearing to 0.",
                         aircraftType.Name, cell, tokens[4]));
                     modified = true;
-                    continue;
+                    dirValue = 0;
                 }
                 DirectionType dirType = DirectionType.FindClosestDirectionType(dirValue, Map.UnitDirectionTypes);
                 if (dirType.ID != dirValue)
@@ -1843,7 +1863,7 @@ namespace MobiusEditor.TiberianDawn
                         aircraftType.Name, cell, dirValue, dirType.ID, dirType.Name));
                     modified = true;
                 }
-                Unit newUnit = new Unit()
+                Unit newAir = new Unit()
                 {
                     Type = aircraftType,
                     House = Map.HouseTypes.Where(t => t.Equals(tokens[0])).FirstOrDefault(),
@@ -1851,15 +1871,24 @@ namespace MobiusEditor.TiberianDawn
                     Direction = dirType,
                     Mission = Map.MissionTypes.Where(t => t.Equals(tokens[5])).FirstOrDefault() ?? Map.GetDefaultMission(aircraftType)
                 };
-                if (newUnit.House == null)
+                if (newAir.House == null)
                 {
                     HouseType defHouse = Map.HouseTypes.First();
                     errors.Add(string.Format("Aircraft '{0}' on cell {1} references unknown house '{2}'; clearing to '{3}'.",
-                        newUnit.Type.Name, cell, tokens[0], defHouse.Name));
+                        newAir.Type.Name, cell, tokens[0], defHouse.Name));
                     modified = true;
-                    newUnit.House = defHouse;
+                    newAir.House = defHouse;
                 }
-                if (!Map.Technos.Add(cell, newUnit))
+                if (newAir.Mission == null)
+                {
+                    string badOrder = Map.MissionTypesBad.Where(t => t.Equals(tokens[5], StringComparison.InvariantCultureIgnoreCase)).FirstOrDefault();
+                    string deforders = Map.GetDefaultMission(aircraftType);
+                    string reason = badOrder != null ? "unsupported" : "unknown";
+                    errors.Add(string.Format("Aircraft '{0}' on cell {1} references {2} orders '{3}'; changing to '{4}'.",
+                        newAir.Type.Name, cell, reason, badOrder ?? tokens[5], deforders));
+                    newAir.Mission = deforders;
+                }
+                if (!Map.Technos.Add(cell, newAir))
                 {
                     ICellOccupier techno = Map.Technos[cell];
                     if (techno is Building building)
@@ -1975,10 +2004,10 @@ namespace MobiusEditor.TiberianDawn
                 int dirValue;
                 if (!Int32.TryParse(tokens[4], out dirValue))
                 {
-                    errors.Add(string.Format("Direction for structure '{0}' on cell {1}, value '{2}', cannot be parsed; skipping.",
+                    errors.Add(string.Format("Direction for structure '{0}' on cell {1}, value '{2}', cannot be parsed; clearing to 0.",
                         buildingType.Name, cell, tokens[4]));
                     modified = true;
-                    continue;
+                    dirValue = 0;
                 }
                 DirectionType dirType = DirectionType.FindClosestDirectionType(dirValue, Map.BuildingDirectionTypes);
                 if (dirType.ID != dirValue)
@@ -2205,19 +2234,9 @@ namespace MobiusEditor.TiberianDawn
                 };
                 if (!Map.Technos.Add(cell, newTerr))
                 {
-                    ICellOccupier techno = Map.FindBlockingObject(cell, terrainType, out int blockingCell, out int placementCell);
+                    ICellOccupier techno = Map.FindBlockingObject(cell, terrainType, false, out int blockingCell, out int placementCell);
                     string reportCell = blockingCell == -1 ? "<unknown>" : blockingCell.ToString();
-                    if (techno is Building building)
-                    {
-                        errors.Add(string.Format("Terrain '{0}' on cell {1} overlaps structure '{2}' placed on cell {3} at cell {4}; skipping.", terrainType.Name, cell, building.Type.Name, placementCell, reportCell));
-                        modified = true;
-                    }
-                    else if (techno is Overlay overlay)
-                    {
-                        errors.Add(string.Format("Terrain '{0}' on cell {1} overlaps overlay '{2}' at cell {3}; skipping.", terrainType.Name, cell, overlay.Type.Name, reportCell));
-                        modified = true;
-                    }
-                    else if (techno is Terrain terrain)
+                    if (techno is Terrain terrain)
                     {
                         errors.Add(string.Format("Terrain '{0}' on cell {1} overlaps terrain '{2}' placed on cell {3} at cell {4}; skipping.", terrainType.Name, cell, terrain.Type.Name, placementCell, reportCell));
                         modified = true;

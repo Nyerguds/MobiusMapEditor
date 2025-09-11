@@ -130,7 +130,7 @@ namespace MobiusEditor.SoleSurvivor
                 TerrainTypes.GetTypes(), OverlayTypes.GetTypes(), SmudgeTypes.GetTypes(Globals.ConvertCraters),
                 EventTypes.GetTypes(), cellEventTypes, unitEventTypes, structureEventTypes, terrainEventTypes,
                 ActionTypes.GetTypes(), cellActionTypes, unitActionTypes, structureActionTypes, terrainActionTypes,
-                MissionTypes.GetTypes(), MissionTypes.MISSION_GUARD, MissionTypes.MISSION_STOP,
+                MissionTypes.GetTypes(), MissionTypes.GetUnassignableTypes(), MissionTypes.MISSION_GUARD, MissionTypes.MISSION_STOP,
                 MissionTypes.MISSION_HARVEST, MissionTypes.MISSION_UNLOAD, DirectionTypes.GetMainTypes(),
                 DirectionTypes.GetAllTypes(), infantry, units, buildings, TeamMissionTypes.GetTypes(), fullTechnoTypes,
                 waypoints, movies, movieEmpty, themeEmpty.Yield().Concat(themeTypesSole), themeEmpty,

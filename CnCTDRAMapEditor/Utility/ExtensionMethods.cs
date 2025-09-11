@@ -63,6 +63,11 @@ namespace MobiusEditor.Utility
             return value < minValue || value > maxValue ? errorValue : value;
         }
 
+        public static byte Restrict(this byte value, byte minValue, byte maxValue)
+        {
+            return Math.Max(minValue, Math.Min(value, maxValue));
+        }
+
         public static int Restrict(this int value, int minValue, int maxValue)
         {
             return Math.Max(minValue, Math.Min(value, maxValue));
