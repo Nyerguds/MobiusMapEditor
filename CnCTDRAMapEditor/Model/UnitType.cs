@@ -111,8 +111,13 @@ namespace MobiusEditor.Model
         public override bool IsAircraft => true;
         public override bool IsVessel => false;
         public override bool IsFixedWing => Flags.HasFlag(UnitTypeFlag.FixedWing);
-        public override Rectangle OverlapBounds => new Rectangle(-1, -1, 3, 3);
-        public override int ZOrder => Globals.ZOrderFlying;
+        public override Rectangle OverlapBounds => !IsFixedWing ? new Rectangle(-1, -1, 3, 3) : new Rectangle(-1, -2, 3, 4);
+        public override Point OverlapMaskOffset => !IsFixedWing ? Point.Empty : new Point(0, -1);
+        public override Point ContentMaskOffset => OverlapMaskOffset;
+        public override int ZOrder => !IsFixedWing ? base.ZOrder : Globals.ZOrderFlying;
+        // Flying aircraft are treated as overlapping the entire cell. Since they rotate, no detail analysis is done.
+        public override bool[,][] OverlapMask => !IsFixedWing ? base.OverlapMask
+            : new bool[2, 1][] { { new bool[] { true, true, true, true, true } }, { new bool[5] } };
 
         public AircraftType(int id, string name, string textId, string ownerHouse, FrameUsage bodyFrameUsage, FrameUsage turrFrameUsage, string turret, string turret2, int turrOffset, int turretY, UnitTypeFlag flags)
             : base(id, name, textId, ownerHouse, bodyFrameUsage, turrFrameUsage, turret, turret2, turrOffset, turretY, flags)
@@ -167,7 +172,9 @@ namespace MobiusEditor.Model
         public virtual Rectangle OverlapBounds => new Rectangle(-1, -1, 3, 3);
         // Units are big enough to be visible even when partially overlapped, so they only count as overlapped if their center is overlapped.
         public virtual bool[,][] OverlapMask => new bool[1, 1][] { { new bool[] { true, false, false, false, false } } };
+        public virtual Point OverlapMaskOffset => Point.Empty;
         public virtual bool[,][] ContentMask => OverlapMask;
+        public virtual Point ContentMaskOffset => Point.Empty;
         public virtual bool[,] OccupyMask => new bool[1, 1] { { true } };
         public virtual bool[,] BaseOccupyMask => new bool[1, 1] { { true } };
         public virtual int ZOrder => Globals.ZOrderDefault;
@@ -263,12 +270,19 @@ namespace MobiusEditor.Model
             // so for a nicer preview we use only half a cell around.
             Bitmap unitThumbnail = new Bitmap(Globals.PreviewTileWidth * 2, Globals.PreviewTileHeight * 2);
             unitThumbnail.SetResolution(96, 96);
+            bool flying = IsAircraft && IsFixedWing;
+            // Temporarily disable this for the thumbnail.
+            if (flying)
+            {
+                Flags &= ~UnitTypeFlag.FixedWing;
+            }
             using (Bitmap bigThumbnail = new Bitmap(Globals.PreviewTileWidth * 3, Globals.PreviewTileHeight * 3))
             {
                 bigThumbnail.SetResolution(96, 96);
                 using (Graphics g = Graphics.FromImage(bigThumbnail))
                 {
                     MapRenderer.SetRenderSettings(g, Globals.PreviewSmoothScale);
+                    
                     RenderInfo render = MapRenderer.RenderUnit(gameInfo, null, new Point(1, 1), Globals.PreviewTileSize, mockUnit, false);
                     if (render.RenderedObject != null)
                     {
@@ -280,6 +294,10 @@ namespace MobiusEditor.Model
                 {
                     g2.DrawImage(bigThumbnail, new Point(-Globals.PreviewTileWidth / 2, -Globals.PreviewTileHeight / 2));
                 }
+            }
+            if (flying)
+            {
+                Flags |= UnitTypeFlag.FixedWing;
             }
             Thumbnail = unitThumbnail;
             if (oldImage != null)

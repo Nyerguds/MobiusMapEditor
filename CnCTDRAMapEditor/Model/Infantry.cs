@@ -127,7 +127,9 @@ namespace MobiusEditor.Model
 
         public Rectangle OverlapBounds => new Rectangle(-1, -1, 3, 3);
         public bool[,][] OverlapMask => new bool[1, 1][] { { Infantry.Select(loc => loc != null).ToArray() } };
+        public Point OverlapMaskOffset => Point.Empty;
         public bool[,][] ContentMask => OverlapMask;
+        public Point ContentMaskOffset => Point.Empty;
         public bool[,] OccupyMask => new bool[1, 1] { { true } };
         public bool[,] BaseOccupyMask => new bool[1, 1] { { true } };
         public int ZOrder => Globals.ZOrderDefault;

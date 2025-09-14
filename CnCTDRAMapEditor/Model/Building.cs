@@ -33,7 +33,9 @@ namespace MobiusEditor.Model
 
         public Rectangle OverlapBounds => Type.OverlapBounds;
         public bool[,][] OverlapMask => Type.OverlapMask;
+        public Point OverlapMaskOffset => Type.OverlapMaskOffset;
         public bool[,][] ContentMask => Type.ContentMask;
+        public Point ContentMaskOffset => Type.ContentMaskOffset;
         public bool[,] OccupyMask => Type.OccupyMask;
         public bool[,] BaseOccupyMask => Type.BaseOccupyMask;
         public int ZOrder => Type.ZOrder;

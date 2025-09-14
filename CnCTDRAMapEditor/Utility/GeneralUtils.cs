@@ -599,6 +599,7 @@ namespace MobiusEditor.Utility
 
         /// <summary>
         /// Chops up an image into cells and determines for each sub-cell of each cell if it can be considered "mostly opaque".
+        /// Note that the coordinates inside the result are [Height, Width].
         /// </summary>
         /// <param name="image">Image to scan.</param>
         /// <param name="size">Size of the object in cells.</param>

@@ -90,13 +90,17 @@ namespace MobiusEditor.Tools
                 {
                     if (placementMode && (selectedUnitType != null))
                     {
-                        mapPanel.Invalidate(map, Rectangle.Inflate(new Rectangle(navigationWidget.MouseCell, new Size(1, 1)), 1, 1));
+                        Rectangle bounds = selectedUnitType.OverlapBounds;
+                        Point mouseLoc = new Point(navigationWidget.MouseCell.X + bounds.Location.X, navigationWidget.MouseCell.Y + bounds.Location.Y);
+                        mapPanel.Invalidate(map, new Rectangle(mouseLoc, bounds.Size));
                     }
                     selectedUnitType = value;
                     unitTypeListBox.SelectedValue = selectedUnitType;
                     if (placementMode && (selectedUnitType != null))
                     {
-                        mapPanel.Invalidate(map, Rectangle.Inflate(new Rectangle(navigationWidget.MouseCell, new Size(1, 1)), 1, 1));
+                        Rectangle bounds = selectedUnitType.OverlapBounds;
+                        Point mouseLoc = new Point(navigationWidget.MouseCell.X + bounds.Location.X, navigationWidget.MouseCell.Y + bounds.Location.Y);
+                        mapPanel.Invalidate(map, new Rectangle(mouseLoc, bounds.Size));
                     }
                     mockUnit.Type = selectedUnitType;
                 }
@@ -108,8 +112,7 @@ namespace MobiusEditor.Tools
             : base(mapPanel, layers, statusLbl, plugin, url)
         {
             previewMap = map;
-            // Leaving these in order of definition. Ordering as vehicles, then vessels, then air units, can be done as:
-            // .OrderBy(t => t.IsAircraft).ThenBy(t => t.IsVessel).ThenBy(t => t.ID);
+            // Leaving these in order of definition.
             List<UnitType> unitTypes = plugin.Map.UnitTypes.ToList();
             UnitType unitType = unitTypes.First();
             mockUnit = new Unit()
@@ -393,8 +396,11 @@ namespace MobiusEditor.Tools
             {
                 if (SelectedUnitType != null)
                 {
-                    mapPanel.Invalidate(map, Rectangle.Inflate(new Rectangle(e.OldCell, new Size(1, 1)), 1, 1));
-                    mapPanel.Invalidate(map, Rectangle.Inflate(new Rectangle(e.NewCell, new Size(1, 1)), 1, 1));
+                    Rectangle bounds = SelectedUnitType.OverlapBounds;
+                    Point oldLoc = new Point(e.OldCell.X + bounds.Location.X, e.OldCell.Y + bounds.Location.Y);
+                    Point newLoc = new Point(e.NewCell.X + bounds.Location.X, e.NewCell.Y + bounds.Location.Y);
+                    mapPanel.Invalidate(map, new Rectangle(oldLoc, bounds.Size));
+                    mapPanel.Invalidate(map, new Rectangle(newLoc, bounds.Size));
                 }
             }
             else if (selectedUnit != null)
@@ -524,10 +530,7 @@ namespace MobiusEditor.Tools
             if (curVal != newVal)
             {
                 unitTypeListBox.SelectedIndex = newVal;
-                if (placementMode)
-                {
-                    mapPanel.Invalidate(map, Rectangle.Inflate(new Rectangle(navigationWidget.MouseCell, new Size(1, 1)), 1, 1));
-                }
+                // If in placement mode, the SelectedUnitType property change takes care of the refresh.
             }
         }
 
@@ -542,7 +545,9 @@ namespace MobiusEditor.Tools
             navigationWidget.PenColor = Color.Red;
             if (SelectedUnitType != null)
             {
-                mapPanel.Invalidate(map, Rectangle.Inflate(new Rectangle(navigationWidget.MouseCell, new Size(1, 1)), 1, 1));
+                Rectangle bounds = SelectedUnitType.OverlapBounds;
+                Point mouseLoc = new Point(navigationWidget.MouseCell.X + bounds.Location.X, navigationWidget.MouseCell.Y + bounds.Location.Y);
+                mapPanel.Invalidate(map, new Rectangle(mouseLoc, bounds.Size));
             }
             UpdateStatus();
         }
@@ -558,7 +563,9 @@ namespace MobiusEditor.Tools
             navigationWidget.PenColor = Color.Yellow;
             if (SelectedUnitType != null)
             {
-                mapPanel.Invalidate(map, Rectangle.Inflate(new Rectangle(navigationWidget.MouseCell, new Size(1, 1)), 1, 1));
+                Rectangle bounds = SelectedUnitType.OverlapBounds;
+                Point mouseLoc = new Point(navigationWidget.MouseCell.X + bounds.Location.X, navigationWidget.MouseCell.Y + bounds.Location.Y);
+                mapPanel.Invalidate(map, new Rectangle(mouseLoc, bounds.Size));
             }
             UpdateStatus();
         }
@@ -597,12 +604,13 @@ namespace MobiusEditor.Tools
             var oldImage = unitTypeMapPanel.MapImage;
             if (mockUnit.Type != null)
             {
-                var unitPreview = new Bitmap(Globals.PreviewTileWidth * 3, Globals.PreviewTileWidth * 3);
+                bool flying = mockUnit.Type.IsAircraft && mockUnit.Type.IsFixedWing;
+                var unitPreview = new Bitmap(Globals.PreviewTileWidth * 3, Globals.PreviewTileWidth * (flying ? 4 : 3));
                 unitPreview.SetResolution(96, 96);
                 using (var g = Graphics.FromImage(unitPreview))
                 {
                     MapRenderer.SetRenderSettings(g, Globals.PreviewSmoothScale);
-                    RenderInfo render = MapRenderer.RenderUnit(plugin.GameInfo, map, new Point(1, 1), Globals.PreviewTileSize, mockUnit, false);
+                    RenderInfo render = MapRenderer.RenderUnit(plugin.GameInfo, map, new Point(1, flying ? 2 : 1), Globals.PreviewTileSize, mockUnit, false);
                     if (render.RenderedObject != null)
                     {
                         render.RenderAction(g);

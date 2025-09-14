@@ -30,7 +30,9 @@ namespace MobiusEditor.Model
         public string DisplayName { get; private set; }
         public Rectangle OverlapBounds => new Rectangle(Point.Empty, Size);
         public bool[,][] OverlapMask { get; private set; }
+        public Point OverlapMaskOffset => Point.Empty;
         public bool[,][] ContentMask { get; private set; }
+        public Point ContentMaskOffset => Point.Empty;
         public bool[,] OccupyMask { get; private set; }
         public Size Size => OccupyMask.GetDimensions();
         public bool[,] BaseOccupyMask => OccupyMask;

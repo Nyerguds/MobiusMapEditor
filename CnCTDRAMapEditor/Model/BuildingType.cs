@@ -79,7 +79,9 @@ namespace MobiusEditor.Model
         public bool Capturable { get; set; }
         public Rectangle OverlapBounds => new Rectangle(Point.Empty, OccupyMask.GetDimensions());
         public bool[,][] OverlapMask { get; private set; }
+        public Point OverlapMaskOffset => Point.Empty;
         public bool[,][] ContentMask { get; private set; }
+        public Point ContentMaskOffset => Point.Empty;
         public bool[,] OccupyMask { get; private set; }
 
         /// <summary>Actual footprint of the building, without bibs involved.</summary>

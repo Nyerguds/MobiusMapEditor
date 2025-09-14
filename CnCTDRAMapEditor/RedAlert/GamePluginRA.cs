@@ -1026,49 +1026,105 @@ namespace MobiusEditor.RedAlert
                             modified = true;
                             continue;
                         }
-                        TeamMission mission = IndexToType(Map.TeamMissionTypes, missionTokens[0], true);
-                        if (mission == null)
+                        int miss;
+                        if (!Int32.TryParse(missionTokens[0], out miss))
                         {
-                            errors.Add(string.Format("Team '{0}' references unknown orders id '{1}'.", kvp.Key, missionTokens[0]));
+                            errors.Add(string.Format("Team '{0}' has unparseable orders id '{1}'. Skipping.", kvp.Key, missionTokens[0]));
                             modified = true;
                             continue;
                         }
+                        // A common bug in old RA maps is corruption of the highest bits. So most of these attempt to fix values by masking them to only the lower 3 bytes.
+                        TeamMission mission = Map.TeamMissionTypes.FirstOrDefault(tm => tm.ID == miss);
+                        if (mission == null)
+                        {
+                            int missCorr = miss & 0xFFFFFF;
+                            mission = Map.TeamMissionTypes.FirstOrDefault(tm => tm.ID == miss);
+                            modified = true;
+                            if (mission == null)
+                            {
+                                errors.Add(string.Format("Team '{0}' references unknown orders id {1}. Skipping.", kvp.Key, miss));
+                                continue;
+                            }
+                            else
+                            {
+                                errors.Add(string.Format("Team '{0}' references unknown orders id {1} ({1:X8}). Corrected to {2} ({3}).",
+                                    kvp.Key, miss, missCorr, mission.Mission));
+                            }
+                        }
+                        int missionOptsMax = mission.DropdownOptions.Length == 0 ? 0 : mission.DropdownOptions.Max(vl => vl.Value);
                         string argError = null;
                         string argStr = missionTokens[1];
+                        int argCorrect = 0;
+                        bool valreset = false;
                         if (!Int32.TryParse(argStr, out int arg))
                         {
                             argError = string.Format("Team '{0}', orders index {1} ('{2}') has a non-numeric value '{3}'; reverting to 0.", kvp.Key, i, mission.Mission, argStr);
                         }
                         else if (mission.ArgType == TeamMissionArgType.Time && arg < 0)
                         {
-                            argError = string.Format("Team '{0}', orders index {1} ('{2}') has a bad value '{3}' for a Time argument; reverting to 0.", kvp.Key, i, mission.Mission, argStr);
+                            argCorrect = arg & 0xFFFFFF;
+                            argError = string.Format("Team '{0}', orders index {1} ('{2}') has a bad value {3} for a Time argument; attempting to correct to {5}.",
+                                kvp.Key, i, mission.Mission, argStr, argCorrect);
                         }
-                        else if (mission.ArgType == TeamMissionArgType.Waypoint && (arg < -1 || arg > Map.Waypoints.Length))
+                        else if (mission.ArgType == TeamMissionArgType.Waypoint && (arg < -1 || arg >= Map.Waypoints.Length))
                         {
-                            argError = string.Format("Team '{0}', orders index {1} ('{2}') has a bad value '{3}' for a Waypoint argument; reverting to 0.", kvp.Key, i, mission.Mission, argStr);
+                            argCorrect = arg & 0xFFFFFF;
+                            if (argCorrect >= Map.Waypoints.Length)
+                            {
+                                valreset = true;
+                                argCorrect = 0;
+                            }
+                            argError = string.Format("Team '{0}', orders index {1} ('{2}') has a bad value {3} for a Waypoint argument; {4} to {5}.",
+                                kvp.Key, i, mission.Mission, argStr + (valreset ? "" : " (0x" + arg.ToString("X8") + ")"), valreset ? "reverting" : "fixing", argCorrect);
                         }
-                        else if (mission.ArgType == TeamMissionArgType.OptionsList && (arg < 0 || arg > mission.DropdownOptions.Max(vl => vl.Value)))
+                        else if (mission.ArgType == TeamMissionArgType.OptionsList && (arg < 0 || arg > missionOptsMax))
                         {
-                            argError = string.Format("Team '{0}', orders index {1} ('{2}') has a bad value '{3}' for the available options; reverting to 0.", kvp.Key, i, mission.Mission, argStr);
+                            argCorrect = arg & 0xFFFFFF;
+                            string opt = mission.DropdownOptions.Where(vl => vl.Value == argCorrect).DefaultIfEmpty((0, null)).First().Label;
+                            if (argCorrect >= missionOptsMax)
+                            {
+                                valreset = true;
+                                argCorrect = 0;
+                            }
+                            argError = string.Format("Team '{0}', orders index {1} ('{2}') has a bad value {3} for the available options; {4} to {5}.",
+                                kvp.Key, i, mission.Mission, argStr + (valreset ? "" : " (0x" + arg.ToString("X8") + ")"), valreset ? "reverting" : "fixing",
+                                argCorrect.ToString() + (opt == null ? "" : " ('" + opt + "')"));
                         }
                         else if (mission.ArgType == TeamMissionArgType.MapCell && (arg < 0 || arg >= Map.Metrics.Length))
                         {
-                            argError = string.Format("Team '{0}', orders index {1} ('{2}') has a bad value '{3}' for a Cell argument; reverting to 0.", kvp.Key, i, mission.Mission, argStr);
+                            argCorrect = arg & 0xFFFFFF;
+                            if (argCorrect >= Map.Metrics.Length)
+                            {
+                                valreset = true;
+                                argCorrect = 0;
+                            }
+                            argError = string.Format("Team '{0}', orders index {1} ('{2}') has a bad value {3} for a Cell argument; {4} to {5}.",
+                                kvp.Key, i, mission.Mission, argStr + (valreset ? "" : " (0x" + arg.ToString("X8") + ")"), valreset ? "reverting" : "fixing", argCorrect);
                         }
-                        else if (mission.ArgType == TeamMissionArgType.MissionNumber && (arg < 0 || arg > missionsMax))
+                        else if (mission.ArgType == TeamMissionArgType.MissionNumber && (arg < 0 || arg >= missionsMax))
                         {
-                            argError = string.Format("Team '{0}', orders index {1} ('{2}') has a bad value '{3}' for an orders index argument; reverting to 0.", kvp.Key, i, mission.Mission, argStr);
+                            argCorrect = arg & 0xFFFFFF;
+                            if (argCorrect >= missionsMax)
+                            {
+                                valreset = true;
+                                argCorrect = 0;
+                            }
+                            argError = string.Format("Team '{0}', orders index {1} ('{2}') has a bad value {3} for an orders index argument; {4} to {5}.",
+                                kvp.Key, i, mission.Mission, argStr + (valreset ? "" : " (0x" + arg.ToString("X8") + ")"), valreset ? "reverting" : "fixing", argCorrect);
                         }
+                        //tarcom support isn't really implemented; leave this for now.
+                        /*
                         else if (mission.ArgType == TeamMissionArgType.Tarcom && arg < 0)
                         {
                             argError = string.Format("Team '{0}', orders index {1} ('{2}') has a bad value '{3}' for a Tarcom argument; reverting to 0.", kvp.Key, i, mission.Mission, argStr);
                         }
-                        // Note: globals are deliberately NOT checked here; the CheckTriggersGlobals logic takes care of checking that.
+                        */
+                        // Note: globals are deliberately NOT checked here; the CheckTriggersGlobals logic takes care of checking and correcting overflows in global values.
                         if (argError != null)
                         {
                             errors.Add(argError);
                             modified = true;
-                            arg = 0;
+                            arg = argCorrect;
                         }
                         teamType.Missions.Add(new TeamTypeMission { Mission = mission, Argument = arg });
                     }

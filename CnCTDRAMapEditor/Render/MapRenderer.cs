@@ -1003,22 +1003,33 @@ namespace MobiusEditor.Render
             // Get body frame
             bool succeeded = Globals.TheTilesetManager.GetTeamColorTileData(unit.Type.Name, icon, teamColor, out Tile tile, true, false);
             unit.DrawFrameCache = icon;
-            Size imSize = tile.Image.Size;
-            Point imOrigin = Point.Empty;
+
+            // Image source size
+            Rectangle imSourceRect = new Rectangle(Point.Empty, tile.Image.Size);
+            // Reduce the rendered chunk from the original image to a maximum size of 3x3 cells.
             int maxW = Globals.OriginalTileWidth * 3;
             int maxH = Globals.OriginalTileHeight * 3;
-            if (imSize.Width > maxW || imSize.Height > maxH)
+            if (imSourceRect.Width > maxW || imSourceRect.Height > maxH)
             {
-                imOrigin = new Point(Math.Max(0, (imSize.Width - maxW) / 2), Math.Max(0, (imSize.Height - maxH) / 2));
-                if (imSize.Width > maxW) imSize.Width = maxW;
-                if (imSize.Height > maxH) imSize.Height = maxH;
+                imSourceRect.X = Math.Max(0, (imSourceRect.Width - maxW) / 2);
+                imSourceRect.Y = Math.Max(0, (imSourceRect.Height - maxH) / 2);
+                imSourceRect.Width = Math.Min(imSourceRect.Width, maxW);
+                imSourceRect.Height = Math.Min(imSourceRect.Height, maxH);
             }
-            Point location =
-                new Point(topLeft.X * tileSize.Width, topLeft.Y * tileSize.Height) +
-                new Size(tileSize.Width / 2, tileSize.Height / 2);
-            Size renderSize = new Size(imSize.Width * tileSize.Width / Globals.OriginalTileWidth, imSize.Height * tileSize.Height / Globals.OriginalTileHeight);
-            Rectangle renderRect = new Rectangle(new Point(0, 0), renderSize);
-            Rectangle renderBounds = new Rectangle(location - new Size(renderSize.Width / 2, renderSize.Height / 2), renderSize);
+            // Size and location of image to render onto the map. This is equal to its overlap size. Normally 3x3 cells, but for flying planes it's 3x4.
+            Rectangle renderRect = unit.Type.OverlapBounds.AdjustToScale(tileSize);
+            renderRect.X += topLeft.X * tileSize.Width;
+            renderRect.Y += topLeft.Y * tileSize.Height;
+            // Center point inside renderRect. This does not change for flying aircraft; only their shadow is rendered further down.
+            Point unitCenter = new Point(tileSize.Width * 3 / 2, tileSize.Height * 3 / 2);
+            // Image render size
+            Size unitRenderSize = new Size(imSourceRect.Width * tileSize.Width / Globals.OriginalTileWidth, imSourceRect.Height * tileSize.Height / Globals.OriginalTileHeight);
+            // Position and size of unit inside renderRect
+            Rectangle unitRenderRect = new Rectangle(
+                unitCenter.X - unitRenderSize.Width / 2,
+                unitCenter.Y - unitRenderSize.Height / 2,
+                unitRenderSize.Width, unitRenderSize.Height);
+
             Tile turretTile = null;
             Tile turret2Tile = null;
             Point turretAdjust = Point.Empty;
@@ -1121,20 +1132,28 @@ namespace MobiusEditor.Render
             {
                 // Combine body and turret to one image, then paint it. This is done because it might be semitransparent.
                 using (ImageAttributes imageAttributes = new ImageAttributes())
-                using (Bitmap unitBm = new Bitmap(renderBounds.Width, renderBounds.Height))
+                using (Bitmap unitBm = new Bitmap(renderRect.Width, renderRect.Height))
                 {
                     imageAttributes.SetColorMatrix(GetColorMatrix(Color.White, 1.0f, alphaFactor));
                     unitBm.SetResolution(96, 96);
                     using (Graphics unitG = Graphics.FromImage(unitBm))
                     {
                         unitG.CopyRenderSettingsFrom(g);
+                        // For debug
+                        //using (Pen p = new Pen(Color.Black, Math.Max(1, Globals.OriginalTileWidth / Globals.PixelWidth)))
+                        //{
+                        //    unitG.DrawRectangle(p, 1, 1, renderRect.Width - 1, renderRect.Height - 1);
+                        //}
                         if (tile != null)
                         {
                             if (unit.Type.IsAircraft)
                             {
-                                int shiftX = tileSize.Width / Globals.PixelWidth;
-                                int shiftY = 2 * (tileSize.Height / Globals.PixelHeight);
-                                Point shadowPoint = new Point(renderRect.X + shiftX, renderRect.Y + shiftY);
+                                AircraftType airtp = (AircraftType)unit.Type;
+                                int shiftX = 1;
+                                int shiftY = 2 + (airtp.IsFixedWing ? Globals.PixelHeight : 0);
+                                shiftX = shiftX * tileSize.Width / Globals.PixelWidth;
+                                shiftY = shiftY * tileSize.Width / Globals.PixelWidth;
+                                Point shadowPoint = new Point(unitRenderRect.X + shiftX, unitRenderRect.Y + shiftY);
                                 using (ImageAttributes shadowAttr = new ImageAttributes())
                                 {
                                     ColorMatrix shadowMatrix = new ColorMatrix(new float[][]
@@ -1146,16 +1165,15 @@ namespace MobiusEditor.Render
                                         new float[] {0, 0, 0, 0, 1}    // Translation
                                     });
                                     shadowAttr.SetColorMatrix(shadowMatrix);
-                                    Rectangle shadowRect = new Rectangle(shadowPoint, renderRect.Size);
-                                    unitG.DrawImage(tile.Image, shadowRect, imOrigin.X, imOrigin.Y, imSize.Width, imSize.Height, GraphicsUnit.Pixel, shadowAttr);
+                                    Rectangle shadowRect = new Rectangle(shadowPoint, unitRenderRect.Size);
+                                    unitG.DrawImage(tile.Image, shadowRect, imSourceRect.X, imSourceRect.Y, imSourceRect.Width, imSourceRect.Height, GraphicsUnit.Pixel, shadowAttr);
                                 }
                             }
-                            unitG.DrawImage(tile.Image, renderRect, imOrigin.X, imOrigin.Y, imSize.Width, imSize.Height, GraphicsUnit.Pixel);
+                            unitG.DrawImage(tile.Image, unitRenderRect, imSourceRect, GraphicsUnit.Pixel);
                         }
                         if (unit.Type.HasTurret)
                         {
-                            Point center = new Point((renderRect.X + renderRect.Width) / 2, (renderRect.Y + renderRect.Height) / 2);
-                            void RenderTurret(Graphics ug, Tile turrTile, Point turrAdjust, Size tlSize)
+                            void RenderTurret(Graphics ug, Point center, Tile turrTile, Point turrAdjust, Size tlSize)
                             {
                                 Size turretSize = turrTile.Image.Size;
                                 Size turretRenderSize = new Size(turretSize.Width * tlSize.Width / Globals.OriginalTileWidth, turretSize.Height * tlSize.Height / Globals.OriginalTileHeight);
@@ -1169,20 +1187,20 @@ namespace MobiusEditor.Render
 
                             if (turretTile != null && turretTile.Image != null)
                             {
-                                RenderTurret(unitG, turretTile, turretAdjust, tileSize);
+                                RenderTurret(unitG, unitCenter, turretTile, turretAdjust, tileSize);
                             }
                             if (unit.Type.HasDoubleTurret && turret2Tile != null && turret2Tile.Image != null)
                             {
-                                RenderTurret(unitG, turret2Tile, turret2Adjust, tileSize);
+                                RenderTurret(unitG, unitCenter, turret2Tile, turret2Adjust, tileSize);
                             }
                         }
                     }
-                    g.DrawImage(unitBm, renderBounds, 0, 0, renderBounds.Width, renderBounds.Height, GraphicsUnit.Pixel, imageAttributes);
+                    g.DrawImage(unitBm, renderRect, 0, 0, renderRect.Width, renderRect.Height, GraphicsUnit.Pixel, imageAttributes);
                 }
             }
             Point centerPoint = GetVehicleRenderPoint();
             Point usedCenter = new Point(topLeft.X * Globals.PixelWidth + centerPoint.X, topLeft.Y * Globals.PixelHeight + centerPoint.Y);
-            return new RenderInfo(usedCenter, render, unit, !succeeded);
+            return new RenderInfo(usedCenter, render, unit.ZOrder, unit, !succeeded);
         }
 
         public static RenderInfo RenderWaypointCircleOutline(Size tileSize, Waypoint waypoint)
@@ -1968,6 +1986,7 @@ namespace MobiusEditor.Render
                     continue;
                 }
                 bool[,][] opaqueMask = Globals.IgnoreShadowOverlap? ovl.ContentMask : ovl.OverlapMask;
+                Point opaqueMaskOffset = Globals.IgnoreShadowOverlap ? ovl.ContentMaskOffset : ovl.OverlapMaskOffset;
                 int maskY = opaqueMask == null ? 0 : opaqueMask.GetLength(0);
                 int maskX = opaqueMask == null ? 0 : opaqueMask.GetLength(1);
                 Point? pt = map.Technos[occ] ?? map.Buildings[occ];
@@ -1987,7 +2006,7 @@ namespace MobiusEditor.Render
                     continue;
                 }
                 // Get list of points, find current point in the list.
-                Rectangle boundsRect = new Rectangle(pt.Value, new Size(maskX, maskY));
+                Rectangle boundsRect = new Rectangle(pt.Value.X + opaqueMaskOffset.X, pt.Value.Y + opaqueMaskOffset.Y, maskX, maskY);
                 List<Point> pts = boundsRect.Points().OrderBy(p => p.Y * map.Metrics.Width + p.X).ToList();
                 int index = pts.IndexOf(location);
                 if (index == -1)

@@ -38,8 +38,10 @@ namespace MobiusEditor.Model
         public Rectangle OverlapBounds => new Rectangle(Point.Empty, Type.Size);
         // Smudge is always drawn first; it can't overlap anything.
         public bool[,][] OverlapMask => new bool[1, 1][] { { new bool[5] } };
+        public Point OverlapMaskOffset => Point.Empty;
         // Ignore overlap on smudge; never outline it.
         public bool[,][] ContentMask => new bool[1, 1][] { { new bool[5] } };
+        public Point ContentMaskOffset => Point.Empty;
         public int ZOrder => Globals.ZOrderFloor;
 
         public bool IsPreview { get; set; }

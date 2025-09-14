@@ -72,7 +72,9 @@ namespace MobiusEditor.Model
         public bool[,] OccupyMask => new bool[1, 1] { { true } };
         public bool[,] BaseOccupyMask => new bool[1, 1] { { true } };
         public bool[,][] OverlapMask => new bool[1, 1][] { { new bool[] { false, false, false, false, false } } };
+        public Point OverlapMaskOffset => Point.Empty;
         public bool[,][] ContentMask { get; private set; }
+        public Point ContentMaskOffset => Point.Empty;
 
         public Rectangle OverlapBounds => new Rectangle(0, 0, 1, 1);
         public int ZOrder => -1;
