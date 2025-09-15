@@ -144,6 +144,8 @@ namespace MobiusEditor.Model
         public abstract int HitPointsGreenMinimum { get; }
         /// <summary>Threshold (1-256) at which the health bar colour changes from red to yellow in this game.</summary>
         public abstract int HitPointsYellowMinimum { get; }
+        /// <summary>True if VTOL / helicopter types do not spawn in the air in this game type.</summary>
+        public abstract bool LandedHelis { get; }
         /// <summary>Returns the viewport size around the Home waypoint, for DOS resolution, in old pixels.</summary>
         public abstract Size ViewportSizeSmall { get; }
         /// <summary>Returns the extra sidebar part of the viewport size, for DOS resolution, in old pixels. This is always added to the left of the main viewport.</summary>

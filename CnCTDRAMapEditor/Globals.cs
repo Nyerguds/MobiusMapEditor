@@ -113,6 +113,8 @@ namespace MobiusEditor
 
             // Graphical tweaks
             FixClassicEinstein = Properties.Settings.Default.FixClassicEinstein;
+            LandedHelisTd = Properties.Settings.Default.TdHelisSpawnOnGround;
+            LandedHelisRa = Properties.Settings.Default.RaHelisSpawnOnGround;
             FixConcretePavement = Properties.Settings.Default.FixConcretePavement;
             AdjustSoleTeleports = Properties.Settings.Default.DrawSoleTeleports;
         }
@@ -257,6 +259,8 @@ namespace MobiusEditor
 
         public static bool FixClassicEinstein { get; private set; }
         public static bool FixConcretePavement { get; private set; }
+        public static bool LandedHelisTd { get; private set; }
+        public static bool LandedHelisRa { get; private set; }
         public static bool AdjustSoleTeleports { get; private set; }
 
         public static readonly Size MapPreviewSize = new Size(512, 512);

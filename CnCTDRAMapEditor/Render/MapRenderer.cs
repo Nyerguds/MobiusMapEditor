@@ -1034,6 +1034,8 @@ namespace MobiusEditor.Render
             Tile turret2Tile = null;
             Point turretAdjust = Point.Empty;
             Point turret2Adjust = Point.Empty;
+            float turretAlpha = 1.0f;
+            bool flying = unit.Type.IsFlying;
             if (unit.Type.HasTurret)
             {
                 FrameUsage turrUsage = unit.Type.TurretFrameUsage;
@@ -1041,7 +1043,7 @@ namespace MobiusEditor.Render
                 string turret2Name = unit.Type.HasDoubleTurret ? unit.Type.SecondTurret ?? unit.Type.Turret ?? unit.Type.Name : null;
                 int turret1Icon = 0;
                 int turret2Icon = -1;
-                if ((turrUsage & FrameUsage.Frames01Single) != FrameUsage.None)
+                if (turrUsage.HasFlag(FrameUsage.Frames01Single))
                 {
                     turret1Icon = 0;
                 }
@@ -1050,24 +1052,29 @@ namespace MobiusEditor.Render
                     // Never used for a turret, but whatever.
                     turret1Icon = ((BodyShape[Facing32[unit.Direction.ID]] + 2) / 4) & 0x07;
                 }
-                else if ((turrUsage & FrameUsage.Frames16Simple) != FrameUsage.None)
+                else if (turrUsage.HasFlag(FrameUsage.Frames16Simple))
                 {
                     turret1Icon = BodyShape[Facing16[unit.Direction.ID] * 2] / 2;
                 }
-                else if ((turrUsage & FrameUsage.Frames16Symmetrical) != FrameUsage.None)
+                else if (turrUsage.HasFlag(FrameUsage.Frames16Symmetrical))
                 {
                     // Special case for 16-frame rotation saved as 8-frame because it is symmetrical and thus the second half of the frames is the same.
                     // This is normally not used or units, but exists for the turret of the mobile gap generator.
                     turret1Icon = (BodyShape[Facing32[unit.Direction.ID]] / 2) & 7;
                 }
-                else if ((turrUsage & FrameUsage.Frames32Full) != FrameUsage.None)
+                else if (turrUsage.HasFlag(FrameUsage.Frames32Full))
                 {
                     turret1Icon = BodyShape[Facing32[unit.Direction.ID]];
                 }
-                else if ((turrUsage & FrameUsage.Rotor) != FrameUsage.None)
+                else if (turrUsage.HasFlag(FrameUsage.Rotor))
                 {
-                    turret1Icon = (unit.Direction.ID >> 5) % 2 == 1 ? 9 : 5;
-                    turret2Icon = (unit.Direction.ID >> 5) % 2 == 1 ? 8 : 4;
+                    // Remastered in-flight rotor graphics are opaque black for some reason. Need to be about 40% translucent to look good.
+                    if (!Globals.UseClassicFiles && flying) 
+                    {
+                        turretAlpha = 0.4f;
+                    }
+                    turret1Icon = (unit.Direction.ID >> 5) % 2 == 1 ? (flying ? 0 : 9) : (flying ? 2 : 5);
+                    turret2Icon = (unit.Direction.ID >> 5) % 2 == 1 ? (flying ? 1 : 8) : (flying ? 3 : 4);
                 }
                 // If not explicitly set, default to the same as turret 1.
                 if (turret2Icon == -1)
@@ -1150,21 +1157,13 @@ namespace MobiusEditor.Render
                             {
                                 AircraftType airtp = (AircraftType)unit.Type;
                                 int shiftX = 1;
-                                int shiftY = 2 + (airtp.IsFixedWing ? Globals.PixelHeight : 0);
+                                int shiftY = 2 + (airtp.IsFlying ? Globals.PixelHeight : 0);
                                 shiftX = shiftX * tileSize.Width / Globals.PixelWidth;
                                 shiftY = shiftY * tileSize.Width / Globals.PixelWidth;
                                 Point shadowPoint = new Point(unitRenderRect.X + shiftX, unitRenderRect.Y + shiftY);
                                 using (ImageAttributes shadowAttr = new ImageAttributes())
                                 {
-                                    ColorMatrix shadowMatrix = new ColorMatrix(new float[][]
-                                    {
-                                        new float[] {0, 0, 0, 0, 0},   // Red
-                                        new float[] {0, 0, 0, 0, 0},   // Green
-                                        new float[] {0, 0, 0, 0, 0},   // Blue
-                                        new float[] {0, 0, 0, 0.5f, 0},// Alpha (50% of original)
-                                        new float[] {0, 0, 0, 0, 1}    // Translation
-                                    });
-                                    shadowAttr.SetColorMatrix(shadowMatrix);
+                                    shadowAttr.SetColorMatrix(GetColorMatrix(Color.Black, 0, 0.5f));
                                     Rectangle shadowRect = new Rectangle(shadowPoint, unitRenderRect.Size);
                                     unitG.DrawImage(tile.Image, shadowRect, imSourceRect.X, imSourceRect.Y, imSourceRect.Width, imSourceRect.Height, GraphicsUnit.Pixel, shadowAttr);
                                 }
@@ -1173,7 +1172,7 @@ namespace MobiusEditor.Render
                         }
                         if (unit.Type.HasTurret)
                         {
-                            void RenderTurret(Graphics ug, Point center, Tile turrTile, Point turrAdjust, Size tlSize)
+                            void RenderTurret(Graphics ug, Point center, Tile turrTile, Point turrAdjust, Size tlSize, float translucency)
                             {
                                 Size turretSize = turrTile.Image.Size;
                                 Size turretRenderSize = new Size(turretSize.Width * tlSize.Width / Globals.OriginalTileWidth, turretSize.Height * tlSize.Height / Globals.OriginalTileHeight);
@@ -1182,16 +1181,22 @@ namespace MobiusEditor.Render
                                     turrAdjust.X * tlSize.Width / Globals.PixelWidth,
                                     turrAdjust.Y * tlSize.Height / Globals.PixelHeight
                                 );
-                                ug.DrawImage(turrTile.Image, turrBounds, 0, 0, turrTile.Image.Width, turrTile.Image.Height, GraphicsUnit.Pixel);
+                                using (ImageAttributes turrAttributes = new ImageAttributes())
+                                {
+                                    if (translucency != 1.0f)
+                                    {
+                                        turrAttributes.SetColorMatrix(GetColorMatrix(Color.White, 1.0f, translucency));
+                                    }
+                                    ug.DrawImage(turrTile.Image, turrBounds, 0, 0, turrTile.Image.Width, turrTile.Image.Height, GraphicsUnit.Pixel, turrAttributes);
+                                }
                             }
-
                             if (turretTile != null && turretTile.Image != null)
                             {
-                                RenderTurret(unitG, unitCenter, turretTile, turretAdjust, tileSize);
+                                RenderTurret(unitG, unitCenter, turretTile, turretAdjust, tileSize, turretAlpha);
                             }
                             if (unit.Type.HasDoubleTurret && turret2Tile != null && turret2Tile.Image != null)
                             {
-                                RenderTurret(unitG, unitCenter, turret2Tile, turret2Adjust, tileSize);
+                                RenderTurret(unitG, unitCenter, turret2Tile, turret2Adjust, tileSize, turretAlpha);
                             }
                         }
                     }

@@ -82,6 +82,7 @@ namespace MobiusEditor.RedAlert
         public override int MaxTeams => Constants.MaxTeams;
         public override int HitPointsGreenMinimum => 128;
         public override int HitPointsYellowMinimum => 64;
+        public override bool LandedHelis => Globals.LandedHelisRa;
         public override Size ViewportSizeSmall => new Size(240, 192);
         public override Size ViewportSidebarSmall => new Size(80,192);
         public override Point ViewportOffsetSmall => new Point(-108, -84);

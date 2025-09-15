@@ -601,16 +601,18 @@ namespace MobiusEditor.Tools
 
         protected override void RefreshPreviewPanel()
         {
-            var oldImage = unitTypeMapPanel.MapImage;
+            Image oldImage = unitTypeMapPanel.MapImage;
             if (mockUnit.Type != null)
             {
-                bool flying = mockUnit.Type.IsAircraft && mockUnit.Type.IsFixedWing;
-                var unitPreview = new Bitmap(Globals.PreviewTileWidth * 3, Globals.PreviewTileWidth * (flying ? 4 : 3));
+                bool flying = mockUnit.Type.IsAircraft && mockUnit.Type.IsFlying;
+                Rectangle renderRect = mockUnit.Type.OverlapBounds.AdjustToScale(Globals.PreviewTileSize);
+                Point renderPoint = new Point(1, mockUnit.Type.OverlapBounds.Height - 2);
+                Bitmap unitPreview = new Bitmap(renderRect.Width, renderRect.Height);
                 unitPreview.SetResolution(96, 96);
                 using (var g = Graphics.FromImage(unitPreview))
                 {
                     MapRenderer.SetRenderSettings(g, Globals.PreviewSmoothScale);
-                    RenderInfo render = MapRenderer.RenderUnit(plugin.GameInfo, map, new Point(1, flying ? 2 : 1), Globals.PreviewTileSize, mockUnit, false);
+                    RenderInfo render = MapRenderer.RenderUnit(plugin.GameInfo, map, renderPoint, Globals.PreviewTileSize, mockUnit, false);
                     if (render.RenderedObject != null)
                     {
                         render.RenderAction(g);

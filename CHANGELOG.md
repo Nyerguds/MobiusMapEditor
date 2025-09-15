@@ -743,4 +743,4 @@ Unreleased
 * Added shadows under airplanes.
 * Fixed overlap detection for buildings still looking at technos to see what is blocking it, despite buildings being on their own separate layer now.
 * Enhanced Red Alert mission parsing error detection to correct highest-bit corruption that occurs in some of the original campaign missions.
-* Fixed-wing airplanes are now shown as flying above the cell they are placed on.
+* Aircraft are now shown as flying above the cell they are placed on. The new settings **TdHelisSpawnOnGround** and **RaHelisSpawnOnGround** can disable this for helicopter/VTOL types.
