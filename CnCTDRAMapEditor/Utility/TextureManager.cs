@@ -270,7 +270,15 @@ namespace MobiusEditor.Utility
                 }
                 Bitmap bitmap = new Bitmap(image.Width, image.Height, format);
                 BitmapData bitmapData = bitmap.LockBits(new Rectangle(0, 0, image.Width, image.Height), ImageLockMode.WriteOnly, bitmap.PixelFormat);
-                Marshal.Copy(image.Data, 0, bitmapData.Scan0, image.Stride * image.Height);
+                int minStride = ImageUtils.GetMinimumStride(image.Width, Image.GetPixelFormatSize(format));
+                int readIndex = 0;
+                IntPtr imgScan = bitmapData.Scan0;
+                for (int y = 0; y < image.Height; y++)
+                {
+                    Marshal.Copy(image.Data, readIndex, imgScan, minStride);
+                    imgScan += bitmapData.Stride;
+                    readIndex += image.Stride;
+                }
                 bitmap.UnlockBits(bitmapData);
                 bitmap.SetResolution(96, 96);
                 return bitmap;

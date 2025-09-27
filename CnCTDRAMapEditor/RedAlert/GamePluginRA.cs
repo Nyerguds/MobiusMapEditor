@@ -1231,6 +1231,8 @@ namespace MobiusEditor.RedAlert
                         break;
                 }
             };
+            int maxTrigLoop = (int)Enum.GetValues(typeof(TriggerPersistentType)).Cast<TriggerPersistentType>().Max();
+            int maxTrigStyle = (int)Enum.GetValues(typeof(TriggerMultiStyleType)).Cast<TriggerMultiStyleType>().Max();
             foreach (KeyValuePair<string, string> kvp in triggersSection)
             {
                 try
@@ -1247,30 +1249,44 @@ namespace MobiusEditor.RedAlert
                         errors.Add(string.Format("Trigger '{0}' has a name that is longer than 4 characters. This will not be corrected by the loading process, but should be addressed, since it can make the triggers fail to link correctly to objects and cell triggers, and might even crash the game.", kvp.Key));
                     }
                     Trigger trigger = new Trigger { Name = kvp.Key };
-                    trigger.PersistentType = (TriggerPersistentType)int.Parse(tokens[0]);
+                    int trigPersist;
+                    if (!Int32.TryParse(tokens[0], out trigPersist) || trigPersist < 0 || trigPersist > maxTrigLoop)
+                    {
+                        errors.Add(string.Format("Trigger '{0}' has unknown loop type '{1}'; clearing to '{2}'.", kvp.Key, tokens[0], 0));
+                        trigPersist = 0;
+                        modified = true;
+                    }
+                    trigger.PersistentType = (TriggerPersistentType)trigPersist;
                     int houseId = sbyte.Parse(tokens[1]);
                     trigger.House = houseId == -1 ? House.None : Map.HouseTypes.Where(t => t.Equals(houseId)).FirstOrDefault()?.Name;
                     if (trigger.House == null)
                     {
                         errors.Add(string.Format("Trigger '{0}' has unknown house ID '{1}'; clearing to '{2}'.", kvp.Key, tokens[1], House.None));
-                        modified = true;
                         trigger.House = House.None;
+                        modified = true;
                     }
-                    trigger.EventControl = (TriggerMultiStyleType)int.Parse(tokens[2]);
+                    int trigStyle;
+                    if (!Int32.TryParse(tokens[2], out trigStyle) || trigStyle < 0 || trigStyle > maxTrigStyle)
+                    {
+                        errors.Add(string.Format("Trigger '{0}' has unknown multi-trigger style '{1}'; clearing to '{2}'.", kvp.Key, tokens[2], 0));
+                        trigStyle = 0;
+                        modified = true;
+                    }
+                    trigger.EventControl = (TriggerMultiStyleType)trigStyle;
                     trigger.Event1.EventType = IndexToType(Map.EventTypes, tokens[4], false);
                     trigger.Event1.Team = tokens[5];
-                    trigger.Event1.Data = long.Parse(tokens[6]);
+                    trigger.Event1.Data = Int64.Parse(tokens[6]);
                     trigger.Event2.EventType = IndexToType(Map.EventTypes, tokens[7], false);
                     trigger.Event2.Team = tokens[8];
-                    trigger.Event2.Data = long.Parse(tokens[9]);
+                    trigger.Event2.Data = Int64.Parse(tokens[9]);
                     trigger.Action1.ActionType = IndexToType(Map.ActionTypes, tokens[10], false);
                     trigger.Action1.Team = tokens[11];
                     trigger.Action1.Trigger = tokens[12];
-                    trigger.Action1.Data = long.Parse(tokens[13]);
+                    trigger.Action1.Data = Int64.Parse(tokens[13]);
                     trigger.Action2.ActionType = IndexToType(Map.ActionTypes, tokens[14], false);
                     trigger.Action2.Team = tokens[15];
                     trigger.Action2.Trigger = tokens[16];
-                    trigger.Action2.Data = long.Parse(tokens[17]);
+                    trigger.Action2.Data = Int64.Parse(tokens[17]);
                     // Fix up data caused by union usage in the legacy game
                     fixEvent(trigger.Event1, kvp.Key, 1);
                     fixEvent(trigger.Event2, kvp.Key, 2);

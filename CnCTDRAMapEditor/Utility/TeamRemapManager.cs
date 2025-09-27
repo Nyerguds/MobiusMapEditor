@@ -74,7 +74,7 @@ namespace MobiusEditor.Utility
                 "RED",
                 "GREEN",
                 "ORANGE",
-	            "GREY",
+                "GREY",
                 "BLUE",
                 "BROWN",
                 //"TYPE",
