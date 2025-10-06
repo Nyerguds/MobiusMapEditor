@@ -21,6 +21,8 @@ namespace MobiusEditor.Interface
         int ID { get; }
         /// <summary>Object ini name</summary>
         string Name { get; }
+        /// <summary>Image override.</summary>
+        string ImageOverride { get; }
         /// <summary>True if the object can have a House that owns it.</summary>
         bool Ownable { get; }
         /// <summary>True if this object has a weapon. This affects the default orders for placing it on the map.</summary>

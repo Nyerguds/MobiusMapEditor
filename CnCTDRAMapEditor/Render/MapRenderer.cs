@@ -668,7 +668,9 @@ namespace MobiusEditor.Render
                 }
                 alphaFactor = alphaFactor.Restrict(0, 1);
             }
-            int icon = building.Type.FrameOffset;
+            BuildingType bType = building.Type;
+            string image = String.IsNullOrEmpty(bType.ImageOverride) ? bType.GraphicsSource : bType.ImageOverride;
+            int icon = bType.FrameOffset;
             int maxIcon = 0;
             int damageIconOffs = 0;
             int collapseIcon = 0;
@@ -677,14 +679,14 @@ namespace MobiusEditor.Render
             bool isDamaged = building.Strength <= healthyMin;
             bool hasCollapseFrame = false;
             // Only fetch if damaged. BuildingType.IsSingleFrame is an override for the RA mines. Everything else works with one simple logic.
-            if (isDamaged && !building.Type.IsSingleFrame && !building.Type.IsWall)
+            if (isDamaged && !bType.IsSingleFrame && !bType.IsWall)
             {
-                maxIcon = Globals.TheTilesetManager.GetTileDataLength(building.Type.GraphicsSource);
+                maxIcon = Globals.TheTilesetManager.GetTileDataLength(image);
                 hasCollapseFrame = maxIcon > 1 && maxIcon % 2 == 1;
                 damageIconOffs = (maxIcon + (hasCollapseFrame ? 0 : 1)) / 2;
                 collapseIcon = Math.Max(0, maxIcon - 1);
             }
-            if (building.Type.HasTurret)
+            if (bType.HasTurret)
             {
                 icon += BodyShape[Facing32[building.Direction.ID]];
                 if (isDamaged)
@@ -692,7 +694,7 @@ namespace MobiusEditor.Render
                     icon += damageIconOffs;
                 }
             }
-            else if (building.Type.IsWall)
+            else if (bType.IsWall)
             {
                 icon += GetBuildingOverlayIcon(map, topLeft, building);
             }
@@ -711,23 +713,23 @@ namespace MobiusEditor.Render
             if (map != null)
             {
                 House house = building.House == null ? null : map.Houses.FirstOrDefault(h => h.Type.ID == building.House.ID);
-                if (building.Type.CanRemap && house != null)
+                if (bType.CanRemap && house != null)
                 {
                     color = house.BuildingTeamColor ?? house.UnitTeamColor;
                 }
             }
             // Fall back to type defaults. This might be necessary for House "None", which does not actually exist in Map.Houses.
-            if (color == null && building.House != null && building.Type.CanRemap)
+            if (color == null && building.House != null && bType.CanRemap)
             {
                 color = building.House.BuildingTeamColor ?? building.House.UnitTeamColor;
             }
             ITeamColor teamColor = color == null ? null : Globals.TheTeamColorManager[color];
-            bool succeeded = Globals.TheTilesetManager.GetTeamColorTileData(building.Type.GraphicsSource, icon, teamColor, out Tile tile, true, false);
+            bool succeeded = Globals.TheTilesetManager.GetTeamColorTileData(image, icon, teamColor, out Tile tile, true, false);
             building.DrawFrameCache = icon;
             Point location = new Point(topLeft.X * tileSize.Width, topLeft.Y * tileSize.Height);
-            Size maxSize = new Size(building.Type.Size.Width * tileSize.Width, building.Type.Size.Height * tileSize.Height);
+            Size maxSize = new Size(bType.Size.Width * tileSize.Width, bType.Size.Height * tileSize.Height);
 
-            Size bldTSize = building.Type.Size;
+            Size bldTSize = bType.Size;
             Size tileISize = tile.Image.Size;
             Rectangle paintBounds;
             if (!succeeded)
@@ -742,15 +744,15 @@ namespace MobiusEditor.Render
             Rectangle buildingBounds = new Rectangle(location, maxSize);
             Tile factoryOverlayTile = null;
             // Draw no factory overlay over the collapse frame.
-            if (building.Type.FactoryOverlay != null && (building.Strength > 1 || !hasCollapseFrame))
+            if (bType.FactoryOverlay != null && (building.Strength > 1 || !hasCollapseFrame))
             {
                 int overlayIcon = 0;
                 if (building.Strength <= healthyMin)
                 {
-                    int maxOverlayIcon = Globals.TheTilesetManager.GetTileDataLength(building.Type.FactoryOverlay);
+                    int maxOverlayIcon = Globals.TheTilesetManager.GetTileDataLength(bType.FactoryOverlay);
                     overlayIcon = maxOverlayIcon / 2;
                 }
-                Globals.TheTilesetManager.GetTeamColorTileData(building.Type.FactoryOverlay, overlayIcon, teamColor, out factoryOverlayTile, false, false);
+                Globals.TheTilesetManager.GetTeamColorTileData(bType.FactoryOverlay, overlayIcon, teamColor, out factoryOverlayTile, false, false);
             }
             void render(Graphics g)
             {
@@ -769,11 +771,11 @@ namespace MobiusEditor.Render
                                 Size renderSize = tileISize;
                                 if (!succeeded)
                                 {
-                                    renderSize.Width = building.Type.Size.Width * tileSize.Width;
-                                    renderSize.Height = building.Type.Size.Height * tileSize.Height;
+                                    renderSize.Width = bType.Size.Width * tileSize.Width;
+                                    renderSize.Height = bType.Size.Height * tileSize.Height;
                                 }
-                                Rectangle factBounds = RenderBounds(renderSize, building.Type.Size, tileScale);
-                                Rectangle ovrlBounds = RenderBounds(factoryOverlayTile.Image.Size, building.Type.Size, tileScale);
+                                Rectangle factBounds = RenderBounds(renderSize, bType.Size, tileScale);
+                                Rectangle ovrlBounds = RenderBounds(factoryOverlayTile.Image.Size, bType.Size, tileScale);
                                 factoryG.DrawImage(tile.Image, factBounds, 0, 0, tile.Image.Width, tile.Image.Height, GraphicsUnit.Pixel);
                                 factoryG.DrawImage(factoryOverlayTile.Image, ovrlBounds, 0, 0, factoryOverlayTile.Image.Width, factoryOverlayTile.Image.Height, GraphicsUnit.Pixel);
                             }
@@ -837,23 +839,26 @@ namespace MobiusEditor.Render
         {
             int icon = HumanShape[Facing32[infantry.Direction.ID]];
             string color = null;
+            InfantryType infType = infantry.Type;
             if (map != null)
             {
                 House house = infantry.House == null ? null : map.Houses.FirstOrDefault(h => h.Type.ID == infantry.House.ID);
-                if (infantry.Type.CanRemap && house != null)
+                if (infType.CanRemap && house != null)
                 {
-                    color = infantry.Type.BuildingRemap ? (house.BuildingTeamColor ?? house.UnitTeamColor) : house.UnitTeamColor;
+                    color = infType.BuildingRemap ? (house.BuildingTeamColor ?? house.UnitTeamColor) : house.UnitTeamColor;
                 }
             }
             // Fall back to type defaults.
-            if (color == null && infantry.House != null && infantry.Type.CanRemap)
+            if (color == null && infantry.House != null && infType.CanRemap)
             {
-                color = infantry.Type.BuildingRemap ? (infantry.House.BuildingTeamColor ?? infantry.House.UnitTeamColor) : infantry.House.UnitTeamColor;
+                color = infType.BuildingRemap ? (infantry.House.BuildingTeamColor ?? infantry.House.UnitTeamColor) : infantry.House.UnitTeamColor;
             }
             ITeamColor teamColor = color == null ? null : Globals.TheTeamColorManager[color];
             Tile tile = null;
             // InfantryType.Init() should have taken care of RA's classic civilian remap mess at this point, and remapped all cached source graphics.
-            bool success = Globals.TheTilesetManager.GetTeamColorTileData(infantry.Type.GraphicsSource, icon, teamColor, out tile, true, false);
+            // This code does not use GraphicsOverride; Init also takes care of that.
+            string image = infType.GraphicsSource ?? infType.Name;
+            bool success = Globals.TheTilesetManager.GetTeamColorTileData(image, icon, teamColor, out tile, true, false);
             Size imSize = tile.Image.Size;
             Point origLocation = new Point(topLeft.X * tileSize.Width, topLeft.Y * tileSize.Height);
             Point renderLocation = origLocation;
@@ -922,7 +927,8 @@ namespace MobiusEditor.Render
             // In TD, damage is when BELOW the threshold. In RA, it's ON the threshold.
             int healthyMin = gameInfo.HitPointsGreenMinimum;
             int damagedMin = gameInfo.HitPointsYellowMinimum;
-            FrameUsage frameUsage = unit.Type.BodyFrameUsage;
+            UnitType unitType = unit.Type;
+            FrameUsage frameUsage = unitType.BodyFrameUsage;
             if (frameUsage.HasFlag(FrameUsage.Frames01Single))
             {
                 icon = 0;
@@ -968,17 +974,17 @@ namespace MobiusEditor.Render
             // Special logic for carrier types with unload frames.
             if ((frameUsage & FrameUsage.HasUnloadFrames) != FrameUsage.None)
             {
-                if (unit.Type.IsAircraft)
+                if (unitType.IsAircraft)
                 {
                     // Transport heli unload has 4 frames
                     bodyFrames += 4;
                 }
-                else if (unit.Type.IsVessel)
+                else if (unitType.IsVessel)
                 {
                     // Boat unload has 4 frames
                     bodyFrames += 4;
                 }
-                else if (unit.Type.IsGroundUnit)
+                else if (unitType.IsGroundUnit)
                 {
                     // APC unload has 6 frames.
                     bodyFrames += 6;
@@ -989,19 +995,20 @@ namespace MobiusEditor.Render
             if (map != null)
             {
                 House house = unit.House == null ? null : map.Houses.FirstOrDefault(h => h.Type.ID == unit.House.ID);
-                if (unit.Type.CanRemap && house != null)
+                if (unitType.CanRemap && house != null)
                 {
-                    color = unit.Type.BuildingRemap ? (house.BuildingTeamColor ?? house.UnitTeamColor) : house.UnitTeamColor;
+                    color = unitType.BuildingRemap ? (house.BuildingTeamColor ?? house.UnitTeamColor) : house.UnitTeamColor;
                 }
             }
             // Fall back to type defaults.
-            if (color == null && unit.House != null && unit.Type.CanRemap)
+            if (color == null && unit.House != null && unitType.CanRemap)
             {
-                color = unit.Type.BuildingRemap ? (unit.House.BuildingTeamColor ?? unit.House.UnitTeamColor) : unit.House.UnitTeamColor;
+                color = unitType.BuildingRemap ? (unit.House.BuildingTeamColor ?? unit.House.UnitTeamColor) : unit.House.UnitTeamColor;
             }
             ITeamColor teamColor = color == null ? null : Globals.TheTeamColorManager[color];
             // Get body frame
-            bool succeeded = Globals.TheTilesetManager.GetTeamColorTileData(unit.Type.Name, icon, teamColor, out Tile tile, true, false);
+            string image = String.IsNullOrEmpty(unitType.ImageOverride) ? unitType.Name : unitType.ImageOverride;
+            bool succeeded = Globals.TheTilesetManager.GetTeamColorTileData(image, icon, teamColor, out Tile tile, true, false);
             unit.DrawFrameCache = icon;
 
             // Image source size
@@ -1017,7 +1024,7 @@ namespace MobiusEditor.Render
                 imSourceRect.Height = Math.Min(imSourceRect.Height, maxH);
             }
             // Size and location of image to render onto the map. This is equal to its overlap size. Normally 3x3 cells, but for flying planes it's 3x4.
-            Rectangle renderRect = unit.Type.OverlapBounds.AdjustToScale(tileSize);
+            Rectangle renderRect = unitType.OverlapBounds.AdjustToScale(tileSize);
             renderRect.X += topLeft.X * tileSize.Width;
             renderRect.Y += topLeft.Y * tileSize.Height;
             // Center point inside renderRect. This does not change for flying aircraft; only their shadow is rendered further down.
@@ -1035,12 +1042,12 @@ namespace MobiusEditor.Render
             Point turretAdjust = Point.Empty;
             Point turret2Adjust = Point.Empty;
             float turretAlpha = 1.0f;
-            bool flying = unit.Type.IsFlying;
-            if (unit.Type.HasTurret)
+            bool flying = unitType.IsFlying;
+            if (unitType.HasTurret)
             {
-                FrameUsage turrUsage = unit.Type.TurretFrameUsage;
-                string turretName = unit.Type.Turret ?? unit.Type.Name;
-                string turret2Name = unit.Type.HasDoubleTurret ? unit.Type.SecondTurret ?? unit.Type.Turret ?? unit.Type.Name : null;
+                FrameUsage turrUsage = unitType.TurretFrameUsage;
+                string turretName = unitType.Turret ?? image;
+                string turret2Name = unitType.HasDoubleTurret ? unitType.SecondTurret ?? unitType.Turret ?? image : null;
                 int turret1Icon = 0;
                 int turret2Icon = -1;
                 if (turrUsage.HasFlag(FrameUsage.Frames01Single))
@@ -1082,8 +1089,8 @@ namespace MobiusEditor.Render
                     turret2Icon = turret1Icon;
                 }
                 // If same as body name, add body frames.
-                turret1Icon = unit.Type.Name.Equals(turretName, StringComparison.OrdinalIgnoreCase) ? bodyFrames + turret1Icon : turret1Icon;
-                turret2Icon = unit.Type.Name.Equals(turret2Name, StringComparison.OrdinalIgnoreCase) ? bodyFrames + turret2Icon : turret2Icon;
+                turret1Icon = image.Equals(turretName, StringComparison.OrdinalIgnoreCase) ? bodyFrames + turret1Icon : turret1Icon;
+                turret2Icon = image.Equals(turret2Name, StringComparison.OrdinalIgnoreCase) ? bodyFrames + turret2Icon : turret2Icon;
                 if (turretName != null)
                     Globals.TheTilesetManager.GetTeamColorTileData(turretName, turret1Icon, teamColor, out turretTile, false, false);
                 if (turret2Name != null)
@@ -1096,10 +1103,10 @@ namespace MobiusEditor.Render
                     // Never actually used for 2 turrets. Put second turret in the front?
                     turret2Adjust = BackTurretAdjust[Facing32[(byte)((unit.Direction.ID + DirectionTypes.South.ID) & 0xFF)]];
                 }
-                else if (unit.Type.TurretOffset != 0)
+                else if (unitType.TurretOffset != 0)
                 {
                     // Used by ships and by the transport helicopter.
-                    int distance = unit.Type.TurretOffset;
+                    int distance = unitType.TurretOffset;
                     int face = (unit.Direction.ID >> 5) & 7;
                     if (turrUsage.HasFlag(FrameUsage.Rotor))
                     {
@@ -1109,11 +1116,11 @@ namespace MobiusEditor.Render
                     int x = 0;
                     int y = 0;
                     // For vessels, perspective stretch is simply done as '/ 2'.
-                    int perspectiveDivide = unit.Type.IsVessel ? 2 : 1;
+                    int perspectiveDivide = unitType.IsVessel ? 2 : 1;
                     MovePoint(ref x, ref y, unit.Direction.ID, distance, perspectiveDivide);
                     turretAdjust.X += x;
                     turretAdjust.Y += y;
-                    if (unit.Type.HasDoubleTurret)
+                    if (unitType.HasDoubleTurret)
                     {
                         x = 0;
                         y = 0;
@@ -1123,8 +1130,8 @@ namespace MobiusEditor.Render
                     }
                 }
                 // Adjust Y-offset.
-                turretAdjust.Y += unit.Type.TurretY;
-                turret2Adjust.Y += unit.Type.TurretY;
+                turretAdjust.Y += unitType.TurretY;
+                turret2Adjust.Y += unitType.TurretY;
             }
             float alphaFactor = 1.0f;
             if (!fullOpaque)
@@ -1153,9 +1160,9 @@ namespace MobiusEditor.Render
                         //}
                         if (tile != null)
                         {
-                            if (unit.Type.IsAircraft)
+                            if (unitType.IsAircraft)
                             {
-                                AircraftType airtp = (AircraftType)unit.Type;
+                                AircraftType airtp = (AircraftType)unitType;
                                 int shiftX = 1;
                                 int shiftY = 2 + (airtp.IsFlying ? Globals.PixelHeight : 0);
                                 shiftX = shiftX * tileSize.Width / Globals.PixelWidth;
@@ -1170,7 +1177,7 @@ namespace MobiusEditor.Render
                             }
                             unitG.DrawImage(tile.Image, unitRenderRect, imSourceRect, GraphicsUnit.Pixel);
                         }
-                        if (unit.Type.HasTurret)
+                        if (unitType.HasTurret)
                         {
                             void RenderTurret(Graphics ug, Point center, Tile turrTile, Point turrAdjust, Size tlSize, float translucency)
                             {
@@ -1194,7 +1201,7 @@ namespace MobiusEditor.Render
                             {
                                 RenderTurret(unitG, unitCenter, turretTile, turretAdjust, tileSize, turretAlpha);
                             }
-                            if (unit.Type.HasDoubleTurret && turret2Tile != null && turret2Tile.Image != null)
+                            if (unitType.HasDoubleTurret && turret2Tile != null && turret2Tile.Image != null)
                             {
                                 RenderTurret(unitG, unitCenter, turret2Tile, turret2Adjust, tileSize, turretAlpha);
                             }
@@ -1813,7 +1820,7 @@ namespace MobiusEditor.Render
                     }
                     string color = GetOutlineColor(infantry.House, map);
                     Color outlineCol = Color.FromArgb(0x80, Globals.TheTeamColorManager.GetBaseColor(color));
-                    string infId = "outline_inf_" + infantry.Type.Name + '_' + ((int)ist) + '_' + infantry.Direction.ID + "_" + tileSize.Width + "x" + tileSize.Height;
+                    string infId = "outline_" + typeof(InfantryType).Name + "_" + infantry.Type.Name + '_' + ((int)ist) + '_' + infantry.Direction.ID + "_" + tileSize.Width + "x" + tileSize.Height;
                     RegionData paintAreaRel = Globals.TheShapeCacheManager.GetShape(infId);
                     if (paintAreaRel == null)
                     {
@@ -1924,7 +1931,7 @@ namespace MobiusEditor.Render
                 {
                     houseCol = Color.FromArgb(0x80, Globals.TheTeamColorManager.GetBaseColor(colorPick(placedObj.House)));
                 }
-                string id = "outline_" + typeof(T).Name + "_" + placedObj.TechnoType.Name + "_fr" + placedObj.DrawFrameCache + "_" + tileSize.Width + "x" + tileSize.Height;
+                string id = "outline_" + placedObj.TechnoType.GetType().Name + "_" + placedObj.TechnoType.Name + "_fr" + placedObj.DrawFrameCache + "_" + tileSize.Width + "x" + tileSize.Height;
                 RegionData paintAreaRel = Globals.TheShapeCacheManager.GetShape(id);
                 if (paintAreaRel == null)
                 {
@@ -3122,9 +3129,10 @@ namespace MobiusEditor.Render
                     string text = trigPart[0];
                     bool isPreview = trigPart[1] == "P";
                     Color textCol = isPreview ? previewTextColor : textColor;
+                    Color fillCol = isPreview ? previewFillColor : fillColor;
                     Rectangle textBounds = new Rectangle(Point.Empty, tileBounds.Size);
-                    string trId = "trigger_" + trigger + "_" + ((uint)(isPreview ? previewTextColor : textColor).ToArgb()).ToString("X4");
-                    string bgId = "trig_bg_" + trigger + "_" + ((uint)(isPreview ? previewFillColor : fillColor).ToArgb()).ToString("X4");
+                    string trId = "trigger_" + trigger + "_" + ((uint)textCol.ToArgb()).ToString("X4");
+                    string bgId = "trig_bg_" + trigger + "_" + ((uint)fillCol.ToArgb()).ToString("X4");
 
                     Bitmap trigbm = Globals.TheShapeCacheManager.GetImage(trId);
                     if (trigbm == null)

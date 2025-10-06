@@ -55,6 +55,7 @@ namespace MobiusEditor.Model
         public string Name { get; private set; }
         public bool Ownable => true;
         public string DisplayName { get; private set; }
+        public string NameOverride { get; set; }
         public string DisplayNameWithTheaterInfo
         {
             get
@@ -115,7 +116,7 @@ namespace MobiusEditor.Model
         public bool IsFixedWing => false;
         public bool IsHarvester => false;
         public bool IsExpansionOnly => false;
-        
+
         /// <summary>Produces structures.</summary>
         public bool IsFactory => Flags.HasFlag(BuildingTypeFlag.Factory);
         /// <summary>Is a fake building.</summary>
@@ -135,6 +136,7 @@ namespace MobiusEditor.Model
         /// <summary>This type typically has no rules present in the rules file, and needs specific checks on that.</summary>
         public bool hasNoRules => Flags.HasFlag(BuildingTypeFlag.NoRules);
 
+        public string ImageOverride { get; set; }
         public bool GraphicsFound { get; private set; }
         /// <summary>
         /// Value for Z-sorting; can be used to make buildings specifically show as "flatter" than others so pieces sticking out at the top don't overlap objects on these cells.
@@ -288,9 +290,16 @@ namespace MobiusEditor.Model
 
         public void InitDisplayName()
         {
-            DisplayName = !String.IsNullOrEmpty(nameId) && !String.IsNullOrEmpty(Globals.TheGameTextManager[nameId])
-                ? Globals.TheGameTextManager[nameId] + " (" + Name.ToUpperInvariant() + ")"
-                : Name.ToUpperInvariant();
+            string str = null;
+            bool hasString = !String.IsNullOrEmpty(nameId) && !String.IsNullOrEmpty(str = Globals.TheGameTextManager[nameId]);
+            bool hasOverride = !String.IsNullOrEmpty(NameOverride);
+            if (!hasString && !hasOverride)
+            {
+                DisplayName = Name.ToUpperInvariant();
+                return;
+            }
+            DisplayName = (hasOverride ? NameOverride : str)
+                + " (" + Name.ToUpperInvariant() + ")";
         }
 
         public void Init(GameInfo gameInfo, HouseType house, DirectionType direction)

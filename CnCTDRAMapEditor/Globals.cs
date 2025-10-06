@@ -113,6 +113,7 @@ namespace MobiusEditor
 
             // Graphical tweaks
             FixClassicEinstein = Properties.Settings.Default.FixClassicEinstein;
+            AllowImageModsInMaps = Properties.Settings.Default.AllowImageModsInMaps;
             LandedHelisTd = Properties.Settings.Default.TdHelisSpawnOnGround;
             LandedHelisRa = Properties.Settings.Default.RaHelisSpawnOnGround;
             FixConcretePavement = Properties.Settings.Default.FixConcretePavement;
@@ -258,6 +259,7 @@ namespace MobiusEditor
         public static bool EnableTdClassicMultiLine { get; private set; }
 
         public static bool FixClassicEinstein { get; private set; }
+        public static bool AllowImageModsInMaps { get; private set; }
         public static bool FixConcretePavement { get; private set; }
         public static bool LandedHelisTd { get; private set; }
         public static bool LandedHelisRa { get; private set; }

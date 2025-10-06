@@ -168,6 +168,7 @@ namespace MobiusEditor.Model
         public string Name { get; private set; }
         public bool Ownable => true;
         public string DisplayName { get; private set; }
+        public string NameOverride { get; set; }
         public string Turret { get; private set; }
         public string SecondTurret { get; private set; }
         public int TurretOffset { get; private set; }
@@ -199,6 +200,7 @@ namespace MobiusEditor.Model
         public bool CanRemap => !Flags.HasFlag(UnitTypeFlag.NoRemap);
         /// <summary>Uses the buildings remap of the owning House.</summary>
         public bool BuildingRemap => Flags.HasFlag(UnitTypeFlag.BuildingRemap);
+        public string ImageOverride { get; set; }
         public bool IsExpansionOnly => Flags.HasFlag(UnitTypeFlag.ExpansionOnly);
         /// <summary>Can show a mobile gap area-of-effect radius indicator.</summary>
         public bool IsGapGenerator => Flags.HasFlag(UnitTypeFlag.GapGenerator);
@@ -257,9 +259,16 @@ namespace MobiusEditor.Model
 
         public void InitDisplayName()
         {
-            DisplayName = !String.IsNullOrEmpty(nameId) && !String.IsNullOrEmpty(Globals.TheGameTextManager[nameId])
-                ? Globals.TheGameTextManager[nameId] + " (" + Name.ToUpperInvariant() + ")"
-                : Name.ToUpperInvariant();
+            string str = null;
+            bool hasString = !String.IsNullOrEmpty(nameId) && !String.IsNullOrEmpty(str = Globals.TheGameTextManager[nameId]);
+            bool hasOverride = !String.IsNullOrEmpty(NameOverride);
+            if (!hasString && !hasOverride)
+            {
+                DisplayName = Name.ToUpperInvariant();
+                return;
+            }
+            DisplayName = (hasOverride ? NameOverride : str)
+                + " (" + Name.ToUpperInvariant() + ")";
         }
 
         public void Init(GameInfo gameInfo, HouseType house, DirectionType direction)

@@ -29,6 +29,7 @@ namespace MobiusEditor.Model
         public bool Ownable => true;
         public string GraphicsSource { get; set; }
         public string DisplayName { get; private set; }
+        public string NameOverride { get; set; }
         public string OwnerHouse { get; private set; }
         public UnitTypeFlag Flags { get; private set; }
         public bool IsArmed => Flags.HasFlag(UnitTypeFlag.Armed);
@@ -39,14 +40,16 @@ namespace MobiusEditor.Model
         public bool CanRemap => !Flags.HasFlag(UnitTypeFlag.NoRemap);
         /// <summary>Uses the buildings remap of the owning House.</summary>
         public bool BuildingRemap => Flags.HasFlag(UnitTypeFlag.BuildingRemap);
-        public string ClassicGraphicsSource { get; set; }
+        public string ImageOverride { get; set; }
+        /// <summary>Indicates that the Image tag is not allowed to be read from rules.ini for this type.</summary>
+        public bool NoImageRuleInRemaster { get; set; }
         public byte[] ClassicGraphicsRemap { get; set; }
         public bool GraphicsFound { get; private set; }
 
         public Bitmap Thumbnail { get; set; }
         private string nameId;
 
-        public InfantryType(int id, string name, string textId, string ownerHouse, string remappedFrom, byte[] remapTable, UnitTypeFlag flags)
+        public InfantryType(int id, string name, string textId, string ownerHouse, bool noImageRuleInRemaster, byte[] remapTable, UnitTypeFlag flags)
         {
             ID = id;
             Name = name;
@@ -54,16 +57,16 @@ namespace MobiusEditor.Model
             nameId = textId;
             OwnerHouse = ownerHouse;
             Flags = flags;
-            ClassicGraphicsSource = remappedFrom;
+            NoImageRuleInRemaster = noImageRuleInRemaster;
             ClassicGraphicsRemap = remapTable;
         }
 
         public InfantryType(int id, string name, string textId, string ownerHouse, UnitTypeFlag flags)
-            : this(id, name, textId, ownerHouse, null, null, flags)
+            : this(id, name, textId, ownerHouse, false, null, flags)
         {
         }
         public InfantryType(int id, string name, string textId, string ownerHouse)
-        : this(id, name, textId, ownerHouse, null, null, UnitTypeFlag.None)
+        : this(id, name, textId, ownerHouse, false, null, UnitTypeFlag.None)
         {
         }
 
@@ -103,12 +106,18 @@ namespace MobiusEditor.Model
             return Name;
         }
 
-
         public void InitDisplayName()
         {
-            DisplayName = !String.IsNullOrEmpty(nameId) && !String.IsNullOrEmpty(Globals.TheGameTextManager[nameId])
-                ? Globals.TheGameTextManager[nameId] + " (" + Name.ToUpperInvariant() + ")"
-                : Name.ToUpperInvariant();
+            string str = null;
+            bool hasString = !String.IsNullOrEmpty(nameId) && !String.IsNullOrEmpty(str = Globals.TheGameTextManager[nameId]);
+            bool hasOverride = !String.IsNullOrEmpty(NameOverride);
+            if (!hasString && !hasOverride)
+            {
+                DisplayName = Name.ToUpperInvariant();
+                return;
+            }
+            DisplayName = (hasOverride ? NameOverride : str)
+                + " (" + Name.ToUpperInvariant() + ")";
         }
 
         public void Init(HouseType house, DirectionType direction)
@@ -117,13 +126,16 @@ namespace MobiusEditor.Model
             Bitmap oldImage = Thumbnail;
             // Initialisation for the special RA civilian remapping logic. Normally, code should never check the type of the tileset manager
             // and use a specific one, but this is a special case that'd be more convoluted to get around by implementing it generally.
-            if (((ClassicGraphicsSource != null && !String.Equals(Name, ClassicGraphicsSource, StringComparison.OrdinalIgnoreCase))
-                || ClassicGraphicsRemap != null) && Globals.TheTilesetManager is TilesetManagerClassic tsmc)
+            string actualSprite = ImageOverride ?? Name;
+            if (ClassicGraphicsRemap != null && Globals.TheTilesetManager is TilesetManagerClassic tsmc)
             {
-                string actualSprite = ClassicGraphicsSource ?? Name;
                 // Use special override that 100% makes sure previously-cached versions are cleared, so previous accidental fetches do not corrupt it.
-                GraphicsSource = actualSprite + " (override for infantry "+ Name.ToUpperInvariant() + ")";
+                GraphicsSource = actualSprite + " (remapped for infantry " + Name.ToUpperInvariant() + ")";
                 tsmc.GetTeamColorTileData(GraphicsSource, 0, null, out _, true, false, true, actualSprite, ClassicGraphicsRemap, true);
+            }
+            else
+            {
+                GraphicsSource = actualSprite;
             }
             Infantry mockInfantry = new Infantry(null)
             {

@@ -47,6 +47,7 @@ namespace MobiusEditor.Model
         public bool IsHarvester => false;
         public bool IsExpansionOnly => false;
         public bool CanRemap => false;
+        public string ImageOverride => null;
         public Point CenterPoint { get; private set; }
         public bool GraphicsFound { get; private set; }
         private string nameId;

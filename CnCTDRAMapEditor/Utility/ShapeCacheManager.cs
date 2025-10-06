@@ -61,6 +61,15 @@ namespace MobiusEditor.Utility
             return null;
         }
 
+        public void RemoveAllShapesFor(string identifierStart)
+        {
+            List<string> toRemove = new List<string>(shapes.Keys.Where(k => k.StartsWith(identifierStart, StringComparison.OrdinalIgnoreCase)));
+            foreach (string identifier in toRemove)
+            {
+                shapes.Remove(identifier);
+            }
+        }
+
         public void AddImage(string identifier, Bitmap image)
         {
             if (!images.ContainsKey(identifier))
@@ -76,6 +85,21 @@ namespace MobiusEditor.Utility
                 return images[identifier];
             }
             return null;
+        }
+
+        public void RemoveAllImagesFor(string identifierStart)
+        {
+            List<string> toRemove = new List<string>(images.Keys.Where(k => k.StartsWith(identifierStart, StringComparison.OrdinalIgnoreCase)));
+            foreach (string identifier in toRemove)
+            {
+                Bitmap bitmap = images[identifier];
+                shapes.Remove(identifier);
+                try
+                {
+                    bitmap.Dispose();
+                }
+                catch { /* ignore */ }
+            }
         }
 
         public void Dispose()

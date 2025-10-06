@@ -345,19 +345,19 @@ namespace MobiusEditor.RedAlert
 
         private void SetMissionRules(INI iniText, bool isSolo, bool expansionEnabled, List<string> errors, ref bool modified)
         {
-            UpdateRules(rulesIni, IniRules, false, Map, false, null);
+            UpdateRules(rulesIni, IniRules, false, Map, false, true, null);
             if (expansionEnabled)
             {
                 if (this.aftermathRulesIni != null)
                 {
-                    UpdateRules(aftermathRulesIni, IniAftermath, true, Map, false, null);
+                    UpdateRules(aftermathRulesIni, IniAftermath, true, Map, false, true, null);
                 }
                 if (this.aftermathMpRulesIni != null && !isSolo)
                 {
-                    UpdateRules(aftermathMpRulesIni, IniAftrMulti, true, Map, false, null);
+                    UpdateRules(aftermathMpRulesIni, IniAftrMulti, true, Map, false, true, null);
                 }
             }
-            List<string> newErrors = UpdateRules(iniText, IniMap, true, Map, false, null);
+            List<string> newErrors = UpdateRules(iniText, IniMap, true, Map, false, Globals.AllowImageModsInMaps, null);
             if (newErrors.Count > 0)
             {
                 modified = true;
@@ -396,16 +396,16 @@ namespace MobiusEditor.RedAlert
                 CleanIniContents(extraIniText);
             }
             Dictionary<string, bool> bibBackups = Map.BuildingTypes.ToDictionary(b => b.Name, b => b.HasBib, StringComparer.OrdinalIgnoreCase);
-            UpdateRules(rulesIni, IniRules, false, Map, forFootprintTest, refreshPoints);
+            UpdateRules(rulesIni, IniRules, false, Map, forFootprintTest, true, refreshPoints);
             if (expansionEnabled)
             {
                 if (aftermathRulesIni != null)
                 {
-                    UpdateRules(aftermathRulesIni, IniAftermath, true, Map, forFootprintTest, refreshPoints);
+                    UpdateRules(aftermathRulesIni, IniAftermath, true, Map, forFootprintTest, true, refreshPoints);
                 }
                 if (this.aftermathMpRulesIni != null && !isSolo)
                 {
-                    UpdateRules(aftermathMpRulesIni, IniAftrMulti, true, Map, forFootprintTest, refreshPoints);
+                    UpdateRules(aftermathMpRulesIni, IniAftrMulti,  true, Map, forFootprintTest, true, refreshPoints);
                 }
             }
             // save the buildings as they are without the map's own rule tweaks.
@@ -413,7 +413,7 @@ namespace MobiusEditor.RedAlert
             List<string> errors = null;
             if (extraIniText != null)
             {
-                errors = UpdateRules(extraIniText, IniMap, true, Map, forFootprintTest, refreshPoints);
+                errors = UpdateRules(extraIniText, IniMap, true, Map, forFootprintTest, Globals.AllowImageModsInMaps, refreshPoints);
             }
             footPrintsChanged = false;
             foreach (BuildingType bType in Map.BuildingTypes)
@@ -547,16 +547,16 @@ namespace MobiusEditor.RedAlert
             List<string> errors = new List<string>();
             // This returns errors in original rules files. Ignore for now.
             rulesIni = ReadRulesFile(Globals.TheArchiveManager.ReadFileClassic(IniRules));
-            errors.AddRange(UpdateRules(rulesIni, IniRules, false, Map, false, null));
+            errors.AddRange(UpdateRules(rulesIni, IniRules, false, Map, false, true, null));
             aftermathRulesIni = ReadRulesFile(Globals.TheArchiveManager.ReadFileClassic(IniAftermath));
             if (Map.BasicSection.ExpansionEnabled && aftermathRulesIni != null)
             {
-                errors.AddRange(UpdateRules(aftermathRulesIni, IniAftermath, true, Map, false, null));
+                errors.AddRange(UpdateRules(aftermathRulesIni, IniAftermath, true, Map, false, true, null));
             }
             aftermathMpRulesIni = ReadRulesFile(Globals.TheArchiveManager.ReadFileClassic(IniAftrMulti));
             if (aftermathMpRulesIni != null && this.Map.BasicSection.ExpansionEnabled && !this.Map.BasicSection.SoloMission)
             {
-                errors.AddRange(UpdateRules(aftermathMpRulesIni, IniAftrMulti, true, Map, false, null));
+                errors.AddRange(UpdateRules(aftermathMpRulesIni, IniAftrMulti, true, Map, false, true, null));
             }
             // save the buildings as they are without the map's own rule tweaks.
             bareRuleBuildings = this.Map.BuildingTypes.Select(b => b.Clone()).ToDictionary(b => b.Name, StringComparer.OrdinalIgnoreCase);
@@ -3116,18 +3116,24 @@ namespace MobiusEditor.RedAlert
         /// Update rules according to the information in the given ini file.
         /// </summary>
         /// <param name="ini">ini file</param>
+        /// <param name="iniName">The name of the ini file that is being processed.</param>
+        /// <param name="cumulative">True if this read is cumulative on top of previous ini reads.</param>
         /// <param name="map">Current map; used for ini parsing.</param>
         /// <param name="forFootprintTest">Run in test mode, where bibs are changed but nothing is actually updated on the map.</param>
+        /// <param name="allowImage">True to allow image reads from this rules file.</param>
+        /// <param name="refreshPoints">Set in which to add points to refresh. Can be null.</param>
         /// <returns>Any errors returned by the parsing process.</returns>
-        private List<string> UpdateRules(INI ini, string iniName, bool cumulative, Map map, bool forFootprintTest, HashSet<Point> refreshPoints)
+        private List<string> UpdateRules(INI ini, string iniName, bool cumulative, Map map, bool forFootprintTest, bool allowImage, HashSet<Point> refreshPoints)
         {
             List<string> errors = new List<string>();
             if (!forFootprintTest)
             {
-                errors.AddRange(this.UpdateLandTypeRules(ini, iniName, cumulative, map));
-                errors.AddRange(this.UpdateGeneralRules(ini, iniName, cumulative, map));
+                errors.AddRange(UpdateLandTypeRules(ini, iniName, cumulative, map));
+                errors.AddRange(UpdateGeneralRules(ini, iniName, cumulative, map));
+                errors.AddRange(UpdateUnitRules(ini, iniName, cumulative, map, gameTypeInfo, allowImage, refreshPoints));
+                errors.AddRange(UpdateInfantryRules(ini, iniName, cumulative, map, gameTypeInfo, allowImage, refreshPoints));
             }
-            errors.AddRange(UpdateBuildingRules(ini, iniName, cumulative, map, forFootprintTest, refreshPoints));
+            errors.AddRange(UpdateBuildingRules(ini, iniName, cumulative, map, gameTypeInfo, forFootprintTest, allowImage, refreshPoints));
             if (ini == null)
             {
                 // ignore actual errors.
@@ -3235,7 +3241,156 @@ namespace MobiusEditor.RedAlert
             return null;
         }
 
-        private static IEnumerable<string> UpdateBuildingRules(INI ini, string iniName, bool cumulative, Map map, bool forFootPrintTest, HashSet<Point> refreshPoints)
+        private static IEnumerable<string> UpdateUnitRules(INI ini, string iniName, bool cumulative, Map map, GameInfo gi, bool allowImage, HashSet<Point> refreshPoints)
+        {
+            List<string> errors = new List<string>();
+            foreach (UnitType uTechnoType in map.AllTeamTechnoTypes.OfType<UnitType>())
+            {
+                string unitName = uTechnoType.Name;
+                // uType can be empty if aircraft are disabled.
+                UnitType uType = map.AllUnitTypes.OfType<UnitType>().FirstOrDefault(tt => tt.Name == unitName);
+                INISection unitSettings = ini == null ? null : ini[unitName];
+                string oldImage = uTechnoType.ImageOverride ?? unitName;
+                if (!cumulative)
+                {
+                    uTechnoType.NameOverride = null;
+                    uTechnoType.InitDisplayName();
+                    if (allowImage)
+                    {
+                        uTechnoType.ImageOverride = null;
+                    }
+                    if (uType != null && !ReferenceEquals(uType, uTechnoType))
+                    {
+                        uType.NameOverride = null;
+                        uType.InitDisplayName();
+                        if (allowImage)
+                        {
+                            uTechnoType.ImageOverride = null;
+                        }
+                    }
+                }
+                if (unitSettings == null)
+                {
+                    continue;
+                }
+                string name;
+                if (unitSettings.Keys.Contains("Name") && !String.IsNullOrEmpty(name = unitSettings["Name"]))
+                {
+                    uTechnoType.NameOverride = name;
+                    uTechnoType.InitDisplayName();
+                    if (uType != null && !ReferenceEquals(uType, uTechnoType))
+                    {
+                        uType.NameOverride = name;
+                        uType.InitDisplayName();
+                    }
+                }
+                if (allowImage)
+                {
+                    string image;
+                    if (unitSettings.Keys.Contains("Image") && !String.IsNullOrEmpty(image = unitSettings["Image"]))
+                    {
+                        uTechnoType.ImageOverride = image;
+                        if (uType != null && !ReferenceEquals(uType, uTechnoType))
+                        {
+                            uType.ImageOverride = image;
+                        }
+                    }
+                    if (!String.Equals(oldImage, uTechnoType.ImageOverride ?? unitName, StringComparison.OrdinalIgnoreCase))
+                    {
+                        if (uType != null)
+                        {
+                            DirectionType unitDir = map.UnitDirectionTypes.Where(d => d.Facing == FacingType.SouthWest).First();
+                            uType.Init(gi, map.HouseTypesIncludingSpecials.Where(h => h.Equals(uType.OwnerHouse)).FirstOrDefault(), unitDir);
+                            Globals.TheShapeCacheManager.RemoveAllShapesFor("outline_" + uType.GetType().Name + "_" + uType.Name + "_");
+                        }
+                        // Add all affected units to refresh points.
+                        refreshPoints?.UnionWith(map.Technos.OfType<Unit>()
+                            .Where(unitpt => String.Equals(unitpt.Occupier.GetType().Name, unitName, StringComparison.OrdinalIgnoreCase))
+                            .Select(unitpt => unitpt.Location));
+                    }
+                }
+            }
+            return errors;
+        }
+
+        private static IEnumerable<string> UpdateInfantryRules(INI ini, string iniName, bool cumulative, Map map, GameInfo gi, bool allowImage, HashSet<Point> refreshPoints)
+        {
+            List<string> errors = new List<string>();
+            foreach (InfantryType iTechnoType in map.AllTeamTechnoTypes.OfType<InfantryType>())
+            {
+                string infName = iTechnoType.Name;
+                InfantryType iType = map.AllInfantryTypes.FirstOrDefault(tt => tt.Name == infName);
+                INISection infSettings = ini == null ? null : ini[infName];
+                // RA classic civilians have their Image set in the rules file. This is necessary for the remap system,
+                // but messes up the remaster, so for the remaster, reading these is blocked by "NoImageRuleInRemaster".
+                bool allowImageLoad = allowImage && (!iTechnoType.NoImageRuleInRemaster || Globals.UseClassicFiles);
+                string oldImage = iTechnoType.ImageOverride ?? iTechnoType.Name;
+                if (!cumulative)
+                {
+                    iTechnoType.NameOverride = null;
+                    iTechnoType.InitDisplayName();
+                    if (allowImageLoad)
+                    {
+                        iTechnoType.ImageOverride = null;
+                    }
+                    if (iType != null && !ReferenceEquals(iType, iTechnoType))
+                    {
+                        iType.NameOverride = null;
+                        iType.InitDisplayName();
+                        if (allowImageLoad)
+                        {
+                            iType.ImageOverride = null;
+                        }
+                    }
+                }
+                if (infSettings == null)
+                {
+                    continue;
+                }
+                string name;
+                if (infSettings.Keys.Contains("Name") && !String.IsNullOrEmpty(name = infSettings["Name"]))
+                {
+                    iTechnoType.NameOverride = name;
+                    iTechnoType.InitDisplayName();
+                    if (iType != null && !ReferenceEquals(iType, iTechnoType))
+                    {
+                        iType.NameOverride = name;
+                        iType.InitDisplayName();
+                    }
+                }
+                if (allowImageLoad)
+                {
+                    string image;
+                    bool hasImage = false;
+                    if (infSettings.Keys.Contains("Image") && !String.IsNullOrEmpty(image = infSettings["Image"]))
+                    {
+                        hasImage = true;
+                        iTechnoType.ImageOverride = image;
+                        if (iType != null && !ReferenceEquals(iType, iTechnoType))
+                        {
+                            iType.ImageOverride = image;
+                        }
+                    }
+                    string newImage = iTechnoType.ImageOverride ?? iTechnoType.Name;
+                    if (hasImage || !String.Equals(oldImage, newImage, StringComparison.OrdinalIgnoreCase))
+                    {
+                        if (iType != null)
+                        {
+                            DirectionType unitDir = map.UnitDirectionTypes.Where(d => d.Facing == FacingType.South).First();
+                            iType.Init(map.HouseTypesIncludingSpecials.Where(h => h.Equals(iType.OwnerHouse)).FirstOrDefault(), unitDir);
+                            Globals.TheShapeCacheManager.RemoveAllShapesFor("outline_" + typeof(InfantryType).Name + "_" + iType.Name + "_");
+                        }
+                        // Add all affected infantry units to refresh points.
+                        refreshPoints?.UnionWith(map.Technos.OfType<InfantryGroup>()
+                            .Where(infgpt => infgpt.Occupier.Infantry.Any(inf => inf != null && String.Equals(inf.GetType().Name, infName, StringComparison.OrdinalIgnoreCase)))
+                            .Select(infgpt => infgpt.Location));
+                    }
+                }
+            }
+            return errors;
+        }
+
+        private static IEnumerable<string> UpdateBuildingRules(INI ini, string iniName, bool cumulative, Map map, GameInfo gi, bool forFootPrintTest, bool allowImage, HashSet<Point> refreshPoints)
         {
             List<string> errors = new List<string>();
             IEnumerable<BuildingType> origs = cumulative ? map.BuildingTypes.Select(b => b.Clone()) : BuildingTypes.GetTypes();
@@ -3255,18 +3410,29 @@ namespace MobiusEditor.RedAlert
             // Potentially add new bibs that obstruct stuff
             foreach (BuildingType bType in map.BuildingTypes)
             {
-                if (!originals.TryGetValue(bType.Name, out BuildingType orig))
+                string bname = bType.Name;
+                string oldImage = bType.ImageOverride ?? bType.GraphicsSource;
+                if (!originals.TryGetValue(bname, out BuildingType orig))
                 {
                     continue;
                 }
-                INISection bldSettings = ini == null ? null : ini[bType.Name];
+                INISection bldSettings = ini == null ? null : ini[bname];
                 // Reset
                 if (!forFootPrintTest)
                 {
                     bType.PowerUsage = orig.PowerUsage;
                     bType.PowerProduction = orig.PowerProduction;
+                    if (!cumulative)
+                    {
+                        bType.NameOverride = null;
+                        bType.InitDisplayName();
+                    }
                     bType.Storage = orig.Storage;
                     bType.Capturable = orig.Capturable;
+                    if (allowImage && !cumulative)
+                    {
+                        bType.ImageOverride = null;
+                    }
                 }
                 if (bldSettings == null)
                 {
@@ -3287,13 +3453,13 @@ namespace MobiusEditor.RedAlert
                     List<(string,string)> parseErrors = INI.ParseSection(new MapContext(map, true), bldSettings, bld, true);
                     foreach ((string iniKey, string error) in parseErrors)
                     {
-                        errors.Add("Custom rules error on [" + bType.Name + "] in " + iniName + ": " + error.TrimEnd('.') + ". Value for \"" + iniKey + "\" is ignored.");
+                        errors.Add("Custom rules error on [" + bname + "] in " + iniName + ": " + error.TrimEnd('.') + ". Value for \"" + iniKey + "\" is ignored.");
                     }
                 }
                 catch (Exception e)
                 {
                     // Normally won't happen with the aforementioned system.
-                    errors.Add("Custom rules error on [" + bType.Name + "] in " + iniName + ": " + e.Message.TrimEnd('.') + ". Rule updates for [" + bType.Name + "] are ignored.");
+                    errors.Add("Custom rules error on [" + bname + "] in " + iniName + ": " + e.Message.TrimEnd('.') + ". Rule updates for [" + bname + "] are ignored.");
                     continue;
                 }
                 if (!forFootPrintTest)
@@ -3307,9 +3473,31 @@ namespace MobiusEditor.RedAlert
                     {
                         bType.Storage = bld.Storage;
                     }
+                    if (bldSettings.Keys.Contains("Name"))
+                    {
+                        bType.NameOverride = bld.Name;
+                        bType.InitDisplayName();
+                    }
                     if (bldSettings.Keys.Contains("Capturable"))
                     {
                         bType.Capturable = bld.Capturable;
+                    }
+                    if (allowImage)
+                    {
+                        if (bldSettings.Keys.Contains("Image"))
+                        {
+                            bType.ImageOverride = bld.Image;
+                        }
+                        if (!String.Equals(oldImage, bType.ImageOverride ?? bType.GraphicsSource, StringComparison.OrdinalIgnoreCase))
+                        {
+                            DirectionType bldDir = map.UnitDirectionTypes.Where(d => d.Facing == FacingType.North).First();
+                            bType.Init(gi, map.HouseTypesIncludingSpecials.Where(h => h.Equals(bType.OwnerHouse)).FirstOrDefault(), bldDir);
+                            Globals.TheShapeCacheManager.RemoveAllShapesFor("outline_" + bType.GetType().Name + "_" + bType.Name + "_");
+                            // Add all affected units to refresh points.
+                            refreshPoints?.UnionWith(map.Buildings
+                                .Where(bldpt => String.Equals(bldpt.Occupier.GetType().Name, bname, StringComparison.OrdinalIgnoreCase))
+                                .Select(bldpt => bldpt.Location));
+                        }
                     }
                 }
                 bool hasBib = bldSettings.Keys.Contains("Bib") ? bld.Bib : orig.HasBib;
