@@ -33,7 +33,7 @@ namespace MobiusEditor.Model
         LowerRight /**/ = 4
     }
 
-    [DebuggerDisplay("{Type}: {Trigger}")]
+    [DebuggerDisplay("{Type}; House={House}, Trig={Trigger}")]
     public class Infantry : ITechno, INotifyPropertyChanged, ICloneable
     {
         public event PropertyChangedEventHandler PropertyChanged;

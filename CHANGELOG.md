@@ -741,6 +741,9 @@ Unreleased
 * Unit orders that are in the game but aren't supported in the editor are now recognised and reported as such.
 * An unparseable "Direction" value on a unit in a mission will no longer cause it to skip the entire unit.
 * Added shadows under airplanes.
-* Fixed overlap detection for buildings still looking at technos to see what is blocking it, despite buildings being on their own separate layer now.
+* Since buildings are on their own separate layer now, the placement overlap detection on map load for buildings no longer looks at technos to find out what is blocking something.
 * Enhanced Red Alert mission parsing error detection to correct highest-bit corruption that occurs in some of the original campaign missions.
 * Aircraft are now shown as flying above the cell they are placed on. The new settings **TdHelisSpawnOnGround** and **RaHelisSpawnOnGround** can disable this for helicopter/VTOL types.
+* Name overrides from Red Alert "Name=" ini rule tweaks will now be shown in the editor.
+* Graphics overrides from Red Alert "Image=" ini rule tweaks will now be shown in the editor. Do note that the classic game does not actually support this from mission files.
+* If a tile is found in the Remaster tileset xml definitions, it will be shown as valid tile in the editor, regardless of whether graphics were found for it.

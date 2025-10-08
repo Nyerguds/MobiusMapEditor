@@ -502,10 +502,11 @@ namespace MobiusEditor.Model
                 mask = new bool[IconHeight, IconWidth];
             }
             this.extraTilesFoundOn1x1 = false;
+            int tilesLen = Globals.TheTilesetManager.GetTileDataLength(Name);
             // This allows mods to add 'random' tiles to existing 1x1 tiles. Check excludes 'Clear' terrain and items already defined as random.
             if (IconWidth == 1 & IconHeight == 1 && !Flags.HasFlag(TemplateTypeFlag.Clear) && (!isRandom || fileInit) && !isGroup)
             {
-                if (Globals.TheTilesetManager.GetTileDataLength(this.Name) > 1)
+                if (tilesLen > 1)
                 {
                     this.extraTilesFoundOn1x1 = true;
                     isRandom = true;
@@ -517,7 +518,7 @@ namespace MobiusEditor.Model
             int numIcons = IconWidth * IconHeight;
             if (isRandom)
             {
-                numIcons = Math.Max(1, isGroup ? GroupTiles.Length : Globals.TheTilesetManager.GetTileDataLength(Name));
+                numIcons = Math.Max(1, isGroup ? GroupTiles.Length : tilesLen);
                 NumIcons = numIcons;
                 mask[0, 0] = true;
                 if (numIcons > 1)
@@ -607,7 +608,9 @@ namespace MobiusEditor.Model
             else
             {
                 this.Initialised = true;
-                this.ExistsInTheater = anyFound;
+                // If it 'exists' in the remastered tileset xml, it's supposed to exist,
+                // so mark it as existing regardless of whether the graphics were found.
+                this.ExistsInTheater = anyFound || tilesLen > 0;
             }
             Thumbnail = found ? th : null;
             IconMask = mask;

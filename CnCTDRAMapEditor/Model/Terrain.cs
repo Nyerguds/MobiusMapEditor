@@ -22,7 +22,7 @@ using MobiusEditor.Interface;
 
 namespace MobiusEditor.Model
 {
-    [DebuggerDisplay("{Type}: {Trigger}")]
+    [DebuggerDisplay("{Type}; House={House}, Trig={Trigger}")]
     public class Terrain : ITechno, ICellOverlapper, ICellOccupier, INotifyPropertyChanged, ICloneable, IEquatable<Terrain>
     {
         public event PropertyChangedEventHandler PropertyChanged;
