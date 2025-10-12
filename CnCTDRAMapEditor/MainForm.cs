@@ -1026,7 +1026,8 @@ namespace MobiusEditor
             {
                 return selectedFile;
             }
-            // Not sure what this case is? Mix path is already checked. Might be obsolete.
+            // Check if this is a mix file to open inside another mix file, without actual map path at the end.
+            // This is used by the "Open from mix" menu.
             string[] internalMixPath = null;
             if (selectedFile.Contains(';'))
             {
@@ -1938,19 +1939,6 @@ namespace MobiusEditor
 
         private void OpenFile(string fileName, bool recheckMix)
         {
-            try
-            {
-                if (!File.Exists(fileName))
-                {
-                    MessageBox.Show("File not found \"" + fileName + "\"");
-                    return;
-                }
-            }
-            catch
-            {
-                MessageBox.Show("Cannot access file \"" + fileName + "\"");
-                return;
-            }
             if (recheckMix)
             {
                 fileName = OpenFileFromMix(fileName);
@@ -1965,18 +1953,33 @@ namespace MobiusEditor
             string loadName = fileName;
             string feedbackName = fileName;
             bool nameIsId = false;
-            if (!isMix)
+            try
             {
-                FileInfo fileInfo = new FileInfo(fileName);
-                loadName = fileInfo.FullName;
-                feedbackName = fileInfo.FullName;
+                if (!isMix)
+                {
+                    FileInfo fileInfo = new FileInfo(fileName);
+                    loadName = fileInfo.FullName;
+                    feedbackName = fileInfo.FullName;
+                }
+                else
+                {
+                    MixPath.GetComponentsViewable(fileName, out string[] mixParts, out _);
+                    // To ensure this is stored in case creating "FileInfo" crashes.
+                    loadName = mixParts[0];
+                    FileInfo fileInfo = new FileInfo(loadName);
+                    loadName = fileInfo.FullName;
+                    feedbackName = MixPath.GetFileNameReadable(fileName, false, out nameIsId);
+                }
+                if (!File.Exists(loadName))
+                {
+                    MessageBox.Show("File not found \"" + loadName + "\"");
+                    return;
+                }
             }
-            else
+            catch(IOException)
             {
-                MixPath.GetComponentsViewable(fileName, out string[] mixParts, out _);
-                FileInfo fileInfo = new FileInfo(mixParts[0]);
-                loadName = fileInfo.FullName;
-                feedbackName = MixPath.GetFileNameReadable(fileName, false, out nameIsId);
+                MessageBox.Show("Cannot access file \"" + loadName + "\"");
+                return;
             }
             /// Main logic to detect the map type
             MapLoadInfo info = IdentifyMap(fileName);
