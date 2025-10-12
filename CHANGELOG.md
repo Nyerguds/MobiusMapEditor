@@ -747,3 +747,5 @@ Unreleased
 * Name overrides from Red Alert "Name=" ini rule tweaks will now be shown in the editor.
 * Graphics overrides from Red Alert "Image=" ini rule tweaks will now be shown in the editor. Do note that the classic game does not actually support this from mission files.
 * If a tile is found in the Remaster tileset xml definitions, it will be shown as valid tile in the editor, regardless of whether graphics were found for it.
+* The editor will no longer accept a random file dropped into the editor as being a map file if an ini file of the same name is found. If the ini file is a self-contained map, or the opened file does not match any known .bin format, the file is simply rejected.
+* Added file existence checks into the code to open maps, preventing issues with drag-and-drop from programs that don't give correct existing paths.

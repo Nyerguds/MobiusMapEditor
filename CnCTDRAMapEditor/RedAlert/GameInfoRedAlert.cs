@@ -102,6 +102,11 @@ namespace MobiusEditor.RedAlert
             {
                 return FileType.None;
             }
+            if (contentWasSwapped && iniContents["MapPack"] != null)
+            {
+                // it just read some unrelated ini file with the same name and treated that as the map. Reject the original loaded file.
+                return FileType.None;
+            }
             theater = GetTheater(iniContents);
             return FileType.MPR;
         }

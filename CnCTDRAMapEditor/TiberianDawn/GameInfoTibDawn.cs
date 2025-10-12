@@ -115,12 +115,27 @@ namespace MobiusEditor.TiberianDawn
             {
                 return FileType.None;
             }
-            bool ismpr = GamePluginTD.CheckForEmbeddedMap(iniContents);
-            isMegaMap = GamePluginTD.CheckForMegamap(iniContents);
             theater = GetTheater(iniContents);
-            // Todo: distinguish N64 and TD maps by analysing the .bin file
-
-            return ismpr ? FileType.MPR : contentWasSwapped ? FileType.BIN : FileType.INI;
+            bool ismpr = GamePluginTD.CheckForEmbeddedMap(iniContents);
+            if (ismpr && contentWasSwapped)
+            {
+                // extra loaded ini file is irrelevant to actual loaded file.
+                return FileType.None;
+            }
+            isMegaMap = GamePluginTD.CheckForMegamap(iniContents);
+            int maxTemplate = TemplateTypes.GetTypes().Max(tp => tp.ID);
+            bool isDesert = TheaterTypes.Desert.Name.Equals(theater, StringComparison.OrdinalIgnoreCase);
+            Dictionary<int, ushort> n64Mapping = isDesert ? N64MapConverter.DESERT_MAPPING : N64MapConverter.TEMPERATE_MAPPING;
+            int maxTemplateN64 = n64Mapping.Keys.Where(k => k != -1 && k != 0xFFFF).Max();
+            bool isN64 = false;
+            bool checksAsNormalMap = !isMegaMap && !ismpr && GamePluginTD.CheckNormalMap(binContents, MapSize, maxTemplate, maxTemplateN64, out isN64);
+            if (contentWasSwapped && (isMegaMap && !GamePluginTD.CheckMegaMap(binContents, MapSizeMega, maxTemplate)
+                 || (!isMegaMap && !checksAsNormalMap)))
+            {
+                // Primary read file is not valid bin.
+                return FileType.None;
+            }
+            return ismpr ? FileType.MPR : contentWasSwapped ? (isN64 ? FileType.B64 : FileType.BIN) : (isN64 ? FileType.I64 : FileType.INI);
         }
 
         public override IGamePlugin CreatePlugin(bool mapImage, bool megaMap) => new GamePluginTD(mapImage, megaMap);

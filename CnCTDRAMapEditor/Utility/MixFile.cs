@@ -117,6 +117,17 @@ namespace MobiusEditor.Utility
         /// </summary>
         public static bool CheckValidMix(string mixPath, bool handleAdvanced)
         {
+            try
+            {
+                if (!File.Exists(mixPath))
+                {
+                    return false;
+                }
+            }
+            catch
+            {
+                return false;
+            }
             MixFile dummy = new MixFile();
             FileInfo mixFile = new FileInfo(mixPath);
             dummy.fileStart = 0;

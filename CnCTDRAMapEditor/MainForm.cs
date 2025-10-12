@@ -1938,6 +1938,19 @@ namespace MobiusEditor
 
         private void OpenFile(string fileName, bool recheckMix)
         {
+            try
+            {
+                if (!File.Exists(fileName))
+                {
+                    MessageBox.Show("File not found \"" + fileName + "\"");
+                    return;
+                }
+            }
+            catch
+            {
+                MessageBox.Show("Cannot access file \"" + fileName + "\"");
+                return;
+            }
             if (recheckMix)
             {
                 fileName = OpenFileFromMix(fileName);
@@ -1968,7 +1981,7 @@ namespace MobiusEditor
             /// Main logic to detect the map type
             MapLoadInfo info = IdentifyMap(fileName);
             // Handle failure
-            if (info == null && !isMix)
+            if ((info == null || info.GameType == GameType.None) && !isMix)
             {
                 // If not a map, see if it is maybe an image.
                 string extension = Path.GetExtension(loadName).TrimStart('.');
@@ -2276,6 +2289,11 @@ namespace MobiusEditor
                     fileType = ft;
                 }
                 break;
+            }
+            // Can still happen if the logic to read an ini alongside a .bin concludes the supposed ".bin" isn't a c&C map at all.
+            if (gameType == GameType.None)
+            {
+                return null;
             }
             return new MapLoadInfo(loadFilename, iniPath, iniBytes, binPath, binBytes, openedFileIsBin, theater, isMegaMap, gameType, fileType);
         }
@@ -3161,7 +3179,7 @@ namespace MobiusEditor
             if (e.Data.GetDataPresent(DataFormats.FileDrop))
             {
                 string[] files = (string[])e.Data.GetData(DataFormats.FileDrop);
-                if (files.Length == 1)
+                if (files != null && files.Length == 1)
                     e.Effect = DragDropEffects.Copy;
             }
         }

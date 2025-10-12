@@ -81,6 +81,15 @@ namespace MobiusEditor.SoleSurvivor
             {
                 return FileType.None;
             }
+            int maxTemplate = TemplateTypes.GetTypes().Max(tp => tp.ID);
+            isMegaMap = GamePluginTD.CheckForMegamap(iniContents);
+            if (contentWasSwapped
+                && ((isMegaMap && !GamePluginTD.CheckMegaMap(binContents, MapSizeMega, maxTemplate))
+                || !isMegaMap && !GamePluginTD.CheckNormalMap(binContents, MapSize, maxTemplate, -1, out _)))
+            {
+                // Primary read file is not valid bin.
+                return FileType.None;
+            }
             theater = GetTheater(iniContents);
             return FileType.INI;
         }

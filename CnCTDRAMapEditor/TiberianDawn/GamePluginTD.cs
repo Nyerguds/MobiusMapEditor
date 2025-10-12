@@ -355,6 +355,105 @@ namespace MobiusEditor.TiberianDawn
             return INITools.CheckForIniInfo(iniContents, "MapPack");
         }
 
+        public static bool CheckNormalMap(byte[] binContents, Size mapSize, int maxTypeVal, int maxTypeValN64, out bool isN64)
+        {
+            isN64 = false;
+            if (binContents == null)
+            {
+                return false;
+            }
+            int dataLen = binContents.Length;
+            int mapWidth = mapSize.Width;
+            int mapHeight = mapSize.Height;
+            int mapLen = mapWidth * mapHeight;
+            if (dataLen != mapLen * 2)
+            {
+                return false;
+            }
+            if (maxTypeValN64 > 0)
+            {
+                int normalType = 0;
+                int n64Type = 0;
+                for (int i = 0; i < dataLen; i += 2)
+                {
+                    short val = (short)(binContents[i] | (binContents[i + 1] << 8));
+                    if (val == -1)
+                    {
+                        n64Type++;
+                    }
+                    else if (val == 0xFF)
+                    {
+                        normalType++;
+                    }
+                    else if (binContents[i] == 0 && binContents[i + 1] < 0x10)
+                    {
+                        // XCC Editor doesn't save using the "-1" shortcut but actually saves clear terrain per cell.
+                        normalType++;
+                    }
+                }
+                isN64 = n64Type > 0 && normalType == 0;
+                if (isN64)
+                {
+                    for (int i = 0; i < dataLen; i += 2)
+                    {
+                        ushort val = (ushort)((binContents[i] << 8) + binContents[i + 1]);
+                        if (val != 0xFFFF && val > maxTypeValN64)
+                        {
+                            return false;
+                        }
+                    }
+                    return true;
+                }
+            }
+            for (int i = 0; i < dataLen; i += 2)
+            {
+                byte typeValue = binContents[i];
+                if (typeValue != 0xFF && typeValue > maxTypeVal)
+                {
+                    return false;
+                }
+            }
+            return true;
+        }
+
+        public static bool CheckMegaMap(byte[] binContents, Size mapSize, int maxTypeVal)
+        {
+            int dataLen = binContents.Length;
+            int lastCell = -1;
+            int mapWidth = mapSize.Width;
+            int mapHeight = mapSize.Height;
+            int mapLen = mapWidth * mapHeight;
+            using (MemoryStream ms = new MemoryStream(binContents))
+            using (BinaryReader reader = new BinaryReader(ms, Encoding.UTF8, true))
+            {
+                while (reader.BaseStream.Position < dataLen)
+                {
+                    byte cellLow = reader.ReadByte();
+                    byte cellHi = reader.ReadByte();
+                    int cell = (cellHi << 8) | cellLow;
+                    if (cell == lastCell)
+                    {
+                        return false;
+                    }
+                    else if (cell < lastCell)
+                    {
+                        return false;
+                    }
+                    if (cell > mapLen)
+                    {
+                        return false;
+                    }
+                    byte typeValue = reader.ReadByte();
+                    byte iconValue = reader.ReadByte();
+                    if (typeValue != 0xFF && typeValue > maxTypeVal)
+                    {
+                        return false;
+                    }
+                }
+            }
+            return true;
+        }
+
         public IEnumerable<string> Initialize()
         {
             Globals.TheTeamColorManager.Load(@"DATA\XML\CNCTDTEAMCOLORS.XML");
@@ -553,7 +652,7 @@ namespace MobiusEditor.TiberianDawn
                 List<string> errors = new List<string>();
                 bool modified = false;
                 bool tryCheckSingle = false;
-                bool checkN64 = fileType == FileType.I64 || (binPath != null && binPath.EndsWith(".map", StringComparison.OrdinalIgnoreCase));
+                bool checkN64 = !forSole && (fileType == FileType.I64 || fileType == FileType.B64 || (binPath != null && binPath.EndsWith(".map", StringComparison.OrdinalIgnoreCase)));
                 ParseIniContent(ini, iniContent, forSole);
                 tryCheckSingle = !forSole
                     && singlePlayRegex.IsMatch(Path.GetFileNameWithoutExtension(iniPath))
@@ -593,11 +692,11 @@ namespace MobiusEditor.TiberianDawn
 
         private void ReadMap(byte[] fileContents, string filename, List<string> errors, ref bool modified, bool checkN64, out bool isN64Map)
         {
-            const int binLen = 0x2000;
+            int binLen = Map.Metrics.Width * Map.Metrics.Height * 2;
             isN64Map = false;
             List<string> err = new List<string>();
             bool mod = modified;
-            CellGrid<Template> templates = ReadBinData(fileContents, filename, err, ref mod);            
+            CellGrid<Template> templates = ReadBinData(fileContents, filename, Map.Metrics.Size, err, ref mod);            
             if (checkN64 && fileContents.Length == binLen)
             {
                 int normalType = 0;
@@ -661,9 +760,9 @@ namespace MobiusEditor.TiberianDawn
             }
         }
 
-        private CellGrid<Template> ReadBinData(byte[] mapData, string filename, List<string> errors, ref bool modified)
+        private CellGrid<Template> ReadBinData(byte[] mapData, string filename, Size mapSize, List<string> errors, ref bool modified)
         {
-            CellGrid<Template> templates = new CellGrid<Template>(Map.Metrics);
+            CellGrid<Template> templates = new CellGrid<Template>(new CellMetrics(mapSize));
             using (MemoryStream ms = new MemoryStream(mapData))
             using (BinaryReader binReader = new BinaryReader(ms, Encoding.UTF8, true))
             {
@@ -2562,8 +2661,8 @@ namespace MobiusEditor.TiberianDawn
             List<string> errors = new List<string>();
             target.Clear();
             TemplateType[] templateTypes = Map.GetMapTemplateTypes();
-            int width = Map.Metrics.Width;
-            int height = Map.Metrics.Width;
+            int width = target.Metrics.Width;
+            int height = target.Metrics.Width;
             int cell = 0;
             for (int y = 0; y < height; ++y)
             {
@@ -2585,8 +2684,8 @@ namespace MobiusEditor.TiberianDawn
             target.Clear();
             TemplateType[] templateTypes = Map.GetMapTemplateTypes();
             long dataLen = reader.BaseStream.Length;
-            int mapLen = Map.Metrics.Length;
-            int mapWidth = Map.Metrics.Width;
+            int mapLen = target.Metrics.Length;
+            int mapWidth = target.Metrics.Width;
             int lastCell = -1;
             while (reader.BaseStream.Position < dataLen)
             {

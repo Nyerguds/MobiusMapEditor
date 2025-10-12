@@ -264,7 +264,7 @@ namespace MobiusEditor.Dialogs
             }
             MapLayerFlag layers = GetLayers();
             bool smooth = chkSmooth.Checked;
-            bool highlightFlags = true;
+            bool highlightFlags = chkHighlightFlags.Checked;
             bool inBounds = chkBoundsOnly.Checked;
             bool origPal = chkOrigPalette.Checked;
             string path = txtPath.Text;
