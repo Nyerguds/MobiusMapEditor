@@ -167,7 +167,7 @@ namespace MobiusEditor.Utility
                 if (shpData != null)
                 {
                     mixInfo.Type = MixContentType.ShpTd;
-                    mixInfo.Info = string.Format("C&C SHP; {0} frame{1}, {2}×{3}", shpData.Length, shpData.Length == 1 ? string.Empty : "s", width, height);
+                    mixInfo.Info = String.Format("C&C SHP; {0} frame{1}, {2}×{3}", shpData.Length, shpData.Length == 1 ? string.Empty : "s", width, height);
                     return true;
                 }
             }
@@ -236,7 +236,7 @@ namespace MobiusEditor.Utility
                     return false;
                 }
                 mixInfo.Type = MixContentType.Pcx;
-                mixInfo.Info = string.Format("PCX Image; {0}×{1}, {2} bpp", width, height, bitsPerPixel);
+                mixInfo.Info = String.Format("PCX Image; {0}×{1}, {2} bpp", width, height, bitsPerPixel);
                 return true;
             }
             catch (Exception)
@@ -289,7 +289,7 @@ namespace MobiusEditor.Utility
                     return false;
                 }
                 mixInfo.Type = MixContentType.Bmp;
-                mixInfo.Info = string.Format("Bitmap Image; DIB v{0}, {1}×{2}, {3} bpp", dibformat, width, height, bitsPerPixel);
+                mixInfo.Info = String.Format("Bitmap Image; DIB v{0}, {1}×{2}, {3} bpp", dibformat, width, height, bitsPerPixel);
                 return true;
             }
             catch (Exception)
@@ -306,7 +306,7 @@ namespace MobiusEditor.Utility
                 if (shpData != null)
                 {
                     mixInfo.Type = MixContentType.ShpD2;
-                    mixInfo.Info = string.Format("Dune II SHP; {0} frame{1}, {2}×{3}", shpData.Length, shpData.Length == 1 ? string.Empty : "s", widths.Max(), heights.Max());
+                    mixInfo.Info = String.Format("Dune II SHP; {0} frame{1}, {2}×{3}", shpData.Length, shpData.Length == 1 ? string.Empty : "s", widths.Max(), heights.Max());
                     return true;
                 }
             }
@@ -491,8 +491,8 @@ namespace MobiusEditor.Utility
                     }
                 }
                 mixInfo.Type = MixContentType.Wsa;
-                string posInfo = xPos != 0 && yPos != 0 ? string.Format(" at position {0}×{1}", xPos, yPos) : string.Empty;
-                mixInfo.Info = string.Format("WSA Animation; {0}×{1}{2}, {3} frame{4}{5}{6}",
+                string posInfo = xPos != 0 && yPos != 0 ? String.Format(" at position {0}×{1}", xPos, yPos) : string.Empty;
+                mixInfo.Info = String.Format("WSA Animation; {0}×{1}{2}, {3} frame{4}{5}{6}",
                     xorWidth, xorHeight, posInfo, nrOfFrames, 
                     nrOfFrames == 1 ? string.Empty : "s",
                     hasLoopFrame ? " + loop frame" : string.Empty,
@@ -561,7 +561,7 @@ namespace MobiusEditor.Utility
                     return false;
                 }
                 mixInfo.Type = MixContentType.TmpTd;
-                mixInfo.Info = string.Format("C&C Template; {0} tile{1}", hdrCount, hdrCount == 1 ? string.Empty : "s");
+                mixInfo.Info = String.Format("C&C Template; {0} tile{1}", hdrCount, hdrCount == 1 ? string.Empty : "s");
                 return true;
             }
             catch (Exception)
@@ -655,11 +655,11 @@ namespace MobiusEditor.Utility
                 string tilesInfo;
                 if (tilesX == -1 && tilesY == -1)
                 {
-                    tilesInfo = string.Format("{0} images", actualImages);
+                    tilesInfo = String.Format("{0} images", actualImages);
                 }
                 else
                 {
-                    tilesInfo = string.Format("{0}×{1}", tilesX, tilesY);
+                    tilesInfo = String.Format("{0}×{1}", tilesX, tilesY);
                 }
                 mixInfo.Type = MixContentType.TmpRa;
                 mixInfo.Info = "RA Template; " + tilesInfo;
@@ -679,7 +679,7 @@ namespace MobiusEditor.Utility
                 if (shpData != null)
                 {
                     mixInfo.Type = MixContentType.Font;
-                    mixInfo.Info = string.Format("Font; {0} symbol{1}, {2}×{3}", shpData.Length, shpData.Length != 1 ? "s" : String.Empty, widths.Max(), height);
+                    mixInfo.Info = String.Format("Font; {0} symbol{1}, {2}×{3}", shpData.Length, shpData.Length != 1 ? "s" : String.Empty, widths.Max(), height);
                     return true;
                 }
             }
@@ -714,7 +714,7 @@ namespace MobiusEditor.Utility
                         string mapTheater = map.TryGetValue("Theater") ?? "?";
                         string mapName = bas.TryGetValue("Name");
                         List<string> mapDesc = new List<string>();
-                        mapDesc.Add(string.Format("; {0}×{1}", mapWidth, mapheight));
+                        mapDesc.Add(String.Format("; {0}×{1}", mapWidth, mapheight));
                         MixContentType mapType = MixContentType.MapTd;
                         if (SoleSurvivor.GamePluginSS.CheckForSSmap(ini))
                             mapType = MixContentType.MapSole;
@@ -766,7 +766,7 @@ namespace MobiusEditor.Utility
                         || s.Keys.Any(k => k.Key.IndexOfAny(badIniHeaderRange) > 0 || k.Value.IndexOfAny(badIniHeaderRange) > 0)))
                     {
                         mixInfo.Type = MixContentType.Ini;
-                        mixInfo.Info = string.Format("INI file");
+                        mixInfo.Info = String.Format("INI file");
                         return true;
                     }
                 }
@@ -787,7 +787,7 @@ namespace MobiusEditor.Utility
                 if (indices.Count > 0 && !hasBadChars && (indices[0] - indices.Count * 2) == 0 && strings.Any(s => s.Length > 0))
                 {
                     mixInfo.Type = MixContentType.Strings;
-                    mixInfo.Info = string.Format("Strings File; {0} entr{1}", strings.Count, strings.Count == 1 ? "y" : "ies");
+                    mixInfo.Info = String.Format("Strings File; {0} entr{1}", strings.Count, strings.Count == 1 ? "y" : "ies");
                     return true;
                 }
             }
@@ -868,7 +868,7 @@ namespace MobiusEditor.Utility
                         {
                             mixInfo.Type = MixContentType.Mix;
                             string formatInfo = newType ? ("new format; " + (encrypted ? string.Empty : "not ") + "encrypted; ") : string.Empty;
-                            mixInfo.Info = string.Format("Mix file; {0}{1} file{2}", formatInfo, mixContents, mixContents == 1 ? string.Empty : "s");
+                            mixInfo.Info = String.Format("Mix file; {0}{1} file{2}", formatInfo, mixContents, mixContents == 1 ? string.Empty : "s");
                             return true;
                         }
                     }
@@ -942,7 +942,7 @@ namespace MobiusEditor.Utility
                 return false;
             }
             mixInfo.Type = MixContentType.Audio;
-            mixInfo.Info = string.Format("Audio file; {0} Hz, {1}-bit {2}, compression {3}, {4} chunks.",
+            mixInfo.Info = String.Format("Audio file; {0} Hz, {1}-bit {2}, compression {3}, {4} chunks.",
                 frequency, is16Bit ? 16 : 8, isStereo ? "stereo" : "mono", compression, chunks);
             return true;
         }
@@ -999,9 +999,9 @@ namespace MobiusEditor.Utility
             int fullMinutes = fullSeconds / 60;
             int minutes = fullMinutes % 60;
             int hours = fullMinutes / 60;
-            string time = hours > 0 ? string.Format("{0}:{1:D2}:{2:D2}", hours, minutes, seconds) : string.Format("{0}:{1:D2}", minutes, seconds);
+            string time = hours > 0 ? String.Format("{0}:{1:D2}:{2:D2}", hours, minutes, seconds) : String.Format("{0}:{1:D2}", minutes, seconds);
             mixInfo.Type = MixContentType.Vqa;
-            mixInfo.Info = string.Format("Video file; VQA v{0}, {1}×{2}, {3}, {4}fps",
+            mixInfo.Info = String.Format("Video file; VQA v{0}, {1}×{2}, {3}, {4}fps",
                 version, width, height, time, frameRate);
             return true;
         }
@@ -1037,7 +1037,7 @@ namespace MobiusEditor.Utility
                 }
             }
             mixInfo.Type = MixContentType.Vqp;
-            mixInfo.Info = string.Format("Video stretch table; {0} block{1}", blocks, blocks == 1 ? string.Empty : "s");
+            mixInfo.Info = String.Format("Video stretch table; {0} block{1}", blocks, blocks == 1 ? string.Empty : "s");
             return true;
         }
 
@@ -1064,7 +1064,7 @@ namespace MobiusEditor.Utility
                 }
             }
             mixInfo.Type = MixContentType.PalTbl;
-            mixInfo.Info = string.Format("Palette stretch table");
+            mixInfo.Info = String.Format("Palette stretch table");
             return true;
         }
 
@@ -1102,7 +1102,7 @@ namespace MobiusEditor.Utility
             }
             int files = ArrayUtils.ReadInt32FromByteArrayLe(fileContents, 0x30);
             mixInfo.Type = MixContentType.XccNames;
-            mixInfo.Info = string.Format("XCC filenames database ({0} file{1})", files, files == 1 ? string.Empty : "s");
+            mixInfo.Info = String.Format("XCC filenames database ({0} file{1})", files, files == 1 ? string.Empty : "s");
             return true;
         }
 
@@ -1141,7 +1141,7 @@ namespace MobiusEditor.Utility
                 }
             }
             mixInfo.Type = MixContentType.RaMixNames;
-            mixInfo.Info = string.Format("RAMIX filenames database ({0} file{1})", files, files == 1 ? string.Empty : "s");
+            mixInfo.Info = String.Format("RAMIX filenames database ({0} file{1})", files, files == 1 ? string.Empty : "s");
             return true;
         }
 
@@ -1228,7 +1228,7 @@ namespace MobiusEditor.Utility
             }
             mixInfo.Type = MixContentType.Mrf;
             int reportBlocks = hasIndex ? blocksNoIndex : blocks;
-            mixInfo.Info = string.Format("Fading table{0} ({1} table{2})", hasIndex ? " with index" : string.Empty, reportBlocks, reportBlocks != 1 ? "s" : string.Empty);
+            mixInfo.Info = String.Format("Fading table{0} ({1} table{2})", hasIndex ? " with index" : string.Empty, reportBlocks, reportBlocks != 1 ? "s" : string.Empty);
             return true;
         }
     }

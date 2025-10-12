@@ -213,7 +213,7 @@ namespace MobiusEditor.Utility
                 var fileItem = fileItems[i];
                 bool isMix = file.IndexOf('?') != -1;
                 string fileText = isMix ? MixPath.GetFileNameReadable(file, false, out _) : file;
-                fileItem.Text = string.Format("&{0} {1}", i + 1, fileText.Replace("&", "&&"));
+                fileItem.Text = String.Format("&{0} {1}", i + 1, fileText.Replace("&", "&&"));
                 fileItem.Tag = file;
                 fileItem.Click -= FileItem_Click;
                 fileItem.Click += FileItem_Click;

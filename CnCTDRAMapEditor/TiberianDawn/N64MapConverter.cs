@@ -114,7 +114,7 @@ namespace MobiusEditor.TiberianDawn
                             hasErrors = true;
                             if (errors != null)
                             {
-                                errors.Add(string.Format("Value {0} - {1} - PC value {1} already mapped on N64 value {2}",
+                                errors.Add(String.Format("Value {0} - {1} - PC value {1} already mapped on N64 value {2}",
                                     cellValN64.ToString("X4"), cellValPc.ToString("X4"), inverseMapping[cellValPc].ToString("X4")));
                             }
                         }

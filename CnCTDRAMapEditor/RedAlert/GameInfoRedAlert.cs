@@ -97,14 +97,15 @@ namespace MobiusEditor.RedAlert
         {
             isMegaMap = true;
             theater = null;
+            if (contentWasSwapped)
+            {
+                // Primary read file is just some unsupported file that happens to have the same
+                // name as a valid ini file in the same folder. Reject the original loaded file.
+                return FileType.None;
+            }
             bool iniMatch = IsCnCIni(iniContents) && GamePluginRA.CheckForRAMap(iniContents);
             if (!iniMatch)
             {
-                return FileType.None;
-            }
-            if (contentWasSwapped && iniContents["MapPack"] != null)
-            {
-                // it just read some unrelated ini file with the same name and treated that as the map. Reject the original loaded file.
                 return FileType.None;
             }
             theater = GetTheater(iniContents);

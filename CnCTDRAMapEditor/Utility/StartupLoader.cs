@@ -305,11 +305,11 @@ namespace MobiusEditor.Utility
                     cultureName = DEFAULT_CULTURE;
                     break;
             }
-            string gameTextFilename = string.Format(Globals.GameTextFilenameFormat, cultureName.ToUpper());
+            string gameTextFilename = String.Format(Globals.GameTextFilenameFormat, cultureName.ToUpper());
             if (!Globals.TheArchiveManager.FileExists(gameTextFilename))
             {
                 cultureName = DEFAULT_CULTURE;
-                gameTextFilename = string.Format(Globals.GameTextFilenameFormat, cultureName.ToUpper());
+                gameTextFilename = String.Format(Globals.GameTextFilenameFormat, cultureName.ToUpper());
             }
             GameTextManager gtm = new GameTextManager(Globals.TheArchiveManager, gameTextFilename);
             //gtm.Dump(Path.Combine(Program.ApplicationPath, "alltext.txt"));

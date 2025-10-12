@@ -544,9 +544,9 @@ namespace MobiusEditor.Utility
             if (string.IsNullOrEmpty(argex.ParamName))
                 return string.Empty;
             if (argex is ArgumentNullException)
-                return string.Format("\"{0}\" is null.", argex.ParamName);
+                return String.Format("\"{0}\" is null.", argex.ParamName);
             if (argex is ArgumentOutOfRangeException)
-                return string.Format("\"{0}\" out of range.", argex.ParamName);
+                return String.Format("\"{0}\" out of range.", argex.ParamName);
             return argex.ParamName;
         }
 

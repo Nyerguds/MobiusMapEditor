@@ -1307,7 +1307,7 @@ namespace MobiusEditor.Utility
                 {
                     return null;
                 }
-                throw new FileTypeLoadException(string.Format("Unknown font type identifier, '{0}'.", fontHeaderCompress), "Font file");
+                throw new FileTypeLoadException(String.Format("Unknown font type identifier, '{0}'.", fontHeaderCompress), "Font file");
             }
             height = fileData[0x12]; // MaxHeight
             int width = fileData[0x13]; // MaxWidth
@@ -1362,7 +1362,7 @@ namespace MobiusEditor.Utility
                     {
                         return null;
                     }
-                    throw new FileTypeLoadException(string.Format("Illegal value '{0}' in symbol heights list at entry #{1}: the value is larger than global height '{2}'.", fHeight, i, height));
+                    throw new FileTypeLoadException(String.Format("Illegal value '{0}' in symbol heights list at entry #{1}: the value is larger than global height '{2}'.", fHeight, i, height));
                 }
                 heightsList.Add(fHeight);
             }
@@ -1388,7 +1388,7 @@ namespace MobiusEditor.Utility
                     {
                         return null;
                     }
-                    throw new FileTypeLoadException(string.Format("Data for font entry #{0} exceeds file bounds!", i), ex);
+                    throw new FileTypeLoadException(String.Format("Data for font entry #{0} exceeds file bounds!", i), ex);
                 }
                 fontList[i] = dataFullFrame;
             }

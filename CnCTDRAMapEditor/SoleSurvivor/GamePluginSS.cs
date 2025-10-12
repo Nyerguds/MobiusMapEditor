@@ -74,8 +74,8 @@ namespace MobiusEditor.SoleSurvivor
             : base()
         {
             this.isMegaMap = megaMap;
-            IEnumerable<Waypoint> crateWaypoints = Enumerable.Range(0, cratePoints).Select(i => new Waypoint(string.Format("CR{0}", i), WaypointFlag.CrateSpawn));
-            IEnumerable<Waypoint> teamWaypoints = Enumerable.Range(cratePoints, teamStartPoints).Select(i => new Waypoint(string.Format("TM{0}", i - cratePoints), WaypointFlag.FootballField | Waypoint.GetFlagForMpId(i - cratePoints)));
+            IEnumerable<Waypoint> crateWaypoints = Enumerable.Range(0, cratePoints).Select(i => new Waypoint(String.Format("CR{0}", i), WaypointFlag.CrateSpawn));
+            IEnumerable<Waypoint> teamWaypoints = Enumerable.Range(cratePoints, teamStartPoints).Select(i => new Waypoint(String.Format("TM{0}", i - cratePoints), WaypointFlag.FootballField | Waypoint.GetFlagForMpId(i - cratePoints)));
             IEnumerable<Waypoint> generalWaypoints = Enumerable.Range(cratePoints + teamStartPoints, totalNumberedPoints - cratePoints - teamStartPoints).Select(i => new Waypoint(i.ToString()));
             Waypoint[] specialWaypoints = new Waypoint[] { new Waypoint("Flare", "Flr.", WaypointFlag.Flare), new Waypoint("Home", WaypointFlag.Home), new Waypoint("Reinf.", "Rnf.", WaypointFlag.Reinforce) };
             Waypoint[] waypoints = crateWaypoints.Concat(teamWaypoints).Concat(generalWaypoints).Concat(specialWaypoints).ToArray();
@@ -290,20 +290,20 @@ namespace MobiusEditor.SoleSurvivor
             {
                 if (!Globals.DisableAirUnits)
                 {
-                    info.Add(string.Format(maximums, "aircraft", numAircraft, gi.MaxAircraft));
+                    info.Add(String.Format(maximums, "aircraft", numAircraft, gi.MaxAircraft));
                 }
-                info.Add(string.Format(maximums, "structures", numBuildings, gi.MaxBuildings));
-                info.Add(string.Format(maximums, "infantry", numInfantry, gi.MaxInfantry));
+                info.Add(String.Format(maximums, "structures", numBuildings, gi.MaxBuildings));
+                info.Add(String.Format(maximums, "infantry", numInfantry, gi.MaxInfantry));
             }
-            info.Add(string.Format(maximums, "terrain objects", numTerrain, gi.MaxTerrain));
+            info.Add(String.Format(maximums, "terrain objects", numTerrain, gi.MaxTerrain));
             if (!Globals.NoOwnedObjectsInSole)
             {
-                info.Add(string.Format(maximums, "units", numUnits, gi.MaxUnits));
+                info.Add(String.Format(maximums, "units", numUnits, gi.MaxUnits));
             }
-            //info.Add(string.Format(maximums, "team types", Map.TeamTypes.Count, gi.MaxTeamsClassic));
-            //info.Add(string.Format(maximums, "triggers", Map.Triggers.Count, gi.MaxTriggersClassic));
+            //info.Add(String.Format(maximums, "team types", Map.TeamTypes.Count, gi.MaxTeamsClassic));
+            //info.Add(String.Format(maximums, "triggers", Map.Triggers.Count, gi.MaxTriggersClassic));
             int startPoints = Map.Waypoints.Count(w => w.Cell.HasValue && w.Flags.HasFlag(WaypointFlag.PlayerStart));
-            info.Add(string.Format("Number of set starting points: {0}.", startPoints));
+            info.Add(String.Format("Number of set starting points: {0}.", startPoints));
             return info;
         }
 

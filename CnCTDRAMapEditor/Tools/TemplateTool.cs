@@ -490,7 +490,7 @@ namespace MobiusEditor.Tools
                 Alignment = StringAlignment.Center,
                 LineAlignment = StringAlignment.Center
             };
-            string text = string.Format("{0} ({1}x{2})", selected.DisplayName, selected.IconWidth, selected.IconHeight);
+            string text = String.Format("{0} ({1}x{2})", selected.DisplayName, selected.IconWidth, selected.IconHeight);
             SizeF textSize = e.Graphics.MeasureString(text, SystemFonts.CaptionFont) + new SizeF(6.0f, 6.0f);
             RectangleF textBounds = new RectangleF(new PointF(0, 0), textSize);
             using (SolidBrush sizeBackgroundBrush = new SolidBrush(Color.FromArgb(128, Color.Black)))
@@ -1507,7 +1507,7 @@ namespace MobiusEditor.Tools
             FacingType showEdge = dragEdge != FacingType.None ? dragEdge : DetectDragEdge(dragStartPoint.HasValue);
             if (boundsMode && (showEdge != FacingType.None || (dragStartPoint.HasValue && dragStartBounds.HasValue)))
             {
-                string tooltip = string.Format("X = {0}\nY = {1}\nWidth = {2}\nHeight = {3}", dragBounds.Left, dragBounds.Top, dragBounds.Width, dragBounds.Height);
+                string tooltip = String.Format("X = {0}\nY = {1}\nWidth = {2}\nHeight = {3}", dragBounds.Left, dragBounds.Top, dragBounds.Width, dragBounds.Height);
                 Size textSize = TextRenderer.MeasureText(tooltip, SystemFonts.CaptionFont);
                 Size tooltipSize = new Size(textSize.Width + 6, textSize.Height + 6);
                 Point mouseCell = navigationWidget.MouseCell;

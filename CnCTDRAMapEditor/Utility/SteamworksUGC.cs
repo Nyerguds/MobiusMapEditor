@@ -181,7 +181,7 @@ namespace MobiusEditor.Utility
                     break;
                 default:
                     Failed = true;
-                    Status = string.Format("Publishing failed. ({0})", callback.m_eResult);
+                    Status = String.Format("Publishing failed. ({0})", callback.m_eResult);
                     break;
             }
         }
@@ -224,13 +224,13 @@ namespace MobiusEditor.Utility
                 {
                     return string.Empty;
                 }
-                return string.Format("http://steamcommunity.com/app/{0}/workshop/", app_id.ToString());
+                return String.Format("http://steamcommunity.com/app/{0}/workshop/", app_id.ToString());
             }
         }
 
         public static string GetWorkshopItemURL(ulong id)
         {
-            return string.Format("https://steamcommunity.com/sharedfiles/filedetails/?id={0}", id);
+            return String.Format("https://steamcommunity.com/sharedfiles/filedetails/?id={0}", id);
         }
 
         public static bool IsSteamBuild => File.Exists("steam_appid.txt");

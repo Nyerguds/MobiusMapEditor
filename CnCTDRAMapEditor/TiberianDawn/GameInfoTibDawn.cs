@@ -126,13 +126,14 @@ namespace MobiusEditor.TiberianDawn
             int maxTemplate = TemplateTypes.GetTypes().Max(tp => tp.ID);
             bool isDesert = TheaterTypes.Desert.Name.Equals(theater, StringComparison.OrdinalIgnoreCase);
             Dictionary<int, ushort> n64Mapping = isDesert ? N64MapConverter.DESERT_MAPPING : N64MapConverter.TEMPERATE_MAPPING;
-            int maxTemplateN64 = n64Mapping.Keys.Where(k => k != -1 && k != 0xFFFF).Max();
+            int maxTemplateN64 = isMegaMap ? -1 : n64Mapping.Keys.Where(k => k != -1 && k != 0xFFFF).Max();
             bool isN64 = false;
-            bool checksAsNormalMap = !isMegaMap && !ismpr && GamePluginTD.CheckNormalMap(binContents, MapSize, maxTemplate, maxTemplateN64, out isN64);
-            if (contentWasSwapped && (isMegaMap && !GamePluginTD.CheckMegaMap(binContents, MapSizeMega, maxTemplate)
-                 || (!isMegaMap && !checksAsNormalMap)))
+            bool normalMapFormatOk = !isMegaMap && !ismpr && GamePluginTD.CheckNormalMapFormat(binContents, MapSize, maxTemplate, maxTemplateN64, out isN64);
+            if (contentWasSwapped && (isMegaMap && !GamePluginTD.CheckMegaMapFormat(binContents, MapSizeMega, maxTemplate)
+                 || (!isMegaMap && !normalMapFormatOk)))
             {
-                // Primary read file is not valid bin.
+                // Primary read file is just some unsupported file that happens to have the same
+                // name as a valid ini file in the same folder. Reject the original loaded file.
                 return FileType.None;
             }
             return ismpr ? FileType.MPR : contentWasSwapped ? (isN64 ? FileType.B64 : FileType.BIN) : (isN64 ? FileType.I64 : FileType.INI);

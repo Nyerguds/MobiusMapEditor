@@ -1913,7 +1913,7 @@ namespace MobiusEditor
                         parms[0] = "much ";
                         parms[1] = ", but it can't magically convert an image into a map looking like the image";
                     }
-                    string messageSize = string.Format(messageTemplate, parms);
+                    string messageSize = String.Format(messageTemplate, parms);
                     DialogResult dr = MessageBox.Show(this, messageSize, "Warning", MessageBoxButtons.YesNo, MessageBoxIcon.Error);
                     if (dr != DialogResult.Yes)
                     {
@@ -2027,11 +2027,11 @@ namespace MobiusEditor
                             List<MixEntry> entries = romfis.IdentifySingleFile(affectedId);
                             if (entries.Count == 1)
                             {
-                                message += string.Format(" (File id identified as \"{0}\")", entries[0].Name);
+                                message += String.Format(" (File id identified as \"{0}\")", entries[0].Name);
                             }
                             else if (entries.Count > 1)
                             {
-                                message += string.Format(" (Possible name matches: {0})", String.Join(", ", entries.Select(entr => "\"" + entr.Name + "\"").ToArray()));
+                                message += String.Format(" (Possible name matches: {0})", String.Join(", ", entries.Select(entr => "\"" + entr.Name + "\"").ToArray()));
                             }
                         }
                     }

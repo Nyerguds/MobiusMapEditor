@@ -592,7 +592,7 @@ namespace MobiusEditor.RedAlert
 
         public GamePluginRA(bool mapImage)
         {
-            IEnumerable<Waypoint> playerWaypoints = Enumerable.Range(0, multiStartPoints).Select(i => new Waypoint(string.Format("P{0}", i), Waypoint.GetFlagForMpId(i)));
+            IEnumerable<Waypoint> playerWaypoints = Enumerable.Range(0, multiStartPoints).Select(i => new Waypoint(String.Format("P{0}", i), Waypoint.GetFlagForMpId(i)));
             IEnumerable<Waypoint> generalWaypoints = Enumerable.Range(multiStartPoints, totalNumberedPoints - multiStartPoints).Select(i => new Waypoint(i.ToString()));
             Waypoint[] specialWaypoints = new Waypoint[] { new Waypoint("Home", WaypointFlag.Home), new Waypoint("Reinf.", "Rnf.", WaypointFlag.Reinforce), new Waypoint("Special", "Spc.", WaypointFlag.Special) };
             IEnumerable<Waypoint> waypoints = playerWaypoints.Concat(generalWaypoints).Concat(specialWaypoints);
@@ -953,7 +953,7 @@ namespace MobiusEditor.RedAlert
                 {
                     if (kvp.Key.Length > 8)
                     {
-                        errors.Add(string.Format("TeamType '{0}' has a name that is longer than 8 characters. This will not be corrected by the loading process, but should be addressed, since it can make the teams fail to read correctly, and might even crash the game.", kvp.Key));
+                        errors.Add(String.Format("TeamType '{0}' has a name that is longer than 8 characters. This will not be corrected by the loading process, but should be addressed, since it can make the teams fail to read correctly, and might even crash the game.", kvp.Key));
                     }
                     TeamType teamType = new TeamType { Name = kvp.Key };
                     string[] tokens = kvp.Value.Split(',');
@@ -962,7 +962,7 @@ namespace MobiusEditor.RedAlert
                     if (teamType.House == null)
                     {
                         HouseType defHouse = Map.HouseTypes.First();
-                        errors.Add(string.Format("Team '{0}' has unknown house ID '{1}'; clearing to '{2}'.", kvp.Key, houseStr, defHouse.Name));
+                        errors.Add(String.Format("Team '{0}' has unknown house ID '{1}'; clearing to '{2}'.", kvp.Key, houseStr, defHouse.Name));
                         modified = true;
                         teamType.House = defHouse;
                     }
@@ -987,7 +987,7 @@ namespace MobiusEditor.RedAlert
                         string[] classTokens = tokens[i].Split(':');
                         if (classTokens.Length != 2)
                         {
-                            errors.Add(string.Format("Team '{0}' has wrong number of tokens for class index {1} (has {2}, expecting 2).", kvp.Key, i, classTokens.Length));
+                            errors.Add(String.Format("Team '{0}' has wrong number of tokens for class index {1} (has {2}, expecting 2).", kvp.Key, i, classTokens.Length));
                             modified = true;
                             continue;
                         }
@@ -995,13 +995,13 @@ namespace MobiusEditor.RedAlert
                         byte count = byte.Parse(classTokens[1]);
                         if (type == null)
                         {
-                            errors.Add(string.Format("Team '{0}' references unknown class '{1}'.", kvp.Key, classTokens[0]));
+                            errors.Add(String.Format("Team '{0}' references unknown class '{1}'.", kvp.Key, classTokens[0]));
                             modified = true;
                             continue;
                         }
                         if (!Map.BasicSection.ExpansionEnabled && type.IsExpansionOnly)
                         {
-                            errors.Add(string.Format("Team '{0}' contains expansion unit '{1}', but expansion units are not enabled; enabling expansion units.", kvp.Key, type.Name));
+                            errors.Add(String.Format("Team '{0}' contains expansion unit '{1}', but expansion units are not enabled; enabling expansion units.", kvp.Key, type.Name));
                             Map.BasicSection.ExpansionEnabled = true;
                             modified = true;
                         }
@@ -1009,7 +1009,7 @@ namespace MobiusEditor.RedAlert
                     }
                     if (numClasses > Globals.MaxTeamClasses)
                     {
-                        errors.Add(string.Format("Team '{0}' has more classes than the game can handle (has {1}, maximum is {2}).", kvp.Key, numClasses, Globals.MaxTeamClasses));
+                        errors.Add(String.Format("Team '{0}' has more classes than the game can handle (has {1}, maximum is {2}).", kvp.Key, numClasses, Globals.MaxTeamClasses));
                         modified = true;
                     }
                     int numMissions = int.Parse(tokens[classesIndexEnd]);
@@ -1022,14 +1022,14 @@ namespace MobiusEditor.RedAlert
                         string[] missionTokens = tokens[i].Split(':');
                         if (missionTokens.Length != 2)
                         {
-                            errors.Add(string.Format("Team '{0}' has wrong number of tokens for orders index {1} (has {2}, expecting 2).", kvp.Key, i, missionTokens.Length));
+                            errors.Add(String.Format("Team '{0}' has wrong number of tokens for orders index {1} (has {2}, expecting 2).", kvp.Key, i, missionTokens.Length));
                             modified = true;
                             continue;
                         }
                         int miss;
                         if (!Int32.TryParse(missionTokens[0], out miss))
                         {
-                            errors.Add(string.Format("Team '{0}' has unparseable orders id '{1}'. Skipping.", kvp.Key, missionTokens[0]));
+                            errors.Add(String.Format("Team '{0}' has unparseable orders id '{1}'. Skipping.", kvp.Key, missionTokens[0]));
                             modified = true;
                             continue;
                         }
@@ -1042,12 +1042,12 @@ namespace MobiusEditor.RedAlert
                             modified = true;
                             if (mission == null)
                             {
-                                errors.Add(string.Format("Team '{0}' references unknown orders id {1}. Skipping.", kvp.Key, miss));
+                                errors.Add(String.Format("Team '{0}' references unknown orders id {1}. Skipping.", kvp.Key, miss));
                                 continue;
                             }
                             else
                             {
-                                errors.Add(string.Format("Team '{0}' references unknown orders id {1} ({1:X8}). Corrected to {2} ({3}).",
+                                errors.Add(String.Format("Team '{0}' references unknown orders id {1} ({1:X8}). Corrected to {2} ({3}).",
                                     kvp.Key, miss, missCorr, mission.Mission));
                             }
                         }
@@ -1058,12 +1058,12 @@ namespace MobiusEditor.RedAlert
                         bool valreset = false;
                         if (!Int32.TryParse(argStr, out int arg))
                         {
-                            argError = string.Format("Team '{0}', orders index {1} ('{2}') has a non-numeric value '{3}'; reverting to 0.", kvp.Key, i, mission.Mission, argStr);
+                            argError = String.Format("Team '{0}', orders index {1} ('{2}') has a non-numeric value '{3}'; reverting to 0.", kvp.Key, i, mission.Mission, argStr);
                         }
                         else if (mission.ArgType == TeamMissionArgType.Time && arg < 0)
                         {
                             argCorrect = arg & 0xFFFFFF;
-                            argError = string.Format("Team '{0}', orders index {1} ('{2}') has a bad value {3} for a Time argument; attempting to correct to {5}.",
+                            argError = String.Format("Team '{0}', orders index {1} ('{2}') has a bad value {3} for a Time argument; attempting to correct to {5}.",
                                 kvp.Key, i, mission.Mission, argStr, argCorrect);
                         }
                         else if (mission.ArgType == TeamMissionArgType.Waypoint && (arg < -1 || arg >= Map.Waypoints.Length))
@@ -1074,7 +1074,7 @@ namespace MobiusEditor.RedAlert
                                 valreset = true;
                                 argCorrect = 0;
                             }
-                            argError = string.Format("Team '{0}', orders index {1} ('{2}') has a bad value {3} for a Waypoint argument; {4} to {5}.",
+                            argError = String.Format("Team '{0}', orders index {1} ('{2}') has a bad value {3} for a Waypoint argument; {4} to {5}.",
                                 kvp.Key, i, mission.Mission, argStr + (valreset ? "" : " (0x" + arg.ToString("X8") + ")"), valreset ? "reverting" : "fixing", argCorrect);
                         }
                         else if (mission.ArgType == TeamMissionArgType.OptionsList && (arg < 0 || arg > missionOptsMax))
@@ -1086,7 +1086,7 @@ namespace MobiusEditor.RedAlert
                                 valreset = true;
                                 argCorrect = 0;
                             }
-                            argError = string.Format("Team '{0}', orders index {1} ('{2}') has a bad value {3} for the available options; {4} to {5}.",
+                            argError = String.Format("Team '{0}', orders index {1} ('{2}') has a bad value {3} for the available options; {4} to {5}.",
                                 kvp.Key, i, mission.Mission, argStr + (valreset ? "" : " (0x" + arg.ToString("X8") + ")"), valreset ? "reverting" : "fixing",
                                 argCorrect.ToString() + (opt == null ? "" : " ('" + opt + "')"));
                         }
@@ -1098,7 +1098,7 @@ namespace MobiusEditor.RedAlert
                                 valreset = true;
                                 argCorrect = 0;
                             }
-                            argError = string.Format("Team '{0}', orders index {1} ('{2}') has a bad value {3} for a Cell argument; {4} to {5}.",
+                            argError = String.Format("Team '{0}', orders index {1} ('{2}') has a bad value {3} for a Cell argument; {4} to {5}.",
                                 kvp.Key, i, mission.Mission, argStr + (valreset ? "" : " (0x" + arg.ToString("X8") + ")"), valreset ? "reverting" : "fixing", argCorrect);
                         }
                         else if (mission.ArgType == TeamMissionArgType.MissionNumber && (arg < 0 || arg >= missionsMax))
@@ -1109,14 +1109,14 @@ namespace MobiusEditor.RedAlert
                                 valreset = true;
                                 argCorrect = 0;
                             }
-                            argError = string.Format("Team '{0}', orders index {1} ('{2}') has a bad value {3} for an orders index argument; {4} to {5}.",
+                            argError = String.Format("Team '{0}', orders index {1} ('{2}') has a bad value {3} for an orders index argument; {4} to {5}.",
                                 kvp.Key, i, mission.Mission, argStr + (valreset ? "" : " (0x" + arg.ToString("X8") + ")"), valreset ? "reverting" : "fixing", argCorrect);
                         }
                         //tarcom support isn't really implemented; leave this for now.
                         /*
                         else if (mission.ArgType == TeamMissionArgType.Tarcom && arg < 0)
                         {
-                            argError = string.Format("Team '{0}', orders index {1} ('{2}') has a bad value '{3}' for a Tarcom argument; reverting to 0.", kvp.Key, i, mission.Mission, argStr);
+                            argError = String.Format("Team '{0}', orders index {1} ('{2}') has a bad value '{3}' for a Tarcom argument; reverting to 0.", kvp.Key, i, mission.Mission, argStr);
                         }
                         */
                         // Note: globals are deliberately NOT checked here; the CheckTriggersGlobals logic takes care of checking and correcting overflows in global values.
@@ -1130,14 +1130,14 @@ namespace MobiusEditor.RedAlert
                     }
                     if (numMissions > Globals.MaxTeamMissions)
                     {
-                        errors.Add(string.Format("Team '{0}' has more orders than the game can handle (has {1}, maximum is {2}).", kvp.Key, numMissions, Globals.MaxTeamMissions));
+                        errors.Add(String.Format("Team '{0}' has more orders than the game can handle (has {1}, maximum is {2}).", kvp.Key, numMissions, Globals.MaxTeamMissions));
                         modified = true;
                     }
                     teamTypes.Add(teamType);
                 }
                 catch (Exception ex)
                 {
-                    errors.Add(string.Format("Teamtype '{0}' has errors and can't be parsed: {1}.", kvp.Key, ex.Message));
+                    errors.Add(String.Format("Teamtype '{0}' has errors and can't be parsed: {1}.", kvp.Key, ex.Message));
                     modified = true;
                 }
             }
@@ -1190,7 +1190,7 @@ namespace MobiusEditor.RedAlert
                                     heliType = this.Map.AllTeamTechnoTypes.OfType<AircraftType>().FirstOrDefault();
                                     fixedData = heliType.ID;
                                 }
-                                errors.Add(string.Format("Trigger '{0}', Event {1} (\"{2}\") has bad value '{3}' set for the Aircraft id. This is most likely caused by older versions of this editor. Fixing id to '{4}' ({5}).",
+                                errors.Add(String.Format("Trigger '{0}', Event {1} (\"{2}\") has bad value '{3}' set for the Aircraft id. This is most likely caused by older versions of this editor. Fixing id to '{4}' ({5}).",
                                     triggerName, evtNr, e.EventType.TrimEnd('.'), e.Data, fixedData, heliType.Name));
                                 e.Data = fixedData;
                             }
@@ -1240,19 +1240,19 @@ namespace MobiusEditor.RedAlert
                     string[] tokens = kvp.Value.Split(',');
                     if (tokens.Length != 18)
                     {
-                        errors.Add(string.Format("Trigger '{0}' has too few tokens (expecting 18).", kvp.Key));
+                        errors.Add(String.Format("Trigger '{0}' has too few tokens (expecting 18).", kvp.Key));
                         modified = true;
                         continue;
                     }
                     if (kvp.Key.Length > 4)
                     {
-                        errors.Add(string.Format("Trigger '{0}' has a name that is longer than 4 characters. This will not be corrected by the loading process, but should be addressed, since it can make the triggers fail to link correctly to objects and cell triggers, and might even crash the game.", kvp.Key));
+                        errors.Add(String.Format("Trigger '{0}' has a name that is longer than 4 characters. This will not be corrected by the loading process, but should be addressed, since it can make the triggers fail to link correctly to objects and cell triggers, and might even crash the game.", kvp.Key));
                     }
                     Trigger trigger = new Trigger { Name = kvp.Key };
                     int trigPersist;
                     if (!Int32.TryParse(tokens[0], out trigPersist) || trigPersist < 0 || trigPersist > maxTrigLoop)
                     {
-                        errors.Add(string.Format("Trigger '{0}' has unknown loop type '{1}'; clearing to '{2}'.", kvp.Key, tokens[0], 0));
+                        errors.Add(String.Format("Trigger '{0}' has unknown loop type '{1}'; clearing to '{2}'.", kvp.Key, tokens[0], 0));
                         trigPersist = 0;
                         modified = true;
                     }
@@ -1261,14 +1261,14 @@ namespace MobiusEditor.RedAlert
                     trigger.House = houseId == -1 ? House.None : Map.HouseTypes.Where(t => t.Equals(houseId)).FirstOrDefault()?.Name;
                     if (trigger.House == null)
                     {
-                        errors.Add(string.Format("Trigger '{0}' has unknown house ID '{1}'; clearing to '{2}'.", kvp.Key, tokens[1], House.None));
+                        errors.Add(String.Format("Trigger '{0}' has unknown house ID '{1}'; clearing to '{2}'.", kvp.Key, tokens[1], House.None));
                         trigger.House = House.None;
                         modified = true;
                     }
                     int trigStyle;
                     if (!Int32.TryParse(tokens[2], out trigStyle) || trigStyle < 0 || trigStyle > maxTrigStyle)
                     {
-                        errors.Add(string.Format("Trigger '{0}' has unknown multi-trigger style '{1}'; clearing to '{2}'.", kvp.Key, tokens[2], 0));
+                        errors.Add(String.Format("Trigger '{0}' has unknown multi-trigger style '{1}'; clearing to '{2}'.", kvp.Key, tokens[2], 0));
                         trigStyle = 0;
                         modified = true;
                     }
@@ -1296,7 +1296,7 @@ namespace MobiusEditor.RedAlert
                 }
                 catch (Exception ex)
                 {
-                    errors.Add(string.Format("Trigger '{0}' has errors and can't be parsed: {1}.", kvp.Key, ex.Message));
+                    errors.Add(String.Format("Trigger '{0}' has errors and can't be parsed: {1}.", kvp.Key, ex.Message));
                     modified = true;
                 }
             }
@@ -1568,7 +1568,7 @@ namespace MobiusEditor.RedAlert
                 int cell;
                 if (!Int32.TryParse(kvp.Key, out cell))
                 {
-                    errors.Add(string.Format("Cell for Smudge cannot be parsed. Key: '{0}', value: '{1}'; skipping.", kvp.Key, kvp.Value));
+                    errors.Add(String.Format("Cell for Smudge cannot be parsed. Key: '{0}', value: '{1}'; skipping.", kvp.Key, kvp.Value));
                     modified = true;
                     continue;
                 }
@@ -1577,11 +1577,11 @@ namespace MobiusEditor.RedAlert
                 {
                     if (tokens.Length > 0 && tokens[0].Length > 0)
                     {
-                        errors.Add(string.Format("Smudge '{0}' on cell {1} has wrong number of tokens (has {2}, expecting 3); skipping.", tokens[0], kvp.Key, tokens.Length));
+                        errors.Add(String.Format("Smudge '{0}' on cell {1} has wrong number of tokens (has {2}, expecting 3); skipping.", tokens[0], kvp.Key, tokens.Length));
                     }
                     else
                     {
-                        errors.Add(string.Format("Smudge on cell {0} has wrong number of tokens (has {1}, expecting 3); skipping.", kvp.Key, tokens.Length));
+                        errors.Add(String.Format("Smudge on cell {0} has wrong number of tokens (has {1}, expecting 3); skipping.", kvp.Key, tokens.Length));
                     }
                     modified = true;
                     continue;
@@ -1591,19 +1591,19 @@ namespace MobiusEditor.RedAlert
                 SmudgeType smudgeType = badCrater ? SmudgeTypes.Crater1 : Map.SmudgeTypes.Where(t => t.Equals(tokens[0])).FirstOrDefault();
                 if (smudgeType == null)
                 {
-                    errors.Add(string.Format("Smudge '{0}' references unknown smudge.", tokens[0]));
+                    errors.Add(String.Format("Smudge '{0}' references unknown smudge.", tokens[0]));
                     modified = true;
                     continue;
                 }
                 if (Globals.FilterTheaterObjects && !smudgeType.ExistsInTheater)
                 {
-                    errors.Add(string.Format("Smudge '{0}' is not available in the set theater; skipping.", smudgeType.Name));
+                    errors.Add(String.Format("Smudge '{0}' is not available in the set theater; skipping.", smudgeType.Name));
                     modified = true;
                     continue;
                 }
                 if (badCrater)
                 {
-                    errors.Add(string.Format("Smudge '{0}' does not function correctly in maps. Correcting to '{1}'.", tokens[0], smudgeType.Name));
+                    errors.Add(String.Format("Smudge '{0}' does not function correctly in maps. Correcting to '{1}'.", tokens[0], smudgeType.Name));
                     modified = true;
                 }
                 int icon = 0;
@@ -1642,11 +1642,11 @@ namespace MobiusEditor.RedAlert
                 {
                     if (tokens.Length < 2)
                     {
-                        errors.Add(string.Format("Unit entry '{0}' has wrong number of tokens (has {1}, expecting 7).", kvp.Key, tokens.Length));
+                        errors.Add(String.Format("Unit entry '{0}' has wrong number of tokens (has {1}, expecting 7).", kvp.Key, tokens.Length));
                     }
                     else
                     {
-                        errors.Add(string.Format("Unit entry '{0}', unit '{1}', has wrong number of tokens (has {2}, expecting 7).", kvp.Key, tokens[1], tokens.Length));
+                        errors.Add(String.Format("Unit entry '{0}', unit '{1}', has wrong number of tokens (has {2}, expecting 7).", kvp.Key, tokens[1], tokens.Length));
                     }
                     modified = true;
                     continue;
@@ -1654,48 +1654,48 @@ namespace MobiusEditor.RedAlert
                 UnitType unitType = Map.AllUnitTypes.Where(t => t.IsGroundUnit && t.Equals(tokens[1])).FirstOrDefault();
                 if (unitType == null)
                 {
-                    errors.Add(string.Format("Unit '{0}' references unknown unit.", tokens[1]));
+                    errors.Add(String.Format("Unit '{0}' references unknown unit.", tokens[1]));
                     modified = true;
                     continue;
                 }
                 if (!Map.BasicSection.ExpansionEnabled && unitType.IsExpansionOnly)
                 {
-                    errors.Add(string.Format("Expansion unit '{0}' encountered, but expansion units are not enabled; enabling expansion units.", unitType.Name));
+                    errors.Add(String.Format("Expansion unit '{0}' encountered, but expansion units are not enabled; enabling expansion units.", unitType.Name));
                     modified = true;
                     Map.BasicSection.ExpansionEnabled = Map.BasicSection.ExpansionEnabled = true;
                 }
                 int strength;
                 if (!Int32.TryParse(tokens[2], out strength))
                 {
-                    errors.Add(string.Format("Strength for unit '{0}' cannot be parsed; value: '{1}'; skipping.", unitType.Name, tokens[2]));
+                    errors.Add(String.Format("Strength for unit '{0}' cannot be parsed; value: '{1}'; skipping.", unitType.Name, tokens[2]));
                     modified = true;
                     continue;
                 }
                 int cell;
                 if (!Int32.TryParse(tokens[3], out cell))
                 {
-                    errors.Add(string.Format("Cell for unit '{0}' cannot be parsed; value: '{1}'; skipping.", unitType.Name, tokens[3]));
+                    errors.Add(String.Format("Cell for unit '{0}' cannot be parsed; value: '{1}'; skipping.", unitType.Name, tokens[3]));
                     modified = true;
                     continue;
                 }
                 if (strength < 1 || strength > 256)
                 {
                     int newStrength = strength.Restrict(1, 256);
-                    errors.Add(string.Format("Strength for unit '{0}' on cell {1} has illegal value {2}; corrected to {3}.", unitType.Name, cell, strength, newStrength));
+                    errors.Add(String.Format("Strength for unit '{0}' on cell {1} has illegal value {2}; corrected to {3}.", unitType.Name, cell, strength, newStrength));
                     strength = newStrength;
                     modified = true;
                 }
                 int dirValue;
                 if (!Int32.TryParse(tokens[4], out dirValue))
                 {
-                    errors.Add(string.Format("Direction for unit '{0}' on cell {1}, value '{2}', cannot be parsed; clearing to 0.", unitType.Name, cell, tokens[4]));
+                    errors.Add(String.Format("Direction for unit '{0}' on cell {1}, value '{2}', cannot be parsed; clearing to 0.", unitType.Name, cell, tokens[4]));
                     modified = true;
                     dirValue = 0;
                 }
                 DirectionType dirType = DirectionType.FindClosestDirectionType(dirValue, Map.UnitDirectionTypes);
                 if (dirType.ID != dirValue)
                 {
-                    errors.Add(string.Format("Direction for unit '{0}' on cell {1}, value {2}, cannot be matched to a known value. Taking closest match value {3} ({4}).",
+                    errors.Add(String.Format("Direction for unit '{0}' on cell {1}, value {2}, cannot be matched to a known value. Taking closest match value {3} ({4}).",
                         unitType.Name, cell, dirValue, dirType.ID, dirType.Name));
                     modified = true;
                 }
@@ -1713,12 +1713,12 @@ namespace MobiusEditor.RedAlert
                     if ("ITALY".Equals(tokens[0], StringComparison.OrdinalIgnoreCase))
                     {
                         defHouse = HouseTypes.Ukraine;
-                        errors.Add(string.Format("Unit '{0}' on cell {1} has obsolete house '{2}'; substituting with '{3}'.", newUnit.Type.Name, cell, tokens[0], defHouse.Name));
+                        errors.Add(String.Format("Unit '{0}' on cell {1} has obsolete house '{2}'; substituting with '{3}'.", newUnit.Type.Name, cell, tokens[0], defHouse.Name));
                     }
                     else
                     {
                         defHouse = Map.HouseTypes.First();
-                        errors.Add(string.Format("Unit '{0}' on cell {1} references unknown house '{2}'; clearing to '{3}'.", newUnit.Type.Name, cell, tokens[0], defHouse.Name));
+                        errors.Add(String.Format("Unit '{0}' on cell {1} references unknown house '{2}'; clearing to '{3}'.", newUnit.Type.Name, cell, tokens[0], defHouse.Name));
                     }
                     modified = true;
                     newUnit.House = defHouse;
@@ -1728,7 +1728,7 @@ namespace MobiusEditor.RedAlert
                     string badOrder = Map.MissionTypesBad.Where(t => t.Equals(tokens[5], StringComparison.InvariantCultureIgnoreCase)).FirstOrDefault();
                     string deforders = Map.GetDefaultMission(unitType);
                     string reason = badOrder != null ? "unsupported" : "unknown";
-                    errors.Add(string.Format("Unit '{0}' on cell {1} references {2} orders '{3}'; changing to '{4}'.",
+                    errors.Add(String.Format("Unit '{0}' on cell {1} references {2} orders '{3}'; changing to '{4}'.",
                         newUnit.Type.Name, cell, reason, badOrder ?? tokens[5], deforders));
                     newUnit.Mission = deforders;
                 }
@@ -1737,40 +1737,40 @@ namespace MobiusEditor.RedAlert
                     ICellOccupier techno = Map.Technos[cell];
                     if (techno is Building building)
                     {
-                        errors.Add(string.Format("Unit '{0}' overlaps structure '{1}' in cell {2}; skipping.", unitType.Name, building.Type.Name, cell));
+                        errors.Add(String.Format("Unit '{0}' overlaps structure '{1}' in cell {2}; skipping.", unitType.Name, building.Type.Name, cell));
                     }
                     else if (techno is Overlay overlay)
                     {
-                        errors.Add(string.Format("Unit '{0}' overlaps overlay '{1}' in cell {2}; skipping.", unitType.Name, overlay.Type.Name, cell));
+                        errors.Add(String.Format("Unit '{0}' overlaps overlay '{1}' in cell {2}; skipping.", unitType.Name, overlay.Type.Name, cell));
                     }
                     else if (techno is Terrain terrain)
                     {
-                        errors.Add(string.Format("Unit '{0}' overlaps terrain '{1}' in cell {2}; skipping.", unitType.Name, terrain.Type.Name, cell));
+                        errors.Add(String.Format("Unit '{0}' overlaps terrain '{1}' in cell {2}; skipping.", unitType.Name, terrain.Type.Name, cell));
                     }
                     else if (techno is InfantryGroup infantry)
                     {
-                        errors.Add(string.Format("Unit '{0}' overlaps infantry in cell {1}; skipping.", unitType.Name, cell));
+                        errors.Add(String.Format("Unit '{0}' overlaps infantry in cell {1}; skipping.", unitType.Name, cell));
                     }
                     else if (techno is Unit unit)
                     {
-                        errors.Add(string.Format("Unit '{0}' overlaps unit '{1}' in cell {2}; skipping.", unitType.Name, unit.Type.Name, cell));
+                        errors.Add(String.Format("Unit '{0}' overlaps unit '{1}' in cell {2}; skipping.", unitType.Name, unit.Type.Name, cell));
                     }
                     else
                     {
-                        errors.Add(string.Format("Unit '{0}' overlaps unknown techno in cell {1}; skipping.", unitType.Name, cell));
+                        errors.Add(String.Format("Unit '{0}' overlaps unknown techno in cell {1}; skipping.", unitType.Name, cell));
                     }
                     modified = true;
                     continue;
                 }
                 if (!caseTrigs.ContainsKey(tokens[6]))
                 {
-                    errors.Add(string.Format("Unit '{0}' on cell {1} links to unknown trigger '{1}'; clearing trigger.", unitType.Name, cell, tokens[6]));
+                    errors.Add(String.Format("Unit '{0}' on cell {1} links to unknown trigger '{1}'; clearing trigger.", unitType.Name, cell, tokens[6]));
                     modified = true;
                     newUnit.Trigger = Trigger.None;
                 }
                 else if (!checkUnitTrigs.Contains(tokens[6]))
                 {
-                    errors.Add(string.Format("Unit '{0}' on cell {1} links to trigger '{1}' which does not contain an event or action applicable to units; clearing trigger.", unitType.Name, cell, tokens[6]));
+                    errors.Add(String.Format("Unit '{0}' on cell {1} links to trigger '{1}' which does not contain an event or action applicable to units; clearing trigger.", unitType.Name, cell, tokens[6]));
                     modified = true;
                     newUnit.Trigger = Trigger.None;
                 }
@@ -1795,7 +1795,7 @@ namespace MobiusEditor.RedAlert
             if (Globals.DisableAirUnits)
             {
                 bool isOne = amount == 1;
-                errors.Add(string.Format("Aircraft are disabled. {0} [Aircraft] {1} skipped. If you don't know why, please consult the manual's explanation of the \"DisableAirUnits\" setting.", amount, isOne ? "entry was" : "entries were"));
+                errors.Add(String.Format("Aircraft are disabled. {0} [Aircraft] {1} skipped. If you don't know why, please consult the manual's explanation of the \"DisableAirUnits\" setting.", amount, isOne ? "entry was" : "entries were"));
                 modified = true;
                 return;
             }
@@ -1806,11 +1806,11 @@ namespace MobiusEditor.RedAlert
                 {
                     if (tokens.Length < 2)
                     {
-                        errors.Add(string.Format("Aircraft entry '{0}' has wrong number of tokens (has {1}, expecting 6).", kvp.Key, tokens.Length));
+                        errors.Add(String.Format("Aircraft entry '{0}' has wrong number of tokens (has {1}, expecting 6).", kvp.Key, tokens.Length));
                     }
                     else
                     {
-                        errors.Add(string.Format("Aircraft entry '{0}', aircraft '{1}', has wrong number of tokens (has {2}, expecting 6).", kvp.Key, tokens[1], tokens.Length));
+                        errors.Add(String.Format("Aircraft entry '{0}', aircraft '{1}', has wrong number of tokens (has {2}, expecting 6).", kvp.Key, tokens[1], tokens.Length));
                     }
                     modified = true;
                     continue;
@@ -1818,27 +1818,27 @@ namespace MobiusEditor.RedAlert
                 UnitType aircraftType = Map.AllUnitTypes.Where(t => t.IsAircraft && t.Equals(tokens[1])).FirstOrDefault();
                 if (aircraftType == null)
                 {
-                    errors.Add(string.Format("Aircraft '{0}' references unknown aircraft.", tokens[1]));
+                    errors.Add(String.Format("Aircraft '{0}' references unknown aircraft.", tokens[1]));
                     modified = true;
                     continue;
                 }
                 if (!Map.BasicSection.ExpansionEnabled && aircraftType.IsExpansionOnly)
                 {
-                    errors.Add(string.Format("Expansion aircraft '{0}' encountered, but expansion units are not enabled; enabling expansion units.", aircraftType.Name));
+                    errors.Add(String.Format("Expansion aircraft '{0}' encountered, but expansion units are not enabled; enabling expansion units.", aircraftType.Name));
                     modified = true;
                     Map.BasicSection.ExpansionEnabled = true;
                 }
                 int strength;
                 if (!Int32.TryParse(tokens[2], out strength))
                 {
-                    errors.Add(string.Format("Strength for aircraft '{0}' cannot be parsed; value: '{1}'; skipping.", aircraftType.Name, tokens[2]));
+                    errors.Add(String.Format("Strength for aircraft '{0}' cannot be parsed; value: '{1}'; skipping.", aircraftType.Name, tokens[2]));
                     modified = true;
                     continue;
                 }
                 int cell;
                 if (!Int32.TryParse(tokens[3], out cell))
                 {
-                    errors.Add(string.Format("Cell for aircraft '{0}' cannot be parsed; value: '{1}'; skipping.",
+                    errors.Add(String.Format("Cell for aircraft '{0}' cannot be parsed; value: '{1}'; skipping.",
                         aircraftType.Name, tokens[3]));
                     modified = true;
                     continue;
@@ -1846,7 +1846,7 @@ namespace MobiusEditor.RedAlert
                 if (strength < 1 || strength > 256)
                 {
                     int newStrength = strength.Restrict(1, 256);
-                    errors.Add(string.Format("Strength for aircraft '{0}' on cell {1} has illegal value {2}; corrected to {3}.",
+                    errors.Add(String.Format("Strength for aircraft '{0}' on cell {1} has illegal value {2}; corrected to {3}.",
                         aircraftType.Name, cell, strength, newStrength));
                     strength = newStrength;
                     modified = true;
@@ -1854,7 +1854,7 @@ namespace MobiusEditor.RedAlert
                 int dirValue;
                 if (!Int32.TryParse(tokens[4], out dirValue))
                 {
-                    errors.Add(string.Format("Direction for aircraft '{0}' on cell {1}, value '{2}', cannot be parsed; clearing to 0.",
+                    errors.Add(String.Format("Direction for aircraft '{0}' on cell {1}, value '{2}', cannot be parsed; clearing to 0.",
                         aircraftType.Name, cell, tokens[4]));
                     modified = true;
                     dirValue = 0;
@@ -1862,7 +1862,7 @@ namespace MobiusEditor.RedAlert
                 DirectionType dirType = DirectionType.FindClosestDirectionType(dirValue, Map.UnitDirectionTypes);
                 if (dirType.ID != dirValue)
                 {
-                    errors.Add(string.Format("Direction for aircraft '{0}' on cell {1}, value {2}, cannot be matched to a known value. Taking closest match value {3} ({4}).",
+                    errors.Add(String.Format("Direction for aircraft '{0}' on cell {1}, value {2}, cannot be matched to a known value. Taking closest match value {3} ({4}).",
                         aircraftType.Name, cell, dirValue, dirType.ID, dirType.Name));
                     modified = true;
                 }
@@ -1880,12 +1880,12 @@ namespace MobiusEditor.RedAlert
                     if ("ITALY".Equals(tokens[0], StringComparison.OrdinalIgnoreCase))
                     {
                         defHouse = HouseTypes.Ukraine;
-                        errors.Add(string.Format("Aircraft '{0}' on cell {1} has obsolete house '{2}'; substituting with '{3}'.", newAir.Type.Name, cell, tokens[0], defHouse.Name));
+                        errors.Add(String.Format("Aircraft '{0}' on cell {1} has obsolete house '{2}'; substituting with '{3}'.", newAir.Type.Name, cell, tokens[0], defHouse.Name));
                     }
                     else
                     {
                         defHouse = Map.HouseTypes.First();
-                        errors.Add(string.Format("Aircraft '{0}' on cell {1} references unknown house '{2}'; clearing to '{3}'.", newAir.Type.Name, cell, tokens[0], defHouse.Name));
+                        errors.Add(String.Format("Aircraft '{0}' on cell {1} references unknown house '{2}'; clearing to '{3}'.", newAir.Type.Name, cell, tokens[0], defHouse.Name));
                     }
                     modified = true;
                     newAir.House = defHouse;
@@ -1895,7 +1895,7 @@ namespace MobiusEditor.RedAlert
                     string badOrder = Map.MissionTypesBad.Where(t => t.Equals(tokens[5], StringComparison.InvariantCultureIgnoreCase)).FirstOrDefault();
                     string deforders = Map.GetDefaultMission(aircraftType);
                     string reason = badOrder != null ? "unsupported" : "unknown";
-                    errors.Add(string.Format("Aircraft '{0}' on cell {1} references {2} orders '{3}'; changing to '{4}'.",
+                    errors.Add(String.Format("Aircraft '{0}' on cell {1} references {2} orders '{3}'; changing to '{4}'.",
                         newAir.Type.Name, cell, reason, badOrder ?? tokens[5], deforders));
                     newAir.Mission = deforders;
                 }
@@ -1904,27 +1904,27 @@ namespace MobiusEditor.RedAlert
                     ICellOccupier techno = Map.Technos[cell];
                     if (techno is Building building)
                     {
-                        errors.Add(string.Format("Aircraft '{0}' overlaps structure '{1}' in cell {2}; skipping.", aircraftType.Name, building.Type.Name, cell));
+                        errors.Add(String.Format("Aircraft '{0}' overlaps structure '{1}' in cell {2}; skipping.", aircraftType.Name, building.Type.Name, cell));
                     }
                     else if (techno is Overlay overlay)
                     {
-                        errors.Add(string.Format("Aircraft '{0}' overlaps overlay '{1}' in cell {2}; skipping.", aircraftType.Name, overlay.Type.Name, cell));
+                        errors.Add(String.Format("Aircraft '{0}' overlaps overlay '{1}' in cell {2}; skipping.", aircraftType.Name, overlay.Type.Name, cell));
                     }
                     else if (techno is Terrain terrain)
                     {
-                        errors.Add(string.Format("Aircraft '{0}' overlaps terrain '{1}' in cell {2}; skipping.", aircraftType.Name, terrain.Type.Name, cell));
+                        errors.Add(String.Format("Aircraft '{0}' overlaps terrain '{1}' in cell {2}; skipping.", aircraftType.Name, terrain.Type.Name, cell));
                     }
                     else if (techno is InfantryGroup infantry)
                     {
-                        errors.Add(string.Format("Aircraft '{0}' overlaps infantry in cell {1}; skipping.", aircraftType.Name, cell));
+                        errors.Add(String.Format("Aircraft '{0}' overlaps infantry in cell {1}; skipping.", aircraftType.Name, cell));
                     }
                     else if (techno is Unit unit)
                     {
-                        errors.Add(string.Format("Aircraft '{0}' overlaps unit '{1}' in cell {2}; skipping.", aircraftType.Name, unit.Type.Name, cell));
+                        errors.Add(String.Format("Aircraft '{0}' overlaps unit '{1}' in cell {2}; skipping.", aircraftType.Name, unit.Type.Name, cell));
                     }
                     else
                     {
-                        errors.Add(string.Format("Aircraft '{0}' overlaps unknown techno in cell {1}; skipping.", aircraftType.Name, cell));
+                        errors.Add(String.Format("Aircraft '{0}' overlaps unknown techno in cell {1}; skipping.", aircraftType.Name, cell));
                     }
                     modified = true;
                 }
@@ -1945,11 +1945,11 @@ namespace MobiusEditor.RedAlert
                 {
                     if (tokens.Length < 2)
                     {
-                        errors.Add(string.Format("Ship entry '{0}' has wrong number of tokens (has {1}, expecting 7).", kvp.Key, tokens.Length));
+                        errors.Add(String.Format("Ship entry '{0}' has wrong number of tokens (has {1}, expecting 7).", kvp.Key, tokens.Length));
                     }
                     else
                     {
-                        errors.Add(string.Format("Ship entry {0}, ship '{1}', has wrong number of tokens (has {2}, expecting 7).", kvp.Key, tokens[1], tokens.Length));
+                        errors.Add(String.Format("Ship entry {0}, ship '{1}', has wrong number of tokens (has {2}, expecting 7).", kvp.Key, tokens[1], tokens.Length));
                     }
                     modified = true;
                     continue;
@@ -1957,48 +1957,48 @@ namespace MobiusEditor.RedAlert
                 UnitType vesselType = Map.AllUnitTypes.Where(t => t.IsVessel && t.Equals(tokens[1])).FirstOrDefault();
                 if (vesselType == null)
                 {
-                    errors.Add(string.Format("Ship '{0}' references unknown ship.", tokens[1]));
+                    errors.Add(String.Format("Ship '{0}' references unknown ship.", tokens[1]));
                     modified = true;
                     continue;
                 }
                 if (!Map.BasicSection.ExpansionEnabled && vesselType.IsExpansionOnly)
                 {
-                    errors.Add(string.Format("Expansion ship '{0}' encountered, but expansion units are not enabled; enabling expansion units.", vesselType.Name));
+                    errors.Add(String.Format("Expansion ship '{0}' encountered, but expansion units are not enabled; enabling expansion units.", vesselType.Name));
                     modified = true;
                     Map.BasicSection.ExpansionEnabled = true;
                 }
                 int strength;
                 if (!Int32.TryParse(tokens[2], out strength))
                 {
-                    errors.Add(string.Format("Strength for ship '{0}' cannot be parsed; value: '{1}'; skipping.", vesselType.Name, tokens[2]));
+                    errors.Add(String.Format("Strength for ship '{0}' cannot be parsed; value: '{1}'; skipping.", vesselType.Name, tokens[2]));
                     modified = true;
                     continue;
                 }
                 int cell;
                 if (!Int32.TryParse(tokens[3], out cell))
                 {
-                    errors.Add(string.Format("Cell for ship '{0}', value '{1}', cannot be parsed; skipping.", vesselType.Name, tokens[3]));
+                    errors.Add(String.Format("Cell for ship '{0}', value '{1}', cannot be parsed; skipping.", vesselType.Name, tokens[3]));
                     modified = true;
                     continue;
                 }
                 if (strength < 1 || strength > 256)
                 {
                     int newStrength = strength.Restrict(1, 256);
-                    errors.Add(string.Format("Strength for ship '{0}' on cell {1} has illegal value {2}; corrected to {3}.", vesselType.Name, cell, strength, newStrength));
+                    errors.Add(String.Format("Strength for ship '{0}' on cell {1} has illegal value {2}; corrected to {3}.", vesselType.Name, cell, strength, newStrength));
                     strength = newStrength;
                     modified = true;
                 }
                 int dirValue;
                 if (!Int32.TryParse(tokens[4], out dirValue))
                 {
-                    errors.Add(string.Format("Direction for ship '{0}' on cell {1}, value '{2}', cannot be parsed; clearing to 0.", vesselType.Name, cell, tokens[4]));
+                    errors.Add(String.Format("Direction for ship '{0}' on cell {1}, value '{2}', cannot be parsed; clearing to 0.", vesselType.Name, cell, tokens[4]));
                     modified = true;
                     dirValue = 0;
                 }
                 DirectionType dirType = DirectionType.FindClosestDirectionType(dirValue, Map.UnitDirectionTypes);
                 if (dirType.ID != dirValue)
                 {
-                    errors.Add(string.Format("Direction for ship '{0}' on cell {1}, value {2}, cannot be matched to a known value. Taking closest match value {3} ({4}).",
+                    errors.Add(String.Format("Direction for ship '{0}' on cell {1}, value {2}, cannot be matched to a known value. Taking closest match value {3} ({4}).",
                         vesselType.Name, cell, dirValue, dirType.ID, dirType.Name));
                     modified = true;
                 }
@@ -2016,12 +2016,12 @@ namespace MobiusEditor.RedAlert
                     if ("ITALY".Equals(tokens[0], StringComparison.OrdinalIgnoreCase))
                     {
                         defHouse = HouseTypes.Ukraine;
-                        errors.Add(string.Format("Ship '{0}' on cell {1} has obsolete house '{2}'; substituting with '{3}'.", newShip.Type.Name, cell, tokens[0], defHouse.Name));
+                        errors.Add(String.Format("Ship '{0}' on cell {1} has obsolete house '{2}'; substituting with '{3}'.", newShip.Type.Name, cell, tokens[0], defHouse.Name));
                     }
                     else
                     {
                         defHouse = Map.HouseTypes.First();
-                        errors.Add(string.Format("Ship '{0}' on cell {1} references unknown house '{2}'; clearing to '{3}'.", newShip.Type.Name, cell, tokens[0], defHouse.Name));
+                        errors.Add(String.Format("Ship '{0}' on cell {1} references unknown house '{2}'; clearing to '{3}'.", newShip.Type.Name, cell, tokens[0], defHouse.Name));
                     }
                     modified = true;
                     newShip.House = defHouse;
@@ -2031,7 +2031,7 @@ namespace MobiusEditor.RedAlert
                     string badOrder = Map.MissionTypesBad.Where(t => t.Equals(tokens[5], StringComparison.InvariantCultureIgnoreCase)).FirstOrDefault();
                     string deforders = Map.GetDefaultMission(vesselType);
                     string reason = badOrder != null ? "unsupported" : "unknown";
-                    errors.Add(string.Format("Ship '{0}' on cell {1} references {2} orders '{3}'; changing to '{4}'.",
+                    errors.Add(String.Format("Ship '{0}' on cell {1} references {2} orders '{3}'; changing to '{4}'.",
                         newShip.Type.Name, cell, reason, badOrder ?? tokens[5], deforders));
                     newShip.Mission = deforders;
                 }
@@ -2040,40 +2040,40 @@ namespace MobiusEditor.RedAlert
                     ICellOccupier techno = Map.Technos[cell];
                     if (techno is Building building)
                     {
-                        errors.Add(string.Format("Ship '{0}' overlaps structure '{1}' in cell {2}; skipping.", vesselType.Name, building.Type.Name, cell));
+                        errors.Add(String.Format("Ship '{0}' overlaps structure '{1}' in cell {2}; skipping.", vesselType.Name, building.Type.Name, cell));
                     }
                     else if (techno is Overlay overlay)
                     {
-                        errors.Add(string.Format("Ship '{0}' overlaps overlay '{1}' in cell {2}; skipping.", vesselType.Name, overlay.Type.Name, cell));
+                        errors.Add(String.Format("Ship '{0}' overlaps overlay '{1}' in cell {2}; skipping.", vesselType.Name, overlay.Type.Name, cell));
                     }
                     else if (techno is Terrain terrain)
                     {
-                        errors.Add(string.Format("Ship '{0}' overlaps terrain '{1}' in cell {2}; skipping.", vesselType.Name, terrain.Type.Name, cell));
+                        errors.Add(String.Format("Ship '{0}' overlaps terrain '{1}' in cell {2}; skipping.", vesselType.Name, terrain.Type.Name, cell));
                     }
                     else if (techno is InfantryGroup infantry)
                     {
-                        errors.Add(string.Format("Ship '{0}' overlaps infantry in cell {1}; skipping.", vesselType.Name, cell));
+                        errors.Add(String.Format("Ship '{0}' overlaps infantry in cell {1}; skipping.", vesselType.Name, cell));
                     }
                     else if (techno is Unit unit)
                     {
-                        errors.Add(string.Format("Ship '{0}' overlaps unit '{1}' in cell {2}; skipping.", vesselType.Name, unit.Type.Name, cell));
+                        errors.Add(String.Format("Ship '{0}' overlaps unit '{1}' in cell {2}; skipping.", vesselType.Name, unit.Type.Name, cell));
                     }
                     else
                     {
-                        errors.Add(string.Format("Ship '{0}' overlaps unknown techno in cell {1}; skipping.", vesselType.Name, cell));
+                        errors.Add(String.Format("Ship '{0}' overlaps unknown techno in cell {1}; skipping.", vesselType.Name, cell));
                     }
                     modified = true;
                     continue;
                 }
                 if (!caseTrigs.ContainsKey(tokens[6]))
                 {
-                    errors.Add(string.Format("Ship '{0}' on cell {1} links to unknown trigger '{2}'; clearing trigger.", vesselType.Name, cell, tokens[6]));
+                    errors.Add(String.Format("Ship '{0}' on cell {1} links to unknown trigger '{2}'; clearing trigger.", vesselType.Name, cell, tokens[6]));
                     modified = true;
                     newShip.Trigger = Trigger.None;
                 }
                 else if (!checkUnitTrigs.Contains(tokens[6]))
                 {
-                    errors.Add(string.Format("Ship '{0}' on cell {1} links to trigger '{2}' which does not contain an event or action applicable to ships; clearing trigger.", vesselType.Name, cell, tokens[6]));
+                    errors.Add(String.Format("Ship '{0}' on cell {1} links to trigger '{2}' which does not contain an event or action applicable to ships; clearing trigger.", vesselType.Name, cell, tokens[6]));
                     modified = true;
                     newShip.Trigger = Trigger.None;
                 }
@@ -2099,11 +2099,11 @@ namespace MobiusEditor.RedAlert
                 {
                     if (tokens.Length < 2)
                     {
-                        errors.Add(string.Format("Infantry entry '{0}' has wrong number of tokens (has {1}, expecting 8).", kvp.Key, tokens.Length));
+                        errors.Add(String.Format("Infantry entry '{0}' has wrong number of tokens (has {1}, expecting 8).", kvp.Key, tokens.Length));
                     }
                     else
                     {
-                        errors.Add(string.Format("Infantry entry '{0}', infantry '{1}', has wrong number of tokens (has {2}, expecting 8).", kvp.Key, tokens[1], tokens.Length));
+                        errors.Add(String.Format("Infantry entry '{0}', infantry '{1}', has wrong number of tokens (has {2}, expecting 8).", kvp.Key, tokens[1], tokens.Length));
                     }
                     modified = true;
                     continue;
@@ -2111,27 +2111,27 @@ namespace MobiusEditor.RedAlert
                 InfantryType infantryType = Map.AllInfantryTypes.Where(t => t.Equals(tokens[1])).FirstOrDefault();
                 if (infantryType == null)
                 {
-                    errors.Add(string.Format("Infantry '{0}' references unknown infantry.", tokens[1]));
+                    errors.Add(String.Format("Infantry '{0}' references unknown infantry.", tokens[1]));
                     modified = true;
                     continue;
                 }
                 if (!Map.BasicSection.ExpansionEnabled && infantryType.IsExpansionOnly)
                 {
-                    errors.Add(string.Format("Expansion infantry unit '{0}' encountered, but expansion units are not enabled; enabling expansion units.", infantryType.Name));
+                    errors.Add(String.Format("Expansion infantry unit '{0}' encountered, but expansion units are not enabled; enabling expansion units.", infantryType.Name));
                     modified = true;
                     Map.BasicSection.ExpansionEnabled = true;
                 }
                 int strength;
                 if (!Int32.TryParse(tokens[2], out strength))
                 {
-                    errors.Add(string.Format("Strength for infantry '{0}' cannot be parsed; value: '{1}'; skipping.", infantryType.Name, tokens[2]));
+                    errors.Add(String.Format("Strength for infantry '{0}' cannot be parsed; value: '{1}'; skipping.", infantryType.Name, tokens[2]));
                     modified = true;
                     continue;
                 }
                 int cell;
                 if (!Int32.TryParse(tokens[3], out cell))
                 {
-                    errors.Add(string.Format("Cell for infantry '{0}', value: '{1}', cannot be parsed; skipping.", infantryType.Name, tokens[3]));
+                    errors.Add(String.Format("Cell for infantry '{0}', value: '{1}', cannot be parsed; skipping.", infantryType.Name, tokens[3]));
                     modified = true;
                     continue;
                 }
@@ -2146,23 +2146,23 @@ namespace MobiusEditor.RedAlert
                 {
                     if (techno is Building building)
                     {
-                        errors.Add(string.Format("Infantry '{0}' overlaps structure '{1}' in cell {2}; skipping.", infantryType.Name, building.Type.Name, cell));
+                        errors.Add(String.Format("Infantry '{0}' overlaps structure '{1}' in cell {2}; skipping.", infantryType.Name, building.Type.Name, cell));
                     }
                     else if (techno is Overlay overlay)
                     {
-                        errors.Add(string.Format("Infantry '{0}' overlaps overlay '{1}' in cell {2}; skipping.", infantryType.Name, overlay.Type.Name, cell));
+                        errors.Add(String.Format("Infantry '{0}' overlaps overlay '{1}' in cell {2}; skipping.", infantryType.Name, overlay.Type.Name, cell));
                     }
                     else if (techno is Terrain terrain)
                     {
-                        errors.Add(string.Format("Infantry '{0}' overlaps terrain '{1}' in cell {2}; skipping.", infantryType.Name, terrain.Type.Name, cell));
+                        errors.Add(String.Format("Infantry '{0}' overlaps terrain '{1}' in cell {2}; skipping.", infantryType.Name, terrain.Type.Name, cell));
                     }
                     else if (techno is Unit unit)
                     {
-                        errors.Add(string.Format("Infantry '{0}' overlaps unit '{1}' in cell {2}; skipping.", infantryType.Name, unit.Type.Name, cell));
+                        errors.Add(String.Format("Infantry '{0}' overlaps unit '{1}' in cell {2}; skipping.", infantryType.Name, unit.Type.Name, cell));
                     }
                     else
                     {
-                        errors.Add(string.Format("Infantry '{0}' overlaps unknown techno in cell {1}; skipping.", infantryType.Name, cell));
+                        errors.Add(String.Format("Infantry '{0}' overlaps unknown techno in cell {1}; skipping.", infantryType.Name, cell));
                     }
                     modified = true;
                     continue;
@@ -2170,20 +2170,20 @@ namespace MobiusEditor.RedAlert
                 int stoppingPos;
                 if (!Int32.TryParse(tokens[4], out stoppingPos))
                 {
-                    errors.Add(string.Format("Sub-position for infantry '{0}' on cell {1} cannot be parsed; value: '{2}'; skipping.", infantryType.Name, cell, tokens[4]));
+                    errors.Add(String.Format("Sub-position for infantry '{0}' on cell {1} cannot be parsed; value: '{2}'; skipping.", infantryType.Name, cell, tokens[4]));
                     modified = true;
                     continue;
                 }
                 if (stoppingPos >= Globals.NumInfantryStops)
                 {
-                    errors.Add(string.Format("Infantry '{0}' has invalid position {1} in cell {2}; skipping.", infantryType.Name, stoppingPos, cell));
+                    errors.Add(String.Format("Infantry '{0}' has invalid position {1} in cell {2}; skipping.", infantryType.Name, stoppingPos, cell));
                     modified = true;
                     continue;
                 }
                 if (strength < 1 || strength > 256)
                 {
                     int newStrength = strength.Restrict(1, 256);
-                    errors.Add(string.Format("Strength for infantry '{0}' on cell {1}, sub-position {2} has illegal value {3}; corrected to {4}.",
+                    errors.Add(String.Format("Strength for infantry '{0}' on cell {1}, sub-position {2} has illegal value {3}; corrected to {4}.",
                         infantryType.Name, cell, stoppingPos, strength, newStrength));
                     strength = newStrength;
                     modified = true;
@@ -2191,7 +2191,7 @@ namespace MobiusEditor.RedAlert
                 int dirValue;
                 if (!Int32.TryParse(tokens[6], out dirValue))
                 {
-                    errors.Add(string.Format("Direction for infantry '{0}' on cell {1}, sub-position {2}, value '{3}', cannot be parsed; clearing to 0.",
+                    errors.Add(String.Format("Direction for infantry '{0}' on cell {1}, sub-position {2}, value '{3}', cannot be parsed; clearing to 0.",
                         infantryType.Name, cell, stoppingPos, tokens[6]));
                     modified = true;
                     dirValue = 0;
@@ -2199,25 +2199,25 @@ namespace MobiusEditor.RedAlert
                 DirectionType dirType = DirectionType.FindClosestDirectionType(dirValue, Map.UnitDirectionTypes);
                 if (dirType.ID != dirValue)
                 {
-                    errors.Add(string.Format("Direction for infantry '{0}' on cell {1}, sub-position {2}, value {3}, cannot be matched to a known value. Taking closest match value {4} ({5}).",
+                    errors.Add(String.Format("Direction for infantry '{0}' on cell {1}, sub-position {2}, value {3}, cannot be matched to a known value. Taking closest match value {4} ({5}).",
                         infantryType.Name, cell, stoppingPos, dirValue, dirType.ID, dirType.Name));
                     modified = true;
                 }
                 if (infantryGroup.Infantry[stoppingPos] != null)
                 {
-                    errors.Add(string.Format("Infantry '{0}' overlaps another infantry at position {1} in cell {2}; skipping.", infantryType.Name, stoppingPos, cell));
+                    errors.Add(String.Format("Infantry '{0}' overlaps another infantry at position {1} in cell {2}; skipping.", infantryType.Name, stoppingPos, cell));
                     modified = true;
                     continue;
                 }
                 if (!caseTrigs.ContainsKey(tokens[7]))
                 {
-                    errors.Add(string.Format("Infantry '{0}' on cell {1}, sub-position {2} links to unknown trigger '{3}'; clearing trigger.", infantryType.Name, cell, stoppingPos, tokens[7]));
+                    errors.Add(String.Format("Infantry '{0}' on cell {1}, sub-position {2} links to unknown trigger '{3}'; clearing trigger.", infantryType.Name, cell, stoppingPos, tokens[7]));
                     modified = true;
                     tokens[7] = Trigger.None;
                 }
                 else if (!checkUnitTrigs.Contains(tokens[7]))
                 {
-                    errors.Add(string.Format("Infantry '{0}' on cell {1}, sub-position {2} links to trigger '{3}' which does not contain an event or action applicable to infantry; clearing trigger.", infantryType.Name, cell, stoppingPos, tokens[7]));
+                    errors.Add(String.Format("Infantry '{0}' on cell {1}, sub-position {2} links to trigger '{3}' which does not contain an event or action applicable to infantry; clearing trigger.", infantryType.Name, cell, stoppingPos, tokens[7]));
                     modified = true;
                     tokens[7] = Trigger.None;
                 }
@@ -2242,12 +2242,12 @@ namespace MobiusEditor.RedAlert
                     if ("ITALY".Equals(tokens[0], StringComparison.OrdinalIgnoreCase))
                     {
                         defHouse = HouseTypes.Ukraine;
-                        errors.Add(string.Format("Infantry '{0}' on cell {1}, sub-position {2} has obsolete house '{3}'; substituting with '{4}'.", inf.Type.Name, cell, stoppingPos, tokens[0], defHouse.Name));
+                        errors.Add(String.Format("Infantry '{0}' on cell {1}, sub-position {2} has obsolete house '{3}'; substituting with '{4}'.", inf.Type.Name, cell, stoppingPos, tokens[0], defHouse.Name));
                     }
                     else
                     {
                         defHouse = Map.HouseTypes.First();
-                        errors.Add(string.Format("Infantry '{0}' on cell {1}, sub-position {2} references unknown house '{3}'; clearing to '{4}'.", inf.Type.Name, cell, stoppingPos, tokens[0], defHouse.Name));
+                        errors.Add(String.Format("Infantry '{0}' on cell {1}, sub-position {2} references unknown house '{3}'; clearing to '{4}'.", inf.Type.Name, cell, stoppingPos, tokens[0], defHouse.Name));
                     }
                     modified = true;
                     inf.House = defHouse;
@@ -2257,7 +2257,7 @@ namespace MobiusEditor.RedAlert
                     string badOrder = Map.MissionTypesBad.Where(t => t.Equals(tokens[5], StringComparison.InvariantCultureIgnoreCase)).FirstOrDefault();
                     string deforders = Map.GetDefaultMission(infantryType);
                     string reason = badOrder != null ? "unsupported" : "unknown";
-                    errors.Add(string.Format("Infantry '{0}' on cell {1}, sub-position {2} references {3} orders '{4}'; changing to '{5}'.",
+                    errors.Add(String.Format("Infantry '{0}' on cell {1}, sub-position {2} references {3} orders '{4}'; changing to '{5}'.",
                         inf.Type.Name, cell, stoppingPos, reason, badOrder ?? tokens[5], deforders));
                     inf.Mission = deforders;
                 }
@@ -2278,11 +2278,11 @@ namespace MobiusEditor.RedAlert
                 {
                     if (tokens.Length < 2)
                     {
-                        errors.Add(string.Format("Structure entry '{0}' has wrong number of tokens (has {1}, expecting 6-8).", kvp.Key, tokens.Length));
+                        errors.Add(String.Format("Structure entry '{0}' has wrong number of tokens (has {1}, expecting 6-8).", kvp.Key, tokens.Length));
                     }
                     else
                     {
-                        errors.Add(string.Format("Structure entry '{0}', structure '{1}', has wrong number of tokens (has {2}, expecting 6-8).", kvp.Key, tokens[1], tokens.Length));
+                        errors.Add(String.Format("Structure entry '{0}', structure '{1}', has wrong number of tokens (has {2}, expecting 6-8).", kvp.Key, tokens[1], tokens.Length));
                     }
                     modified = true;
                     continue;
@@ -2290,34 +2290,34 @@ namespace MobiusEditor.RedAlert
                 BuildingType buildingType = Map.BuildingTypes.Where(t => t.Equals(tokens[1])).FirstOrDefault();
                 if (buildingType == null)
                 {
-                    errors.Add(string.Format("Structure '{0}' references unknown structure.", tokens[1]));
+                    errors.Add(String.Format("Structure '{0}' references unknown structure.", tokens[1]));
                     modified = true;
                     continue;
                 }
                 if (Globals.FilterTheaterObjects && buildingType.IsTheaterDependent && !buildingType.ExistsInTheater)
                 {
-                    errors.Add(string.Format("Structure '{0}' is not available in the set theater; skipping.", buildingType.Name));
+                    errors.Add(String.Format("Structure '{0}' is not available in the set theater; skipping.", buildingType.Name));
                     modified = true;
                     continue;
                 }
                 int strength;
                 if (!Int32.TryParse(tokens[2], out strength))
                 {
-                    errors.Add(string.Format("Strength for structure '{0}' cannot be parsed; value: '{1}'; skipping.", buildingType.Name, tokens[2]));
+                    errors.Add(String.Format("Strength for structure '{0}' cannot be parsed; value: '{1}'; skipping.", buildingType.Name, tokens[2]));
                     modified = true;
                     continue;
                 }
                 int cell;
                 if (!Int32.TryParse(tokens[3], out cell))
                 {
-                    errors.Add(string.Format("Cell for structure '{0}' cannot be parsed; value: '{1}'; skipping.", buildingType.Name, tokens[3]));
+                    errors.Add(String.Format("Cell for structure '{0}' cannot be parsed; value: '{1}'; skipping.", buildingType.Name, tokens[3]));
                     modified = true;
                     continue;
                 }
                 if (strength < 1 || strength > 256)
                 {
                     int newStrength = strength.Restrict(1, 256);
-                    errors.Add(string.Format("Strength for structure '{0}' on cell {1} has illegal value {2}; corrected to {3}.", buildingType.Name, cell, strength, newStrength));
+                    errors.Add(String.Format("Strength for structure '{0}' on cell {1} has illegal value {2}; corrected to {3}.", buildingType.Name, cell, strength, newStrength));
                     strength = newStrength;
                     modified = true;
                 }
@@ -2327,7 +2327,7 @@ namespace MobiusEditor.RedAlert
                     OverlayType wall = Map.OverlayTypes.Where(t => t.Equals(kvp.Value)).FirstOrDefault();
                     if (wall != null)
                     {
-                        errors.Add(string.Format("Structure '{0}' on cell {1} is a wall type. It will be treated as wall, not as building.", buildingType.Name, cell));
+                        errors.Add(String.Format("Structure '{0}' on cell {1} is a wall type. It will be treated as wall, not as building.", buildingType.Name, cell));
                         Map.Overlay[cell] = new Overlay() { Type = wall, Icon = 0 };
                         modified = true;
                         continue;
@@ -2336,7 +2336,7 @@ namespace MobiusEditor.RedAlert
                 int dirValue;
                 if (!Int32.TryParse(tokens[4], out dirValue))
                 {
-                    errors.Add(string.Format("Direction for structure '{0}' on cell {1}, value '{2}', cannot be parsed; clearing to 0.",
+                    errors.Add(String.Format("Direction for structure '{0}' on cell {1}, value '{2}', cannot be parsed; clearing to 0.",
                         buildingType.Name, cell, tokens[4]));
                     modified = true;
                     dirValue = 0;
@@ -2344,7 +2344,7 @@ namespace MobiusEditor.RedAlert
                 DirectionType dirType = DirectionType.FindClosestDirectionType(dirValue, Map.BuildingDirectionTypes);
                 if (dirType.ID != dirValue)
                 {
-                    errors.Add(string.Format("Direction for structure '{0}' on cell {1}, value {2}, cannot be matched to a known value. Taking closest match value {3} ({4}).",
+                    errors.Add(String.Format("Direction for structure '{0}' on cell {1}, value {2}, cannot be matched to a known value. Taking closest match value {3} ({4}).",
                         buildingType.Name, cell, dirValue, dirType.ID, dirType.Name));
                     modified = true;
                 }
@@ -2365,13 +2365,13 @@ namespace MobiusEditor.RedAlert
                     if ("ITALY".Equals(tokens[0], StringComparison.OrdinalIgnoreCase))
                     {
                         defHouse = HouseTypes.Ukraine;
-                        errors.Add(string.Format("Structure '{0}' on cell {1} has obsolete house '{2}'; substituting with '{3}'.",
+                        errors.Add(String.Format("Structure '{0}' on cell {1} has obsolete house '{2}'; substituting with '{3}'.",
                             buildingType.Name, cell, tokens[0], defHouse.Name));
                     }
                     else
                     {
                         defHouse = Map.HouseTypes.First();
-                        errors.Add(string.Format("Structure '{0}' on cell {1} references unknown house '{2}'; clearing to '{3}'.",
+                        errors.Add(String.Format("Structure '{0}' on cell {1} references unknown house '{2}'; clearing to '{3}'.",
                             buildingType.Name, cell, tokens[0], defHouse.Name));
                     }
                     modified = true;
@@ -2385,14 +2385,14 @@ namespace MobiusEditor.RedAlert
                 Map.Buildings.Add(cell, newBld);
                 if (!caseTrigs.ContainsKey(tokens[5]))
                 {
-                    errors.Add(string.Format("Structure '{0}' on cell {1} links to unknown trigger '{2}'; clearing trigger.",
+                    errors.Add(String.Format("Structure '{0}' on cell {1} links to unknown trigger '{2}'; clearing trigger.",
                         buildingType.Name, cell, tokens[5]));
                     modified = true;
                     newBld.Trigger = Trigger.None;
                 }
                 else if (!checkStrcTrigs.Contains(tokens[5]))
                 {
-                    errors.Add(string.Format("Structure '{0}' on cell {1} links to trigger '{2}' which does not contain an event or action applicable to structures; clearing trigger.",
+                    errors.Add(String.Format("Structure '{0}' on cell {1} links to trigger '{2}' which does not contain an event or action applicable to structures; clearing trigger.",
                         buildingType.Name, cell, tokens[5]));
                     modified = true;
                     newBld.Trigger = Trigger.None;
@@ -2426,7 +2426,7 @@ namespace MobiusEditor.RedAlert
                     else if ("ITALY".Equals(basePlayerStr, StringComparison.OrdinalIgnoreCase))
                     {
                         basePlayer = HouseTypes.Ukraine;
-                        errors.Add(string.Format("Base section has obsolete house '{0}'; substituting with '{1}'.", basePlayerStr, basePlayer.Name));
+                        errors.Add(String.Format("Base section has obsolete house '{0}'; substituting with '{1}'.", basePlayerStr, basePlayer.Name));
                     }
                 }
             }
@@ -2443,7 +2443,7 @@ namespace MobiusEditor.RedAlert
             }
             if (!Int32.TryParse(baseCountStr, out int baseCount))
             {
-                errors.Add(string.Format("Base count '{0}' is not a valid integer.", baseCountStr));
+                errors.Add(String.Format("Base count '{0}' is not a valid integer.", baseCountStr));
                 modified = true;
                 CleanBaseSection(ini, baseSection);
                 return;
@@ -2463,11 +2463,11 @@ namespace MobiusEditor.RedAlert
                 {
                     if (tokens.Length > 0 && tokens[0].Length > 0)
                     {
-                        errors.Add(string.Format("Base rebuild entry {0}, structure {1}, has wrong number of tokens (has {2}, expecting 2).", key, tokens[0], tokens.Length));
+                        errors.Add(String.Format("Base rebuild entry {0}, structure {1}, has wrong number of tokens (has {2}, expecting 2).", key, tokens[0], tokens.Length));
                     }
                     else
                     {
-                        errors.Add(string.Format("Base rebuild entry {0} has wrong number of tokens (has {1}, expecting 2).", key, tokens.Length));
+                        errors.Add(String.Format("Base rebuild entry {0} has wrong number of tokens (has {1}, expecting 2).", key, tokens.Length));
                     }
                     modified = true;
                     continue;
@@ -2475,20 +2475,20 @@ namespace MobiusEditor.RedAlert
                 BuildingType buildingType = Map.BuildingTypes.Where(t => t.Equals(tokens[0])).FirstOrDefault();
                 if (buildingType == null)
                 {
-                    errors.Add(string.Format("Base rebuild entry {0} references unknown structure '{1}'.", key, tokens[0]));
+                    errors.Add(String.Format("Base rebuild entry {0} references unknown structure '{1}'.", key, tokens[0]));
                     modified = true;
                     continue;
                 }
                 if (Globals.FilterTheaterObjects && buildingType.IsTheaterDependent && !buildingType.ExistsInTheater)
                 {
-                    errors.Add(string.Format("Base rebuild entry {0} references structure '{1}' which is not available in the set theater; skipping.", key, buildingType.Name));
+                    errors.Add(String.Format("Base rebuild entry {0} references structure '{1}' which is not available in the set theater; skipping.", key, buildingType.Name));
                     modified = true;
                     continue;
                 }
                 int cell;
                 if (!Int32.TryParse(tokens[1], out cell))
                 {
-                    errors.Add(string.Format("Cell for base rebuild entry '{0}', structure '{1}' cannot be parsed; value: '{2}'; skipping.", key, buildingType.Name, tokens[1]));
+                    errors.Add(String.Format("Cell for base rebuild entry '{0}', structure '{1}' cannot be parsed; value: '{2}'; skipping.", key, buildingType.Name, tokens[1]));
                     modified = true;
                     continue;
                 }
@@ -2501,7 +2501,7 @@ namespace MobiusEditor.RedAlert
                     }
                     else
                     {
-                        errors.Add(string.Format("Duplicate base rebuild entry for structure '{0}' on cell '{1}'; skipping.", buildingType.Name, cell));
+                        errors.Add(String.Format("Duplicate base rebuild entry for structure '{0}' on cell '{1}'; skipping.", buildingType.Name, cell));
                     }
                     continue;
                 }
@@ -2519,7 +2519,7 @@ namespace MobiusEditor.RedAlert
             {
                 if (baseKeyRegex.IsMatch(kvp.Key))
                 {
-                    errors.Add(string.Format("Base rebuild priority entry with key '{0}' exceeds count; skipping.", kvp.Key));
+                    errors.Add(String.Format("Base rebuild priority entry with key '{0}' exceeds count; skipping.", kvp.Key));
                     modified = true;
                 }
                 // non-matches will be ignored as potential modded content.
@@ -2552,7 +2552,7 @@ namespace MobiusEditor.RedAlert
                 int cell;
                 if (!Int32.TryParse(kvp.Key, out cell))
                 {
-                    errors.Add(string.Format("Cell for terrain cannot be parsed. Key: '{0}', value: '{1}'; skipping.", kvp.Key, kvp.Value));
+                    errors.Add(String.Format("Cell for terrain cannot be parsed. Key: '{0}', value: '{1}'; skipping.", kvp.Key, kvp.Value));
                     modified = true;
                     continue;
                 }
@@ -2560,13 +2560,13 @@ namespace MobiusEditor.RedAlert
                 TerrainType terrainType = Map.TerrainTypes.Where(t => t.Equals(name)).FirstOrDefault();
                 if (terrainType == null)
                 {
-                    errors.Add(string.Format("Terrain '{0}' references unknown terrain.", name));
+                    errors.Add(String.Format("Terrain '{0}' references unknown terrain.", name));
                     modified = true;
                     continue;
                 }
                 if (Globals.FilterTheaterObjects && !terrainType.ExistsInTheater)
                 {
-                    errors.Add(string.Format("Terrain '{0}' is not available in the set theater; skipping.", terrainType.Name));
+                    errors.Add(String.Format("Terrain '{0}' is not available in the set theater; skipping.", terrainType.Name));
                     modified = true;
                     continue;
                 }
@@ -2581,23 +2581,23 @@ namespace MobiusEditor.RedAlert
                     string reportCell = blockingCell == -1 ? "<unknown>" : blockingCell.ToString();
                     if (techno is Terrain terrain)
                     {
-                        errors.Add(string.Format("Terrain '{0}' on cell {1} overlaps terrain '{2}' placed on cell {3} at cell {4}; skipping.", terrainType.Name, cell, terrain.Type.Name, placementCell, reportCell));
+                        errors.Add(String.Format("Terrain '{0}' on cell {1} overlaps terrain '{2}' placed on cell {3} at cell {4}; skipping.", terrainType.Name, cell, terrain.Type.Name, placementCell, reportCell));
                     }
                     else if (techno is InfantryGroup infantry)
                     {
-                        errors.Add(string.Format("Terrain '{0}' on cell {1} overlaps infantry at cell {2}; skipping.", terrainType.Name, cell, reportCell));
+                        errors.Add(String.Format("Terrain '{0}' on cell {1} overlaps infantry at cell {2}; skipping.", terrainType.Name, cell, reportCell));
                     }
                     else if (techno is Unit unit)
                     {
-                        errors.Add(string.Format("Terrain '{0}' on cell {1} overlaps unit '{2}' at cell {3}; skipping.", terrainType.Name, cell, unit.Type.Name, reportCell));
+                        errors.Add(String.Format("Terrain '{0}' on cell {1} overlaps unit '{2}' at cell {3}; skipping.", terrainType.Name, cell, unit.Type.Name, reportCell));
                     }
                     else if (blockingCell != -1)
                     {
-                        errors.Add(string.Format("Terrain '{0}' placed on cell {1} overlaps unknown techno at cell {2}; skipping.", terrainType.Name, cell, blockingCell));
+                        errors.Add(String.Format("Terrain '{0}' placed on cell {1} overlaps unknown techno at cell {2}; skipping.", terrainType.Name, cell, blockingCell));
                     }
                     else
                     {
-                        errors.Add(string.Format("Terrain '{0}' placed on cell {1} crosses outside the map bounds; skipping.", terrainType.Name, cell));
+                        errors.Add(String.Format("Terrain '{0}' placed on cell {1} crosses outside the map bounds; skipping.", terrainType.Name, cell));
                     }
                     modified = true;
                 }
@@ -2633,24 +2633,24 @@ namespace MobiusEditor.RedAlert
                 {
                     if (point.Y == 0 || point.Y == lastLine)
                     {
-                        errors.Add(string.Format("Overlay can not be placed on the first and last lines of the map. Cell: '{0}', Id: '{1}' (unknown); skipping.", i, overlayId));
+                        errors.Add(String.Format("Overlay can not be placed on the first and last lines of the map. Cell: '{0}', Id: '{1}' (unknown); skipping.", i, overlayId));
                     }
                     else
                     {
-                        errors.Add(string.Format("Overlay ID {0} references unknown overlay.", overlayId));
+                        errors.Add(String.Format("Overlay ID {0} references unknown overlay.", overlayId));
                     }
                     modified = true;
                     continue;
                 }
                 if (point.Y == 0 || point.Y == lastLine)
                 {
-                    errors.Add(string.Format("Overlay can not be placed on the first and last lines of the map. Cell: '{0}', Type: '{1}'; skipping.", i, overlayType.Name));
+                    errors.Add(String.Format("Overlay can not be placed on the first and last lines of the map. Cell: '{0}', Type: '{1}'; skipping.", i, overlayType.Name));
                     modified = true;
                     continue;
                 }
                 if (Globals.FilterTheaterObjects && !overlayType.ExistsInTheater)
                 {
-                    errors.Add(string.Format("Overlay '{0}' is not available in the set theater; skipping.", overlayType.Name));
+                    errors.Add(String.Format("Overlay '{0}' is not available in the set theater; skipping.", overlayType.Name));
                     modified = true;
                     continue;
                 }
@@ -2659,11 +2659,11 @@ namespace MobiusEditor.RedAlert
                     string desc = overlayType.IsWall ? "Wall" : "Solid overlay";
                     if (techno is Building building)
                     {
-                        errors.Add(string.Format("{0} '{1}' overlaps structure '{2}' at cell {3}; skipping.", desc, overlayType.Name, building.Type.Name, i));
+                        errors.Add(String.Format("{0} '{1}' overlaps structure '{2}' at cell {3}; skipping.", desc, overlayType.Name, building.Type.Name, i));
                     }
                     else
                     {
-                        errors.Add(string.Format("{0} '{1}' overlaps unknown techno in cell {2}; skipping.", desc, overlayType.Name, i));
+                        errors.Add(String.Format("{0} '{1}' overlaps unknown techno in cell {2}; skipping.", desc, overlayType.Name, i));
                     }
                     modified = true;
                     continue;
@@ -2685,32 +2685,32 @@ namespace MobiusEditor.RedAlert
                 int cell;
                 if (!Int32.TryParse(kvp.Key, out cell))
                 {
-                    errors.Add(string.Format("Cell for overlay cannot be parsed. Key: '{0}', value: '{1}'; skipping.", kvp.Key, kvp.Value));
+                    errors.Add(String.Format("Cell for overlay cannot be parsed. Key: '{0}', value: '{1}'; skipping.", kvp.Key, kvp.Value));
                     modified = true;
                     continue;
                 }
                 if (!Map.Metrics.GetLocation(cell, out Point point))
                 {
-                    errors.Add(string.Format("Cell for overlay is not inside the map bounds. Key: '{0}', value: '{1}'; skipping.", kvp.Key, kvp.Value));
+                    errors.Add(String.Format("Cell for overlay is not inside the map bounds. Key: '{0}', value: '{1}'; skipping.", kvp.Key, kvp.Value));
                     modified = true;
                     continue;
                 }
                 if (point.Y == 0 || point.Y == lastLine)
                 {
-                    errors.Add(string.Format("Overlay can not be placed on the first and or last lines of the map. Key: '{0}', value: '{1}'; skipping.", kvp.Key, kvp.Value));
+                    errors.Add(String.Format("Overlay can not be placed on the first and or last lines of the map. Key: '{0}', value: '{1}'; skipping.", kvp.Key, kvp.Value));
                     modified = true;
                     continue;
                 }
                 OverlayType overlayType = Map.OverlayTypes.Where(t => t.Equals(kvp.Value)).FirstOrDefault();
                 if (overlayType == null)
                 {
-                    errors.Add(string.Format("Overlay '{0}' references unknown overlay.", kvp.Value));
+                    errors.Add(String.Format("Overlay '{0}' references unknown overlay.", kvp.Value));
                     modified = true;
                     continue;
                 }
                 if (Globals.FilterTheaterObjects && !overlayType.ExistsInTheater)
                 {
-                    errors.Add(string.Format("Overlay '{0}' is not available in the set theater; skipping.", overlayType.Name));
+                    errors.Add(String.Format("Overlay '{0}' is not available in the set theater; skipping.", overlayType.Name));
                     modified = true;
                     continue;
                 }
@@ -2719,11 +2719,11 @@ namespace MobiusEditor.RedAlert
                     string desc = overlayType.IsWall ? "Wall" : "Solid overlay";
                     if (techno is Building building)
                     {
-                        errors.Add(string.Format("{0} '{1}' overlaps structure '{2}' at cell {3}; skipping.", desc, overlayType.Name, building.Type.Name, cell));
+                        errors.Add(String.Format("{0} '{1}' overlaps structure '{2}' at cell {3}; skipping.", desc, overlayType.Name, building.Type.Name, cell));
                     }
                     else
                     {
-                        errors.Add(string.Format("{0} '{1}' overlaps unknown techno in cell {2}; skipping.", desc, overlayType.Name, cell));
+                        errors.Add(String.Format("{0} '{1}' overlaps unknown techno in cell {2}; skipping.", desc, overlayType.Name, cell));
                     }
                     modified = true;
                     continue;
@@ -2743,18 +2743,18 @@ namespace MobiusEditor.RedAlert
             {
                 if (!Int32.TryParse(kvp.Key, out int waypoint))
                 {
-                    errors.Add(string.Format("Invalid waypoint '{0}' (expecting integer).", kvp.Key));
+                    errors.Add(String.Format("Invalid waypoint '{0}' (expecting integer).", kvp.Key));
                     modified = true;
                     continue;
                 }
                 if (waypoint != 0 && kvp.Key.StartsWith("0"))
                 {
-                    errors.Add(string.Format("Waypoint '{0}' is zero-padded and will never be read by the game. Skipping.", kvp.Key));
+                    errors.Add(String.Format("Waypoint '{0}' is zero-padded and will never be read by the game. Skipping.", kvp.Key));
                     continue;
                 }
                 if (!Int32.TryParse(kvp.Value, out int cell))
                 {
-                    errors.Add(string.Format("Waypoint {0} has invalid cell '{1}' (expecting integer).", waypoint, kvp.Value));
+                    errors.Add(String.Format("Waypoint {0} has invalid cell '{1}' (expecting integer).", waypoint, kvp.Value));
                     modified = true;
                     continue;
                 }
@@ -2763,7 +2763,7 @@ namespace MobiusEditor.RedAlert
                     // don't bother reporting illegal-but-empty entries.
                     if (cell != -1)
                     {
-                        errors.Add(string.Format("Waypoint {0} out of range (expecting between {1} and {2}).", waypoint, 0, Map.Waypoints.Length - 1));
+                        errors.Add(String.Format("Waypoint {0} out of range (expecting between {1} and {2}).", waypoint, 0, Map.Waypoints.Length - 1));
                         modified = true;
                     }
                     continue;
@@ -2774,7 +2774,7 @@ namespace MobiusEditor.RedAlert
                     // don't bother reporting illegal-but-empty entries.
                     if (cell != -1)
                     {
-                        errors.Add(string.Format("Waypoint {0} cell value {1} out of range (expecting between {2} and {3}).", waypoint, cell, 0, Map.Metrics.Length - 1));
+                        errors.Add(String.Format("Waypoint {0} cell value {1} out of range (expecting between {2} and {3}).", waypoint, cell, 0, Map.Metrics.Length - 1));
                         modified = true;
                     }
                     continue;
@@ -2794,25 +2794,25 @@ namespace MobiusEditor.RedAlert
             {
                 if (!Int32.TryParse(kvp.Key, out int cell))
                 {
-                    errors.Add(string.Format("Invalid cell trigger '{0}' (expecting integer).", kvp.Key));
+                    errors.Add(String.Format("Invalid cell trigger '{0}' (expecting integer).", kvp.Key));
                     modified = true;
                     continue;
                 }
                 if (!Map.Metrics.Contains(cell))
                 {
-                    errors.Add(string.Format("Cell trigger {0} outside map bounds; skipping.", cell));
+                    errors.Add(String.Format("Cell trigger {0} outside map bounds; skipping.", cell));
                     modified = true;
                     continue;
                 }
                 if (!caseTrigs.ContainsKey(kvp.Value))
                 {
-                    errors.Add(string.Format("Cell trigger {0} links to unknown trigger '{1}'; skipping.", cell, kvp.Value));
+                    errors.Add(String.Format("Cell trigger {0} links to unknown trigger '{1}'; skipping.", cell, kvp.Value));
                     modified = true;
                     continue;
                 }
                 if (!checkCellTrigs.Contains(kvp.Value))
                 {
-                    errors.Add(string.Format("Cell trigger {0} links to trigger '{1}' which does not contain a placeable event; skipping.", cell, kvp.Value));
+                    errors.Add(String.Format("Cell trigger {0} links to trigger '{1}' which does not contain a placeable event; skipping.", cell, kvp.Value));
                     modified = true;
                     continue;
                 }
@@ -2879,7 +2879,7 @@ namespace MobiusEditor.RedAlert
                 string secName = houseSection.Name;
                 // Will only succeed if anything remained in the house section.
                 ini.Sections.Rename(italySectionName, ukr.Type.Name);
-                errors.Add(string.Format("Obsolete house section '{0}' found, and its modern counterpart '{1}' is not present. Interpreting section as '{1}'.", secName, ukr.Type.Name));
+                errors.Add(String.Format("Obsolete house section '{0}' found, and its modern counterpart '{1}' is not present. Interpreting section as '{1}'.", secName, ukr.Type.Name));
                 if (itaErrors.Count > 0)
                 {
                     // add these after the detection message.
@@ -2928,7 +2928,7 @@ namespace MobiusEditor.RedAlert
                 string trigName = indexToName(triggers, teamType.Trigger, Trigger.None);
                 if (!checkUnitTrigs.Contains(trigName))
                 {
-                    errors.Add(string.Format("Team '{0}' links to trigger '{1}' which does not contain an event or action applicable to units; clearing trigger.", teamType.Name, trigName));
+                    errors.Add(String.Format("Team '{0}' links to trigger '{1}' which does not contain an event or action applicable to units; clearing trigger.", teamType.Name, trigName));
                     modified = true;
                     teamType.Trigger = Trigger.None;
                 }
@@ -3785,7 +3785,7 @@ namespace MobiusEditor.RedAlert
             foreach (int cell in resolvedSmudge.Keys.OrderBy(c => c))
             {
                 Smudge smudge = resolvedSmudge[cell];
-                smudgeSection[cell.ToString()] = string.Format("{0},{1},{2}", smudge.Type.Name.ToUpperInvariant(), cell, Math.Min(smudge.Type.Icons - 1, smudge.Icon));
+                smudgeSection[cell.ToString()] = String.Format("{0},{1},{2}", smudge.Type.Name.ToUpperInvariant(), cell, Math.Min(smudge.Type.Icons - 1, smudge.Icon));
             }
             INISection terrainSection = ini.Sections.Add("TERRAIN");
             foreach (var (location, terrain) in Map.Technos.OfType<Terrain>().OrderBy(t => Map.Metrics.GetCell(t.Location)))
@@ -3810,10 +3810,10 @@ namespace MobiusEditor.RedAlert
             foreach (TeamType teamType in Map.TeamTypes)
             {
                 string[] classes = teamType.Classes
-                    .Select(c => string.Format("{0}:{1}", c.Type.Name.ToUpperInvariant(), c.Count))
+                    .Select(c => String.Format("{0}:{1}", c.Type.Name.ToUpperInvariant(), c.Count))
                     .ToArray();
                 string[] missions = teamType.Missions
-                    .Select(m => string.Format("{0}:{1}", m.Mission.ID, m.Argument))
+                    .Select(m => String.Format("{0}:{1}", m.Mission.ID, m.Argument))
                     .ToArray();
                 int flags = 0;
                 if (teamType.IsRoundAbout) flags |= 0x01;
@@ -3850,7 +3850,7 @@ namespace MobiusEditor.RedAlert
                     }
                     string key = infantryIndex.ToString("D3");
                     infantryIndex++;
-                    infantrySection[key] = string.Format("{0},{1},{2},{3},{4},{5},{6},{7}",
+                    infantrySection[key] = String.Format("{0},{1},{2},{3},{4},{5},{6},{7}",
                         infantry.House.Name,
                         infantry.Type.Name.ToUpperInvariant(),
                         infantry.Strength,
@@ -3872,7 +3872,7 @@ namespace MobiusEditor.RedAlert
                 }
                 string key = structureIndex.ToString("D3");
                 structureIndex++;
-                structuresSection[key] = string.Format("{0},{1},{2},{3},{4},{5},{6},{7}",
+                structuresSection[key] = String.Format("{0},{1},{2},{3},{4},{5},{6},{7}",
                     building.House.Name,
                     building.Type.Name.ToUpperInvariant(),
                     building.Strength,
@@ -3901,7 +3901,7 @@ namespace MobiusEditor.RedAlert
                 }
                 string key = baseIndex.ToString("D3");
                 baseIndex++;
-                baseSection[key] = string.Format("{0},{1}",
+                baseSection[key] = String.Format("{0},{1}",
                     building.Type.Name.ToUpperInvariant(),
                     cell
                 );
@@ -3923,7 +3923,7 @@ namespace MobiusEditor.RedAlert
                 }
                 string key = unitIndex.ToString("D3");
                 unitIndex++;
-                unitsSection[key] = string.Format("{0},{1},{2},{3},{4},{5},{6}",
+                unitsSection[key] = String.Format("{0},{1},{2},{3},{4},{5},{6}",
                     unit.House.Name,
                     unit.Type.Name.ToUpperInvariant(),
                     unit.Strength,
@@ -3946,7 +3946,7 @@ namespace MobiusEditor.RedAlert
                     }
                     string key = aircraftIndex.ToString("D3");
                     aircraftIndex++;
-                    aircraftSection[key] = string.Format("{0},{1},{2},{3},{4},{5}",
+                    aircraftSection[key] = String.Format("{0},{1},{2},{3},{4},{5}",
                         aircraft.House.Name,
                         aircraft.Type.Name.ToUpperInvariant(),
                         aircraft.Strength,
@@ -3966,7 +3966,7 @@ namespace MobiusEditor.RedAlert
                 }
                 string key = shipsIndex.ToString("D3");
                 shipsIndex++;
-                shipsSection[key] = string.Format("{0},{1},{2},{3},{4},{5},{6}",
+                shipsSection[key] = String.Format("{0},{1},{2},{3},{4},{5},{6}",
                     ship.House.Name,
                     ship.Type.Name.ToUpperInvariant(),
                     ship.Strength,
@@ -4310,35 +4310,35 @@ namespace MobiusEditor.RedAlert
                 int numVessels = Map.Technos.OfType<Unit>().Where(u => u.Occupier.Type.IsVessel).Count();
                 if (!Globals.DisableAirUnits && numAircraft > gi.MaxAircraft)
                 {
-                    errors.Add(string.Format("Maximum number of aircraft exceeded ({0} > {1})", numAircraft, gi.MaxAircraft));
+                    errors.Add(String.Format("Maximum number of aircraft exceeded ({0} > {1})", numAircraft, gi.MaxAircraft));
                 }
                 if (numBuildings > gi.MaxBuildings)
                 {
-                    errors.Add(string.Format("Maximum number of structures exceeded ({0} > {1})", numBuildings, gi.MaxBuildings));
+                    errors.Add(String.Format("Maximum number of structures exceeded ({0} > {1})", numBuildings, gi.MaxBuildings));
                 }
                 if (numInfantry > gi.MaxInfantry)
                 {
-                    errors.Add(string.Format("Maximum number of infantry exceeded ({0} > {1})", numInfantry, gi.MaxInfantry));
+                    errors.Add(String.Format("Maximum number of infantry exceeded ({0} > {1})", numInfantry, gi.MaxInfantry));
                 }
                 if (numTerrain > gi.MaxTerrain)
                 {
-                    errors.Add(string.Format("Maximum number of terrain objects exceeded ({0} > {1})", numTerrain, gi.MaxTerrain));
+                    errors.Add(String.Format("Maximum number of terrain objects exceeded ({0} > {1})", numTerrain, gi.MaxTerrain));
                 }
                 if (numUnits > gi.MaxUnits)
                 {
-                    errors.Add(string.Format("Maximum number of units exceeded ({0} > {1})", numUnits, gi.MaxUnits));
+                    errors.Add(String.Format("Maximum number of units exceeded ({0} > {1})", numUnits, gi.MaxUnits));
                 }
                 if (numVessels > gi.MaxVessels)
                 {
-                    errors.Add(string.Format("Maximum number of ships exceeded ({0} > {1})", numVessels, gi.MaxVessels));
+                    errors.Add(String.Format("Maximum number of ships exceeded ({0} > {1})", numVessels, gi.MaxVessels));
                 }
                 if (Map.TeamTypes.Count > gi.MaxTeams)
                 {
-                    errors.Add(string.Format("Maximum number of team types exceeded ({0} > {1})", Map.TeamTypes.Count, gi.MaxTeams));
+                    errors.Add(String.Format("Maximum number of team types exceeded ({0} > {1})", Map.TeamTypes.Count, gi.MaxTeams));
                 }
                 if (Map.Triggers.Count > gi.MaxTriggers)
                 {
-                    errors.Add(string.Format("Maximum number of triggers exceeded ({0} > {1})", Map.Triggers.Count, gi.MaxTriggers));
+                    errors.Add(String.Format("Maximum number of triggers exceeded ({0} > {1})", Map.Triggers.Count, gi.MaxTriggers));
                 }
             }
             if (!Map.BasicSection.SoloMission)
@@ -4623,21 +4623,21 @@ namespace MobiusEditor.RedAlert
             const string maximums = "Number of {0}: {1}. Maximum: {2}.";
             if (!Globals.DisableAirUnits)
             {
-                info.Add(string.Format(maximums, "aircraft", numAircraft, Constants.MaxAircraft));
+                info.Add(String.Format(maximums, "aircraft", numAircraft, Constants.MaxAircraft));
             }
-            info.Add(string.Format(maximums, "structures", numBuildings, Constants.MaxBuildings));
-            info.Add(string.Format(maximums, "infantry", numInfantry, Constants.MaxInfantry));
-            info.Add(string.Format(maximums, "terrain objects", numTerrain, Constants.MaxTerrain));
-            info.Add(string.Format(maximums, "units", numUnits, Constants.MaxUnits));
-            info.Add(string.Format(maximums, "ships", numVessels, Constants.MaxVessels));
-            info.Add(string.Format(maximums, "team types", Map.TeamTypes.Count, Constants.MaxTeams));
-            info.Add(string.Format(maximums, "triggers", Map.Triggers.Count, Constants.MaxTriggers));
+            info.Add(String.Format(maximums, "structures", numBuildings, Constants.MaxBuildings));
+            info.Add(String.Format(maximums, "infantry", numInfantry, Constants.MaxInfantry));
+            info.Add(String.Format(maximums, "terrain objects", numTerrain, Constants.MaxTerrain));
+            info.Add(String.Format(maximums, "units", numUnits, Constants.MaxUnits));
+            info.Add(String.Format(maximums, "ships", numVessels, Constants.MaxVessels));
+            info.Add(String.Format(maximums, "team types", Map.TeamTypes.Count, Constants.MaxTeams));
+            info.Add(String.Format(maximums, "triggers", Map.Triggers.Count, Constants.MaxTriggers));
             if (!Map.BasicSection.SoloMission)
             {
                 info.Add(String.Empty);
                 info.Add("Multiplayer info:");
                 int startPoints = Map.Waypoints.Count(w => w.Cell.HasValue && w.Flags.HasFlag(WaypointFlag.PlayerStart));
-                info.Add(string.Format("Number of set starting points: {0}.", startPoints));
+                info.Add(String.Format("Number of set starting points: {0}.", startPoints));
             }
             HashSet<int> usedWaypoints = new HashSet<int>();
             HashSet<int> setWaypoints = Enumerable.Range(0, Map.Waypoints.Length).Where(i => Map.Waypoints[i].Cell.HasValue).ToHashSet();

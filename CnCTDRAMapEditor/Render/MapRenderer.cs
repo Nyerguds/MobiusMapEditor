@@ -280,7 +280,7 @@ namespace MobiusEditor.Render
                     }
                     else
                     {
-                        Debug.Print(string.Format("Template {0} ({1}) could not be rendered.", name, icon));
+                        Debug.Print(String.Format("Template {0} ({1}) could not be rendered.", name, icon));
                     }
                 }
             }
@@ -466,7 +466,7 @@ namespace MobiusEditor.Render
         {
             if (Globals.FilterTheaterObjects && !smudge.Type.ExistsInTheater)
             {
-                Debug.Print(string.Format("Smudge {0} ({1}) not available in this theater.", smudge.Type.Name, smudge.Icon));
+                Debug.Print(String.Format("Smudge {0} ({1}) not available in this theater.", smudge.Type.Name, smudge.Icon));
                 return (Rectangle.Empty, (g) => { });
             }
             float alphaFactor = 1.0f;
@@ -535,7 +535,7 @@ namespace MobiusEditor.Render
             }
             else
             {
-                Debug.Print(string.Format("Smudge {0} ({1}) not found", smudge.Type.Name, smudge.Icon));
+                Debug.Print(String.Format("Smudge {0} ({1}) not found", smudge.Type.Name, smudge.Icon));
                 return (Rectangle.Empty, (g) => { });
             }
         }
@@ -600,7 +600,7 @@ namespace MobiusEditor.Render
             }
             else
             {
-                Debug.Print(string.Format("Overlay {0} ({1}) not found", name, icon));
+                Debug.Print(String.Format("Overlay {0} ({1}) not found", name, icon));
                 return new RenderInfo(Point.Empty, null, 0, null, false);
             }
         }
@@ -1346,7 +1346,7 @@ namespace MobiusEditor.Render
             }
             if (image == null)
             {
-                Debug.Print(string.Format("Waypoint graphics {0} ({1}) not found", tileGraphics, icon));
+                Debug.Print(String.Format("Waypoint graphics {0} ({1}) not found", tileGraphics, icon));
                 return new RenderInfo(Point.Empty, null, null, false);
             }
             Point location = new Point(point.X * tileSize.Width, point.Y * tileSize.Height);

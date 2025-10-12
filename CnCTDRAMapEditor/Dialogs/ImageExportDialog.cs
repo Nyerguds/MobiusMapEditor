@@ -89,11 +89,11 @@ namespace MobiusEditor.Dialogs
                 int scaleHeight = Math.Max(1, (int)Math.Floor(Globals.OriginalTileHeight * scale + 0.0001));
                 int width = gamePlugin.Map.Metrics.Width * scaleWidth;
                 int height = gamePlugin.Map.Metrics.Height * scaleHeight;
-                lblSize.Text = string.Format("Size: {0}×{1}", width, height);
-                lblCellSize.Text = string.Format("Cell size: {0}×{1}", scaleWidth, scaleHeight);
+                lblSize.Text = String.Format("Size: {0}×{1}", width, height);
+                lblCellSize.Text = String.Format("Cell size: {0}×{1}", scaleWidth, scaleHeight);
                 int boundsWidth = gamePlugin.Map.Bounds.Width * scaleWidth;
                 int boundsHeight = gamePlugin.Map.Bounds.Height * scaleHeight;
-                lblSizeBounds.Text = string.Format("{0}×{1}", boundsWidth, boundsHeight);
+                lblSizeBounds.Text = String.Format("{0}×{1}", boundsWidth, boundsHeight);
             }
         }
 
