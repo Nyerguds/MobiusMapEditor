@@ -2217,6 +2217,7 @@ namespace MobiusEditor
             }
             // If neither mix nor pgm, find data on disk.
             bool openedFileIsBin = false;
+            bool acceptbin = false;
             if (fileType == FileType.None)
             {
                 iniBytes = File.ReadAllBytes(loadFilename);
@@ -2233,6 +2234,8 @@ namespace MobiusEditor
                     }
                     binBytes = iniBytes;
                     binPath = loadFilename;
+                    string ext = Path.GetExtension(loadFilename);
+                    acceptbin = ".bin".Equals(ext) || (".map".Equals(ext) && !File.Exists(Path.ChangeExtension(loadFilename, ".bin")));
                     iniBytes = File.ReadAllBytes(iniPath);
                     iniContents = INITools.GetIniContents(iniBytes);
                     openedFileIsBin = true;
@@ -2280,7 +2283,7 @@ namespace MobiusEditor
             foreach (GameInfo gi in gameInfos)
             {
                 GameType gt = gi.GameType;
-                FileType ft = gi.IdentifyMap(iniContents, binBytes, openedFileIsBin, out isMegaMap, out theater);
+                FileType ft = gi.IdentifyMap(iniContents, binBytes, openedFileIsBin, acceptbin, out isMegaMap, out theater);
                 if (ft == FileType.None)
                 {
                     continue;

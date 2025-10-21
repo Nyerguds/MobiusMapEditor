@@ -70,7 +70,7 @@ namespace MobiusEditor.SoleSurvivor
         public override Bitmap WorkshopPreviewGeneric => null;
         public override Bitmap WorkshopPreviewGenericGame => null;
 
-        public override FileType IdentifyMap(INI iniContents, byte[] binContents, bool contentWasSwapped, out bool isMegaMap, out string theater)
+        public override FileType IdentifyMap(INI iniContents, byte[] binContents, bool contentWasSwapped, bool acceptBin, out bool isMegaMap, out string theater)
         {
             isMegaMap = true;
             theater = null;
@@ -83,7 +83,7 @@ namespace MobiusEditor.SoleSurvivor
             }
             int maxTemplate = TemplateTypes.GetTypes().Max(tp => tp.ID);
             isMegaMap = GamePluginTD.CheckForMegamap(iniContents);
-            if (contentWasSwapped
+            if (contentWasSwapped && !acceptBin
                 && ((isMegaMap && !GamePluginTD.CheckMegaMapFormat(binContents, MapSizeMega, maxTemplate))
                 || !isMegaMap && !GamePluginTD.CheckNormalMapFormat(binContents, MapSize, maxTemplate, -1, out _)))
             {

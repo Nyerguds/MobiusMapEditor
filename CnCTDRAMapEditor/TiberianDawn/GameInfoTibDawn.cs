@@ -104,7 +104,7 @@ namespace MobiusEditor.TiberianDawn
         public override Bitmap WorkshopPreviewGeneric => Properties.Resources.UI_CustomMissionPreviewDefault;
         public override Bitmap WorkshopPreviewGenericGame => Properties.Resources.TD_Head;
 
-        public override FileType IdentifyMap(INI iniContents, byte[] binContents, bool contentWasSwapped, out bool isMegaMap, out string theater)
+        public override FileType IdentifyMap(INI iniContents, byte[] binContents, bool contentWasSwapped, bool acceptBin, out bool isMegaMap, out string theater)
         {
             isMegaMap = false;
             theater = null;
@@ -129,7 +129,8 @@ namespace MobiusEditor.TiberianDawn
             int maxTemplateN64 = isMegaMap ? -1 : n64Mapping.Keys.Where(k => k != -1 && k != 0xFFFF).Max();
             bool isN64 = false;
             bool normalMapFormatOk = !isMegaMap && !ismpr && GamePluginTD.CheckNormalMapFormat(binContents, MapSize, maxTemplate, maxTemplateN64, out isN64);
-            if (contentWasSwapped && (isMegaMap && !GamePluginTD.CheckMegaMapFormat(binContents, MapSizeMega, maxTemplate)
+            if (contentWasSwapped && !acceptBin
+                && (isMegaMap && !GamePluginTD.CheckMegaMapFormat(binContents, MapSizeMega, maxTemplate)
                  || (!isMegaMap && !normalMapFormatOk)))
             {
                 // Primary read file is just some unsupported file that happens to have the same

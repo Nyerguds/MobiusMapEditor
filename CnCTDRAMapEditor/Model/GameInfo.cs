@@ -174,10 +174,13 @@ namespace MobiusEditor.Model
         /// <param name="iniContents">Contents of the loaded ini file.</param>
         /// <param name="binContents">Contents of the loaded bin file.</param>
         /// <param name="contentWasSwapped">True if the primary opened file was the .bin one.</param>
+        /// <param name="acceptBin">True if the binary data should be accepted even if it does not fully match the format.
+        /// This is normally only true if <paramref name="contentWasSwapped"/> is true and the loaded file has either the .bin or .map extension.
+        /// </param>
         /// <param name="isMegaMap">Returns whether the given map is a megamap.</param>
         /// <param name="theater">Returns the theater of the map.</param>
         /// <returns></returns>
-        public abstract FileType IdentifyMap(INI iniContents, byte[] binContents, bool contentWasSwapped, out bool isMegaMap, out string theater);
+        public abstract FileType IdentifyMap(INI iniContents, byte[] binContents, bool contentWasSwapped, bool acceptBin, out bool isMegaMap, out string theater);
         /// <summary>
         /// Create game plugin for this game.
         /// </summary>
