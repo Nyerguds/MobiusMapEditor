@@ -1709,7 +1709,7 @@ namespace MobiusEditor
             ClearActiveTool();
             using (ErrorMessageBox emb = new ErrorMessageBox())
             {
-                emb.Title = "Map objects";
+                emb.Title = "Map Objects";
                 emb.Message = "Map objects overview:";
                 emb.Errors = plugin.AssessMapItems();
                 emb.StartPosition = FormStartPosition.CenterParent;
@@ -1727,7 +1727,7 @@ namespace MobiusEditor
             ClearActiveTool();
             using (ErrorMessageBox emb = new ErrorMessageBox())
             {
-                emb.Title = "Power usage";
+                emb.Title = "Power Balance";
                 emb.Message = "Power balance per House:";
                 emb.Errors = plugin.Map.AssessPower(plugin.GetHousesWithProduction());
                 emb.StartPosition = FormStartPosition.CenterParent;
@@ -1745,7 +1745,7 @@ namespace MobiusEditor
             ClearActiveTool();
             using (ErrorMessageBox emb = new ErrorMessageBox())
             {
-                emb.Title = "Silo storage";
+                emb.Title = "Silo Storage";
                 emb.Message = "Available silo storage per House:";
                 emb.Errors = plugin.Map.AssessStorage(plugin.GetHousesWithProduction());
                 emb.StartPosition = FormStartPosition.CenterParent;

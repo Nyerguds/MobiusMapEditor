@@ -114,7 +114,8 @@ namespace MobiusEditor.Dialogs
                     break;
             }
             */
-            houseComboBox.DataSource = House.None.Yield().Concat(plugin.Map.Houses.Select(t => t.Type.Name)).ToArray();
+            houseComboBox.DataSource = House.None.Yield().Concat(plugin.Map.Houses.Select(t => t.Type.Name))
+                .Select(v => new ListItem<String>(v, v)).ToArray();
             persistenceComboBox.DataSource = Enum.GetValues(typeof(TriggerPersistentType)).Cast<TriggerPersistentType>()
                 .Select(v => new ListItem<TriggerPersistentType>(v, persistenceNames[(int)v])).ToArray();
             typeComboBox.DataSource = Enum.GetValues(typeof(TriggerMultiStyleType)).Cast<TriggerMultiStyleType>()
@@ -190,12 +191,11 @@ namespace MobiusEditor.Dialogs
                     case GameType.TiberianDawn:
                     case GameType.SoleSurvivor:
                         string team = SelectedTrigger.Action1.Team ?? TeamType.None;                        
-                        string[] teamData = TeamType.None.Yield().Concat(plugin.Map.TeamTypes.Select(t => t.Name)).ToArray();
-                        teamComboBox.DataSource = teamData;
-                        teamComboBox.DataBindings.Add("SelectedValue", SelectedTrigger.Action1, "Team", true, DataSourceUpdateMode.OnPropertyChanged);
+                        string[] teamData = TeamType.None.Yield().Concat(plugin.Map.TeamTypes.Select(t =>  t.Name)).ToArray();
+                        teamComboBox.DataSource = teamData.Select(tn => new ListItem<String>(tn, tn)).ToArray();
                         string correctedTeam = teamData.FirstOrDefault(tm => tm.Equals(team, StringComparison.OrdinalIgnoreCase)) ?? TeamType.None;
-                        // For primitive types / strings, bind to SelectedValue but change on SelectedItem.
-                        teamComboBox.SelectedItem = correctedTeam;
+                        SelectedTrigger.Action1.Team = correctedTeam;
+                        teamComboBox.DataBindings.Add("SelectedValue", SelectedTrigger.Action1, "Team", true, DataSourceUpdateMode.OnPropertyChanged);
                         string teamDescrTd = GetTeamLabel(SelectedTrigger.Action1.Team);
                         if (teamDescrTd != null && teamComboBox.ClientRectangle.Contains(teamComboBox.PointToClient(Cursor.Position)))
                         {

@@ -242,6 +242,7 @@ namespace MobiusEditor.Dialogs
             this.houseComboBox.Name = "houseComboBox";
             this.houseComboBox.Size = new System.Drawing.Size(240, 21);
             this.houseComboBox.TabIndex = 1;
+            this.houseComboBox.ValueMember = "Value";
             // 
             // typeLabel
             // 
@@ -369,6 +370,7 @@ namespace MobiusEditor.Dialogs
             this.typeComboBox.TabIndex = 7;
             this.typeComboBox.ValueMember = "Value";
             this.typeComboBox.SelectedValueChanged += new System.EventHandler(this.TypeComboBox_SelectedValueChanged);
+            this.typeComboBox.ValueMember = "Value";
             // 
             // event1ComboBox
             // 
@@ -423,6 +425,7 @@ namespace MobiusEditor.Dialogs
             this.teamComboBox.MouseEnter += new System.EventHandler(this.TeamComboBox_MouseEnter);
             this.teamComboBox.MouseLeave += new System.EventHandler(this.ToolTipComboBox_MouseLeave);
             this.teamComboBox.MouseMove += new System.Windows.Forms.MouseEventHandler(this.TeamComboBox_MouseMove);
+            this.teamComboBox.ValueMember = "Value";
             // 
             // event1Flp
             // 

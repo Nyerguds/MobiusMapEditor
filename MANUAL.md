@@ -6,7 +6,7 @@
 
 Simply unpack the editor into a new folder on your disk somewhere, and run `MobiusMapEditor.exe`. On first startup, it will automatically try to detect the folder in which the C&C Remastered Collection is installed, and if it can't find it, it will show a dialog asking you to locate it. Note that this autodetect only works on Steam installations of the game.
 
-If the C&C Remastered Collection is not installed on your PC, you can use the "Continue with classic graphics" button on the dialog to start the editor without the Remastered graphics. To suppress the "Select game path" dialog and instead automatically start with classic graphics, you can edit the config file in a text editor and enable the option to always use classic graphics. (See the "Configuration" section below.)
+If the C&C Remastered Collection is not installed on your PC, you can use the "Continue with classic graphics" button on the dialog to start the editor without the Remastered graphics. To suppress the "Select game path" dialog and instead automatically start with classic graphics, you can edit the config file in a text editor and enable the option to always use classic graphics. (See the [Configuration](#configuration) section below.)
 
 ---
 
@@ -28,6 +28,28 @@ Specific options about the map and the scripting elements can be found in the "S
 
 The triggers dialog contains a "Check" button that will check if any configurations in the triggers might not work, or might even cause game crashes. For TD, these checks are based on [the TD triggers overview guide I wrote on Steam](https://steamcommunity.com/sharedfiles/filedetails/?id=2824756756). Note that this is not a scripting guide; it is an overview of what each trigger event and action will accept as inputs, and produce as output, highlighting potential issues and some workarounds.
 
+### Tools and view options
+
+Under the Tools menu, the following items are available:
+
+* Statistics → Map Objects: Shows how close you are getting to the object limits for each object type.
+* Statistics → Power Balance: Shows the produced and consumed power for all Houses. This takes damaged and unbuilt buildings into account, and will give extra information on the situation with the affected buildings repaired / built.
+* Statistics → Silo Storage: Shows how much silo space is available for each House.
+* Options: Has a number of usability options that can be enabled and disabled. These options are not saved, but their defaults can be preset in the configuration file (see [Defaults](#defaults) below). The options themselves are fairly self-explanatory:
+    * Flood fill is obstructed by map bounds: when using flood fill, the map border indicating the usable map area will stop flood fill from propagating. This works at both sides of the border. Not that flood fill *erasing* (using right click), which takes the entire area of the selected tile into account, can be positioned to cross over the border, which *will* make it clear on both sides.
+    * Drag-place map tiles without smearing: When placing down large map tiles such as cliffs and dragging the mouse while placing, a new object will only be placed down once the mouse is completely moved off the previously placed tiles.
+    * Randomize drag-placed map tiles: When drag-placing map tiles such as cliffs and shores, equivalent tiles will be placed down after the first one, to make the terrain look less boring.
+    * Show grid while placing / moving: To aid in placement accuracy, the map grid (also accessible under View → Extra Indicators) will be shown temporarily whenever you perform a placement or movement action.
+    * Show crates on top of other objects: This makes crates always visible. Note that the "Outlines on crates" option under View → Extra Indicators has pretty much the same purpose.
+* Re-randomize tiles: if the tileset contains randomizable tiles, this will re-randomize them all to bring more variety into the map. See [Randomizable tiles](#randomizable-tiles) later in the manual.
+* Export as image: generate an image from the current map. This allows tweaking the scale and shown layers and indicators. The layers and indicators that are enabled by default will match the ones set in the editor, though some options on the window might change them.
+
+The View menu holds options related to what is visible on the map, and the zoom options.
+
+* Layers: Toggles all objects placed down on the map. Note that Waypoints are also in here, since the map editor gives them both a physical graphic and an indicator label. This is mainly caused by the multiplayer flags being waypoints.
+* Indicators: Lines and text drawn over the objects on the map, such as celltriggers, overlap indicators, the names of waypoints, and extra info on objects such as triggers, rebuild priority, and labels indicating that certain buildings are fake.
+* Extra Indicators: These are indicators that are generally only shown under specific circumstances, such as during the placing or moving of objects. In this menu, they can be enabled permanently. Note that keeping these enabled might make the editor less responsive.
+
 ### Hotkeys
 
 You can switch between the different editing modes using the six first letters on the top two rows on your keyboard; Q-W-E-R-T-Y and A-S-D-F-G-H on classic a US qwerty keyboard. Note that these keys are interpreted positionally on the keyboard, meaning that they will work in the intended logical way on different-region keyboard, like the German 'qwertz' and French 'azerty'.
@@ -36,9 +58,9 @@ As is standard in most programs, Undo and Redo are linked to \[Ctrl\]+\[Z\] and 
 
 Besides those, \[PageUp\] and \[PageDown\] have been universally implemented to let you switch to the previous / next item on the current editing tool's selection list, with \[Home\] and \[End\] going to the start and end of the list. This also works for increasing/decreasing the resource placement size in Resources mode. Holding down the \[Ctrl\] key and using the mouse scroll wheel has the same previous / next item function.
 
-Some editing modes will have their own specific shortcuts; in Map mode, holding down the \[Ctrl\] key will allow modifying the map border, and \[Ctrl\]+\[Alt\] allows using the flood fill feature. In Waypoints mode, pressing \[Shift\] plus the starting letter of a special waypoint will act as shortcut for quickly selecting it, and \[Shift\] + \[M\] will toggle the teamtype routes editing mode. And in Waypoints and Celltriggers modes, the \[Enter\] key acts as shortcut for the "Jump To" function. All such mode-dependent shortcuts will be indicated in the bottom bar along with the mouse function modifiers.
+Some editing modes will have their own specific shortcuts; in Map mode, holding down the \[Ctrl\] key will allow modifying the map border, and \[Ctrl\]+\[Alt\] allows using the flood fill feature. In Waypoints mode, pressing \[Shift\] plus the starting letter of a special waypoint will act as shortcut for quickly selecting it, and \[Shift\] + \[M\] will toggle the teamtype routes editing mode. In Waypoints and Celltriggers modes, the \[Enter\] key acts as shortcut for the "Jump To" function. All such mode-dependent shortcuts will be indicated in the bottom bar along with the mouse function modifiers.
 
-Additionally, the "Extra indicators" you can find under the "View" menu all have an F-key assigned to them, to quickly toggle them. F1 for the map symmetry lines, F2 for the map grid, F3 for showing the map terrain type of each cell, F4 for indicating cells occupied by placed down objects, F5 to show the reveal radius around any waypoints that are configured to reveal terrain through map scripting, F6 for always showing outlines on crates, F7 for showing the radiuses for special abilities, such as the gap generators and radar jammers in Red Alert, and F8 for showing the initial viewport area around the Home waypoint in singleplayer maps. A lot of these extra indicators will pop up automatically under certain conditions, such as placing/dragging the affected objects, or simply being in the relevant editing mode. The menu toggles will simply keep them permanently enabled, even outside these contexts.
+Additionally, the "Extra indicators" you can find under the "View" menu all have an F-key assigned to them, to quickly toggle them. F1 for the map symmetry lines, F2 for the map grid, F3 for showing the map terrain type of each cell, F4 for indicating cells occupied by placed down objects, F5 to show the reveal radius around any waypoints that are configured to reveal terrain through map scripting, F6 for always showing outlines on crates, F7 for showing the radiuses for special abilities, such as the gap generators and radar jammers in Red Alert, and F8 for showing the initial viewport area around the Home waypoint in singleplayer maps.
 
 Note that all these hotkeys will only work when the main window is selected; if you click on the tool window to select it, all keys will work as expected inside the selected controls. Also note that the tool window will automatically deselect when the mouse is moved over the main editor area, to avoid having to click the main window to activate its normal functioning.
 
@@ -74,7 +96,7 @@ The Tools menu has a specific "Re-randomize tiles" option to automatically apply
 
 The "Publish" option in the menu will allow you to upload your map to the Steam Workshop. It only works if you have the C&C Remastered game installed through Steam.
 
-If the editor is running in Classic mode (see below), the editor will never ask for your C&C Remaster game folder, however, if it hasn't already been set, it *will* attempt to auto-detect the Steam game folder, and if it succeeds, the Publish function will be available as usual.
+If the editor is running in Classic mode (see [Using classic files](#using-classic-files)), the editor will never ask for your C&C Remaster game folder, however, if it hasn't already been set, it *will* attempt to auto-detect the Steam game folder, and if it succeeds, the Publish function will be available as usual.
 
 If, for some reason, the Steam game folder detection fails, you can get the prompt to manually select your game folder by disabling classic mode and restarting the editor.
 
@@ -82,7 +104,7 @@ If, for some reason, the Steam game folder detection fails, you can get the prom
 
 Land types indicate which cells of the map tilesets are passable to different types of units, and which cells can be built on. They will be showm as hashed pattern when placing down a Map object, and can be permanently enabled under "View" → "Extra indicators" → "Map land types", or simply by pressing F3. Once enabled, the hashing will be shown both on the map and on the map tool window preview.
 
-The colors for the different land types can be configured in the config file; see "Colors and transparency" below. These land types exist in the games:
+The colors for the different land types can be configured in the config file; see [Colors and transparency](#colors-and-transparency) below. These land types exist in the games:
 
 * Clear: Passable for land units, and can be built on. Normally only shown on placement previews, but if the Extra Indicators option is enabled, it will also be visible on the map tool window. Its default color is white.
 * Beach: Passable, but can't be built on. Its default color is yellow.
@@ -118,9 +140,9 @@ The file "CnCTDRAMapEditor.exe.config" contains settings to customise the editor
 
 Using classic files will not only use the classic graphics, but will also load the classic game text from the respective game's 'CONQUER.ENG' file, and the Red Alert house colors from 'PALETTE.CPS'.
 
-The default "Classic\\TD" and "Classic\\RA" folders are supplied along with the editor, so it is immediately usable in classic mode. The contents of these folders were taken from the official freeware releases of the games, supplemented with some files from the Red Alert expansion packs. For the exact expected contents of the classic folders, see the "Classic files listing" section below.
+The default "Classic\\TD" and "Classic\\RA" folders are supplied along with the editor, so it is immediately usable in classic mode. The contents of these folders were taken from the official freeware releases of the games, supplemented with some files from the Red Alert expansion packs. For the exact expected contents of the classic folders, see the [Classic files listing](#classic-files-listing) section below.
 
-The extra theaters available for Tiberian Dawn and Red Alert in the upgraded community releases of the classic games are supported if their .mix files are found in the configured folders. To achieve this, you can either copy the theater .mix archives from the classic install folder into into the classic folder provided with the editor (see "Classic files listing" section below for the exact names), or point the **ClassicPathTD** / **ClassicPathRA** folder to your own classic game install folder.
+The extra theaters available for Tiberian Dawn and Red Alert in the upgraded community releases of the classic games are supported if their .mix files are found in the configured folders. To achieve this, you can either copy the theater .mix archives from the classic install folder into into the classic folder provided with the editor (see [Classic files listing](#classic-files-listing) section below for the exact names), or point the **ClassicPathTD** / **ClassicPathRA** folder to your own classic game install folder.
 
 Note that for Red Alert, the editor uses the DOS versions of the infantry sprites, and the community version of Red Alert does not contain those for the expansion pack infantry. To use your own game install folder without losing those graphics, copy the "lores1.mix" file from "Classic\\RA\\" into the Red Alert game folder. This will not have any effect on the game itself; it only uses the contents of "hires1.mix".
 
@@ -253,7 +275,7 @@ Options that can be enabled to support features that some versions might have mo
 These don't affect any real behaviour, but change some graphics to look more correct in the editor:
 
 * **FixClassicEinstein**: While the Win95 and remastered versions of Red Alert have Einstein's in-game sprite colored to match how he appears in the briefings, the DOS version (which the editor and the game use) looks identical to Dr. Mobius in Tiberian Dawn. This option makes the editor shuffle around some colors in the classic DOS sprite so it matches that same color scheme. Note that the **GraphicsFixesRA** mod also fixes this.
-* **TdHelisSpawnOnGround** / **RaHelisSpawnOnGround**: If aircraft are enabled (see **DisableAirUnits**), these options will make the helicopter / VTOL type aircraft for the mentioned game appear as landed on the ground. In the Remasters, they normally spawn in the air, but in case this is fixed, this can make the editor reflect that change. This is disabled by default.
+* **TdHelisSpawnOnGround** / **RaHelisSpawnOnGround**: If aircraft are enabled (see **DisableAirUnits** above), these options will make the helicopter / VTOL type aircraft for the mentioned game appear as landed on the ground. In the Remasters, they normally spawn in the air, but in case this is fixed, this can make the editor reflect that change. This is disabled by default.
 * **AllowImageModsInMaps**: Allow "Image=" ini rule tweaks in Red Alert maps to load custom graphics. This is enabled by default, but can be disabled to better emulate the classic game behaviour.
 * **FixConcretePavement**: The connection logic of the "CONC" pavement in Tiberian Dawn is seriously bugged in-game. The editor contains a fixed logic, showing the concrete how it was intended to be, filling in side gaps with filler cells. However, be advised that this new logic does not match the actual game. For this reason, it is disabled by default.
 * **DrawSoleTeleports**: On Sole Survivor maps, draw a black area with a blue border over the loaded ROAD graphics to emulate the look of the in-game teleporters.
