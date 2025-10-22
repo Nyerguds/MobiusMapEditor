@@ -125,6 +125,7 @@ namespace MobiusEditor
             this.infoToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.InfoAboutMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.InfoWebsiteMenuItem = new System.Windows.Forms.ToolStripMenuItem();
+            this.InfoManualMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.InfoCheckForUpdatesMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.mainStatusStrip = new System.Windows.Forms.StatusStrip();
             this.toolStatusLabel = new System.Windows.Forms.ToolStripStatusLabel();
@@ -860,6 +861,7 @@ namespace MobiusEditor
             this.infoToolStripMenuItem.DropDownItems.AddRange(new System.Windows.Forms.ToolStripItem[] {
             this.InfoAboutMenuItem,
             this.InfoWebsiteMenuItem,
+            this.InfoManualMenuItem,
             this.InfoCheckForUpdatesMenuItem});
             this.infoToolStripMenuItem.Name = "infoToolStripMenuItem";
             this.infoToolStripMenuItem.Size = new System.Drawing.Size(40, 20);
@@ -878,6 +880,13 @@ namespace MobiusEditor
             this.InfoWebsiteMenuItem.Size = new System.Drawing.Size(221, 22);
             this.InfoWebsiteMenuItem.Text = "Project website on GitHub...";
             this.InfoWebsiteMenuItem.Click += new System.EventHandler(this.InfoWebsiteMenuItem_Click);
+            // 
+            // InfoManualMenuItem
+            // 
+            this.InfoManualMenuItem.Name = "InfoManualMenuItem";
+            this.InfoManualMenuItem.Size = new System.Drawing.Size(221, 22);
+            this.InfoManualMenuItem.Text = "Manual on GitHub...";
+            this.InfoManualMenuItem.Click += new System.EventHandler(this.InfoManualMenuItem_Click);
             // 
             // InfoCheckForUpdatesMenuItem
             // 
@@ -1217,6 +1226,7 @@ namespace MobiusEditor
         private System.Windows.Forms.ToolStripMenuItem InfoAboutMenuItem;
         private System.Windows.Forms.ToolStripMenuItem InfoCheckForUpdatesMenuItem;
         private System.Windows.Forms.ToolStripMenuItem InfoWebsiteMenuItem;
+        private System.Windows.Forms.ToolStripMenuItem InfoManualMenuItem;
         private System.Windows.Forms.ToolStripMenuItem viewLayersFootballAreaMenuItem;
         private System.Windows.Forms.ToolStripMenuItem viewExtraIndicatorsHomeAreaBox;
     }

@@ -1903,18 +1903,18 @@ namespace MobiusEditor
                         "Note that every pixel on the image represents one cell on the map, so for a {2}, the expected image size is {3}×{4}.\n\n" +
                         "This function is meant to allow map makers to plan out the layout of their map in an image editor, " +
                         "with more tools available in terms of symmetry, copy-pasting, drawing straight lines, drawing curves, etc" +
-                        "{1}" +
-                        ".\n\n" +
+                        "{1}.\n\n" +
+                        "For more information, consult the MANUAL.MD file on the GitHub page.\n\n" +
                         "Are you sure you want to continue?";
                     object[] parms = { String.Empty, String.Empty, String.Format(mapStr, gameInfo.Name), size.Width, size.Height };
                     // If either total size is larger than double, or one of the sizes is larger than 3x that dimension, they're Probably Doing It Wrong; give extra info.
-                    if ((imageSize.Width > size.Width * 2 && imageSize.Height > size.Height * 2) || imageSize.Width > size.Width * 3 || imageSize.Height > size.Height * 2)
+                    if ((imageSize.Width > size.Width * 2 && imageSize.Height > size.Height * 2) || imageSize.Width > size.Width * 3 || imageSize.Height > size.Height * 3)
                     {
                         parms[0] = "much ";
                         parms[1] = ", but it can't magically convert an image into a map looking like the image";
                     }
                     string messageSize = String.Format(messageTemplate, parms);
-                    DialogResult dr = MessageBox.Show(this, messageSize, "Warning", MessageBoxButtons.YesNo, MessageBoxIcon.Error);
+                    DialogResult dr = MessageBox.Show(this, messageSize, "Warning", MessageBoxButtons.YesNo, MessageBoxIcon.Warning);
                     if (dr != DialogResult.Yes)
                     {
                         return;
@@ -3500,6 +3500,11 @@ namespace MobiusEditor
         private void InfoWebsiteMenuItem_Click(object sender, EventArgs e)
         {
             Process.Start(Program.GithubUrl);
+        }
+
+        private void InfoManualMenuItem_Click(object sender, EventArgs e)
+        {
+            Process.Start(Program.GithubManualUrl);
         }
 
         private void InfoCheckForUpdatesMenuItem_Click(object sender, EventArgs e)

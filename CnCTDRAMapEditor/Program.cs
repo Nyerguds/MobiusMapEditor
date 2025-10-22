@@ -36,6 +36,7 @@ namespace MobiusEditor
         public const string GithubOwner = "Nyerguds";
         public const string GithubProject = "MobiusMapEditor";
         public const string GithubUrl = "https://github.com/" + GithubOwner + "/" + GithubProject;
+        public const string GithubManualUrl = GithubUrl + "/blob/master/MANUAL.md";
         public const string GithubVerCheckUrl = "https://api.github.com/repos/" + GithubOwner + "/" + GithubProject + "/releases?per_page=1";
         public const string ProgramInfo =
             "Originally created by Petroglyph Games for the Command & Conquer: Remastered project, " +
