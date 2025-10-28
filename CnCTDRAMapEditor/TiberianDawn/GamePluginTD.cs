@@ -48,8 +48,14 @@ namespace MobiusEditor.TiberianDawn
         protected const string movieEmpty = "x";
         protected const string remarkOld = " (Classic only)";
         protected const string remarkNew = " (Remaster only)";
+        protected const string disabledObjSole = "Owned objects in Sole Survivor are disabled.";
+        protected const string settingNoOwnedObjSole = "NoOwnedObjectsInSole";
+        protected const string entrySkipped = "{0} {1} entry was skipped.";
+        protected const string entriesSkipped = "{0} {1} entries were skipped.";
         protected const string consultManual = "If you don't know why, please consult the manual's explanation of the \"{0}\" setting.";
-        protected readonly string disabledObjExplSole = String.Format(consultManual, "NoOwnedObjectsInSole");
+        protected static readonly string disabledObjExplSole = String.Format(consultManual, settingNoOwnedObjSole);
+        protected static readonly string disabledObjSoleOne = disabledObjSole + " " + entrySkipped + " " + disabledObjExplSole;
+        protected static readonly string disabledObjSoleMul = disabledObjSole + " " + entriesSkipped + " " + disabledObjExplSole;
         protected readonly IEnumerable<string> movieTypes;
 
         protected static readonly IEnumerable<string> movieTypesTD = new string[]
@@ -1559,8 +1565,7 @@ namespace MobiusEditor.TiberianDawn
             }
             if (skipSoleStuff)
             {
-                bool isOne = amount == 1;
-                errors.Add(String.Format("Owned objects in Sole Survivor are disabled. {0} [Infantry] {1} skipped. {2}", amount, isOne ? "entry was" : "entries were", disabledObjExplSole));
+                errors.Add(String.Format(amount == 1 ? disabledObjSoleOne : disabledObjSoleMul, amount, "[Infantry]"));
                 modified = true;
                 return;
             }
@@ -1737,8 +1742,7 @@ namespace MobiusEditor.TiberianDawn
             }
             if (skipSoleStuff)
             {
-                bool isOne = amount == 1;
-                errors.Add(String.Format("Owned objects in Sole Survivor are disabled. {0} [Units] {1} skipped. {2}", amount, isOne ? "entry was" : "entries were", disabledObjExplSole));
+                errors.Add(String.Format(amount == 1 ? disabledObjSoleOne : disabledObjSoleMul, amount, "[Units]"));
                 modified = true;
                 return;
             }
@@ -1895,11 +1899,11 @@ namespace MobiusEditor.TiberianDawn
             }
             if (Globals.DisableAirUnits || skipSoleStuff)
             {
-                // this is inside the loop so it only trigers if anything is actually inside the section.
                 bool isOne = amount == 1;
                 string disabledObj = skipSoleStuff ? "Owned objects in Sole Survivor" : "Aircraft";
-                string disabledObjExpl = String.Format(consultManual, skipSoleStuff ? "NoOwnedObjectsInSole" : "DisableAirUnits");
-                errors.Add(String.Format("{0} are disabled. {1} [Aircraft] {2} skipped. {3}", disabledObj, amount, isOne ? "entry was" : "entries were", disabledObjExpl));
+                string disabledObjExpl = String.Format(consultManual, skipSoleStuff ? settingNoOwnedObjSole : "DisableAirUnits");
+                errors.Add(String.Format("{0} are disabled. {0} {2}",
+                    String.Format(isOne ? entrySkipped : entriesSkipped, amount, "[Aircraft]"), disabledObjExpl));
                 modified = true;
                 return;
             }
@@ -2030,8 +2034,7 @@ namespace MobiusEditor.TiberianDawn
             }
             if (skipSoleStuff)
             {
-                bool isOne = amount == 1;
-                errors.Add(String.Format("Owned objects in Sole Survivor are disabled. {0} [Structures] {1} skipped. {2}", amount, isOne ? "entry was" : "entries were", disabledObjExplSole));
+                errors.Add(String.Format(amount == 1 ? disabledObjSoleOne : disabledObjSoleMul, amount, "[Structures]"));
                 modified = true;
                 return;
             }
@@ -2191,8 +2194,7 @@ namespace MobiusEditor.TiberianDawn
             }
             if (skipSoleStuff && baseCount > 0)
             {
-                bool isOne = baseCount == 1;
-                errors.Add(String.Format("Owned objects in Sole Survivor are disabled. {0} [Base] {1} skipped. {2}", baseCount, isOne ? "entry was" : "entries were", disabledObjExplSole));
+                errors.Add(String.Format(baseCount == 1 ? disabledObjSoleOne : disabledObjSoleMul, baseCount, "[Structures]"));
                 modified = true;
                 CleanBaseSection(ini, baseSection);
                 return;
@@ -2442,18 +2444,19 @@ namespace MobiusEditor.TiberianDawn
                 }
                 if ((overlayType.IsWall || overlayType.IsSolid) && Map.Buildings.ObjectAt(cell, out ICellOccupier techno))
                 {
-                    string desc = overlayType.IsWall ? "Wall" : "Solid overlay";
+                    string ovldesc = overlayType.IsWall ? "Wall" : "Solid overlay";
                     if (techno is Building building)
                     {
-                        errors.Add(String.Format("{0} '{1}' overlaps structure '{2}' at cell {3}; skipping.", desc, overlayType.Name, building.Type.Name, cell));
+                        errors.Add(String.Format("{0} '{1}' overlaps structure '{2}' at cell {3}; skipping.", ovldesc, overlayType.Name, building.Type.Name, cell));
                     }
                     else if (techno is Overlay ovl)
                     {
-                        errors.Add(String.Format("{0} '{1}' overlaps overlay '{2}' at cell {3}; skipping.", desc, overlayType.Name, ovl.Type.Name, cell));
+                        errors.Add(String.Format("{0} '{1}' overlaps overlay '{2}' at cell {3}; skipping.", ovldesc, overlayType.Name, ovl.Type.Name, cell));
                     }
                     else
                     {
-                        errors.Add(String.Format("{0} '{1}' overlaps unknown techno in cell {2}; skipping.", desc, overlayType.Name, cell));
+                        // Should never happen since buildings are a separate layer now.
+                        errors.Add(String.Format("{0} '{1}' overlaps unknown techno in cell {2}; skipping.", ovldesc, overlayType.Name, cell));
                     }
                     modified = true;
                     continue;
@@ -2496,8 +2499,9 @@ namespace MobiusEditor.TiberianDawn
                         errors.Add(String.Format("Waypoint {0} out of range (expecting between {1} and {2}).", waypoint, 0, Map.Waypoints.Length - 1));
                         modified = true;
                     }
+                    continue;
                 }
-                else if (!Map.Metrics.Contains(cell))
+                if (!Map.Metrics.Contains(cell))
                 {
                     Map.Waypoints[waypoint].Cell = null;
                     // don't bother reporting illegal-but-empty entries.
@@ -2506,11 +2510,9 @@ namespace MobiusEditor.TiberianDawn
                         errors.Add(String.Format("Waypoint {0} cell value {1} out of range (expecting between {2} and {3}).", waypoint, cell, 0, Map.Metrics.Length - 1));
                         modified = true;
                     }
+                    continue;
                 }
-                else
-                {
-                    Map.Waypoints[waypoint].Cell = cell;
-                }
+                Map.Waypoints[waypoint].Cell = cell;
             }
         }
 
@@ -2539,16 +2541,15 @@ namespace MobiusEditor.TiberianDawn
                 {
                     errors.Add(String.Format("Cell trigger {0} links to unknown trigger '{1}'; skipping.", cell, kvp.Value));
                     modified = true;
+                    continue;
                 }
-                else if (!checkCellTrigs.Contains(kvp.Value))
+                if (!checkCellTrigs.Contains(kvp.Value))
                 {
                     errors.Add(String.Format("Cell trigger {0} links to trigger '{1}' which does not contain a placeable event; skipping.", cell, kvp.Value));
                     modified = true;
+                    continue;
                 }
-                else
-                {
-                    Map.CellTriggers[cell] = new CellTrigger(caseTrigs[kvp.Value]);
-                }
+                Map.CellTriggers[cell] = new CellTrigger(caseTrigs[kvp.Value]);
             }
         }
 

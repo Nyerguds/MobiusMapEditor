@@ -28,7 +28,7 @@ Specific options about the map and the scripting elements can be found in the "S
 
 The triggers dialog contains a "Check" button that will check if any configurations in the triggers might not work, or might even cause game crashes. For TD, these checks are based on [the TD triggers overview guide I wrote on Steam](https://steamcommunity.com/sharedfiles/filedetails/?id=2824756756). Note that this is not a scripting guide; it is an overview of what each trigger event and action will accept as inputs, and produce as output, highlighting potential issues and some workarounds.
 
-### Tools and view options
+### Tools and View menus
 
 Under the Tools menu, the following items are available:
 
@@ -59,7 +59,7 @@ As is standard in most programs, Undo and Redo are linked to \[Ctrl\]+\[Z\] and 
 
 Besides those, \[PageUp\] and \[PageDown\] have been universally implemented to let you switch to the previous / next item on the current editing tool's selection list, with \[Home\] and \[End\] going to the start and end of the list. This also works for increasing/decreasing the resource placement size in Resources mode. Holding down the \[Ctrl\] key and using the mouse scroll wheel has the same previous / next item function.
 
-Some editing modes will have their own specific hotkeys; in Map mode, holding down the \[Ctrl\] key will allow modifying the map border, and \[Ctrl\]+\[Alt\] allows using the flood fill feature. In Waypoints mode, pressing \[Shift\] plus the starting letter of a special waypoint will act as shortcut for quickly selecting it, and \[Shift\] + \[M\] will toggle the teamtype routes editing mode. In Waypoints and Celltriggers modes, the \[Enter\] key acts as hotkey for the "Jump To" function. All such mode-dependent hotkey will be indicated in the bottom bar along with the mouse function modifiers.
+Some editing modes will have their own specific hotkeys; in Map mode, holding down the \[Ctrl\] key will allow modifying the map border, and \[Ctrl\]+\[Alt\] allows using the flood fill feature. In Waypoints mode, pressing \[Shift\] plus the starting letter of a special waypoint will act as shortcut for quickly selecting it, and \[Shift\] + \[M\] will toggle the teamtype routes editing mode. In Waypoints and Celltriggers modes, the \[Enter\] key acts as hotkey for the "Jump To" function. All such mode-dependent hotkeys will be indicated in the bottom bar along with the mouse function modifiers.
 
 Additionally, the "Extra indicators" you can find under the "View" menu all have an F-key assigned to them, to quickly toggle them. F1 for the map symmetry lines, F2 for the map grid, F3 for showing the map terrain type of each cell, F4 for indicating cells occupied by placed down objects, F5 to show the reveal radius around any waypoints that are configured to reveal terrain through map scripting, F6 for always showing outlines on crates, F7 for showing the radiuses for special abilities, such as the gap generators and radar jammers in Red Alert, and F8 for showing the initial viewport area around the Home waypoint in singleplayer maps.
 

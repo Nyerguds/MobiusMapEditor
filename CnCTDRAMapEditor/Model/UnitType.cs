@@ -109,8 +109,11 @@ namespace MobiusEditor.Model
     {
         protected readonly Rectangle overlapFlying = new Rectangle(-1, -2, 3, 4);
         // Flying aircraft are treated as overlapping the entire cell. Since they rotate, no detail analysis is done.
-        protected readonly bool[,][] overlapMaskFlying = new bool[2, 1][] { { new bool[] { true, true, true, true, true } }, { new bool[5] } };
         protected readonly Point overlapMaskOffsetFlying = new Point(0, -1);
+        // Overlap includes shadow, so it takes up both cells.
+        protected readonly bool[,][] overlapMaskFlying = new bool[2, 1][] { { new bool[] { true, true, true, true, true } }, { new bool[] { true, true, true, true, true } } };
+        // Content mask is overlap mask without shadow, so only the top cell.
+        protected readonly bool[,][] contentMaskFlying = new bool[2, 1][] { { new bool[] { true, true, true, true, true } }, { new bool[5] } };
 
         /// <summary>If enabled, this aircraft will be rendered as flying.</summary>
         public override bool IsGroundUnit => false;
@@ -122,6 +125,7 @@ namespace MobiusEditor.Model
         public override Rectangle OverlapBounds => IsFlying ? overlapFlying : base.OverlapBounds;
         public override bool[,][] OverlapMask => IsFlying ? overlapMaskFlying : base.OverlapMask;
         public override Point OverlapMaskOffset => IsFlying ? overlapMaskOffsetFlying : base.OverlapMaskOffset;
+        public override bool[,][] ContentMask => IsFlying ? contentMaskFlying : base.ContentMask;
 
         public AircraftType(int id, string name, string textId, string ownerHouse, FrameUsage bodyFrameUsage, FrameUsage turrFrameUsage, string turret, string turret2, int turrOffset, int turretY, UnitTypeFlag flags)
             : base(id, name, textId, ownerHouse, bodyFrameUsage, turrFrameUsage, turret, turret2, turrOffset, turretY, flags)

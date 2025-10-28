@@ -454,7 +454,7 @@ namespace MobiusEditor.Render
             }
             foreach ((ITechno techno, Point location) in paintedTechnos)
             {
-                CheckTechnoOverlap(map, techno, location);
+                CheckTechnoOverlap(map, gameInfo, techno, location);
             }
             if (disposeCacheManager)
             {
@@ -1614,8 +1614,7 @@ namespace MobiusEditor.Render
                     overlappedSubPositions++;
                 }
             }
-            // To show an outline, something needs to be overlapped, the total overlapped sub-cells must be at least half of the visible content,
-            // and  at least 3/4th of the graphics-occupied cells need to be at least partially overlapped.
+            // To show an outline, something needs to be overlapped, and the total overlapped sub-cells must be at least half of the visible content.
             overlay.IsOverlapped = overlappedSubPositions > 0 && overlappedSubPositions * 2 >= occupiedSubPositions;
         }
 
@@ -1633,7 +1632,7 @@ namespace MobiusEditor.Render
             }
         }
 
-        public static void CheckTechnoOverlap(Map map, ITechno techno, Point location)
+        public static void CheckTechnoOverlap(Map map, GameInfo gameInfo, ITechno techno, Point location)
         {
             if (!(techno is ICellOverlapper drawnObj))
             {
@@ -1647,7 +1646,7 @@ namespace MobiusEditor.Render
             int maskX = opaqueMask == null ? 0 : opaqueMask.GetLength(1);
             // If not in currently viewed area, ignore.
             // Select actual map points for all visible points in opaqueMask
-            Point[] opaquePoints = Enumerable.Range(0, maskY).SelectMany(nrY => Enumerable.Range(0, maskX).Select(nrX => new Point(nrX, nrY))).ToArray()
+            Point[] opaquePoints = Enumerable.Range(0, maskY).SelectMany(nrY => Enumerable.Range(0, maskX).Select(nrX => new Point(nrX, nrY)))
                 .Where(pt => opaqueMask[pt.Y, pt.X] != null && opaqueMask[pt.Y, pt.X].Length > 0 && opaqueMask[pt.Y, pt.X].Any(b => b)).ToArray();
             // Cells occupancy is a measure of "important" cells; those with their center occupied.
             int overlappedCells = 0;
@@ -1657,6 +1656,8 @@ namespace MobiusEditor.Render
             foreach (Point opaquePoint in opaquePoints)
             {
                 Point realPoint = new Point(location.X + opaquePoint.X, location.Y + opaquePoint.Y);
+                // Adjust to possible mask shifting. The actual check will use overlappers to determine what overlaps on this cell.
+                realPoint.Offset(drawnObj.ContentMaskOffset);
                 InfantryStoppingType[] toCheck = Enum.GetValues(typeof(InfantryStoppingType)).Cast<InfantryStoppingType>().ToArray();
                 bool[] opaqueCellMask = opaqueMask[opaquePoint.Y, opaquePoint.X];
                 bool cellIsOverlapped = false;

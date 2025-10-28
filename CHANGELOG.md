@@ -684,7 +684,7 @@ Unreleased
 * The Steam workshop preview generated for a multiplayer map will now show enlarged start location flags with very visible circle indications underneath them. The option to add these is also added to the image export window.
 * Added the ability to choose which games to use the editor for, with the "EnabledGames" setting. This allows e.g. disabling Sole Survivor to reduce UI clutter.
 * Overhauled the map file loading system to massively simplify it internally. This fixes the bug that prevented Tiberian Dawn and Sole Survivor maps from opening from the .bin file.
-* Added a new overlap detection logic for objects of the Terrain, Building and Overlay types that only gives them an outline if at least 50% of their non-shadow graphics (as determined by infantry sub-positions) are considered overlapped.
+* Added a new overlap detection logic for objects of the Terrain, Building and Overlay types that only gives them an outline if at least 75% of their cells that contain non-shadow graphics are considered at least 50% overlapped, as determined by infantry sub-positions.
 * Fixed bug that prevented overlap outlines from working on terrain objects that had any cells that only contained shadow.
 * Fixed bug that occasionally showed building priority as "0" on preview buildings if they showed an overlap outline.
 * Added option "IgnoreShadowOverlap" to not draw overlap outlines on objects that are only overlapped by shadows.
@@ -746,7 +746,7 @@ Unreleased
 * Aircraft are now shown as flying above the cell they are placed on. The new settings **TdHelisSpawnOnGround** and **RaHelisSpawnOnGround** can disable this for helicopter/VTOL types.
 * Name overrides from Red Alert "Name=" ini rule tweaks will now be shown in the editor.
 * Graphics overrides from Red Alert "Image=" ini rule tweaks will now be shown in the editor. Do note that the classic game does not actually support this from mission files.
-* If a tile is found in the Remaster tileset xml definitions, it will be shown as valid tile in the editor, regardless of whether graphics were found for it.
+* When using Remastered graphics mode, if a tile is found in the Remaster tileset xml definitions, it will be shown as valid tile in the editor, regardless of whether graphics were found for it.
 * The editor will no longer accept a random file dropped into the editor as being a binary map file for TD/Sole if an ini file of the same name is found. If the ini file is a self-contained map, or the opened file does not match any known .bin format, the file is simply rejected.
 * Added file existence checks into the code to open maps, preventing issues with drag-and-drop from programs that don't give correct existing paths.
 * Fixed bug where centering on a waypoint didn't work when zoomed in to a state where only one scrollbar was shown.
