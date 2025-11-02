@@ -553,6 +553,7 @@ namespace MobiusEditor.Model
                 {
                     for (int x = 0; x < loopWidth; ++x, ++icon)
                     {
+                        bool fetchDummy = tryDummy;
                         if (icon >= NumIcons)
                         {
                             break;
@@ -562,7 +563,7 @@ namespace MobiusEditor.Model
                             if (!maskOv[y, x])
                                 continue;
                             else // If forced, always fetch the graphics.
-                                tryDummy = true;
+                                fetchDummy = true;
                         }
                         int iconToFetch = icon;
                         string nameToFetch = Name;
@@ -570,7 +571,7 @@ namespace MobiusEditor.Model
                         {
                             nameToFetch = GroupTiles[icon];
                             iconToFetch = 0;
-                            tryDummy = forceDummy;
+                            fetchDummy = forceDummy;
                         }
                         if (maskInit && !isRandom && (loopWidth * loopHeight) > 1)
                         {
@@ -582,7 +583,7 @@ namespace MobiusEditor.Model
                             found = true;
                         }
                         // Fetch dummy if definitely in bounds, first cell of a random one, or dummy is forced.
-                        bool success = Globals.TheTilesetManager.GetTileData(nameToFetch, iconToFetch, out Tile tile, tryDummy, false);
+                        bool success = Globals.TheTilesetManager.GetTileData(nameToFetch, iconToFetch, out Tile tile, fetchDummy, false);
                         anyFound |= success;
                         if (tile != null && tile.Image != null)
                         {

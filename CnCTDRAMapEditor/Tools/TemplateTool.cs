@@ -815,7 +815,7 @@ namespace MobiusEditor.Tools
             for (int i = 0; i < mapLength; ++i)
             {
                 Point location = new Point(i / mapWidth, i % mapWidth);
-                // For grouped tiles, PickTemplate will return the Group, not the individual tile. So RandomCell is enabled on the result.
+                // For grouped tiles, PickTemplate will return the Group, not the individual tile. So the RandomCell flag is enabled on the result.
                 TemplateType cur = PickTemplate(map, location, true, out _);
                 if (cur == null || !cur.IsRandom)
                 {
@@ -1165,14 +1165,37 @@ namespace MobiusEditor.Tools
             }
         }
 
+        /// <summary>
+        /// Places a template or a single template tile down on the map.
+        /// </summary>
+        /// <param name="map">Map to perform the operations on, and to take the available tiles list from.</param>
+        /// <param name="selected">The currently selected template type.</param>
+        /// <param name="location">The location at which to place the template.</param>
+        /// <param name="selectedIcon">The currently selected icon. If null, the entire template will be placed.</param>
+        /// <param name="undoTemplates">Undo list to log the change to.</param>
+        /// <param name="redoTemplates">Redo list to log the change to.</param>
+        /// <param name="randomizer">Randomizer to use for random pick operations.</param>
+        /// <param name="diversify">True if this is a sequential randomization operation, and the adjacent tiles need to be different from the previously placed adjacent ones.</param>
         public static void SetTemplate(Map map, TemplateType selected, Point location, Point? selectedIcon,
-            Dictionary<int, Template> undoTemplates, Dictionary<int, Template> redoTemplates, Random randomiser, bool diversify)
+            Dictionary<int, Template> undoTemplates, Dictionary<int, Template> redoTemplates, Random randomizer, bool diversify)
         {
-            SetTemplate(map.TemplateTypes, map.Templates, selected, location, selectedIcon, undoTemplates, redoTemplates, randomiser, diversify);
+            SetTemplate(map.TemplateTypes, map.Templates, selected, location, selectedIcon, undoTemplates, redoTemplates, randomizer, diversify);
         }
 
+        /// <summary>
+        /// Places a template or a single template tile down on the map.
+        /// </summary>
+        /// <param name="templateTypes">List of available template types.</param>
+        /// <param name="templates">Map layer to place the template tile on.</param>
+        /// <param name="selected">The currently selected template type.</param>
+        /// <param name="location">The location at which to place the template.</param>
+        /// <param name="selectedIcon">The currently selected icon. If null, the entire template will be placed.</param>
+        /// <param name="undoTemplates">Undo list to log the change to.</param>
+        /// <param name="redoTemplates">Redo list to log the change to.</param>
+        /// <param name="randomizer">Randomizer to use for random pick operations.</param>
+        /// <param name="diversify">True if this is a sequential randomization operation, and the adjacent tiles need to be different from the previously placed adjacent ones.</param>
         public static void SetTemplate(List<TemplateType> templateTypes, CellGrid<Template> templates, TemplateType selected, Point location, Point? selectedIcon,
-            Dictionary<int, Template> undoTemplates, Dictionary<int, Template> redoTemplates, Random randomiser, bool diversify)
+            Dictionary<int, Template> undoTemplates, Dictionary<int, Template> redoTemplates, Random randomizer, bool diversify)
         {
             if (selected == null)
             {
@@ -1256,12 +1279,12 @@ namespace MobiusEditor.Tools
                                         used.Add(adjWest.Type.ID);
                                     }
                                 }
-                                int randomType = randomiser.Next(0, selected.NumIcons);
+                                int randomType = randomizer.Next(0, selected.NumIcons);
                                 placeType = templateTypes.Where(t => t.Name == selected.GroupTiles[randomType]).FirstOrDefault();
                                 placeIcon = 0;
                                 while (used.Contains(placeType.ID))
                                 {
-                                    randomType = randomiser.Next(0, selected.NumIcons);
+                                    randomType = randomizer.Next(0, selected.NumIcons);
                                     placeType = templateTypes.Where(t => t.Name == selected.GroupTiles[randomType]).FirstOrDefault();
                                 }
                             }
@@ -1283,10 +1306,10 @@ namespace MobiusEditor.Tools
                                         used.Add(adjWest.Icon);
                                     }
                                 }
-                                placeIcon = randomiser.Next(0, selected.NumIcons);
+                                placeIcon = randomizer.Next(0, selected.NumIcons);
                                 while (used.Contains(placeIcon))
                                 {
-                                    placeIcon = randomiser.Next(0, selected.NumIcons);
+                                    placeIcon = randomizer.Next(0, selected.NumIcons);
                                 }
                             }
                             else

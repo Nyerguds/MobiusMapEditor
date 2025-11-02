@@ -1601,8 +1601,7 @@ namespace MobiusEditor.Render
             int occupiedSubPositions = 0;
             int overlappedSubPositions = 0;
             bool[] opaqueCellMask = ovlt.ContentMask[0, 0];
-            InfantryStoppingType[] toCheck = Enum.GetValues(typeof(InfantryStoppingType)).Cast<InfantryStoppingType>().ToArray();
-            foreach (InfantryStoppingType ist in toCheck)
+            foreach (InfantryStoppingType ist in InfantryGroup.RenderOrder)
             {
                 if (!opaqueCellMask[(int)ist])
                 {
@@ -1615,19 +1614,20 @@ namespace MobiusEditor.Render
                 }
             }
             // To show an outline, something needs to be overlapped, and the total overlapped sub-cells must be at least half of the visible content.
+            // The "at least 3/4th of the graphics-occupied cells" check isn't useful on Overlay since they're 1-cell objects.
             overlay.IsOverlapped = overlappedSubPositions > 0 && overlappedSubPositions * 2 >= occupiedSubPositions;
         }
 
         public static void CheckInfantryOverlap(Map map, InfantryGroup group, Point location)
         {
-            InfantryStoppingType[] toCheck = Enum.GetValues(typeof(InfantryStoppingType)).Cast<InfantryStoppingType>().ToArray();
-            foreach (InfantryStoppingType ist in toCheck)
+            foreach (InfantryStoppingType ist in InfantryGroup.RenderOrder)
             {
                 Infantry inf = group.Infantry[(int)ist];
                 if (inf == null)
                 {
                     continue;
                 }
+                // The most straightforward overlap check, since the measure used for overlap ARE infantry sub-positions.
                 inf.IsOverlapped = IsOverlapped(map, location, false, ist, group, inf.DrawOrderCache);
             }
         }
@@ -1645,7 +1645,7 @@ namespace MobiusEditor.Render
             int maskY = opaqueMask == null ? 0 : opaqueMask.GetLength(0);
             int maskX = opaqueMask == null ? 0 : opaqueMask.GetLength(1);
             // If not in currently viewed area, ignore.
-            // Select actual map points for all visible points in opaqueMask
+            // Select points in opaqueMask with actual opaque content in them.
             Point[] opaquePoints = Enumerable.Range(0, maskY).SelectMany(nrY => Enumerable.Range(0, maskX).Select(nrX => new Point(nrX, nrY)))
                 .Where(pt => opaqueMask[pt.Y, pt.X] != null && opaqueMask[pt.Y, pt.X].Length > 0 && opaqueMask[pt.Y, pt.X].Any(b => b)).ToArray();
             // Cells occupancy is a measure of "important" cells; those with their center occupied.
@@ -1655,13 +1655,14 @@ namespace MobiusEditor.Render
             int overlappedSubPositions = 0;
             foreach (Point opaquePoint in opaquePoints)
             {
+                // Select actual map point for point in opaqueMask
                 Point realPoint = new Point(location.X + opaquePoint.X, location.Y + opaquePoint.Y);
                 // Adjust to possible mask shifting. The actual check will use overlappers to determine what overlaps on this cell.
+                // In practice this is only used for flying airplanes, which will never be marked as overlapped, but whatever, the system is generic.
                 realPoint.Offset(drawnObj.ContentMaskOffset);
-                InfantryStoppingType[] toCheck = Enum.GetValues(typeof(InfantryStoppingType)).Cast<InfantryStoppingType>().ToArray();
                 bool[] opaqueCellMask = opaqueMask[opaquePoint.Y, opaquePoint.X];
                 bool cellIsOverlapped = false;
-                foreach (InfantryStoppingType ist in toCheck)
+                foreach (InfantryStoppingType ist in InfantryGroup.RenderOrder)
                 {
                     if (!opaqueCellMask[(int)ist])
                     {
@@ -1807,8 +1808,7 @@ namespace MobiusEditor.Render
                 {
                     continue;
                 }
-                InfantryStoppingType[] toCheck = Enum.GetValues(typeof(InfantryStoppingType)).Cast<InfantryStoppingType>().ToArray();
-                foreach (InfantryStoppingType ist in toCheck)
+                foreach (InfantryStoppingType ist in InfantryGroup.RenderOrder)
                 {
                     Infantry infantry = infantryGroup.Infantry[(int)ist];
                     if (infantry == null)

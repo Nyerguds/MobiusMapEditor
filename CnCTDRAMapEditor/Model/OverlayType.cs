@@ -185,15 +185,15 @@ namespace MobiusEditor.Model
                 }
             }
             this.Thumbnail = th;
+            // Note: OverlapMask is not initialised; it's always 1x1 and all-false, since overlay is the lowest layer and can never overlap other objects.
             // only certain types are analysed for opaqueness.
             if (this.IsCrate || this.IsSolid)
             {
-                // Overlaps over shadow areas are ignored on overlay; they're the bottom layer anyway.
                 ContentMask = GeneralUtils.MakeOpaqueMask(th, new Size(1, 1), 25, 10, 20, Globals.UseClassicFiles ? 0x80 : 0x40, !Globals.UseClassicFiles);
             }
             else if (this.IsWall)
             {
-                // Walls generally look like they occupy the whole cell, and have different states.
+                // Walls generally look like they occupy the whole cell, and due to their different states, analysing their graphics isn't useful.
                 ContentMask = new bool[1, 1][] { { new bool[] { true, true, true, true, true } } };
             }
             else
@@ -207,6 +207,7 @@ namespace MobiusEditor.Model
                 catch { /* ignore */ }
             }
         }
+
         public void Reset()
         {
             this.ExistsInTheater = false;

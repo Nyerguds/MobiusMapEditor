@@ -323,7 +323,7 @@ namespace MobiusEditor.RedAlert
         public static readonly TemplateType Arro0013 = new TemplateType(265, "arro0013", 1, 1, "C");
         public static readonly TemplateType Arro0014 = new TemplateType(266, "arro0014", 1, 1, "C");
         public static readonly TemplateType Arro0015 = new TemplateType(267, "arro0015", 1, 1, "C");
-        public static readonly TemplateType Flor0001 = new TemplateType(268, "flor0001", 1, 1, "C", TemplateTypeFlag.RandomCell | TemplateTypeFlag.DefaultFill);
+        public static readonly TemplateType Flor0001 = new TemplateType(268, "flor0001", 1, 1, "C", TemplateTypeFlag.DefaultFill);
         public static readonly TemplateType Flor0002 = new TemplateType(269, "flor0002", 'C');
         public static readonly TemplateType Flor0003 = new TemplateType(270, "flor0003", 'C');
         public static readonly TemplateType Flor0004 = new TemplateType(271, "flor0004", 'C');
