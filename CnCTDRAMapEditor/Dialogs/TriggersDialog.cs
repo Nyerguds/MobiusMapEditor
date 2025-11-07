@@ -101,30 +101,25 @@ namespace MobiusEditor.Dialogs
             }
             btnAdd.Enabled = nrOfTriggers < maxTriggers;
             RefreshTriggers();
-            //persistenceNames = Enum.GetNames(typeof(TriggerPersistentType));
-            /*
-            switch (plugin.GameType)
-            {
-                case GameType.TiberianDawn:
-                case GameType.SoleSurvivor:
-                    persistenceNames = persistenceNamesTd;
-                    break;
-                case GameType.RedAlert:
-                    persistenceNames = persistenceNamesRa;
-                    break;
-            }
-            */
+            houseComboBox.ValueMember = "Value";
+            houseComboBox.DisplayMember = "Label";
             houseComboBox.DataSource = House.None.Yield().Concat(plugin.Map.Houses.Select(t => t.Type.Name))
-                .Select(v => new ListItem<String>(v, v)).ToArray();
+                .Select(v => ListItem.Create(v)).ToArray();
+            persistenceComboBox.ValueMember = "Value";
+            persistenceComboBox.DisplayMember = "Label";
             persistenceComboBox.DataSource = Enum.GetValues(typeof(TriggerPersistentType)).Cast<TriggerPersistentType>()
-                .Select(v => new ListItem<TriggerPersistentType>(v, persistenceNames[(int)v])).ToArray();
+                .Select(v => ListItem.Create(v, persistenceNames[(int)v])).ToArray();
+            typeComboBox.ValueMember = "Value";
+            typeComboBox.DisplayMember = "Label";
             typeComboBox.DataSource = Enum.GetValues(typeof(TriggerMultiStyleType)).Cast<TriggerMultiStyleType>()
-                .Select(v => new ListItem<TriggerMultiStyleType>(v, typeNames[(int)v])).ToArray();
+                .Select(v => ListItem.Create(v, typeNames[(int)v])).ToArray();
             event1ComboBox.DataSource = plugin.Map.EventTypes.Where(t => !string.IsNullOrEmpty(t)).ToArray();
             event2ComboBox.DataSource = plugin.Map.EventTypes.Where(t => !string.IsNullOrEmpty(t)).ToArray();
             action1ComboBox.DataSource = plugin.Map.ActionTypes.Where(t => !string.IsNullOrEmpty(t)).ToArray();
             action2ComboBox.DataSource = plugin.Map.ActionTypes.Where(t => !string.IsNullOrEmpty(t)).ToArray();
-            teamComboBox.DataSource = TeamType.None.Yield().Concat(plugin.Map.TeamTypes.Select(t => t.Name)).ToArray();
+            teamComboBox.ValueMember = "Value";
+            teamComboBox.DisplayMember = "Label";
+            teamComboBox.DataSource = ListItem.Create(TeamType.None).Yield().Concat(plugin.Map.TeamTypes.Select(t => ListItem.Create(t.Name))).ToArray();
             triggersTableLayoutPanel.Visible = false;
         }
 
@@ -192,7 +187,7 @@ namespace MobiusEditor.Dialogs
                     case GameType.SoleSurvivor:
                         string team = SelectedTrigger.Action1.Team ?? TeamType.None;                        
                         string[] teamData = TeamType.None.Yield().Concat(plugin.Map.TeamTypes.Select(t =>  t.Name)).ToArray();
-                        teamComboBox.DataSource = teamData.Select(tn => new ListItem<String>(tn, tn)).ToArray();
+                        teamComboBox.DataSource = teamData.Select(tn => ListItem.Create(tn)).ToArray();
                         string correctedTeam = teamData.FirstOrDefault(tm => tm.Equals(team, StringComparison.OrdinalIgnoreCase)) ?? TeamType.None;
                         SelectedTrigger.Action1.Team = correctedTeam;
                         teamComboBox.DataBindings.Add("SelectedValue", SelectedTrigger.Action1, "Team", true, DataSourceUpdateMode.OnPropertyChanged);
@@ -1074,7 +1069,7 @@ namespace MobiusEditor.Dialogs
                                 eventValueComboBox.Visible = true;
                                 eventValueComboBox.DisplayMember = "Label";
                                 eventValueComboBox.ValueMember = "Value";
-                                var bldData = plugin.Map.BuildingTypes.Select(t => new ListItem<long>(t.ID, t.DisplayNameWithTheaterInfo)).ToArray();
+                                ListItem<long>[] bldData = plugin.Map.BuildingTypes.Select(t => ListItem.Create((long)t.ID, t.DisplayNameWithTheaterInfo)).ToArray();
                                 eventValueComboBox.DataSource = bldData;
                                 correctedData = ListItem.CheckInList(data, bldData);
                                 triggerEvent.Data = correctedData;
@@ -1129,8 +1124,8 @@ namespace MobiusEditor.Dialogs
                                 eventValueComboBox.Visible = true;
                                 eventValueComboBox.DisplayMember = "Label";
                                 eventValueComboBox.ValueMember = "Value";
-                                var houseData = new ListItem<long>(-1, House.None).Yield()
-                                    .Concat(plugin.Map.Houses.Select(t => new ListItem<long>(t.Type.ID, t.Type.Name))).ToArray();
+                                ListItem<long>[] houseData = ListItem.Create((long)-1, House.None).Yield()
+                                    .Concat(plugin.Map.Houses.Select(t => ListItem.Create((long)t.Type.ID, t.Type.Name))).ToArray();
                                 eventValueComboBox.DataSource = houseData;
                                 correctedData = ListItem.CheckInList(data, houseData);
                                 triggerEvent.Data = correctedData;
@@ -1142,7 +1137,7 @@ namespace MobiusEditor.Dialogs
                                 eventValueComboBox.Visible = true;
                                 eventValueComboBox.DisplayMember = "Label";
                                 eventValueComboBox.ValueMember = "Value";
-                                var bldData = plugin.Map.BuildingTypes.Select(t => new ListItem<long>(t.ID, t.DisplayNameWithTheaterInfo)).ToArray();
+                                ListItem<long>[] bldData = plugin.Map.BuildingTypes.Select(t => ListItem.Create((long)t.ID, t.DisplayNameWithTheaterInfo)).ToArray();
                                 eventValueComboBox.DataSource = bldData;
                                 correctedData = ListItem.CheckInList(data, bldData);
                                 triggerEvent.Data = correctedData;
@@ -1153,7 +1148,7 @@ namespace MobiusEditor.Dialogs
                                 eventValueComboBox.Visible = true;
                                 eventValueComboBox.DisplayMember = "Label";
                                 eventValueComboBox.ValueMember = "Value";
-                                var unitData = plugin.Map.UnitTypes.OfType<VehicleType>().Select(t => new ListItem<long>(t.ID, t.DisplayName)).ToArray();
+                                ListItem<long>[] unitData = plugin.Map.UnitTypes.OfType<VehicleType>().Select(t => ListItem.Create((long)t.ID, t.DisplayName)).ToArray();
                                 eventValueComboBox.DataSource = unitData;
                                 correctedData = ListItem.CheckInList(data, unitData);
                                 triggerEvent.Data = correctedData;
@@ -1164,7 +1159,7 @@ namespace MobiusEditor.Dialogs
                                 eventValueComboBox.Visible = true;
                                 eventValueComboBox.DisplayMember = "Label";
                                 eventValueComboBox.ValueMember = "Value";
-                                var infData = plugin.Map.InfantryTypes.Select(t => new ListItem<long>(t.ID, t.DisplayName)).ToArray();
+                                ListItem<long>[] infData = plugin.Map.InfantryTypes.Select(t => ListItem.Create((long)t.ID, t.DisplayName)).ToArray();
                                 eventValueComboBox.DataSource = infData;
                                 correctedData = ListItem.CheckInList(data, infData);
                                 triggerEvent.Data = correctedData;
@@ -1175,8 +1170,8 @@ namespace MobiusEditor.Dialogs
                                 eventValueComboBox.Visible = true;
                                 eventValueComboBox.DisplayMember = "Label";
                                 eventValueComboBox.ValueMember = "Value";
-                                var airData = plugin.Map.TeamTechnoTypes.OfType<AircraftType>()
-                                    .Select(t => new ListItem<long>(t.ID, t.DisplayName)).ToArray();
+                                ListItem<long>[] airData = plugin.Map.TeamTechnoTypes.OfType<AircraftType>()
+                                    .Select(t => ListItem.Create((long)t.ID, t.DisplayName)).ToArray();
                                 eventValueComboBox.DataSource = airData;
                                 correctedData = ListItem.CheckInList(data, airData);
                                 triggerEvent.Data = correctedData;
@@ -1273,8 +1268,8 @@ namespace MobiusEditor.Dialogs
                                 actionValueComboBox.Visible = true;
                                 actionValueComboBox.DisplayMember = "Label";
                                 actionValueComboBox.ValueMember = "Value";
-                                var houseData = new ListItem<long>(-1, House.None).Yield().Concat(
-                                    plugin.Map.Houses.Select(t => new ListItem<long>(t.Type.ID, t.Type.Name))).ToArray();
+                                ListItem<long>[] houseData = ListItem.Create((long)-1, House.None).Yield().Concat(
+                                    plugin.Map.Houses.Select(t => ListItem.Create((long)t.Type.ID, t.Type.Name))).ToArray();
                                 actionValueComboBox.DataSource = houseData;
                                 correctedData = ListItem.CheckInList(data, houseData);
                                 triggerAction.Data = correctedData;
@@ -1305,8 +1300,8 @@ namespace MobiusEditor.Dialogs
                                 actionValueComboBox.DisplayMember = "Label";
                                 actionValueComboBox.ValueMember = "Value";
                                 Waypoint[] wps = plugin.Map.Waypoints;
-                                var wpsData = new ListItem<long>(-1, Waypoint.None).Yield().Concat(
-                                    Enumerable.Range(0, wps.Length).Select(wp => new ListItem<long>(wp, wps[wp].ToString()))).ToArray();
+                                ListItem<long>[] wpsData = ListItem.Create((long)-1, Waypoint.None).Yield().Concat(
+                                    wps.Select((wp, i) => ListItem.Create((long)i, wp.ToString()))).ToArray();
                                 actionValueComboBox.DataSource = wpsData;
                                 correctedData = ListItem.CheckInList(data, wpsData);
                                 triggerAction.Data = correctedData;
@@ -1318,8 +1313,8 @@ namespace MobiusEditor.Dialogs
                                 actionValueComboBox.Visible = true;
                                 actionValueComboBox.DisplayMember = "Label";
                                 actionValueComboBox.ValueMember = "Value";
-                                var superData = new ListItem<long>(-1, "None").Yield().Concat(
-                                    RedAlert.ActionDataTypes.SuperTypes.Select((t, i) => new ListItem<long>(i, t)))
+                                ListItem<long>[] superData = ListItem.Create((long)-1, "None").Yield().Concat(
+                                    RedAlert.ActionDataTypes.SuperTypes.Select((t, i) => ListItem.Create((long)i, t)))
                                     .OrderBy(t => t.Label).ToArray();
                                 actionValueComboBox.DataSource = superData;
                                 correctedData = ListItem.CheckInList(data, superData);
@@ -1331,14 +1326,14 @@ namespace MobiusEditor.Dialogs
                                 actionValueComboBox.Visible = true;
                                 actionValueComboBox.DisplayMember = "Label";
                                 actionValueComboBox.ValueMember = "Value";
-                                var musData = plugin.Map.ThemeTypes.Select((t, i) => new ListItem<long>(i - 1, t)).OrderBy(t => t.Label).ToList();
-                                var musDefItem = musData.Where(t => t.Value == -1).FirstOrDefault();
+                                List<ListItem<long>> musData = plugin.Map.ThemeTypes.Select((t, i) => ListItem.Create((long)i - 1, t)).OrderBy(t => t.Label).ToList();
+                                ListItem<long> musDefItem = musData.Where(t => t.Value == -1).FirstOrDefault();
                                 if (musDefItem != null)
                                 {
                                     musData.Remove(musDefItem);
                                     musData.Insert(0, musDefItem);
                                 }
-                                actionValueComboBox.DataSource = musData;
+                                actionValueComboBox.DataSource = musData.ToArray();
                                 correctedData = ListItem.CheckInList(data, musData);
                                 triggerAction.Data = correctedData;
                                 actionValueComboBox.DataBindings.Add("SelectedValue", triggerAction, "Data", true, DataSourceUpdateMode.OnPropertyChanged);
@@ -1350,14 +1345,14 @@ namespace MobiusEditor.Dialogs
                                 actionValueComboBox.ValueMember = "Value";
                                 ExplorerComparer sorter = new ExplorerComparer();
                                 // First video is the "None" entry; expose as -1.
-                                var movData = plugin.Map.MovieTypes.Select((t, i) => new ListItem<long>(i - 1, t)).OrderBy(t => t.Label, sorter).ToList();
-                                var movDefItem = movData.Where(t => t.Value == -1).FirstOrDefault();
+                                List<ListItem<long>> movData = plugin.Map.MovieTypes.Select((t, i) => ListItem.Create((long)(i - 1), t)).OrderBy(t => t.Label, sorter).ToList();
+                                ListItem<long> movDefItem = movData.Where(t => t.Value == -1).FirstOrDefault();
                                 if (movDefItem != null)
                                 {
                                     movData.Remove(movDefItem);
                                     movData.Insert(0, movDefItem);
                                 }
-                                actionValueComboBox.DataSource = movData;
+                                actionValueComboBox.DataSource = movData.ToArray();
                                 correctedData = ListItem.CheckInList(data, movData);
                                 triggerAction.Data = correctedData;
                                 actionValueComboBox.DataBindings.Add("SelectedValue", triggerAction, "Data", true, DataSourceUpdateMode.OnPropertyChanged);
@@ -1367,8 +1362,8 @@ namespace MobiusEditor.Dialogs
                                 actionValueComboBox.Visible = true;
                                 actionValueComboBox.DisplayMember = "Label";
                                 actionValueComboBox.ValueMember = "Value";
-                                var vocData = new ListItem<long>(-1, "None").Yield().Concat(
-                                    RedAlert.ActionDataTypes.VocDesc.Select((t, i) => new ListItem<long>(i, t + " (" + RedAlert.ActionDataTypes.VocNames[i] + ")"))
+                                ListItem<long>[] vocData = ListItem.Create((long)-1, "None").Yield().Concat(
+                                    RedAlert.ActionDataTypes.VocDesc.Select((t, i) => ListItem.Create((long)i, t + " (" + RedAlert.ActionDataTypes.VocNames[i] + ")"))
                                     .Where(t => !String.Equals(RedAlert.ActionDataTypes.VocNames[t.Value], "x", StringComparison.OrdinalIgnoreCase))).ToArray();
                                 actionValueComboBox.DataSource = vocData;
                                 correctedData = ListItem.CheckInList(data, vocData);
@@ -1380,8 +1375,8 @@ namespace MobiusEditor.Dialogs
                                 actionValueComboBox.Visible = true;
                                 actionValueComboBox.DisplayMember = "Label";
                                 actionValueComboBox.ValueMember = "Value";
-                                var voxData = new ListItem<long>(-1, "None").Yield().Concat(
-                                    RedAlert.ActionDataTypes.VoxDesc.Select((t, i) => new ListItem<long>(i, t + " (" + RedAlert.ActionDataTypes.VoxNames[i] + ")"))
+                                ListItem<long>[] voxData = ListItem.Create((long)-1, "None").Yield().Concat(
+                                    RedAlert.ActionDataTypes.VoxDesc.Select((t, i) => ListItem.Create((long)i, t + " (" + RedAlert.ActionDataTypes.VoxNames[i] + ")"))
                                     .Where(t => !String.Equals(RedAlert.ActionDataTypes.VoxNames[t.Value], "none", StringComparison.OrdinalIgnoreCase))).ToArray();
                                 actionValueComboBox.DataSource = voxData;
                                 correctedData = ListItem.CheckInList(data, voxData);
@@ -1393,7 +1388,7 @@ namespace MobiusEditor.Dialogs
                                 actionValueComboBox.Visible = true;
                                 actionValueComboBox.DisplayMember = "Label";
                                 actionValueComboBox.ValueMember = "Value";
-                                var quarryData = RedAlert.TeamMissionTypes.Attack.DropdownOptions.Select(t => new ListItem<long>(t.Value, t.Label)).ToArray();
+                                ListItem<long>[] quarryData = RedAlert.TeamMissionTypes.Attack.DropdownOptions.Select(t => ListItem.Create((long)t.Value, t.Label)).ToArray();
                                 actionValueComboBox.DataSource = quarryData;
                                 correctedData = ListItem.CheckInList(data, quarryData);
                                 triggerAction.Data = correctedData;
@@ -1404,7 +1399,7 @@ namespace MobiusEditor.Dialogs
                                 actionValueComboBox.Visible = true;
                                 actionValueComboBox.DisplayMember = "Label";
                                 actionValueComboBox.ValueMember = "Value";
-                                var trueFalseData = new long[] { 0, 1 }.Select(b => new ListItem<long>(b, b == 0 ? "Off" : "On")).ToArray();
+                                ListItem<long>[] trueFalseData = new long[] { 0, 1 }.Select(b => ListItem.Create(b, b == 0 ? "Off" : "On")).ToArray();
                                 actionValueComboBox.DataSource = trueFalseData;
                                 correctedData = ListItem.CheckInList(data, trueFalseData);
                                 triggerAction.Data = correctedData;
@@ -1415,8 +1410,8 @@ namespace MobiusEditor.Dialogs
                                 actionValueComboBox.Visible = true;
                                 actionValueComboBox.DisplayMember = "Label";
                                 actionValueComboBox.ValueMember = "Value";
-                                var txtData = RedAlert.ActionDataTypes.TextDesc
-                                    .Select((t, i) => new ListItem<long>(i + 1, (i + 1).ToString("000") + " " + t)).ToArray();
+                                ListItem<long>[] txtData = RedAlert.ActionDataTypes.TextDesc
+                                    .Select((t, i) => ListItem.Create((long)i + 1, (i + 1).ToString("000") + " " + t)).ToArray();
                                 actionValueComboBox.DataSource = txtData;
                                 correctedData = ListItem.CheckInList(data, txtData);
                                 triggerAction.Data = correctedData;

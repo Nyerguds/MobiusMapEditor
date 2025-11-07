@@ -245,7 +245,6 @@ namespace MobiusEditor.Dialogs
             this.cmbPersistenceType.Name = "cmbPersistenceType";
             this.cmbPersistenceType.Size = new System.Drawing.Size(155, 21);
             this.cmbPersistenceType.TabIndex = 3;
-            this.cmbPersistenceType.ValueMember = "Value";
             // 
             // cmbEventControl
             // 
@@ -259,7 +258,6 @@ namespace MobiusEditor.Dialogs
             this.cmbEventControl.Name = "cmbEventControl";
             this.cmbEventControl.Size = new System.Drawing.Size(155, 21);
             this.cmbEventControl.TabIndex = 5;
-            this.cmbEventControl.ValueMember = "Value";
             // 
             // chkHouse
             // 

@@ -37,7 +37,7 @@ namespace MobiusEditor.Controls
             get => Items.Cast<ListItem<IBrowsableType>>().Select(t => t.Value);
             set
             {
-                DataSource = value.Select(t => new ListItem<IBrowsableType>(t, t.DisplayName)).ToArray();
+                DataSource = value.Select(t => ListItem.Create(t, t.DisplayName)).ToArray();
                 ItemHeight = Math.Min(255,Math.Max(ItemHeight, value.Max(t => (t.Thumbnail?.Height ?? MissingThumbnail.Height))));
                 Invalidate();
             }

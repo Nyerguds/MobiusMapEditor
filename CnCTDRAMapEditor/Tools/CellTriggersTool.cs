@@ -64,9 +64,10 @@ namespace MobiusEditor.Tools
             {
                 if (value is string trig)
                 {
-                    if (this.triggerComboBox.Items.Contains(trig))
+                    ListItem<String> found = ListItem.FindInComboBox(trig, triggerComboBox);
+                    if (found != null)
                     {
-                        this.triggerComboBox.SelectedItem = trig;
+                        triggerComboBox.SelectedItem = found;
                     }
                 }
             }
@@ -117,14 +118,17 @@ namespace MobiusEditor.Tools
 
         private void UpdateDataSource()
         {
-            string selected = triggerComboBox.SelectedItem as string;
+            string selected = ListItem.GetValueFromComboBox<String>(triggerComboBox);
             triggerComboBox.DataSource = null;
-            triggerComboBox.Items.Clear();
+            triggerComboBox.ValueMember = null;
+            triggerComboBox.DisplayMember = null;
             bool hasItems;
             string[] items = GetItems(out hasItems);
             UpdateBlobsList(items, null);
             int selectIndex = selected == null ? 0 : Enumerable.Range(0, items.Length).FirstOrDefault(x => String.Equals(items[x], selected, StringComparison.InvariantCultureIgnoreCase));
-            triggerComboBox.DataSource = items;
+            triggerComboBox.ValueMember = "Value";
+            triggerComboBox.DisplayMember = "Label";
+            triggerComboBox.DataSource = items.Select(tr => ListItem.Create(tr)).ToArray();
             triggerComboBox.SelectedIndex = selectIndex;
             triggerComboBox.Enabled = hasItems;
             // Needed if the index didn't change but the item did.
@@ -196,20 +200,25 @@ namespace MobiusEditor.Tools
                 // Get blobs for technos
                 cellTrigs = new bool[height, width];
                 points.Clear();
-                foreach ((Point Location, ICellOccupier Occupier) techno in map.Technos.Where(lco => lco.Occupier is ITechno t && t.Trigger == trig))
+                // Execute the same code for both units and buildings.
+                void AddPoints(OccupierSet<ICellOccupier> list, string trigname, List<Point> addList, bool[,] markList)
                 {
-                    // Should cover buildings too.
-                    bool[,] occupyMask = techno.Occupier.OccupyMask;
-                    for (int y = 0; y < occupyMask.GetLength(0); ++y)
+                    foreach ((Point Location, ICellOccupier Occupier) techno in list.Where(lco => lco.Occupier is ITechno t && t.Trigger == trigname))
                     {
-                        for (int x = 0; x < occupyMask.GetLength(1); ++x)
+                        bool[,] occupyMask = techno.Occupier.OccupyMask;
+                        for (int y = 0; y < occupyMask.GetLength(0); ++y)
                         {
-                            Point loc = new Point(techno.Location.X + x, techno.Location.Y + y);
-                            points.Add(loc);
-                            cellTrigs[loc.Y, loc.X] = true;
+                            for (int x = 0; x < occupyMask.GetLength(1); ++x)
+                            {
+                                Point loc = new Point(techno.Location.X + x, techno.Location.Y + y);
+                                addList.Add(loc);
+                                markList[loc.Y, loc.X] = true;
+                            }
                         }
                     }
                 }
+                AddPoints(map.Technos, trig, points, cellTrigs);
+                AddPoints(map.Buildings, trig, points, cellTrigs);
                 foreach ((Point Location, ICellOccupier Occupier) techno in map.Technos
                     .Where(lco => lco.Occupier is InfantryGroup ifg && ifg.Infantry.Any(i => i != null && i.Trigger == trig)))
                 {
@@ -327,7 +336,8 @@ namespace MobiusEditor.Tools
 
         private void SetCellTrigger(Point location)
         {
-            if (!(triggerComboBox.SelectedItem is string trigger) || Trigger.IsEmpty(trigger))
+            String trigger = ListItem.GetValueFromComboBox<String>(triggerComboBox);
+            if (Trigger.IsEmpty(trigger))
             {
                 return;
             }
@@ -401,7 +411,12 @@ namespace MobiusEditor.Tools
                 return;
             }
             string trigger = cellTrigger.Trigger;
-            triggerComboBox.SelectedItem = trigger;
+            ListItem<String> liTrigger = ListItem.FindInComboBox(trigger, triggerComboBox);
+            if (liTrigger == null)
+            {
+                return;
+            }
+            triggerComboBox.SelectedItem = liTrigger;
             if (!cellTrigBlobCenters.TryGetValue(trigger, out Rectangle[] locations))
             {
                 return;
@@ -427,7 +442,7 @@ namespace MobiusEditor.Tools
             bool origEmptyState = plugin.Empty;
             plugin.Dirty = true;
             var undoCellTriggers2 = new Dictionary<int, CellTrigger>(undoCellTriggers);
-            string selected = triggerComboBox.SelectedItem as string ?? String.Empty;
+            string selected = ListItem.GetValueFromComboBox<String>(triggerComboBox) ?? String.Empty;
             UpdateBlobsList(null, selected);
             void undoAction(UndoRedoEventArgs ev)
             {
@@ -500,7 +515,7 @@ namespace MobiusEditor.Tools
 
         private void TriggerCombo_SelectedIndexChanged(object sender, EventArgs e)
         {
-            string selected = triggerComboBox.SelectedItem as string;
+            string selected = ListItem.GetValueFromComboBox<String>(triggerComboBox);
             jumpToButton.Enabled = selected != null && cellTrigBlobCenters.TryGetValue(selected, out Rectangle[] locations) && locations != null && locations.Length > 0;
             currentObj = selected;
             if (placementMode)
@@ -523,7 +538,7 @@ namespace MobiusEditor.Tools
 
         private void JumpToNextBlob()
         {
-            string selected = triggerComboBox.SelectedItem as string;
+            string selected = ListItem.GetValueFromComboBox<String>(triggerComboBox);
             if (!String.Equals(currentCellTrig, selected, StringComparison.OrdinalIgnoreCase))
             {
                 currentCellTrigIndex = 0;
@@ -556,7 +571,7 @@ namespace MobiusEditor.Tools
             {
                 return;
             }
-            string selected = triggerComboBox.SelectedItem as string;
+            string selected = ListItem.GetValueFromComboBox<String>(triggerComboBox);
             if (selected == null || Trigger.IsEmpty(selected))
             {
                 return;
@@ -582,7 +597,7 @@ namespace MobiusEditor.Tools
         protected override void PostRenderMap(Graphics graphics, Rectangle visibleCells)
         {
             base.PostRenderMap(graphics, visibleCells);
-            string selected = triggerComboBox.SelectedItem as string;
+            string selected = ListItem.GetValueFromComboBox<String>(triggerComboBox);
             if (selected != null && Trigger.IsEmpty(selected))
                 selected = null;
             string[] selectedRange = selected != null ? new[] { selected } : new string[] { };

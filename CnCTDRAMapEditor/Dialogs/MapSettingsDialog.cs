@@ -29,6 +29,7 @@ using System.Windows.Forms;
 
 namespace MobiusEditor.Dialogs
 {
+
     public partial class MapSettingsDialog : Form
     {
         private string originalExtraIniText;
@@ -73,7 +74,6 @@ namespace MobiusEditor.Dialogs
         private bool wasExp;
         private bool wasSolo;
         private string currentSelection;
-
 
         public MapSettingsDialog(IGamePlugin plugin, PropertyTracker<BasicSection> basicSettingsTracker, PropertyTracker<BriefingSection> briefingSettingsTracker,
             PropertyTracker<SoleSurvivor.CratesSection> cratesSettingsTracker, IDictionary<House, PropertyTracker<House>> houseSettingsTrackers, string extraIniText)

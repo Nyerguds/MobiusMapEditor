@@ -76,11 +76,13 @@ namespace MobiusEditor.Dialogs
                 throw new ArgumentException("Given game plugin does not match current connected Steam game id", "plugin");
             }
             // Bare gameInfo from plugin is always the remaster one.
+            cmbVisibility.ValueMember = "Value";
+            cmbVisibility.DisplayMember = "Label";
             cmbVisibility.DataSource = new ListItem<ERemoteStoragePublishedFileVisibility>[]
             {
-                ListItem.MakeListItem(ERemoteStoragePublishedFileVisibility.k_ERemoteStoragePublishedFileVisibilityPublic, "Public"),
-                ListItem.MakeListItem(ERemoteStoragePublishedFileVisibility.k_ERemoteStoragePublishedFileVisibilityFriendsOnly, "Friends Only"),
-                ListItem.MakeListItem(ERemoteStoragePublishedFileVisibility.k_ERemoteStoragePublishedFileVisibilityPrivate, "Private")
+                ListItem.Create(ERemoteStoragePublishedFileVisibility.k_ERemoteStoragePublishedFileVisibilityPublic, "Public"),
+                ListItem.Create(ERemoteStoragePublishedFileVisibility.k_ERemoteStoragePublishedFileVisibilityFriendsOnly, "Friends Only"),
+                ListItem.Create(ERemoteStoragePublishedFileVisibility.k_ERemoteStoragePublishedFileVisibilityPrivate, "Private")
             };
             multiThreader = new SimpleMultiThreading(this);
             statusUpdateTimer.Interval = 500;

@@ -47,7 +47,7 @@ namespace MobiusEditor.Controls
                 m_Loading = true;
                 Info = null;
                 m_Controller = controller;
-                ListItem<ITechnoType>[] technoTypes = technos.Select(t => ListItem.MakeListItem(t, t.DisplayName)).ToArray();
+                ListItem<ITechnoType>[] technoTypes = technos.Select(t => ListItem.Create(t, t.DisplayName)).ToArray();
                 defaultType = technoTypes.FirstOrDefault()?.Value;
                 cmbTechno.DisplayMember = null;
                 cmbTechno.DataSource = null;

@@ -76,7 +76,7 @@ namespace MobiusEditor.Dialogs
                 GameInfo gi = this.gameInfos[(int)gt];
                 if (gi != null)
                 {
-                    lbGames.Items.Add(new ListItem<GameType>(gt, gi.Name));
+                    lbGames.Items.Add(ListItem.Create(gt, gi.Name));
                 }
             }
             lbGames.SelectedIndex = 0;
@@ -102,7 +102,7 @@ namespace MobiusEditor.Dialogs
                 for (int i = 0; i < ttypes.Length; ++i)
                 {
                     TheaterType tt = ttypes[i];
-                    lbTheaters.Items.Add(new ListItem<TheaterType>(tt, tt.Name));
+                    lbTheaters.Items.Add(ListItem.Create(tt, tt.Name));
                     if (theaterChanged && String.Equals(selectedTheater, tt.Name, StringComparison.OrdinalIgnoreCase))
                     {
                         selectIndex = i;

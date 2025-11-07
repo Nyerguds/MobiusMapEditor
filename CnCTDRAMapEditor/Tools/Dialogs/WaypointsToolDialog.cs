@@ -66,7 +66,7 @@ namespace MobiusEditor.Tools.Dialogs
             {
                 return;
             }
-            string selected = teams.SelectedItem as string;
+            string selected = ListItem.GetValueFromComboBox<string>(teams);
             if (selected != null && !TeamType.None.Equals(selected, StringComparison.OrdinalIgnoreCase))
             {
 #if !EDITMODE

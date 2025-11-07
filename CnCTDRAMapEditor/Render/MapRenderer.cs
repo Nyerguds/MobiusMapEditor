@@ -2698,7 +2698,7 @@ namespace MobiusEditor.Render
             }
         }
 
-        public static void RenderHomeWayPointBox(Graphics graphics, IGamePlugin plugin, Map map, Rectangle visibleCells, Size tileSize,
+        public static void RenderHomeWayPointBox(Graphics graphics, IGamePlugin plugin, Map map, Rectangle? visibleCells, Size tileSize,
             Waypoint homePoint, Color Color)
         {
             if (homePoint == null)
@@ -2729,7 +2729,7 @@ namespace MobiusEditor.Render
                 boundsPen.DashPattern = new float[] { 2.5F, 3.0F };
                 foreach (Rectangle rect in sidebars)
                 {
-                    if (visibleCells == null || visibleCells.AdjustToScale(tileSize).IntersectsWith(rect) && rect.Size.Width > 0 && rect.Size.Height > 0)
+                    if ((!visibleCells.HasValue || visibleCells.Value.AdjustToScale(tileSize).IntersectsWith(rect)) && rect.Size.Width > 0 && rect.Size.Height > 0)
                     {
                         graphics.DrawRectangle(boundsPen, rect);
                     }
@@ -2737,7 +2737,7 @@ namespace MobiusEditor.Render
                 boundsPen.DashStyle = DashStyle.Solid;
                 foreach (Rectangle rect in viewports)
                 {
-                    if (visibleCells == null || visibleCells.AdjustToScale(tileSize).IntersectsWith(rect) && rect.Size.Width > 0 && rect.Size.Height > 0)
+                    if ((!visibleCells.HasValue || visibleCells.Value.AdjustToScale(tileSize).IntersectsWith(rect)) && rect.Size.Width > 0 && rect.Size.Height > 0)
                     {
                         graphics.DrawRectangle(boundsPen, rect);
                     }
@@ -2745,7 +2745,16 @@ namespace MobiusEditor.Render
             }
         }
 
-        public static void RenderWaypointsPath(Graphics graphics, Map map, Rectangle visibleCells, Size tileSize, List<int?> cellRoute, List<int?> validWayPoints)
+        /// <summary>
+        /// Renders a waypoints path
+        /// </summary>
+        /// <param name="graphics">Graphics to paint on.</param>
+        /// <param name="map">Map to read metrics from.</param>
+        /// <param name="visibleCells">If given, only draw inside this area.</param>
+        /// <param name="tileSize"></param>
+        /// <param name="cellRoute"></param>
+        /// <param name="validWayPoints"></param>
+        public static void RenderWaypointsPath(Graphics graphics, Map map, Rectangle? visibleCells, Size tileSize, List<int?> cellRoute, List<int?> validWayPoints)
         {
             if (cellRoute == null || validWayPoints == null || cellRoute.Count != validWayPoints.Count)
             {
@@ -2768,18 +2777,17 @@ namespace MobiusEditor.Render
             {
                 return;
             }
-            RectangleF rect = new RectangleF(
-                visibleCells.X * tileSize.Width,
-                visibleCells.Y * tileSize.Height,
-                visibleCells.Width * tileSize.Width,
-                visibleCells.Height * tileSize.Height);
+            Rectangle? rect = visibleCells.Value.AdjustToScale(tileSize);
             // will always succeed; we already tested that at least two exist.
             int first = Enumerable.Range(0, points.Count).FirstOrDefault(i => points[i].HasValue);
+            PointF? beforePrevious = null;
             PointF previous = points[first].Value;
             float penSize = Math.Max(1f, tileSize.Width / 16.0f);
             using (Pen pathPen = new Pen(Color.Red, penSize))
+            using (Pen pathPenDark = new Pen(Color.DarkRed, penSize))
             {
                 pathPen.DashCap = DashCap.Round;
+                pathPenDark.DashCap = DashCap.Flat;
                 for (int i = first + 1; i < points.Count; ++i)
                 {
                     if (!points[i].HasValue)
@@ -2790,11 +2798,14 @@ namespace MobiusEditor.Render
                     PointF point1 = previous;
                     PointF point2 = current;
                     bool isLoop = validWayPoints[i] == null;
-                    if (LineUtils.CohenSutherlandLineClip(rect, ref point1, ref point2))
+                    if (!rect.HasValue || LineUtils.CohenSutherlandLineClip(rect.Value, ref point1, ref point2))
                     {
-                        pathPen.DashStyle = isLoop ? DashStyle.Dash : DashStyle.Solid;
-                        graphics.DrawLine(pathPen, point1, point2);
+                        // If this is a loop, and it loops back to the previous point, draw it with a darker pen to show both paths.
+                        Pen toUse = isLoop && beforePrevious.HasValue && beforePrevious.Value == current ? pathPenDark : pathPen;
+                        toUse.DashStyle = isLoop ? DashStyle.Dash : DashStyle.Solid;
+                        graphics.DrawLine(toUse, point1, point2);
                     }
+                    beforePrevious = previous;
                     previous = current;
                 }
             }

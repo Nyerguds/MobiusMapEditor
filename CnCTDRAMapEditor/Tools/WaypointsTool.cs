@@ -55,13 +55,13 @@ namespace MobiusEditor.Tools
         protected override Map RenderMap => previewMap;
 
         private int lastSelectedIndexWp;
-        private int lastSelectedIndexRt;
-        // Simply uses the index.
+        private String lastSelectedTeam;
+
         public override object CurrentObject
         {
             get
             {
-                string data = routesMode ? ("R:" + lastSelectedIndexRt + ":" + currentPathPos) : "W:" + lastSelectedIndexWp;
+                string data = routesMode ? ("R=" + (lastSelectedTeam ?? TeamType.None) + "=" + currentPathPos) : "W=" + lastSelectedIndexWp;
                 return data;
             }
             set
@@ -70,34 +70,44 @@ namespace MobiusEditor.Tools
                 if (value is string data)
                 {
                     //index && index >= 0 && waypointsCombo.Items.Count > index;
-                    Match m = Regex.Match(data, "(R|W):(\\d+)(?::(-?\\d+))?");
+                    Match m = Regex.Match(data, "(R|W)=([^=]+)(?==(-?\\d+))?");
                     if (m.Success)
                     {
-                        parseOk = true;
                         routesMode = m.Groups[1].Value == "R";
-                        int index = Int32.Parse(m.Groups[2].Value);
+                        int index;
                         if (routesMode)
                         {
-                            routesCombo.SelectedIndex = index;
-                            lastSelectedIndexRt = index;
-                            currentPathPos = m.Groups[3].Length == 0 ? -1 : Int32.Parse(m.Groups[3].Value);
-                            SelectPathWaypoint(false, false);
+                            string team = m.Groups[2].Value;
+                            index = ListItem.GetIndexInComboBox(team, routesCombo);
+                            if (index != -1)
+                            {
+                                parseOk = true;
+                                lastSelectedTeam = team;
+                                routesCombo.SelectedIndex = index;
+                                currentPathPos = m.Groups[3].Length == 0 ? -1 : Int32.Parse(m.Groups[3].Value);
+                                SelectPathWaypoint(false, false);
+                            }
                         }
                         else
                         {
-                            lastSelectedIndexWp = index;
-                            waypointsCombo.SelectedIndex = index;
-                            currentPathWaypoints = null;
-                            currentPathCells = null;
-                            currentPathPos = -1;
+                            if (Int32.TryParse(m.Groups[2].Value, out index))
+                            {
+                                parseOk = true;
+                                lastSelectedIndexWp = index;
+                                waypointsCombo.SelectedIndex = index;
+                                lastSelectedTeam = TeamType.None;
+                                currentPathWaypoints = null;
+                                currentPathCells = null;
+                                currentPathPos = -1;
+                            }
                         }
                     }
                 }
-                if(!parseOk)
+                if (!parseOk)
                 {
                     routesMode = false;
                     lastSelectedIndexWp = 0;
-                    lastSelectedIndexRt = 0;
+                    lastSelectedTeam = TeamType.None;
                     currentPathWaypoints = null;
                     currentPathCells = null;
                     currentPathPos = -1;
@@ -132,10 +142,14 @@ namespace MobiusEditor.Tools
             this.modeSwitchButton = modeSwitchButton;
             this.modeSwitchButton.Click += ModeSwitchButton_Click;
             this.waypointsCombo = waypointsCombo;
-            this.waypointsCombo.DataSource = plugin.Map.Waypoints.ToArray();
+            this.waypointsCombo.ValueMember = "Value";
+            this.waypointsCombo.DisplayMember = "Label";
+            this.waypointsCombo.DataSource = plugin.Map.Waypoints.Select(wp => ListItem.Create(wp)).ToArray();
             this.waypointsCombo.SelectedIndexChanged += this.WaypointsCombo_SelectedIndexChanged;
             this.routesCombo = routesCombo;
-            this.routesCombo.DataSource = TeamType.None.Yield().Concat(plugin.Map.TeamTypes.Select(t => t.Name)).ToArray();
+            this.routesCombo.ValueMember = "Value";
+            this.routesCombo.DisplayMember = "Label";
+            this.routesCombo.DataSource = TeamType.None.Yield().Concat(plugin.Map.TeamTypes.Select(t => t.Name)).Select(t => ListItem.Create(t)).ToArray();
             this.routesCombo.SelectedIndexChanged += this.RoutesCombo_SelectedIndexChanged;
             this.currentRoutePointLabel = currentRoutePointLabel;
             this.editTeamButton = editTeamButton;
@@ -170,13 +184,9 @@ namespace MobiusEditor.Tools
                 return;
             }
             int waypointIndex = waypointsCombo.SelectedIndex;
-            this.waypointsCombo.SelectedIndexChanged -= this.WaypointsCombo_SelectedIndexChanged;
-            this.waypointsCombo.DataSource = null;
-            this.waypointsCombo.Items.Clear();
-            Waypoint[] wp = map.Waypoints.ToArray();
-            this.waypointsCombo.DataSource = wp;
-            this.waypointsCombo.SelectedIndexChanged += this.WaypointsCombo_SelectedIndexChanged;
-            
+            waypointsCombo.SelectedIndexChanged -= WaypointsCombo_SelectedIndexChanged;
+            waypointsCombo.DataSource = map.Waypoints.Select(wp => ListItem.Create(wp)).ToArray();
+            waypointsCombo.SelectedIndexChanged += WaypointsCombo_SelectedIndexChanged;
             void SelectWaypoint(Map map, int selectedIndex)
             {
                 Waypoint selected = null;
@@ -187,20 +197,22 @@ namespace MobiusEditor.Tools
                 lastSelectedIndexWp = selectedIndex;
                 waypointsCombo.SelectedIndex = selectedIndex;
                 selected = map.Waypoints[selectedIndex];
-                this.jumpToButton.Enabled = selected != null && selected.Cell.HasValue;
+                jumpToButton.Enabled = selected != null && selected.Cell.HasValue;
             }
             void SelectRoute(string[] routeItems, string toSelect)
             {
-                lastSelectedIndexRt = Enumerable.Range(0, routesCombo.Items.Count)
+                int selectIndex = Enumerable.Range(0, routesCombo.Items.Count)
                     .FirstOrDefault(i => String.Equals(routeItems[i], toSelect, StringComparison.OrdinalIgnoreCase));
-                routesCombo.SelectedIndex = lastSelectedIndexRt;
+                if (selectIndex != -1)
+                {
+                    lastSelectedTeam = toSelect;
+                    routesCombo.SelectedIndex = selectIndex;
+                }
             }
             // routes
-            string selectedTeam = routesCombo.SelectedItem as string;
-            routesCombo.SelectedIndex = -1;
-            routesCombo.DataSource = null;
+            string selectedTeam = ListItem.GetValueFromComboBox<string>(routesCombo);
             string[] items = TeamType.None.Yield().Concat(plugin.Map.TeamTypes.Select(t => t.Name)).ToArray();
-            routesCombo.DataSource = items;
+            routesCombo.DataSource = items.Select(t => ListItem.Create(t)).ToArray();
             if (routesMode)
             {
                 SelectWaypoint(map, waypointIndex);
@@ -314,9 +326,9 @@ namespace MobiusEditor.Tools
             {
                 return;
             }
-            Waypoint[] wp = map.Waypoints;
-            Waypoint waypoint = wp[selected];
-            if (waypoint.Cell == cell)
+            Waypoint[] waypoints = map.Waypoints;
+            Waypoint waypoint = waypoints[selected];
+            if (waypoint.Cell.HasValue && waypoint.Cell.Value == cell)
             {
                 return;
             }
@@ -324,17 +336,16 @@ namespace MobiusEditor.Tools
             Point? oldPoint = waypoint.Point;
             waypoint.Cell = cell;
             CommitChange(waypoint, oldCell, cell);
-            this.waypointsCombo.SelectedIndexChanged -= this.WaypointsCombo_SelectedIndexChanged;
-            waypointsCombo.DataSource = null;
-            waypointsCombo.Items.Clear();
-            waypointsCombo.DataSource = wp.ToArray();
-            this.waypointsCombo.SelectedIndexChanged += this.WaypointsCombo_SelectedIndexChanged;
+            waypointsCombo.SelectedIndexChanged -= WaypointsCombo_SelectedIndexChanged;
+            waypointsCombo.DataSource = waypoints.Select(wp => ListItem.Create(wp)).ToArray();
             waypointsCombo.SelectedIndex = selected;
+            waypointsCombo.SelectedIndexChanged += WaypointsCombo_SelectedIndexChanged;
+            WaypointsCombo_SelectedIndexChanged(waypointsCombo, null);
             if (routesMode)
             {
                 // refresh path contents without resetting current path position.
                 // This is necessary to adjust the cells of loop orders, since they don't link to the actual waypoint object.
-                string teamname = routesCombo.SelectedItem as string;
+                string teamname = ListItem.GetValueFromComboBox<string>(routesCombo);
                 TeamType team = TeamType.GetTeamType(teamname, plugin.Map);
                 currentPathCells = map.GetTeamTypeRoute(teamname, out currentPathWaypoints);
             }
@@ -356,18 +367,19 @@ namespace MobiusEditor.Tools
                 return;
             }
             Waypoint waypoint;
-            Waypoint[] wp = map.Waypoints;
+            Waypoint[] waypoints = map.Waypoints;
             int origIndex = waypointsCombo.SelectedIndex;
             int waypointIndex;
-            if (waypointsCombo.SelectedItem is Waypoint selwp && selwp.Cell == cell)
+            Waypoint selwp = ListItem.GetItemFromComboBox<Waypoint>(waypointsCombo)?.Value;
+            if (selwp != null && selwp.Cell.HasValue && selwp.Cell.Value == cell)
             {
                 waypoint = selwp;
                 waypointIndex = waypointsCombo.SelectedIndex;
             }
             else
             {
-                waypointIndex = Enumerable.Range(0, wp.Length).Where(i => wp[i].Cell == cell).DefaultIfEmpty(-1).Last();
-                waypoint = waypointIndex == -1 ? null : wp[waypointIndex];
+                waypointIndex = Enumerable.Range(0, waypoints.Length).Where(i => waypoints[i].Cell.HasValue && waypoints[i].Cell.Value == cell).DefaultIfEmpty(-1).Last();
+                waypoint = waypointIndex == -1 ? null : waypoints[waypointIndex];
             }
             if (waypoint != null)
             {
@@ -375,10 +387,11 @@ namespace MobiusEditor.Tools
                 waypoint.Cell = null;
                 CommitChange(waypoint, oldCell, null);
                 mapPanel.Invalidate(map, GetRefreshCells(waypoint, location));
-                waypointsCombo.DataSource = null;
-                waypointsCombo.Items.Clear();
-                waypointsCombo.DataSource = wp.ToArray();
+                waypointsCombo.SelectedIndexChanged -= WaypointsCombo_SelectedIndexChanged;
+                waypointsCombo.DataSource = waypoints.Select(wp => ListItem.Create(wp)).ToArray();
                 waypointsCombo.SelectedIndex = origIndex;
+                waypointsCombo.SelectedIndexChanged += WaypointsCombo_SelectedIndexChanged;
+                WaypointsCombo_SelectedIndexChanged(waypointsCombo, null);
             }
         }
 
@@ -488,10 +501,12 @@ namespace MobiusEditor.Tools
                         break;
                 }
             }
+            bool isShift = Control.ModifierKeys == Keys.Shift;
+            bool wasPlacementMode = placementMode;
             if (newVal.HasValue && curVal != newVal.Value)
             {
                 int? oldWpi = null;
-                if (placementMode)
+                if (isShift || wasPlacementMode)
                 {
                     int pathPos = currentPathPos;
                     if (pathPos == -1)
@@ -500,8 +515,20 @@ namespace MobiusEditor.Tools
                     }
                     oldWpi = pathPos == -1 ? null : currentPathWaypoints[pathPos];
                 }
-                lastSelectedIndexRt = newVal.Value;
+                lastSelectedTeam = ListItem.GetItemFromComboBoxAtIndex<String>(routesCombo, newVal.Value)?.Value ?? TeamType.None;
                 routesCombo.SelectedIndex = newVal.Value;
+                // Adjust placement mode to newly selected teamtype.
+                if (currentPathWaypoints == null || currentPathWaypoints.All(wp => !wp.HasValue || wp.Value == -1))
+                {
+                    if (wasPlacementMode)
+                    {
+                        ExitPlacementMode();
+                    }
+                }
+                else if (isShift && !wasPlacementMode)
+                {
+                    EnterPlacementMode();
+                }
                 if (placementMode)
                 {
                     int pathPos = currentPathPos;
@@ -600,18 +627,21 @@ namespace MobiusEditor.Tools
                         nextIndex = 0;
                     nsi = foundIndices[nextIndex];
                 }
-                lastSelectedIndexWp = nsi;
                 // in routesMode, SelectPathWaypoint already does this, so no need to do it twice.
                 if (!routesMode)
                 {
                     waypointsCombo.SelectedIndex = nsi;
+                    lastSelectedIndexWp = nsi;
                 }
                 Waypoint selected = map.Waypoints[nsi];
                 if (routesMode && currentPathCells != null && currentPathCells.Count > 0)
                 {
                     int? index = si == -1 ? null : Enumerable.Range(0, currentPathWaypoints.Count).Cast<int?>().FirstOrDefault(i => currentPathWaypoints[(int)i] == nsi);
-                    currentPathPos = index.GetValueOrDefault(-1);
-                    SelectPathWaypoint(false, false);
+                    if (index.HasValue)
+                    {
+                        currentPathPos = index.Value;
+                        SelectPathWaypoint(false, false);
+                    }
                 }
             }
         }
@@ -659,14 +689,14 @@ namespace MobiusEditor.Tools
                     ev.Plugin.Dirty = !ev.NewStateIsClean;
                 }
             }
-            Waypoint selected = waypointsCombo.SelectedItem as Waypoint;
+            Waypoint selected = ListItem.GetValueFromComboBox<Waypoint>(waypointsCombo);
             jumpToButton.Enabled = selected != null && selected.Cell.HasValue;
             url.Track(undoAction, redoAction, ToolType.Waypoint);
         }
 
         private void WaypointsCombo_SelectedIndexChanged(object sender, EventArgs e)
         {
-            Waypoint selected = waypointsCombo.SelectedItem as Waypoint;
+            Waypoint selected = ListItem.GetValueFromComboBox<Waypoint>(waypointsCombo);
             jumpToButton.Enabled = selected != null && selected.Cell.HasValue;
             if (selected != null && selected.Cell.HasValue)
             {
@@ -678,7 +708,7 @@ namespace MobiusEditor.Tools
 
         private void RoutesCombo_SelectedIndexChanged(object sender, EventArgs e)
         {
-            string selected = routesCombo.SelectedItem as string;
+            string selected = ListItem.GetValueFromComboBox<string>(routesCombo);
             currentPathCells = map.GetTeamTypeRoute(selected, out currentPathWaypoints);
             currentPathPos = -1;
             editTeamButton.Enabled = currentPathCells != null;
@@ -731,7 +761,8 @@ namespace MobiusEditor.Tools
 
         protected void JumpToSelectedWaypoint()
         {
-            if (!(waypointsCombo.SelectedItem is Waypoint wp))
+            Waypoint wp = ListItem.GetValueFromComboBox<Waypoint>(waypointsCombo);
+            if (wp == null)
             {
                 return;
             }
@@ -780,7 +811,7 @@ namespace MobiusEditor.Tools
             // if a valid waypoint was found, select it.
             if (wp != null)
             {
-                waypointsCombo.SelectedItem = wp;
+                waypointsCombo.SelectedIndex = waypoint.Value;
             }
             int selectedWp = waypointsCombo.SelectedIndex;
             // if no waypoint was found, and the current selected waypoint is nowhere in the route,
@@ -824,7 +855,7 @@ namespace MobiusEditor.Tools
         private int GetNextPathPoint(int currentPathPos)
         {
             // remove illegal values
-            int pathlen = currentPathWaypoints.Count;
+            int pathlen = currentPathWaypoints?.Count ?? 0;
             int cpp = Math.Max(0, currentPathPos + 1);
             // skip non-waypoint orders.
             while (cpp < pathlen && currentPathWaypoints[cpp] == null)
@@ -944,7 +975,7 @@ namespace MobiusEditor.Tools
             boundRenderCells.Intersect(map.Metrics.Bounds);
             GameInfo gameInfo = plugin.GameInfo;
             int selectedIndex = waypointsCombo.SelectedIndex;
-            Waypoint selected = waypointsCombo.SelectedItem as Waypoint;
+            Waypoint selected = ListItem.GetValueFromComboBox<Waypoint>(waypointsCombo);
             Waypoint dummySelected = null;
             Waypoint[] selectedRange = selected != null ? new [] { selected } : new Waypoint[] { };
             // Render those here so they are put over the opaque redraw of the current waypoint.
@@ -1098,15 +1129,13 @@ namespace MobiusEditor.Tools
 
         private void Map_WaypointsUpdated(object sender, EventArgs e)
         {
-            this.waypointsCombo.SelectedIndexChanged -= this.WaypointsCombo_SelectedIndexChanged;
-            int selected = waypointsCombo.SelectedIndex;
             mapPanel.Invalidate();
-            waypointsCombo.DataSource = null;
-            waypointsCombo.Items.Clear();
+            int selected = waypointsCombo.SelectedIndex;
+            waypointsCombo.SelectedIndexChanged -= WaypointsCombo_SelectedIndexChanged;
             waypointsCombo.DataSource = map.Waypoints.ToArray();
             waypointsCombo.SelectedIndex = selected;
-            this.waypointsCombo.SelectedIndexChanged += this.WaypointsCombo_SelectedIndexChanged;
-            WaypointsCombo_SelectedIndexChanged(null, null);
+            waypointsCombo.SelectedIndexChanged += WaypointsCombo_SelectedIndexChanged;
+            WaypointsCombo_SelectedIndexChanged(waypointsCombo, null);
         }
 
         public override void Activate()
@@ -1165,8 +1194,8 @@ namespace MobiusEditor.Tools
                 {
                     jumpToButton.Click -= JumpToButton_Click;
                     waypointsCombo.SelectedIndexChanged -= this.WaypointsCombo_SelectedIndexChanged;
-                    modeSwitchButton.Click += ModeSwitchButton_Click;
-                    routesCombo.SelectedIndexChanged += this.RoutesCombo_SelectedIndexChanged;
+                    modeSwitchButton.Click -= ModeSwitchButton_Click;
+                    routesCombo.SelectedIndexChanged -= this.RoutesCombo_SelectedIndexChanged;
                     editTeamButton.Click -= EditTeamButton_Click;
                     jumpToRouteButton.Click -= JumpToRouteButton_Click;
                     OnTeamTypeChanged = null;

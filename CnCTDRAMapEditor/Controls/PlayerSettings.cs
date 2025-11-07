@@ -16,7 +16,6 @@ using MobiusEditor.Interface;
 using MobiusEditor.Model;
 using MobiusEditor.Utility;
 using System;
-using System.Collections.Generic;
 using System.Linq;
 using System.Windows.Forms;
 
@@ -33,12 +32,13 @@ namespace MobiusEditor.Controls
             this.plugin = plugin;
             this.houseSettingsTracker = houseSettingsTracker;
             InitializeComponent();
-            edgeComboBox.Items.Clear();
-            edgeComboBox.Items.AddRange(Globals.MapEdges.ToArray());
-            creditsNud.DataBindings.Add("Value", houseSettingsTracker, "Credits");
-            maxBuildingsNud.DataBindings.Add("Value", houseSettingsTracker, "MaxBuilding");
-            maxUnitsNud.DataBindings.Add("Value", houseSettingsTracker, "MaxUnit");
-            edgeComboBox.DataBindings.Add("SelectedItem", houseSettingsTracker, "Edge");
+            edgeComboBox.DataSource = Globals.MapEdges.Select(me => ListItem.Create(me)).ToArray();
+            edgeComboBox.ValueMember = "Value";
+            edgeComboBox.DisplayMember = "Label";
+            edgeComboBox.DataBindings.Add("SelectedValue", houseSettingsTracker, "Edge", false, DataSourceUpdateMode.OnPropertyChanged);
+            creditsNud.DataBindings.Add("Value", houseSettingsTracker, "Credits", false, DataSourceUpdateMode.OnPropertyChanged);
+            maxBuildingsNud.DataBindings.Add("Value", houseSettingsTracker, "MaxBuilding", false, DataSourceUpdateMode.OnPropertyChanged);
+            maxUnitsNud.DataBindings.Add("Value", houseSettingsTracker, "MaxUnit", false, DataSourceUpdateMode.OnPropertyChanged);
 
             switch (plugin.GameInfo.GameType)
             {
@@ -51,11 +51,11 @@ namespace MobiusEditor.Controls
                     playerControlCheckBox.Visible = playerControlLbl.Visible = false;
                     break;
                 case GameType.RedAlert:
-                    maxInfantryNud.DataBindings.Add("Value", houseSettingsTracker, "MaxInfantry");
-                    maxVesselsNud.DataBindings.Add("Value", houseSettingsTracker, "MaxVessel");
-                    techLevelNud.DataBindings.Add("Value", houseSettingsTracker, "TechLevel");
-                    iqNud.DataBindings.Add("Value", houseSettingsTracker, "IQ");
-                    playerControlCheckBox.DataBindings.Add("Checked", houseSettingsTracker, "PlayerControl");
+                    maxInfantryNud.DataBindings.Add("Value", houseSettingsTracker, "MaxInfantry", false, DataSourceUpdateMode.OnPropertyChanged);
+                    maxVesselsNud.DataBindings.Add("Value", houseSettingsTracker, "MaxVessel", false, DataSourceUpdateMode.OnPropertyChanged);
+                    techLevelNud.DataBindings.Add("Value", houseSettingsTracker, "TechLevel", false, DataSourceUpdateMode.OnPropertyChanged);
+                    iqNud.DataBindings.Add("Value", houseSettingsTracker, "IQ", false, DataSourceUpdateMode.OnPropertyChanged);
+                    playerControlCheckBox.DataBindings.Add("Checked", houseSettingsTracker, "PlayerControl", false, DataSourceUpdateMode.OnPropertyChanged);
                     break;
             }
         }
@@ -68,7 +68,7 @@ namespace MobiusEditor.Controls
             playersListBox.BeginUpdate();
             playersListBox.SelectedIndexChanged -= playersListBox_SelectedIndexChanged;
             playersListBox.Items.Clear();
-            ListItem<int>[] housesArray = plugin.Map.HousesForAlliances.Select(h => new ListItem<int>(h.Type.ID, h.Type.Name)).ToArray();
+            ListItem<int>[] housesArray = plugin.Map.HousesForAlliances.Select(h => ListItem.Create(h.Type.ID, h.Type.Name)).ToArray();
             playersListBox.Items.AddRange(housesArray);
             if (houseSettingsTracker.TryGetMember("Allies", out AlliesMask mask))
             {

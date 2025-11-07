@@ -153,8 +153,7 @@ namespace MobiusEditor.Dialogs
             teamTypes = new List<TeamType>();
             renameActions = new List<(string Name1, string Name2)>();
             backupTeamTypes = new List<TeamType>();
-            Waypoint[] wps = plugin.Map.Waypoints;
-            wayPoints = Enumerable.Range(0, wps.Length).Select(wp => new ListItem<int>(wp, wps[wp].ToString())).ToArray();
+            wayPoints = plugin.Map.Waypoints.Select((wp, i) => ListItem.Create(i, wp.ToString())).ToArray();
 
             int nrOfTeams = Math.Min(maxTeams, plugin.Map.TeamTypes.Count);
             btnAddTeamType.Enabled = nrOfTeams < maxTeams;
@@ -173,10 +172,12 @@ namespace MobiusEditor.Dialogs
             }
             teamTypesListView.EndUpdate();
 
-            cmbHouse.DataSource = plugin.Map.Houses.Select(t => new ListItem<HouseType>(t.Type, t.Type.Name)).ToArray();
-            cmbWaypoint.DataSource = new ListItem<int>(-1, Waypoint.None).Yield().Concat(wayPoints).ToArray();
+            cmbHouse.ValueMember = "Value";
+            cmbHouse.DisplayMember = "Label";
+            cmbHouse.DataSource = plugin.Map.Houses.Select(t => ListItem.Create(t.Type, t.Type.Name)).ToArray();
             cmbWaypoint.ValueMember = "Value";
             cmbWaypoint.DisplayMember = "Label";
+            cmbWaypoint.DataSource = ListItem.Create(-1, Waypoint.None).Yield().Concat(wayPoints).ToArray();
 
             string[] items = plugin.Map.FilterUnitTriggers().Select(t => t.Name).Distinct().ToArray();
             filteredEvents = plugin.Map.EventTypes.Where(ev => plugin.Map.UnitEventTypes.Contains(ev)).Distinct().ToArray();
@@ -184,7 +185,9 @@ namespace MobiusEditor.Dialogs
             triggerInfoToolTip = Map.MakeAllowedTriggersToolTip(filteredEvents, filteredActions);
             HashSet<string> allowedTriggers = new HashSet<string>(items);
             items = Trigger.None.Yield().Concat(plugin.Map.Triggers.Select(t => t.Name).Where(t => allowedTriggers.Contains(t)).Distinct()).ToArray();
-            cmbTrigger.DataSource = items;
+            cmbTrigger.ValueMember = "Value";
+            cmbTrigger.DisplayMember = "Label";
+            cmbTrigger.DataSource = items.Select(tr => ListItem.Create(tr)).ToArray();
             defaultTeam = technoTypes.FirstOrDefault();
             // Fix for case sensitivity issue in teamtype missions
             TeamMission[] missions = plugin.Map.TeamMissionTypes;
@@ -212,7 +215,7 @@ namespace MobiusEditor.Dialogs
 
         private void CmbTrigger_SelectedIndexChanged(object sender, EventArgs e)
         {
-            string selected = cmbTrigger.SelectedItem as string;
+            string selected = ListItem.GetValueFromComboBox<String>(cmbTrigger);
             Trigger trig = plugin.Map.Triggers.FirstOrDefault(t => String.Equals(t.Name, selected, StringComparison.OrdinalIgnoreCase));
             triggerInfoToolTip = Map.MakeAllowedTriggersToolTip(filteredEvents, filteredActions, trig);
             triggerToolTip = plugin.TriggerSummary(trig, true, false);
@@ -320,25 +323,24 @@ namespace MobiusEditor.Dialogs
             lblTooLong.Visible = SelectedTeamType != null && SelectedTeamType.Name != null && SelectedTeamType.Name.Length > maxLength;
             if (selected != null)
             {
-                cmbHouse.DataBindings.Add("SelectedValue", selected, "House");
-                chbRoundabout.DataBindings.Add("Checked", selected, "IsRoundAbout");
-                chbLearning.DataBindings.Add("Checked", selected, "IsLearning");
-                chbSuicide.DataBindings.Add("Checked", selected, "IsSuicide");
-                chbAutocreate.DataBindings.Add("Checked", selected, "IsAutocreate");
-                chbMercenary.DataBindings.Add("Checked", selected, "IsMercenary");
-                chbReinforcable.DataBindings.Add("Checked", selected, "IsReinforcable");
-                chbPrebuilt.DataBindings.Add("Checked", selected, "IsPrebuilt");
+                cmbHouse.DataBindings.Add("SelectedValue", selected, "House", false, DataSourceUpdateMode.OnPropertyChanged);
+                chbRoundabout.DataBindings.Add("Checked", selected, "IsRoundAbout", false, DataSourceUpdateMode.OnPropertyChanged);
+                chbLearning.DataBindings.Add("Checked", selected, "IsLearning", false, DataSourceUpdateMode.OnPropertyChanged);
+                chbSuicide.DataBindings.Add("Checked", selected, "IsSuicide", false, DataSourceUpdateMode.OnPropertyChanged);
+                chbAutocreate.DataBindings.Add("Checked", selected, "IsAutocreate", false, DataSourceUpdateMode.OnPropertyChanged);
+                chbMercenary.DataBindings.Add("Checked", selected, "IsMercenary", false, DataSourceUpdateMode.OnPropertyChanged);
+                chbReinforcable.DataBindings.Add("Checked", selected, "IsReinforcable", false, DataSourceUpdateMode.OnPropertyChanged);
+                chbPrebuilt.DataBindings.Add("Checked", selected, "IsPrebuilt", false, DataSourceUpdateMode.OnPropertyChanged);
                 selected.RecruitPriority = CheckBounds(selected.RecruitPriority, nudRecruitPriority);
-                nudRecruitPriority.DataBindings.Add("Value", selected, "RecruitPriority");
+                nudRecruitPriority.DataBindings.Add("Value", selected, "RecruitPriority", false, DataSourceUpdateMode.OnPropertyChanged);
                 selected.InitNum = CheckBounds(selected.InitNum, nudInitNum);
-                nudInitNum.DataBindings.Add("Value", selected, "InitNum");
+                nudInitNum.DataBindings.Add("Value", selected, "InitNum", false, DataSourceUpdateMode.OnPropertyChanged);
                 selected.MaxAllowed = CheckBounds(selected.MaxAllowed, maxAllowedNud);
-                maxAllowedNud.DataBindings.Add("Value", selected, "MaxAllowed");
+                maxAllowedNud.DataBindings.Add("Value", selected, "MaxAllowed", false, DataSourceUpdateMode.OnPropertyChanged);
                 selected.Fear = CheckBounds(selected.Fear, nudFear);
-                nudFear.DataBindings.Add("Value", selected, "Fear");
-                cmbWaypoint.DataBindings.Add("SelectedValue", selected, "Origin");
-                //cmbWaypoint.DataBindings.Add("SelectedIndex", selected, "Origin");
-                cmbTrigger.DataBindings.Add("SelectedItem", selected, "Trigger");
+                nudFear.DataBindings.Add("Value", selected, "Fear", false, DataSourceUpdateMode.OnPropertyChanged);
+                cmbWaypoint.DataBindings.Add("SelectedValue", selected, "Origin", false, DataSourceUpdateMode.OnPropertyChanged);
+                cmbTrigger.DataBindings.Add("SelectedValue", selected, "Trigger", false, DataSourceUpdateMode.OnPropertyChanged);
 
                 teamItemInfo = new TeamItemInfo(null, selected.Classes, technoTypes);
                 tilTeams.Populate(teamItemInfo, this);

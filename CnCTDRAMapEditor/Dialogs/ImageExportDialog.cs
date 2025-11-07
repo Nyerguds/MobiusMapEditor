@@ -111,7 +111,7 @@ namespace MobiusEditor.Dialogs
                 {
                     continue;
                 }
-                ListItem<MapLayerFlag> mli = new ListItem<MapLayerFlag>(mlf, names[i]);
+                ListItem<MapLayerFlag> mli = ListItem.Create(mlf, names[i]);
                 int index;
                 if ((MapLayerFlag.MapLayers & mlf) != MapLayerFlag.None)
                 {
@@ -123,7 +123,7 @@ namespace MobiusEditor.Dialogs
                 }
                 if ((MapLayerFlag.Indicators & mlf) != MapLayerFlag.None)
                 {
-                    index = indicatorsListBox.Items.Add(new ListItem<MapLayerFlag>(mlf, names[i]));
+                    index = indicatorsListBox.Items.Add(ListItem.Create(mlf, names[i]));
                     if ((layers & mlf) != MapLayerFlag.None)
                     {
                         indicatorsListBox.SetSelected(index, true);

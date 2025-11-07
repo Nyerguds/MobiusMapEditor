@@ -311,7 +311,6 @@ namespace MobiusEditor.Dialogs
             this.cmbVisibility.Name = "cmbVisibility";
             this.cmbVisibility.Size = new System.Drawing.Size(100, 21);
             this.cmbVisibility.TabIndex = 21;
-            this.cmbVisibility.ValueMember = "Value";
             this.cmbVisibility.SelectedIndexChanged += new System.EventHandler(this.CmbVisibility_SelectedIndexChanged);
             this.cmbVisibility.MouseEnter += new System.EventHandler(this.WarningToolTipItem_MouseEnter);
             this.cmbVisibility.MouseLeave += new System.EventHandler(this.HideToolTip);

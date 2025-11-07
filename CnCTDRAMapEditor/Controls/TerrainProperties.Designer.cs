@@ -32,7 +32,7 @@ namespace MobiusEditor.Controls
             this.components = new System.ComponentModel.Container();
             this.tableLayoutPanel1 = new System.Windows.Forms.TableLayoutPanel();
             this.label1 = new System.Windows.Forms.Label();
-            this.triggerComboBox = new MobiusEditor.Controls.PropertiesComboBox();
+            this.cmbTrigger = new MobiusEditor.Controls.PropertiesComboBox();
             this.lblTriggerTypesInfo = new System.Windows.Forms.Label();
             this.toolTip1 = new System.Windows.Forms.ToolTip(this.components);
             this.tableLayoutPanel1.SuspendLayout();
@@ -46,7 +46,7 @@ namespace MobiusEditor.Controls
             this.tableLayoutPanel1.ColumnStyles.Add(new System.Windows.Forms.ColumnStyle(System.Windows.Forms.SizeType.Percent, 68.75F));
             this.tableLayoutPanel1.ColumnStyles.Add(new System.Windows.Forms.ColumnStyle(System.Windows.Forms.SizeType.Absolute, 28F));
             this.tableLayoutPanel1.Controls.Add(this.label1, 0, 0);
-            this.tableLayoutPanel1.Controls.Add(this.triggerComboBox, 1, 0);
+            this.tableLayoutPanel1.Controls.Add(this.cmbTrigger, 1, 0);
             this.tableLayoutPanel1.Controls.Add(this.lblTriggerTypesInfo, 2, 0);
             this.tableLayoutPanel1.Dock = System.Windows.Forms.DockStyle.Fill;
             this.tableLayoutPanel1.Location = new System.Drawing.Point(0, 0);
@@ -71,17 +71,17 @@ namespace MobiusEditor.Controls
             // 
             // triggerComboBox
             // 
-            this.triggerComboBox.Dock = System.Windows.Forms.DockStyle.Fill;
-            this.triggerComboBox.DropDownStyle = System.Windows.Forms.ComboBoxStyle.DropDownList;
-            this.triggerComboBox.FormattingEnabled = true;
-            this.triggerComboBox.Location = new System.Drawing.Point(66, 3);
-            this.triggerComboBox.Name = "triggerComboBox";
-            this.triggerComboBox.Size = new System.Drawing.Size(132, 28);
-            this.triggerComboBox.TabIndex = 9;
-            this.triggerComboBox.SelectedIndexChanged += new System.EventHandler(this.TriggerComboBox_SelectedValueChanged);
-            this.triggerComboBox.MouseEnter += new System.EventHandler(this.TriggerComboBox_MouseEnter);
-            this.triggerComboBox.MouseLeave += new System.EventHandler(this.HideToolTip);
-            this.triggerComboBox.MouseMove += new System.Windows.Forms.MouseEventHandler(TriggerComboBox_MouseMove);
+            this.cmbTrigger.Dock = System.Windows.Forms.DockStyle.Fill;
+            this.cmbTrigger.DropDownStyle = System.Windows.Forms.ComboBoxStyle.DropDownList;
+            this.cmbTrigger.FormattingEnabled = true;
+            this.cmbTrigger.Location = new System.Drawing.Point(66, 3);
+            this.cmbTrigger.Name = "cmbTrigger";
+            this.cmbTrigger.Size = new System.Drawing.Size(132, 28);
+            this.cmbTrigger.TabIndex = 9;
+            this.cmbTrigger.SelectedIndexChanged += new System.EventHandler(this.TriggerComboBox_SelectedValueChanged);
+            this.cmbTrigger.MouseEnter += new System.EventHandler(this.TriggerComboBox_MouseEnter);
+            this.cmbTrigger.MouseLeave += new System.EventHandler(this.HideToolTip);
+            this.cmbTrigger.MouseMove += new System.Windows.Forms.MouseEventHandler(TriggerComboBox_MouseMove);
             // 
             // lblTriggerTypesInfo
             // 
@@ -114,7 +114,7 @@ namespace MobiusEditor.Controls
 
         private System.Windows.Forms.TableLayoutPanel tableLayoutPanel1;
         private System.Windows.Forms.Label label1;
-        private MobiusEditor.Controls.PropertiesComboBox triggerComboBox;
+        private MobiusEditor.Controls.PropertiesComboBox cmbTrigger;
         private System.Windows.Forms.ToolTip toolTip1;
         private System.Windows.Forms.Label lblTriggerTypesInfo;
     }

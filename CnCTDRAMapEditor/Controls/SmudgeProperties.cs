@@ -58,19 +58,18 @@ namespace MobiusEditor.Controls
 
         private void UpdateDataSource()
         {
-            int[] data;
-            if (smudge != null && smudge.Type.Icons > 1)
-                data = Enumerable.Range(0, smudge.Type.Icons).ToArray();
-            else
-                data = new int[] { 0 };
-            stateComboBox.DataSource = data;
+            int max = smudge != null && smudge.Type.Icons > 1 ? smudge.Type.Icons : 1;
+            stateComboBox.DataBindings.Clear();
+            stateComboBox.DataSource = null;
+            stateComboBox.ValueMember = "Value";
+            stateComboBox.DisplayMember = "Label";
+            stateComboBox.DataSource = Enumerable.Range(0, max).Select(ic => ListItem.Create(ic)).ToArray();
         }
 
         private void Rebind()
         {
             stateComboBox.DataBindings.Clear();
             stateComboBox.DataSource = null;
-            stateComboBox.Items.Clear();
             if (smudge == null)
             {
                 return;
@@ -78,7 +77,7 @@ namespace MobiusEditor.Controls
             UpdateDataSource();
             if (stateComboBox.Items.Count > 1)
             {
-                stateComboBox.DataBindings.Add("SelectedItem", smudge, "Icon");
+                stateComboBox.DataBindings.Add("SelectedValue", smudge, "Icon", false, DataSourceUpdateMode.OnPropertyChanged);
             }
             stateComboBox.Enabled = stateComboBox.Items.Count > 1;
         }

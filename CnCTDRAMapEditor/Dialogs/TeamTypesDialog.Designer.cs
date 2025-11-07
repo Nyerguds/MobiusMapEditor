@@ -451,7 +451,6 @@ namespace MobiusEditor.Dialogs
             this.cmbHouse.Name = "cmbHouse";
             this.cmbHouse.Size = new System.Drawing.Size(122, 21);
             this.cmbHouse.TabIndex = 10;
-            this.cmbHouse.ValueMember = "Value";
             this.cmbHouse.SelectedValueChanged += new System.EventHandler(this.cmbHouse_SelectedValueChanged);
             // 
             // chbRoundabout

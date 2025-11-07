@@ -54,8 +54,6 @@ namespace MobiusEditor.Controls
                 TeamMission[] missionsArr = missions.ToArray();
                 this.defaultMission = missionsArr.FirstOrDefault();
                 this.cmbMission.DisplayMember = null;
-                this.cmbMission.DataSource = null;
-                this.cmbMission.Items.Clear();
                 this.cmbMission.DataSource = missionsArr;
                 this.cmbMission.DisplayMember = "Mission";
                 this.waypoints = waypoints.ToArray();
@@ -125,7 +123,7 @@ namespace MobiusEditor.Controls
                     newValue = SetUpCmbValue(waypoints, value, tooltip, "Waypoint");
                     break;
                 case TeamMissionArgType.OptionsList:
-                    ListItem<int>[] items = mission.DropdownOptions.Select(ddo => new ListItem<int>(ddo.Value, ddo.Label)).ToArray();
+                    ListItem<int>[] items = mission.DropdownOptions.Select(ddo => ListItem.Create(ddo.Value, ddo.Label)).ToArray();
                     newValue = SetUpCmbValue(items, value, tooltip, null);
                     break;
                 case TeamMissionArgType.MapCell:
