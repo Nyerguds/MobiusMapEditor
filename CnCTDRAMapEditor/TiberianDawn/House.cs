@@ -14,7 +14,6 @@
 // with this program. If not, see https://github.com/electronicarts/CnC_Remastered_Collection
 using System;
 using MobiusEditor.Utility;
-using System.Drawing;
 
 namespace MobiusEditor.TiberianDawn
 {

@@ -118,7 +118,7 @@ namespace MobiusEditor.Dialogs
             this.lblMessage.Name = "lblMessage";
             this.lblMessage.Size = new System.Drawing.Size(191, 13);
             this.lblMessage.TabIndex = 2;
-            this.lblMessage.Text = "The following errors were encountered:";
+            this.lblMessage.Text = "The following issues were encountered:";
             // 
             // flowLayoutPanel5
             // 

@@ -256,11 +256,10 @@ namespace MobiusEditor.Model
             {
                 return this == obj;
             }
-            else if (obj is string)
+            else if (obj is string str)
             {
-                return string.Equals(Name, obj as string, StringComparison.OrdinalIgnoreCase);
+                return String.Equals(Name, str, StringComparison.OrdinalIgnoreCase);
             }
-
             return base.Equals(obj);
         }
 

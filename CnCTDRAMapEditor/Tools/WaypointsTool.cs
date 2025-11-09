@@ -926,8 +926,7 @@ namespace MobiusEditor.Tools
             {
                 return;
             }
-            Point cellPoint;
-            if (!RenderMap.Metrics.GetLocation(cell.Value, out cellPoint))
+            if (!RenderMap.Metrics.GetLocation(cell.Value, out Point cellPoint))
             {
                 return;
             }

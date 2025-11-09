@@ -15,7 +15,6 @@
 // along with this program.  If not, see <https://www.gnu.org/licenses/>.
 using MobiusEditor.Interface;
 using MobiusEditor.Model;
-using MobiusEditor.Utility;
 using System;
 using System.Collections.Generic;
 using System.ComponentModel;

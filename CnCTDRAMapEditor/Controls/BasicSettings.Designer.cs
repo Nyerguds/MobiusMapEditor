@@ -247,7 +247,7 @@ namespace MobiusEditor.Controls
             this.isSinglePlayerCheckBox.TabIndex = 32;
             this.isSinglePlayerCheckBox.Text = "Single-Player";
             this.isSinglePlayerCheckBox.UseVisualStyleBackColor = true;
-            this.isSinglePlayerCheckBox.CheckedChanged += new System.EventHandler(this.isSinglePlayerCheckBox_CheckedChanged);
+            this.isSinglePlayerCheckBox.CheckedChanged += new System.EventHandler(this.IsSinglePlayerCheckBox_CheckedChanged);
             // 
             // win4ComboBox
             // 

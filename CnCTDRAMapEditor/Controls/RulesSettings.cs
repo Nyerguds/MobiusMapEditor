@@ -30,12 +30,9 @@ namespace MobiusEditor.Controls
             }
         }
 
-        private void txtRules_Leave(object sender, EventArgs e)
+        private void TxtRules_Leave(object sender, EventArgs e)
         {
-            if (TextNeedsUpdating != null)
-            {
-                TextNeedsUpdating(sender, e);
-            }
+            TextNeedsUpdating?.Invoke(sender, e);
         }
     }
 }

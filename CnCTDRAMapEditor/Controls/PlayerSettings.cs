@@ -66,7 +66,7 @@ namespace MobiusEditor.Controls
         public void InitAlliances()
         {
             playersListBox.BeginUpdate();
-            playersListBox.SelectedIndexChanged -= playersListBox_SelectedIndexChanged;
+            playersListBox.SelectedIndexChanged -= PlayersListBox_SelectedIndexChanged;
             playersListBox.Items.Clear();
             ListItem<int>[] housesArray = plugin.Map.HousesForAlliances.Select(h => ListItem.Create(h.Type.ID, h.Type.Name)).ToArray();
             playersListBox.Items.AddRange(housesArray);
@@ -82,12 +82,12 @@ namespace MobiusEditor.Controls
                 }
             }
             initDone = true;
-            playersListBox_Resize(playersListBox, new EventArgs());
+            PlayersListBox_Resize(playersListBox, new EventArgs());
             playersListBox.EndUpdate();
-            playersListBox.SelectedIndexChanged += playersListBox_SelectedIndexChanged;
+            playersListBox.SelectedIndexChanged += PlayersListBox_SelectedIndexChanged;
         }
 
-        private void playersListBox_SelectedIndexChanged(object sender, EventArgs e)
+        private void PlayersListBox_SelectedIndexChanged(object sender, EventArgs e)
         {
             var allies = 0;
             foreach (ListItem<int> selectedItem in playersListBox.SelectedItems)
@@ -97,7 +97,7 @@ namespace MobiusEditor.Controls
             houseSettingsTracker.TrySetMember("Allies", new AlliesMask(allies));
         }
 
-        private void playersListBox_Resize(object sender, EventArgs e)
+        private void PlayersListBox_Resize(object sender, EventArgs e)
         {
             if (!initDone)
                 return;

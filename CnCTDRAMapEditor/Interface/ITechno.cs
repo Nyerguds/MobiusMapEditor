@@ -12,7 +12,6 @@
 //
 //   0. You just DO WHAT THE FUCK YOU WANT TO.
 using MobiusEditor.Model;
-using System.Drawing;
 
 namespace MobiusEditor.Interface
 {

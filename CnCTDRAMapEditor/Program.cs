@@ -114,7 +114,7 @@ namespace MobiusEditor
             RemasterRunPath = StartupLoader.GetRemasterRunPath(RemasterSteamId, !Globals.UseClassicFiles);
             bool loadOk = false;
             string mixContentFile = Globals.MixContentInfoFile;
-            if (!string.IsNullOrEmpty(mixContentFile)) {
+            if (!String.IsNullOrEmpty(mixContentFile)) {
                 mixContentFile = mixContentFile.Replace('\\', Path.DirectorySeparatorChar);
             }
             string mixPath = Path.Combine(Program.ApplicationPath, Globals.MixContentInfoFile);
@@ -348,8 +348,8 @@ namespace MobiusEditor
                         break;
                 }
             }
-            string previousVersionConfigFile = previousSettingsDir == null ? null : string.Concat(previousSettingsDir.FullName, @"\", userConfigFileName);
-            string currentVersionConfigFile = string.Concat(currentVersionConfigFileDir.FullName, @"\", userConfigFileName);
+            string previousVersionConfigFile = previousSettingsDir == null ? null : String.Concat(previousSettingsDir.FullName, @"\", userConfigFileName);
+            string currentVersionConfigFile = String.Concat(currentVersionConfigFileDir.FullName, @"\", userConfigFileName);
             if (!currentVersionConfigFileDir.Exists)
             {
                 Directory.CreateDirectory(currentVersionConfigFileDir.FullName);

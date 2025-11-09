@@ -28,7 +28,7 @@ namespace MobiusEditor.Controls
             AddDataBindings();
         }
 
-        private void btnDefaults_Click(object sender, EventArgs e)
+        private void BtnDefaults_Click(object sender, EventArgs e)
         {
             if (DialogResult.Yes == MessageBox.Show("This will reset all crate values to their game defaults. Are you sure you want to continue?", "Warning", MessageBoxButtons.YesNo, MessageBoxIcon.Warning, MessageBoxDefaultButton.Button1))
             {

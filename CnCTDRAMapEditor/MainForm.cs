@@ -207,7 +207,7 @@ namespace MobiusEditor
             bool hasCache = File.Exists(cachedMixInfoFile);
 
             FileOpenFromMixMenuItem.Enabled = true;
-            string estim = hasCache ? string.Empty : " (30-60s)";
+            string estim = hasCache ? String.Empty : " (30-60s)";
             ToolStripMenuItem loading = new ToolStripMenuItem("[Scanning mix files, please wait." + estim + "]");
             loading.Enabled = false;
             FileOpenFromMixMenuItem.DropDownItems.Add(loading);
@@ -355,7 +355,7 @@ namespace MobiusEditor
             {
                 return;
             }
-            ToolStripMenuItem mixMenu = itemToRecycle == null ? new ToolStripMenuItem() : itemToRecycle;
+            ToolStripMenuItem mixMenu = itemToRecycle ?? new ToolStripMenuItem();
             mixMenu.Text = label;
             mixMenu.Enabled = true;
             if (itemToRecycle == null)
@@ -478,11 +478,7 @@ namespace MobiusEditor
                 }
             }
             string fullMixPathIni = Uri.EscapeDataString("\"" + fullMixPath + "\"");
-            string mainMixInfo = curGameIniSection.Keys.TryGetValue(fullMixPathIni);
-            if (mainMixInfo == null)
-            {
-                mainMixInfo = curGameIniSection.Keys.TryGetValue(fullMixPath);
-            }
+            string mainMixInfo = curGameIniSection.Keys.TryGetValue(fullMixPathIni) ?? curGameIniSection.Keys.TryGetValue(fullMixPath);
             if (mainMixInfo == null)
             {
                 return false;
@@ -496,7 +492,7 @@ namespace MobiusEditor
             long timeStamp;
             long size;
             int hasMissions;
-            if (!long.TryParse(mainMixData[0], out timeStamp) || !long.TryParse(mainMixData[1], out size) || !int.TryParse(mainMixData[2], out hasMissions))
+            if (!Int64.TryParse(mainMixData[0], out timeStamp) || !Int64.TryParse(mainMixData[1], out size) || !Int32.TryParse(mainMixData[2], out hasMissions))
             {
                 return false;
             }
@@ -523,11 +519,7 @@ namespace MobiusEditor
                 if (mixPath.StartsWith(subMixPathReplace) || mixPath.StartsWith(subMixPathOld))
                 {
                     string mixPathIni = Uri.EscapeDataString("\"" + mixPath + "\"");
-                    string subMixInfo = curGameIniSection.Keys.TryGetValue(mixPathIni);
-                    if (subMixInfo == null)
-                    {
-                        subMixInfo = curGameIniSection.Keys.TryGetValue(mixPath);
-                    }
+                    string subMixInfo = curGameIniSection.Keys.TryGetValue(mixPathIni) ?? curGameIniSection.Keys.TryGetValue(mixPath);
                     string usableMixPath = subMixPathReplace + mixPath.Substring(subMixPathOld.Length);
                     string[] subMixData = subMixInfo.Split(',');
                     if (subMixData.Length < 3)
@@ -535,7 +527,7 @@ namespace MobiusEditor
                         continue;
                     }
                     // Sub-mix info contains the hash and size of the parent, and whether the sub-mix contains missions.
-                    if (!long.TryParse(subMixData[0], out timeStamp) || !long.TryParse(subMixData[1], out size) || !int.TryParse(subMixData[2], out hasMissions)
+                    if (!Int64.TryParse(subMixData[0], out timeStamp) || !Int64.TryParse(subMixData[1], out size) || !Int32.TryParse(subMixData[2], out hasMissions)
                         || timeStamp != fileModTime || size != fileSize)
                     {
                         continue;
@@ -2052,8 +2044,7 @@ namespace MobiusEditor
                 RefreshActiveTool(true);
                 return;
             }
-            TheaterType[] theaters = gameInfo.AllTheaters;
-            TheaterType theaterObj = theaters == null ? null : theaters.Where(th => th.Name.Equals(info.Theater, StringComparison.OrdinalIgnoreCase)).FirstOrDefault();
+            TheaterType theaterObj = gameInfo.AllTheaters?.Where(th => th.Name.Equals(info.Theater, StringComparison.OrdinalIgnoreCase)).FirstOrDefault();
             if (theaterObj == null)
             {
                 MessageBox.Show(this, String.Format("Unknown {0} theater \"{1}\"", gameInfo.Name, info.Theater), Program.ProgramName, MessageBoxButtons.OK, MessageBoxIcon.Error);
@@ -2753,10 +2744,7 @@ namespace MobiusEditor
                 mapPanel.MapImage = null;
                 mapPanel.Invalidate();
                 // Dispose plugin
-                if (pl != null)
-                {
-                    pl.Dispose();
-                }
+                pl?.Dispose();
                 // Unload graphics
                 Globals.TheTilesetManager.Reset(GameType.None, null);
                 Globals.TheShapeCacheManager.Reset();
@@ -3118,8 +3106,7 @@ namespace MobiusEditor
 
         private void ActiveToolForm_Shown(object sender, EventArgs e)
         {
-            Form tool = sender as Form;
-            if (tool != null)
+            if (sender is Form tool)
             {
                 ClampForm(tool);
             }
@@ -3596,10 +3583,10 @@ namespace MobiusEditor
                 string versionMinStr = match.Groups[4].Value;
                 string versionBldStr = match.Groups[6].Value;
                 string versionRevStr = match.Groups[8].Value;
-                int versionMaj = String.IsNullOrEmpty(versionMajStr) ? 0 : int.Parse(versionMajStr);
-                int versionMin = String.IsNullOrEmpty(versionMinStr) ? 0 : int.Parse(versionMinStr);
-                int versionBld = String.IsNullOrEmpty(versionBldStr) ? 0 : int.Parse(versionBldStr);
-                int versionRev = String.IsNullOrEmpty(versionRevStr) ? 0 : int.Parse(versionRevStr);
+                int versionMaj = String.IsNullOrEmpty(versionMajStr) ? 0 : Int32.Parse(versionMajStr);
+                int versionMin = String.IsNullOrEmpty(versionMinStr) ? 0 : Int32.Parse(versionMinStr);
+                int versionBld = String.IsNullOrEmpty(versionBldStr) ? 0 : Int32.Parse(versionBldStr);
+                int versionRev = String.IsNullOrEmpty(versionRevStr) ? 0 : Int32.Parse(versionRevStr);
                 System.Version serverVer = new System.Version(versionMaj, versionMin, versionBld, versionRev);
                 System.Version.TryParse(Properties.Settings.Default.LastCheckVersion, out System.Version lastChecked);
                 bool isDifferent = serverVer != lastChecked;

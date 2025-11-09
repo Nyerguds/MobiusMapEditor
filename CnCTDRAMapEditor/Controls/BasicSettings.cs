@@ -146,7 +146,7 @@ namespace MobiusEditor.Controls
             }
         }
 
-        private void isSinglePlayerCheckBox_CheckedChanged(object sender, EventArgs e)
+        private void IsSinglePlayerCheckBox_CheckedChanged(object sender, EventArgs e)
         {
             CheckSinglePlayerOptions();
         }
