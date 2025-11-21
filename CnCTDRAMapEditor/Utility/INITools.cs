@@ -314,10 +314,16 @@ namespace MobiusEditor.Utility
 
         public static INISection CompressLCWSection(INISection section, byte[] uncompressedBytes)
         {
+            // Default values for writing an LCW ini section.
+            return CompressLCWSection(section, uncompressedBytes, 0x2000, 70);
+        }
+
+        public static INISection CompressLCWSection(INISection section, byte[] uncompressedBytes, int chunkSize, int lineLength)
+        {
             using (MemoryStream stream = new MemoryStream())
             using (BinaryWriter writer = new BinaryWriter(stream))
             {
-                foreach (byte[] uncompressedChunk in uncompressedBytes.Split(8192))
+                foreach (byte[] uncompressedChunk in uncompressedBytes.Split(chunkSize))
                 {
                     byte[] compressedChunk = WWCompression.LcwCompress(uncompressedChunk);
                     writer.Write((ushort)compressedChunk.Length);
@@ -326,7 +332,7 @@ namespace MobiusEditor.Utility
                 }
                 writer.Flush();
                 stream.Position = 0;
-                string[] values = Convert.ToBase64String(stream.ToArray()).Split(70).ToArray();
+                string[] values = Convert.ToBase64String(stream.ToArray()).Split(lineLength).ToArray();
                 for (int i = 0; i < values.Length; ++i)
                 {
                     section[(i + 1).ToString()] = values[i];

@@ -21,13 +21,13 @@ namespace MobiusEditor.Interface
 {
     public enum FileType
     {
-        None = 0,
-        INI, // ini+bin file
-        BIN, // bin+ini file
-        I64, // N64 ini+map file
-        B64, // N64 map+ini file
-        MPR, // ini file with embedded map
-        PGM, // Petroglyph map archive in meg format
+        None = 0, // Type detection failed.
+        INI, // ini+bin file.
+        BIN, // bin+ini file.
+        I64, // N64 ini+map file.
+        B64, // N64 map+ini file.
+        MPR, // ini file with embedded map.
+        PGM, // Petroglyph map archive in meg format. Contents will be autodetected when opened.
         MIX  // Map selected from inside a mix file; should contain the ini and possibly bin parts behind a '?'.
     }
 

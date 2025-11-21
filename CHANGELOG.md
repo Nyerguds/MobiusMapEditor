@@ -690,7 +690,7 @@ Unreleased
 * Added option "IgnoreShadowOverlap" to not draw overlap outlines on objects that are only overlapped by shadows.
 * Added option "EnforceTriggerTypes" that can be disabled to allow any triggers on any object types. This is mainly for research purposes.
 * Fixed bug that when the option to show crates on top is enabled, they were still outlined by the "outlines on overlapped objects" function, despite never being overlapped.
-* Removed randomness from RA map resources on save, to optimise compression of the OverlayPack ini section. Both the editor and the game re-apply it on load anyway.
+* Removed randomness from RA map resources on save, to optimise compression of the OverlayPack ini section. The game re-applies it on map load anyway.
 * Fixed bug where opening and confirming the map setting without making any changes would clear the map's "modified" status.
 * Fixed crash when trying to publish a freshly opened new map with no content added at all.
 * Fixed crash when trying to publish a map opened from mix file. It will now always require being saved to disc first.

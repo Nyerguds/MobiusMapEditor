@@ -958,7 +958,7 @@ namespace MobiusEditor.RedAlert
                     TeamType teamType = new TeamType { Name = kvp.Key };
                     string[] tokens = kvp.Value.Split(',');
                     string houseStr = tokens[(int)TeamTypeOptions.House];
-                    teamType.House = Map.HouseTypes.Where(t => t.Equals(sbyte.Parse(houseStr))).FirstOrDefault();
+                    teamType.House = Map.HouseTypes.Where(t => t.Equals(SByte.Parse(houseStr))).FirstOrDefault();
                     if (teamType.House == null)
                     {
                         HouseType defHouse = Map.HouseTypes.First();
@@ -966,18 +966,18 @@ namespace MobiusEditor.RedAlert
                         modified = true;
                         teamType.House = defHouse;
                     }
-                    int flags = int.Parse(tokens[(int)TeamTypeOptions.Flags]);
+                    int flags = Int32.Parse(tokens[(int)TeamTypeOptions.Flags]);
                     teamType.IsRoundAbout = (flags & 0x01) != 0;
                     teamType.IsSuicide = (flags & 0x02) != 0;
                     teamType.IsAutocreate = (flags & 0x04) != 0;
                     teamType.IsPrebuilt = (flags & 0x08) != 0;
                     teamType.IsReinforcable = (flags & 0x10) != 0;
-                    teamType.RecruitPriority = int.Parse(tokens[(int)TeamTypeOptions.RecruitPriority]);
-                    teamType.InitNum = byte.Parse(tokens[(int)TeamTypeOptions.InitNum]);
-                    teamType.MaxAllowed = byte.Parse(tokens[(int)TeamTypeOptions.MaxAllowed]);
-                    teamType.Origin = int.Parse(tokens[(int)TeamTypeOptions.Origin]);
+                    teamType.RecruitPriority = Int32.Parse(tokens[(int)TeamTypeOptions.RecruitPriority]);
+                    teamType.InitNum = Byte.Parse(tokens[(int)TeamTypeOptions.InitNum]);
+                    teamType.MaxAllowed = Byte.Parse(tokens[(int)TeamTypeOptions.MaxAllowed]);
+                    teamType.Origin = Int32.Parse(tokens[(int)TeamTypeOptions.Origin]);
                     teamType.Trigger = tokens[(int)TeamTypeOptions.Trigger];
-                    int numClasses = int.Parse(tokens[(int)TeamTypeOptions.Classes]);
+                    int numClasses = Int32.Parse(tokens[(int)TeamTypeOptions.Classes]);
                     int classesIndex = (int)TeamTypeOptions.Classes + 1;
                     int classesIndexEnd = classesIndex + numClasses;
                     int classesMax = Math.Min(Globals.MaxTeamClasses, numClasses);
@@ -992,7 +992,7 @@ namespace MobiusEditor.RedAlert
                             continue;
                         }
                         ITechnoType type = fullTechnoTypes.Where(t => t.Equals(classTokens[0])).FirstOrDefault();
-                        byte count = byte.Parse(classTokens[1]);
+                        byte count = Byte.Parse(classTokens[1]);
                         if (type == null)
                         {
                             errors.Add(String.Format("Team '{0}' references unknown class '{1}'.", kvp.Key, classTokens[0]));
@@ -1012,7 +1012,7 @@ namespace MobiusEditor.RedAlert
                         errors.Add(String.Format("Team '{0}' has more classes than the game can handle (has {1}, maximum is {2}).", kvp.Key, numClasses, Globals.MaxTeamClasses));
                         modified = true;
                     }
-                    int numMissions = int.Parse(tokens[classesIndexEnd]);
+                    int numMissions = Int32.Parse(tokens[classesIndexEnd]);
                     int missionsIndex = classesIndexEnd + 1;
                     int missionsIndexEnd = missionsIndex + numMissions;
                     int missionsMax = Math.Min(Globals.MaxTeamMissions, numMissions);
@@ -1257,7 +1257,7 @@ namespace MobiusEditor.RedAlert
                         modified = true;
                     }
                     trigger.PersistentType = (TriggerPersistentType)trigPersist;
-                    int houseId = sbyte.Parse(tokens[1]);
+                    int houseId = SByte.Parse(tokens[1]);
                     trigger.House = houseId == -1 ? House.None : Map.HouseTypes.Where(t => t.Equals(houseId)).FirstOrDefault()?.Name;
                     if (trigger.House == null)
                     {
@@ -2859,7 +2859,7 @@ namespace MobiusEditor.RedAlert
             Dictionary<string, string> correctedEdges = new Dictionary<string, string>(StringComparer.OrdinalIgnoreCase);
             foreach (string edge in Globals.MapEdges)
                 correctedEdges.Add(edge, edge);
-            string defaultEdge = Globals.MapEdges.FirstOrDefault() ?? string.Empty;
+            string defaultEdge = Globals.MapEdges.FirstOrDefault() ?? String.Empty;
             foreach (Model.House house in Map.Houses)
             {
                 if (house.Type.IsSpecial)
@@ -3685,7 +3685,7 @@ namespace MobiusEditor.RedAlert
             generalSection["AuthorId"] = Map.SteamSection.Author;
             generalSection["Author"] = Map.BasicSection.Author;
             generalSection["ContentType"] = "0";
-            generalSection["Flags"] = string.Empty;
+            generalSection["Flags"] = String.Empty;
             ini.Sections.Add(generalSection);
 
             INISection titleSection = new INISection("Title");
@@ -3831,11 +3831,11 @@ namespace MobiusEditor.RedAlert
                     teamType.Origin.ToString(),
                     nameToIndexString(Map.Triggers, teamType.Trigger),
                     classes.Length.ToString(),
-                    string.Join(",", classes),
+                    String.Join(",", classes),
                     missions.Length.ToString(),
-                    string.Join(",", missions)
+                    String.Join(",", missions)
                 };
-                teamTypesSection[teamType.Name] = string.Join(",", tokens.Where(t => !string.IsNullOrEmpty(t)));
+                teamTypesSection[teamType.Name] = String.Join(",", tokens.Where(t => !String.IsNullOrEmpty(t)));
             }
             INISection infantrySection = ini.Sections.Add("INFANTRY");
             int infantryIndex = 0;
@@ -3979,7 +3979,7 @@ namespace MobiusEditor.RedAlert
             INISection triggersSection = ini.Sections.Add("Trigs");
             foreach (var trigger in Map.Triggers)
             {
-                if (string.IsNullOrEmpty(trigger.Name))
+                if (String.IsNullOrEmpty(trigger.Name))
                 {
                     continue;
                 }
@@ -3990,7 +3990,7 @@ namespace MobiusEditor.RedAlert
                 List<string> tokens = new List<string>
                 {
                     ((int)trigger.PersistentType).ToString(),
-                    !string.IsNullOrEmpty(trigger.House) ? (Map.HouseTypes.Where(h => h.Equals(trigger.House)).FirstOrDefault()?.ID.ToString() ?? "-1") : "-1",
+                    !String.IsNullOrEmpty(trigger.House) ? (Map.HouseTypes.Where(h => h.Equals(trigger.House)).FirstOrDefault()?.ID.ToString() ?? "-1") : "-1",
                     ((int)trigger.EventControl).ToString(),
                     ((int)actionControl).ToString(),
                     nameToIndexString(Map.EventTypes, trigger.Event1.EventType),
@@ -4009,7 +4009,7 @@ namespace MobiusEditor.RedAlert
                     trigger.Action2.Data.ToString()
                 };
 
-                triggersSection[trigger.Name] = string.Join(",", tokens);
+                triggersSection[trigger.Name] = String.Join(",", tokens);
             }
             INISection waypointsSection = ini.Sections.Add("Waypoints");
             for (int i = 0; i < Map.Waypoints.Length; ++i)
@@ -4038,7 +4038,7 @@ namespace MobiusEditor.RedAlert
                 // Current house is not in its own alliances list. Fix that.
                 if (houseSection != null && !gameHouse.Allies.Contains(gameHouse.Type.ID))
                 {
-                    HashSet<string> allies = (houseSection.TryGetValue("Allies") ?? string.Empty)
+                    HashSet<string> allies = (houseSection.TryGetValue("Allies") ?? String.Empty)
                         .Split(new char[] { ',' }, StringSplitOptions.RemoveEmptyEntries)
                         .Distinct(StringComparer.OrdinalIgnoreCase)
                         .ToHashSet(StringComparer.OrdinalIgnoreCase);
@@ -4064,7 +4064,7 @@ namespace MobiusEditor.RedAlert
                 oldSection.Remove("Text");
                 oldSection.RemoveWhere(k => Regex.IsMatch(k, "^\\d+$"));
             }
-            if (string.IsNullOrEmpty(Map.BriefingSection.Briefing))
+            if (String.IsNullOrEmpty(Map.BriefingSection.Briefing))
             {
                 if (oldSection != null)
                 {
@@ -4075,7 +4075,7 @@ namespace MobiusEditor.RedAlert
             }
             INISection briefingSection = ini.Sections.Add("Briefing");
             string briefText = PreprocessBriefingText(Map.BriefingSection.Briefing);
-            if (string.IsNullOrEmpty(briefText))
+            if (String.IsNullOrEmpty(briefText))
             {
                 return null;
             }
@@ -4183,7 +4183,7 @@ namespace MobiusEditor.RedAlert
                         }
                         else
                         {
-                            writer.Write(ushort.MaxValue);
+                            writer.Write(UInt16.MaxValue);
                         }
                     }
                 }
@@ -4216,26 +4216,29 @@ namespace MobiusEditor.RedAlert
             {
                 using (BinaryWriter writer = new BinaryWriter(stream, Encoding.UTF8, true))
                 {
-                    for (int i = 0; i < Map.Metrics.Length; ++i)
+                    for (int y = 0; y < Map.Metrics.Height; ++y)
                     {
-                        Overlay overlay = Map.Overlay[i];
-                        if (overlay != null)
+                        for (int x = 0; x < Map.Metrics.Width; ++x)
                         {
-                            byte id = (byte)overlay.Type.ID;
-                            // reduce to single type for better compression
-                            if (overlay.Type.IsTiberiumOrGold && goldToUse.HasValue)
+                            Overlay overlay = Map.Overlay[y, x];
+                            if (overlay != null)
                             {
-                                id = goldToUse.Value;
+                                byte id = (byte)overlay.Type.ID;
+                                // reduce to single type for better compression
+                                if (overlay.Type.IsTiberiumOrGold && goldToUse.HasValue)
+                                {
+                                    id = goldToUse.Value;
+                                }
+                                if (overlay.Type.IsGem && gemToUse.HasValue)
+                                {
+                                    id = gemToUse.Value;
+                                }
+                                writer.Write(id);
                             }
-                            if (overlay.Type.IsGem && gemToUse.HasValue)
+                            else
                             {
-                                id = gemToUse.Value;
+                                writer.Write(Byte.MaxValue);
                             }
-                            writer.Write(id);
-                        }
-                        else
-                        {
-                            writer.Write(byte.MaxValue);
                         }
                     }
                 }
@@ -4547,11 +4550,11 @@ namespace MobiusEditor.RedAlert
             StringBuilder sb = new StringBuilder();
             sb.Append("The following ");
             sb.Append(context != null ? (context + " ") : null);
-            sb.Append(string.Join("/", missingTypes.ToArray()));
+            sb.Append(String.Join("/", missingTypes.ToArray()));
             sb.Append(" type").Append(plural ? "s are" : " is").Append(" used on the map");
             sb.Append(unitsMissing || infantryMissing || buildingsMissing ? " or in the scripting" : null);
             sb.Append(", but ").Append(plural ? "have" : "has").Append(" no ini rules set to properly define ").Append(plural ? "their" : "its").Append(" stats:\n- ");
-            sb.Append(string.Join("\n- ", missingObjTypes.ToArray()));
+            sb.Append(String.Join("\n- ", missingObjTypes.ToArray()));
             sb.Append("\nWithout ini definition").Append(plural ? "s, these objects" : ", this object").Append(" will have no ");
             sb.Append(unitsMissing || infantryMissing ? "strength, weapon or movement speed" : buildingsMissing ? "strength or weapon" : "weapon");
             sb.Append(" stats, and will malfunction in the game. The definitions can be set in Settings → Map Settings → INI Rules & Tweaks.");
@@ -4908,7 +4911,7 @@ namespace MobiusEditor.RedAlert
         {
             Dictionary<long, int> fixedGlobals = new Dictionary<long, int>();
             string setHouse = this.Map.BasicSection.Player;
-            HouseType house = string.IsNullOrEmpty(setHouse) ? null : Map.HouseTypes.Where(h => h.Equals(setHouse)).FirstOrDefault();
+            HouseType house = String.IsNullOrEmpty(setHouse) ? null : Map.HouseTypes.Where(h => h.Equals(setHouse)).FirstOrDefault();
             return CheckTriggers(triggers, includeExternalData, prefixNames, fatalOnly, out fatal, fix, out wasFixed, null, out _, ref fixedGlobals, house);
         }
 
@@ -5030,7 +5033,7 @@ namespace MobiusEditor.RedAlert
         private void CheckTriggerHouse(string prefix, Trigger trigger, List<string> errors, ref bool fatal, bool fatalOnly,
             bool fix, ref bool wasFixed, HouseType defaultHouse)
         {
-            int house = !string.IsNullOrEmpty(trigger.House) ? (Map.HouseTypes.Where(h => h.Equals(trigger.House)).FirstOrDefault()?.ID ?? -1) : -1;
+            int house = !String.IsNullOrEmpty(trigger.House) ? (Map.HouseTypes.Where(h => h.Equals(trigger.House)).FirstOrDefault()?.ID ?? -1) : -1;
             string fixHouse = defaultHouse?.Name ?? House.None;
             if (house != -1)
             {
