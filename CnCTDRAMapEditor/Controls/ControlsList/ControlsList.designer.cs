@@ -52,11 +52,11 @@ namespace MobiusEditor.Controls.ControlsList
             this.lblTypeName.Size = new System.Drawing.Size(0, 13);
             this.lblTypeName.TabIndex = 0;
             //
-            // EffectBarList
+            // ControlsList
             //
             this.Controls.Add(this.lblTypeName);
             this.Name = "ControlsList";
-            this.Resize += new System.EventHandler(this.EffectBarList_Resize);
+            this.Resize += new System.EventHandler(this.ControlsList_Resize);
             this.ResumeLayout(false);
             this.PerformLayout();
 
