@@ -693,31 +693,25 @@ namespace MobiusEditor.Dialogs
 
         public int UpdateControlInfo(TeamTypeMission updateInfo, char action)
         {
-            // Detect delete signal
+            if (action == 'M')
+            {
+                // Request for Maximum possible list length.
+                return maxMissions;
+            }
             if (SelectedTeamType == null)
             {
-                return action == 'I' || action == 'L' || action == 'M' ? -1 : 0;
+                return action == 'I' || action == 'L' ? -1 : 0;
             }
             List<TeamTypeMission> missionsList = SelectedTeamType.Missions;
-            int index = -1;
             // Must look for actual object, not equality.
-            for (int i = 0; i < missionsList.Count; i++)
-            {
-                if (ReferenceEquals(updateInfo, missionsList[i]))
-                {
-                    index = i;
-                    break;
-                }
-            }
+            int index = missionsList.FindIndex((ttm) => ReferenceEquals(updateInfo, ttm));
             int scrollIndex = index;
             switch (action)
             {
                 case 'I': // Request for Index in list
-                    return scrollIndex;
+                    return index;
                 case 'L': // Request for Length of list
                     return missionsList.Count;
-                case 'M': // Request for Maximum possible list length.
-                    return maxMissions;
                 case 'R': // Remove
                     // Still the same object reference, so this should be found.
                     missionsList.Remove(updateInfo);
