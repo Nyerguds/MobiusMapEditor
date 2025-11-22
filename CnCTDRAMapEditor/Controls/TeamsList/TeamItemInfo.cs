@@ -30,11 +30,6 @@ namespace MobiusEditor.Controls
             this.technos = technos.ToArray();
         }
 
-        public override TeamItemControl GetControlByProperty(TeamTypeClass property, IEnumerable<TeamItemControl> controls)
-        {
-            return controls.FirstOrDefault(ctrl => ReferenceEquals(ctrl.Info, property));
-        }
-
         public override TeamItemControl MakeControl(TeamTypeClass property, IListedControlController<TeamTypeClass, char, int> controller)
         {
             return new TeamItemControl(property, controller, technos);
@@ -43,6 +38,16 @@ namespace MobiusEditor.Controls
         public override void UpdateControl(TeamTypeClass property, IListedControlController<TeamTypeClass, char, int> controller, TeamItemControl control)
         {
             control.SetInfo(property, controller, technos);
+        }
+
+        public override TeamItemControl GetControlByProperty(TeamTypeClass property, IEnumerable<TeamItemControl> controls)
+        {
+            return controls.FirstOrDefault(ctrl => ReferenceEquals(ctrl.Info, property));
+        }
+
+        public override void HideControlTooltips(TeamItemControl control)
+        {
+            // Nothing to do; no tooltips on these.
         }
     }
 }

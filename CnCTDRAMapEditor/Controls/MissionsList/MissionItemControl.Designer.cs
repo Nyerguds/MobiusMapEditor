@@ -107,6 +107,7 @@ namespace MobiusEditor.Controls
             this.numValue.Size = new System.Drawing.Size(121, 20);
             this.numValue.TabIndex = 2;
             this.numValue.ValueChanged += new System.EventHandler(this.NumValue_ValueChanged);
+            this.numValue.MouseLeave += Control_MouseLeave;
             // 
             // cmbValue
             // 
@@ -120,6 +121,7 @@ namespace MobiusEditor.Controls
             this.cmbValue.TabIndex = 3;
             this.cmbValue.Visible = false;
             this.cmbValue.SelectedIndexChanged += new System.EventHandler(this.CmbValue_SelectedIndexChanged);
+            this.cmbValue.MouseLeave += Control_MouseLeave;
             // 
             // panel1
             // 
@@ -142,6 +144,7 @@ namespace MobiusEditor.Controls
             this.cmbMission.Size = new System.Drawing.Size(146, 21);
             this.cmbMission.TabIndex = 1;
             this.cmbMission.SelectedIndexChanged += new System.EventHandler(this.CmbMission_SelectedIndexChanged);
+            this.cmbMission.MouseLeave += Control_MouseLeave;
             // 
             // panel3
             // 

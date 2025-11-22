@@ -93,6 +93,8 @@ namespace MobiusEditor.Controls
                 {
                     UpdateInfo(info);
                 }
+                // When resetting an item, always clear all tooltips.
+                HideAllToolTips();
             }
         }
 
@@ -125,6 +127,13 @@ namespace MobiusEditor.Controls
         public void FocusButton()
         {
             btnOptions.Select();
+        }
+
+        public void HideAllToolTips()
+        {
+            Control_MouseLeave(cmbMission, new EventArgs());
+            Control_MouseLeave(numValue, new EventArgs());
+            Control_MouseLeave(cmbValue, new EventArgs());
         }
 
         private int UpdateValueControl(TeamMission mission, int value)
@@ -321,5 +330,17 @@ namespace MobiusEditor.Controls
             // A = Add new item on current item's spot, pushing the current item down.
             m_Controller?.UpdateControlInfo(Info, 'A');
         }
+
+        private void Control_MouseLeave(object sender, EventArgs e)
+        {
+            // Not sure why the toolitops sometimes linger when moving the mouse
+            // onto the equivalent control of another item, but this fixes it.
+            if (tooltip == null || !(sender is Control ctrl)) return;
+            if (tooltip.GetToolTip(ctrl) != null)
+            {
+                tooltip.Hide(ctrl);
+            }
+        }
+
     }
 }

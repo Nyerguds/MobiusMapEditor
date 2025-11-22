@@ -1032,7 +1032,7 @@ namespace MobiusEditor.Tools
                     }  
                 }
                 suppressRange = selectedRange.Concat(tracePath).ToArray();
-                redRangeBounds = tracePath.Where(wp => !selectedRange.Contains(wp)).ToArray();
+                redRangeBounds = tracePath.Where(wp => wp.Cell.HasValue && !selectedRange.Contains(wp)).ToArray();
                 redRangeIndic = tracePath.ToArray();
                 selectedRange = selectedRange.Where(wp => !tracePath.Contains(wp)).ToArray();
             }

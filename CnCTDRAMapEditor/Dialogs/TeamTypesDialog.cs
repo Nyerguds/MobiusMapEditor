@@ -212,7 +212,7 @@ namespace MobiusEditor.Dialogs
             TeamTypeMission dummyMission = new TeamTypeMission() { Mission = defaultMission, Argument = -1 };
             MissionItemInfo dummyMissions = new MissionItemInfo(null,
                 Enumerable.Range(0, maxMissions).Select(i => dummyMission.Clone()), teamMissionTypes, wayPoints, plugin.Map.Metrics.Length, toolTip1);
-            milMissions.Populate(missionItemInfo, this);
+            milMissions.Populate(dummyMissions, this);
             milMissions.Reset(false);
 
             teamTypeTableLayoutPanel.Visible = false;

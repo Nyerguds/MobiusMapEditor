@@ -14,7 +14,6 @@
 using System;
 using System.Collections.Generic;
 using System.Drawing;
-using System.Linq;
 using System.Windows.Forms;
 
 namespace MobiusEditor.Controls.ControlsList
@@ -60,6 +59,7 @@ namespace MobiusEditor.Controls.ControlsList
                     // "Enabled" is only changed because unlike "Visible", it is unaffected by layout
                     // operations, meaning it accurately represents the user-set value at all times.
                     control.Enabled = false;
+                    customControlInfo?.HideControlTooltips(control);
                 }
             }
             customControlInfo = cci;
@@ -200,6 +200,7 @@ namespace MobiusEditor.Controls.ControlsList
                 {
                     c.Visible = false;
                     c.Enabled = false;
+                    customControlInfo?.HideControlTooltips(c);
                 }
             }
             if (clearItems)

@@ -36,11 +36,6 @@ namespace MobiusEditor.Controls
             this.tooltip = tooltip;
         }
 
-        public override MissionItemControl GetControlByProperty(TeamTypeMission property, IEnumerable<MissionItemControl> controls)
-        {
-            return controls.FirstOrDefault(ctrl => ReferenceEquals(ctrl.Info, property));
-        }
-
         public override MissionItemControl MakeControl(TeamTypeMission property, IListedControlController<TeamTypeMission, char, int> controller)
         {
             return new MissionItemControl(property, controller, missions, waypoints, mapSize, tooltip);
@@ -49,6 +44,16 @@ namespace MobiusEditor.Controls
         public override void UpdateControl(TeamTypeMission property, IListedControlController<TeamTypeMission, char, int> controller, MissionItemControl control)
         {
             control.SetInfo(property, controller, missions, waypoints, mapSize, tooltip);
+        }
+
+        public override MissionItemControl GetControlByProperty(TeamTypeMission property, IEnumerable<MissionItemControl> controls)
+        {
+            return controls.FirstOrDefault(ctrl => ReferenceEquals(ctrl.Info, property));
+        }
+
+        public override void HideControlTooltips(MissionItemControl control)
+        {
+            control.HideAllToolTips();
         }
     }
 }

@@ -31,6 +31,7 @@ namespace MobiusEditor.Controls.ControlsList
         public abstract T MakeControl(TU property, IListedControlController<TU, TA, TR> controller);
         public abstract void UpdateControl(TU property, IListedControlController<TU, TA, TR> controller, T control);
         public abstract T GetControlByProperty(TU property, IEnumerable<T> controls);
+        public abstract void HideControlTooltips(T control);
 
         public override string ToString()
         {
