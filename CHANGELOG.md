@@ -750,5 +750,5 @@ Unreleased
 * The editor will no longer accept a random file dropped into the editor as being a binary map file for TD/Sole if an ini file of the same name is found. If the ini file is a self-contained map, or the opened file does not match any known .bin format, the file is simply rejected.
 * Added file existence checks into the code to open maps, preventing issues with drag-and-drop from programs that don't give correct existing paths.
 * Fixed bug where centering on a waypoint didn't work when zoomed in to a state where only one scrollbar was shown.
-* Optimised the Teamtypes window, making it a lot more responsive.
-* Added more  options in the Teamtypes orders list to insert, clone, and move orders.
+* Vastly optimised the Teamtypes window's "Teams" and "Orders" lists, removing the lag that occurred whenever the lists were loaded or changed.
+* Added more options in the Teamtypes "Orders" list; the old "x" button now pops up a menu with insert, clone, move and remove options.

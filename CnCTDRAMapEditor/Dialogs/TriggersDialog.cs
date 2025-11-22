@@ -27,10 +27,10 @@ namespace MobiusEditor.Dialogs
     public partial class TriggersDialog : Form
     {
         private const long defaultData = -1;
-        private const int maxLength = 4;
         private readonly IGamePlugin plugin;
         private readonly GameInfo gameInfo;
         private readonly GameType gameType;
+        private readonly int maxNameLength;
         private readonly int maxTriggers;
         private string[] persistenceNames = Trigger.PersistenceNames.ToArray();
         private string[] multiStyleNames = Trigger.MultiStyleNames.ToArray();
@@ -65,10 +65,11 @@ namespace MobiusEditor.Dialogs
             this.plugin = plugin;
             gameInfo = plugin.GameInfo;
             gameType = gameInfo.GameType;
-            maxTriggers = plugin.GameInfo.MaxTriggers;
+            maxNameLength = gameInfo.MaxTriggerNameLength;
+            maxTriggers = gameInfo.MaxTriggers;
             InitializeComponent();
             SetTriggerFilter(new TriggerFilter(plugin));
-            lblTooLong.Text = "Trigger length exceeds " + maxLength + " characters!";
+            lblTooLong.Text = "Trigger length exceeds " + maxNameLength + " characters!";
             switch (gameType)
             {
                 case GameType.TiberianDawn:
@@ -158,7 +159,7 @@ namespace MobiusEditor.Dialogs
             //action1ComboBox.DataBindings.Clear();
             //action2ComboBox.DataBindings.Clear();
             teamComboBox.DataBindings.Clear();
-            lblTooLong.Visible = SelectedTrigger != null && SelectedTrigger.Name != null && SelectedTrigger.Name.Length > maxLength;
+            lblTooLong.Visible = SelectedTrigger != null && SelectedTrigger.Name != null && SelectedTrigger.Name.Length > maxNameLength;
             if (SelectedTrigger != null)
             {
                 houseComboBox.DataBindings.Add("SelectedValue", SelectedTrigger, "House", true, DataSourceUpdateMode.OnPropertyChanged);
@@ -559,10 +560,10 @@ namespace MobiusEditor.Dialogs
             {
                 e.CancelEdit = true;
             }
-            else if (curName.Length > maxLength)
+            else if (curName.Length > maxNameLength)
             {
                 e.CancelEdit = true;
-                MessageBox.Show(this, String.Format("Trigger name is longer than {0} characters.", maxLength), "Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
+                MessageBox.Show(this, String.Format("Trigger name is longer than {0} characters.", maxNameLength), "Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
             }
             else if (Trigger.IsEmpty(curName))
             {
@@ -587,7 +588,7 @@ namespace MobiusEditor.Dialogs
                 renameActions.Add((oldName, curName));
                 SelectedTrigger.Name = curName;
                 // Normally always false
-                lblTooLong.Visible = curName.Length > maxLength;
+                lblTooLong.Visible = curName.Length > maxNameLength;
                 // Force text in there already so listview width recalculation works.
                 triggersListView.Items[e.Item].Text = curName;
                 triggersListView.Items[e.Item].ToolTipText = curName;

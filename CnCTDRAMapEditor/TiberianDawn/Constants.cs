@@ -26,6 +26,9 @@ namespace MobiusEditor.TiberianDawn
         public const int TiberiumValue = 25;
         public const string EmptyMapName = "None";
 
+        public const int MaxTriggerNameLength = 4;
+        public const int MaxTeamNameLength = 8;
+
         public const int MaxAircraft         /**/ = 100;
         public const int MaxBuildings        /**/ = 500;
         public const int MaxInfantry         /**/ = 500;

@@ -91,7 +91,9 @@ namespace MobiusEditor.TiberianDawn
         public override int MaxTerrain => Constants.MaxTerrain;
         public override int MaxUnits => Constants.MaxUnits;
         public override int MaxTriggers => Constants.MaxTriggers;
+        public override int MaxTriggerNameLength => Constants.MaxTriggerNameLength;
         public override int MaxTeams => Constants.MaxTeams;
+        public override int MaxTeamNameLength => Constants.MaxTeamNameLength;
         public override int MaxTeamClasses => Globals.MaxTeamClasses;
         public override int MaxTeamMissions => Globals.MaxTeamMissions;
         public override int HitPointsGreenMinimum => 127;

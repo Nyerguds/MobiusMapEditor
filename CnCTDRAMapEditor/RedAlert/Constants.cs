@@ -30,6 +30,9 @@ namespace MobiusEditor.RedAlert
         public const int DefaultJamRadius = 15;
         public const string EmptyMapName = "<none>";
 
+        public const int MaxTriggerNameLength = 4;
+        public const int MaxTeamNameLength = 8;
+
         public const int MaxAircraft  /**/ = 100;
         public const int MaxVessels   /**/ = 100;
         public const int MaxBuildings /**/ = 500;

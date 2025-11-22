@@ -137,8 +137,12 @@ namespace MobiusEditor.Model
         public abstract int MaxUnits { get; }
         /// <summary>Maximum amount of triggers that can be added into a map of this game.</summary>
         public abstract int MaxTriggers { get; }
+        /// <summary>Maximum length of trigger names.</summary>
+        public abstract int MaxTriggerNameLength { get; }
         /// <summary>Maximum amount of teamtypes that can be added into a map of this game.</summary>
         public abstract int MaxTeams { get; }
+        /// <summary>Maximum length of teamtypes names.</summary>
+        public abstract int MaxTeamNameLength { get; }
         /// <summary>Maximum amount of different unit classes in a teamtype for this game.</summary>
         public abstract int MaxTeamClasses { get; }
         /// <summary>Maximum amount of missions (orders) in a teamtype for this game.</summary>

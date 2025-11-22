@@ -37,8 +37,8 @@ namespace MobiusEditor.Dialogs
         private string[] filteredEvents;
         private string[] filteredActions;
 
-        private const int maxLength = 8;
         private readonly IGamePlugin plugin;
+        private readonly int maxNameLength;
         private readonly int maxTeams;
         private readonly int maxClasses;
         private readonly int maxMissions;
@@ -127,13 +127,15 @@ namespace MobiusEditor.Dialogs
         {
             initialTeam = selectteam;
             this.plugin = plugin;
-            maxTeams = plugin.GameInfo.MaxTeams;
-            maxClasses = plugin.GameInfo.MaxTeamClasses;
-            maxMissions = plugin.GameInfo.MaxTeamMissions;
+            GameInfo gi = plugin.GameInfo;
+            maxNameLength = gi.MaxTeamNameLength;
+            maxTeams = gi.MaxTeams;
+            maxClasses = gi.MaxTeamClasses;
+            maxMissions = gi.MaxTeamMissions;
             technoTypes = plugin.Map.TeamTechnoTypes;
 
             InitializeComponent();
-            lblTooLong.Text = "Teamtype length exceeds " + maxLength + " characters!";
+            lblTooLong.Text = "Teamtype length exceeds " + maxNameLength + " characters!";
             int extraWidthDropdowns = nudRecruitPriority.Width + nudRecruitPriority.Margin.Left + nudRecruitPriority.Margin.Right;
             int extraWidthCheckboxes = nudRecruitPriority.Width - chbAutocreate.Width;
             ttf = new ToolTipFixer(this, toolTip1, 10000, new Dictionary<Type, int>
@@ -197,6 +199,22 @@ namespace MobiusEditor.Dialogs
             TeamMission[] missions = plugin.Map.TeamMissionTypes;
             teamMissionTypes = missions.ToArray();
             defaultMission = missions.FirstOrDefault();
+
+            // Initialize Classes and Missions lists to full length. Since the control
+            // now recycles old items, and hides excess ones without removing them, this
+            // gives the controls their full allowed lists from the start, making them much
+            // more responsive, because nothing ever needs to be added or removed.
+            TeamTypeClass dummyClass = new TeamTypeClass() { Type = defaultTeam, Count = 1 };
+            TeamItemInfo dummyClasses = new TeamItemInfo(null, 
+                Enumerable.Range(0, maxClasses).Select(i => dummyClass.Clone()), technoTypes);
+            tilTeams.Populate(dummyClasses, this);
+            tilTeams.Reset(false);
+            TeamTypeMission dummyMission = new TeamTypeMission() { Mission = defaultMission, Argument = -1 };
+            MissionItemInfo dummyMissions = new MissionItemInfo(null,
+                Enumerable.Range(0, maxMissions).Select(i => dummyMission.Clone()), teamMissionTypes, wayPoints, plugin.Map.Metrics.Length, toolTip1);
+            milMissions.Populate(missionItemInfo, this);
+            milMissions.Reset(false);
+
             teamTypeTableLayoutPanel.Visible = false;
         }
 
@@ -324,7 +342,7 @@ namespace MobiusEditor.Dialogs
 
             TeamType selected = SelectedTeamType;
             lastEditedTeam = selected;
-            lblTooLong.Visible = SelectedTeamType != null && SelectedTeamType.Name != null && SelectedTeamType.Name.Length > maxLength;
+            lblTooLong.Visible = SelectedTeamType != null && SelectedTeamType.Name != null && SelectedTeamType.Name.Length > maxNameLength;
             if (selected != null)
             {
                 cmbHouse.DataBindings.Add("SelectedValue", selected, "House", false, DataSourceUpdateMode.OnPropertyChanged);
@@ -634,10 +652,10 @@ namespace MobiusEditor.Dialogs
             {
                 e.CancelEdit = true;
             }
-            else if (curName.Length > maxLength)
+            else if (curName.Length > maxNameLength)
             {
                 e.CancelEdit = true;
-                MessageBox.Show(this, String.Format("Team name is longer than {0} characters.", maxLength), "Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
+                MessageBox.Show(this, String.Format("Team name is longer than {0} characters.", maxNameLength), "Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
             }
             else if (TeamType.IsEmpty(curName))
             {

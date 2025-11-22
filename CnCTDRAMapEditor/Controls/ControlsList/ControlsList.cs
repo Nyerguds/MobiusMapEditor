@@ -26,7 +26,9 @@ namespace MobiusEditor.Controls.ControlsList
     /// <typeparam name="TU">Type of the information objects that contain all information to create/manage a listed control.</typeparam>
     public abstract partial class ControlsList<T,TU, TA, TR> : UserControl where T : Control
     {
+        // List of actual controls.
         protected List<T> contents = new List<T>();
+        // List of control info. Might be less long than controls list.
         protected CustomControlInfo<T, TU, TA, TR> customControlInfo;
 
         public T[] Contents => contents.ToArray();
@@ -43,41 +45,38 @@ namespace MobiusEditor.Controls.ControlsList
         /// <param name="ebc">The controller to assign to the created custom controls.</param>
         public void Populate(CustomControlInfo<T, TU, TA, TR> cci, IListedControlController<TU, TA, TR> ebc)
         {
-            if (cci == null)
-            {
-                Reset();
-                return;
-            }
             // Optimised reset
-            TU[] props = cci.Properties;
-            int oldCount = customControlInfo == null ? 0 : customControlInfo.Properties.Length;
-            int newCount = props.Length;
+            int oldCount = customControlInfo?.Properties?.Length ?? 0;
+            int newCount = cci?.Properties?.Length ?? 0;
             SuspendLayout();
             // Reuse all existing controls, but just reinitialize them.
             // Remove excess:
-            if (newCount < oldCount)
+            if (newCount < contents.Count)
             {
-                List<T> removed = new List<T>();
-                for (int i = newCount; i < oldCount; ++i)
+                for (int i = newCount; i < contents.Count; ++i)
                 {
-                    removed.Add(contents[i]);
-                }
-                for (int i = 0; i < removed.Count; ++i)
-                {
-                    T control = removed[i];
-                    contents.Remove(control);
-                    Controls.Remove(control);
-                    control.Dispose();
+                    T control = contents[i];
+                    control.Visible = false;
+                    // "Enabled" is only changed because unlike "Visible", it is unaffected by layout
+                    // operations, meaning it accurately represents the user-set value at all times.
+                    control.Enabled = false;
                 }
             }
             customControlInfo = cci;
+            if (cci == null)
+            {
+                Size = new Size(Size.Width, GetYPos(true));
+                PerformLayout();
+                return;
+            }
+            TU[] props = cci.Properties;
             lblTypeName.Text = cci.Name;
             lblTypeName.Visible = !String.IsNullOrEmpty(cci.Name);
             int finalHeight = 0;
             // Get trimmed height as start point.
-            if (contents.Count > 0)
+            if (oldCount > 0)
             {
-                T lastControl = contents[contents.Count - 1];
+                T lastControl = contents[oldCount - 1];
                 finalHeight = lastControl.Location.Y + lastControl.Size.Height;
             }
             for (int i = 0; i < newCount; ++i)
@@ -88,6 +87,9 @@ namespace MobiusEditor.Controls.ControlsList
                     if (i < contents.Count)
                     {
                         newControl = contents[i];
+                        newControl.Visible = true;
+                        newControl.Enabled = true;
+                        finalHeight = newControl.Location.Y + newControl.Size.Height;
                         cci.UpdateControl(props[i], ebc, newControl);
                     }
                     else
@@ -137,32 +139,51 @@ namespace MobiusEditor.Controls.ControlsList
         {
             if (refresh)
                 SuspendLayout();
-            int ySpacing = lblTypeName.Location.Y;
-            // Can't count on "lblTypeName.Visible" inside suspended layout.
-            bool addSpacing = !String.IsNullOrEmpty(lblTypeName.Text);
-            int yPos;
-            if (contents.Count == 0)
-                yPos = ySpacing + (addSpacing ? lblTypeName.Height + ySpacing : 0);
-            else
-            {
-                T lastControl = contents[contents.Count - 1];
-                yPos = lastControl.Location.Y + lastControl.Size.Height;
-            }
+            int yPos = GetYPos(false);
             control.Location = new Point(0, yPos);
             contents.Add(control);
             Controls.Add(control);
             control.TabIndex = Controls.Count;
             control.Size = new Size(DisplayRectangle.Width, control.Size.Height);
+            control.Visible = true;
+            control.Enabled = true;
             int newHeight = yPos + control.Size.Height;
             if (refresh)
                 Size = new Size(Size.Width, newHeight);
-            control.Visible = true;
             if (refresh)
                 PerformLayout();
             return newHeight;
         }
 
-        public void Reset()
+        /// <summary>
+        /// Get the Y position at which the next control would be shown.
+        /// This is also used to resize the control to only show visible items.
+        /// </summary>
+        /// <param name="forActive">True if this is based on activated items rather than on all existing items in <see cref="contents"/>.</param>
+        /// <returns></returns>
+        private int GetYPos(bool forActive)
+        {
+            int ySpacing = lblTypeName.Location.Y;
+            // Can't count on "lblTypeName.Visible" inside suspended layout.
+            bool addSpacing = !String.IsNullOrEmpty(lblTypeName.Text);
+            int yPos = ySpacing + (addSpacing ? lblTypeName.Height + ySpacing : 0);
+            if (contents.Count > 0 && !forActive)
+            {
+                T lastControl = contents[contents.Count - 1];
+                return lastControl.Location.Y + lastControl.Size.Height;
+            }
+            for (int i = 0; i < contents.Count; ++i)
+            {
+                T control = contents[i];
+                if (control.Enabled)
+                {
+                    yPos = Math.Max(yPos, control.Location.Y + control.Height);
+                }
+            }
+            return yPos;
+        }
+
+        public void Reset(bool clearItems)
         {
             SuspendLayout();
             lblTypeName.Text = String.Empty;
@@ -170,14 +191,26 @@ namespace MobiusEditor.Controls.ControlsList
             for (int i = 0; i < contentsCount; ++i)
             {
                 T c = contents[i];
-                Controls.Remove(c);
-                c.Dispose();
+                if (clearItems)
+                {
+                    Controls.Remove(c);
+                    c.Dispose();
+                }
+                else
+                {
+                    c.Visible = false;
+                    c.Enabled = false;
+                }
             }
-            contents.Clear();
+            if (clearItems)
+            {
+                contents.Clear();
+            }
+            Size = new Size(Size.Width, GetYPos(true));
             PerformLayout();
         }
 
-        protected void EffectBarList_Resize(object sender, EventArgs e)
+        protected void ControlsList_Resize(object sender, EventArgs e)
         {
             SuspendLayout();
             int contentsCount = contents.Count;

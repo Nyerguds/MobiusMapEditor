@@ -251,6 +251,7 @@ namespace MobiusEditor.Controls
                 return;
             }
             Info.Argument = (byte)item.Value;
+            // E = Edit (has no real effect)
             m_Controller?.UpdateControlInfo(Info, 'E');
         }
 
@@ -263,10 +264,14 @@ namespace MobiusEditor.Controls
             }
             if (m_Controller != null)
             {
+                // Hide irrelevant options.
+                // I = request Index of current item.
                 int index = m_Controller.UpdateControlInfo(Info, 'I');
                 tsmiMoveUp.Visible = index > 0;
+                // L = request Length of whole list.
                 int length = m_Controller.UpdateControlInfo(Info, 'L');
                 tsmiMoveDown.Visible = index < length - 1;
+                // M = request Maximum length allowed in list.
                 int max = m_Controller.UpdateControlInfo(Info, 'M');
                 Boolean maxNotReached = length < max;
                 tsmiDuplicate.Visible = maxNotReached;
@@ -276,57 +281,44 @@ namespace MobiusEditor.Controls
             {
                 tsmiMoveUp.Visible = true;
                 tsmiMoveDown.Visible = true;
+                tsmiDuplicate.Visible = true;
+                tsmiInsert.Visible = true;
             }
             cmsOptions.Show(src, 0, src.Height);
         }
 
         private void TsmiDelete_Click(object sender, EventArgs e)
         {
-            if (m_Loading || Info == null)
-            {
-                return;
-            }
-            // R = Remove
+            if (m_Loading || Info == null) return;
+            // R = Remove current item.
             m_Controller?.UpdateControlInfo(Info, 'R');
         }
 
         private void TsmiMoveUp_Click(object sender, EventArgs e)
         {
-            if (m_Loading || Info == null)
-            {
-                return;
-            }
-            // U = move Up
+            if (m_Loading || Info == null) return;
+            // U = move current item Up.
             m_Controller?.UpdateControlInfo(Info, 'U');
         }
 
         private void TsmiMoveDown_Click(object sender, EventArgs e)
         {
-            if (m_Loading || Info == null)
-            {
-                return;
-            }
-            // D = move Down
+            if (m_Loading || Info == null) return;
+            // D = move current item Down.
             m_Controller?.UpdateControlInfo(Info, 'D');
         }
 
         private void TsmiDuplicate_Click(object sender, EventArgs e)
         {
-            if (m_Loading || Info == null)
-            {
-                return;
-            }
-            // C = Clone
+            if (m_Loading || Info == null) return;
+            // C = Clone current item.
             m_Controller?.UpdateControlInfo(Info, 'C');
         }
 
         private void TsmiInsert_Click(object sender, EventArgs e)
         {
-            if (m_Loading || Info == null)
-            {
-                return;
-            }
-            // A = Add
+            if (m_Loading || Info == null) return;
+            // A = Add new item on current item's spot, pushing the current item down.
             m_Controller?.UpdateControlInfo(Info, 'A');
         }
     }
