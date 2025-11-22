@@ -980,7 +980,7 @@ namespace MobiusEditor.RedAlert
                     int numClasses = Int32.Parse(tokens[(int)TeamTypeOptions.Classes]);
                     int classesIndex = (int)TeamTypeOptions.Classes + 1;
                     int classesIndexEnd = classesIndex + numClasses;
-                    int classesMax = Math.Min(Globals.MaxTeamClasses, numClasses);
+                    int classesMax = Math.Min(GameInfo.MaxTeamClasses, numClasses);
                     int classesIndexMax = classesIndex + classesMax;
                     for (int i = classesIndex; i < classesIndexMax; ++i)
                     {
@@ -1007,15 +1007,15 @@ namespace MobiusEditor.RedAlert
                         }
                         teamType.Classes.Add(new TeamTypeClass { Type = type, Count = count });
                     }
-                    if (numClasses > Globals.MaxTeamClasses)
+                    if (numClasses > GameInfo.MaxTeamClasses)
                     {
-                        errors.Add(String.Format("Team '{0}' has more classes than the game can handle (has {1}, maximum is {2}).", kvp.Key, numClasses, Globals.MaxTeamClasses));
+                        errors.Add(String.Format("Team '{0}' has more classes than the game can handle (has {1}, maximum is {2}).", kvp.Key, numClasses, GameInfo.MaxTeamClasses));
                         modified = true;
                     }
                     int numMissions = Int32.Parse(tokens[classesIndexEnd]);
                     int missionsIndex = classesIndexEnd + 1;
                     int missionsIndexEnd = missionsIndex + numMissions;
-                    int missionsMax = Math.Min(Globals.MaxTeamMissions, numMissions);
+                    int missionsMax = Math.Min(GameInfo.MaxTeamMissions, numMissions);
                     int missionsIndexMax = missionsIndex + missionsMax;
                     for (int i = missionsIndex; i < missionsIndexMax; ++i)
                     {
@@ -1128,9 +1128,9 @@ namespace MobiusEditor.RedAlert
                         }
                         teamType.Missions.Add(new TeamTypeMission { Mission = mission, Argument = arg });
                     }
-                    if (numMissions > Globals.MaxTeamMissions)
+                    if (numMissions > GameInfo.MaxTeamMissions)
                     {
-                        errors.Add(String.Format("Team '{0}' has more orders than the game can handle (has {1}, maximum is {2}).", kvp.Key, numMissions, Globals.MaxTeamMissions));
+                        errors.Add(String.Format("Team '{0}' has more orders than the game can handle (has {1}, maximum is {2}).", kvp.Key, numMissions, GameInfo.MaxTeamMissions));
                         modified = true;
                     }
                     teamTypes.Add(teamType);
@@ -5574,6 +5574,16 @@ namespace MobiusEditor.RedAlert
                     break;
             }
             return actionArg == null ? actionStr : String.Format(GameInfo.TRIG_ARG_FORMAT, actionStr, actionArg);
+        }
+
+        public String TriggerEventInfo(List<Trigger> currentTriggers, string eventName)
+        {
+            return null;
+        }
+
+        public String TriggerActionInfo(List<Trigger> currentTriggers, string actionName)
+        {
+            return null;
         }
 
         public ITeamColor[] GetFlagColors()

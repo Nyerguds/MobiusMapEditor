@@ -21,18 +21,20 @@ namespace MobiusEditor.Controls.ControlsList
     /// </summary>
     /// <typeparam name="T">Type of the user controls with which to populate the list.</typeparam>
     /// <typeparam name="TU">Type of the information objects that contain all information to create/manage a listed control.</typeparam>
-    public abstract class CustomControlInfo<T, TU> where T : Control
+    /// <typeparam name="TA">Type of the actions information sent to the controller's update function.</typeparam>
+    /// <typeparam name="TR">Return type of the controller's update function.</typeparam>
+    public abstract class CustomControlInfo<T, TU, TA, TR> where T : Control
     {
         public string Name { get; set; }
         public TU[] Properties { get; set; }
 
-        public abstract T MakeControl(TU property, ListedControlController<TU> controller);
-        public abstract void UpdateControl(TU property, ListedControlController<TU> controller, T control);
+        public abstract T MakeControl(TU property, IListedControlController<TU, TA, TR> controller);
+        public abstract void UpdateControl(TU property, IListedControlController<TU, TA, TR> controller, T control);
         public abstract T GetControlByProperty(TU property, IEnumerable<T> controls);
 
         public override string ToString()
         {
-            return this.Name;
+            return Name ?? GetType().Name;
         }
     }
 }

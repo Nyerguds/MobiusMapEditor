@@ -151,6 +151,18 @@ namespace MobiusEditor.Interface
         /// <returns>The summarisation of the trigger</returns>
         string TriggerSummary(Trigger trigger, bool withLineBreaks, bool includeTriggerName);
 
+        /// <summary>Returns a popup description for the selected trigger event type.</summary>
+        /// <param name="currentTriggers">Curently edited list of triggers.</param>
+        /// <param name="eventName">Event the popup info is for.</param>
+        /// <returns>Information about the selected event.</returns>
+        string TriggerEventInfo(List<Trigger> currentTriggers, string eventName);
+
+        /// <summary>Returns a popup description for the selected trigger action type.</summary>
+        /// <param name="currentTriggers">Curently edited list of triggers.</param>
+        /// <param name="actionName">Action the popup info is for.</param>
+        /// <returns>Information about the selected event.</returns>
+        string TriggerActionInfo(List<Trigger> currentTriggers, string actionName);
+
         /// <summary>Re-initialises the flag colors for this game.</summary>
         /// <returns>The team colors</returns>
         ITeamColor[] GetFlagColors();

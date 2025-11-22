@@ -29,18 +29,11 @@ namespace MobiusEditor.Dialogs
         private const long defaultData = -1;
         private const int maxLength = 4;
         private readonly IGamePlugin plugin;
+        private readonly GameInfo gameInfo;
+        private readonly GameType gameType;
         private readonly int maxTriggers;
-        // what even is this shit srsly. Replaced by something more human readable.
-        //private string[] persistenceNamesTd = new string[] { "No", "And", "Or" };
-        //private string[] persistenceNamesRa = new string[] { "Temporary", "Semi-Constant", "Constant" };
-        private string[] persistenceNames = new string[] { "On first triggering", "When all linked objects are triggered", "On each triggering" };
-        private string[] typeNames = new string[]
-        {
-                "Event → Action1 [+ Action2]",
-                "Event1 AND Event2 → Action1 [+ Action2]",
-                "Event1 OR Event2 → Action1 [+ Action2]",
-                "Event1 → Action1; Event2 → Action2",
-        };
+        private string[] persistenceNames = Trigger.PersistenceNames.ToArray();
+        private string[] multiStyleNames = Trigger.MultiStyleNames.ToArray();
 
         /// <summary>Argument types to generate a special tooltip for.</summary>
         private enum ArgType
@@ -61,6 +54,7 @@ namespace MobiusEditor.Dialogs
         private ArgType actionArgType1 = ArgType.None;
         private ArgType actionArgType2 = ArgType.None;
         private Control tooltipShownOn = null;
+        private String tooltipShown = null;
 
         private ListViewItem SelectedItem => (triggersListView.SelectedItems.Count > 0) ? triggersListView.SelectedItems[0] : null;
 
@@ -69,11 +63,13 @@ namespace MobiusEditor.Dialogs
         public TriggersDialog(IGamePlugin plugin)
         {
             this.plugin = plugin;
+            gameInfo = plugin.GameInfo;
+            gameType = gameInfo.GameType;
             maxTriggers = plugin.GameInfo.MaxTriggers;
             InitializeComponent();
             SetTriggerFilter(new TriggerFilter(plugin));
             lblTooLong.Text = "Trigger length exceeds " + maxLength + " characters!";
-            switch (plugin.GameInfo.GameType)
+            switch (gameType)
             {
                 case GameType.TiberianDawn:
                 case GameType.SoleSurvivor:
@@ -112,7 +108,7 @@ namespace MobiusEditor.Dialogs
             typeComboBox.ValueMember = "Value";
             typeComboBox.DisplayMember = "Label";
             typeComboBox.DataSource = Enum.GetValues(typeof(TriggerMultiStyleType)).Cast<TriggerMultiStyleType>()
-                .Select(v => ListItem.Create(v, typeNames[(int)v])).ToArray();
+                .Select(v => ListItem.Create(v, multiStyleNames[(int)v])).ToArray();
             event1ComboBox.DataSource = plugin.Map.EventTypes.Where(t => !string.IsNullOrEmpty(t)).ToArray();
             event2ComboBox.DataSource = plugin.Map.EventTypes.Where(t => !string.IsNullOrEmpty(t)).ToArray();
             action1ComboBox.DataSource = plugin.Map.ActionTypes.Where(t => !string.IsNullOrEmpty(t)).ToArray();
@@ -146,7 +142,7 @@ namespace MobiusEditor.Dialogs
             AdjustTriggersListViewColWidth();
         }
 
-        private void triggersListView_SelectedIndexChanged(object sender, EventArgs e)
+        private void TriggersListView_SelectedIndexChanged(object sender, EventArgs e)
         {
             RefreshListSelection();
         }
@@ -170,47 +166,45 @@ namespace MobiusEditor.Dialogs
                 // Set event 1
                 TriggerEvent evt1 = SelectedTrigger.Event1.Clone();
                 event1ComboBox.SelectedItem = SelectedTrigger.Event1.EventType;
-                bool otherToolTipShownEvt = tooltipShownOn != null && tooltipShownOn != event1ComboBox && tooltipShownOn.ClientRectangle.Contains(tooltipShownOn.PointToClient(Cursor.Position));
-                UpdateTriggerEventControls(SelectedTrigger.Event1, event1Nud, event1ValueComboBox, ref eventArgType1, otherToolTipShownEvt, evt1);
-                UpdateEvent1ComboBoxToolTip();
+                UpdateTriggerEventControls(SelectedTrigger.Event1, event1Nud, event1ValueComboBox, ref eventArgType1, evt1);
                 SelectedTrigger.Event1.FillDataFrom(evt1);
+                UpdateEvent1ComboBoxToolTip();
+                UpdateEvent1ValueComboBoxToolTip();
                 // Set action 1
                 TriggerAction act1 = SelectedTrigger.Action1.Clone();
                 action1ComboBox.SelectedItem = SelectedTrigger.Action1.ActionType;
-                bool otherToolTipShownAct = tooltipShownOn != null && tooltipShownOn != action1ValueComboBox && tooltipShownOn.ClientRectangle.Contains(tooltipShownOn.PointToClient(Cursor.Position));
-                UpdateTriggerActionControls(SelectedTrigger.Action1, action1Nud, action1ValueComboBox, ref actionArgType1, otherToolTipShownAct, act1);
-                UpdateAction1ComboBoxToolTip();
+                UpdateTriggerActionControls(SelectedTrigger.Action1, action1Nud, action1ValueComboBox, ref actionArgType1, act1);
                 SelectedTrigger.Action1.FillDataFrom(act1);
-                switch (plugin.GameInfo.GameType)
+                UpdateAction1ComboBoxToolTip();
+                UpdateAction1ValueComboBoxToolTip();
+                switch (gameType)
                 {
                     case GameType.TiberianDawn:
                     case GameType.SoleSurvivor:
-                        string team = SelectedTrigger.Action1.Team ?? TeamType.None;                        
+                        string team = SelectedTrigger.Action1.Team ?? TeamType.None;
                         string[] teamData = TeamType.None.Yield().Concat(plugin.Map.TeamTypes.Select(t =>  t.Name)).ToArray();
                         teamComboBox.DataSource = teamData.Select(tn => ListItem.Create(tn)).ToArray();
                         string correctedTeam = teamData.FirstOrDefault(tm => tm.Equals(team, StringComparison.OrdinalIgnoreCase)) ?? TeamType.None;
                         SelectedTrigger.Action1.Team = correctedTeam;
                         teamComboBox.DataBindings.Add("SelectedValue", SelectedTrigger.Action1, "Team", true, DataSourceUpdateMode.OnPropertyChanged);
-                        string teamDescrTd = GetTeamLabel(SelectedTrigger.Action1.Team);
-                        if (teamDescrTd != null && teamComboBox.ClientRectangle.Contains(teamComboBox.PointToClient(Cursor.Position)))
-                        {
-                            ShowToolTip(toolTip1, teamComboBox, teamDescrTd);
-                        }
+                        UpdateTeamComboBoxToolTip();
                         break;
                     case GameType.RedAlert:
                         typeComboBox.DataBindings.Add("SelectedValue", SelectedTrigger, "EventControl", true, DataSourceUpdateMode.OnPropertyChanged);
                         // Set event 2
                         TriggerEvent evt2 = SelectedTrigger.Event2.Clone();
                         event2ComboBox.SelectedItem = SelectedTrigger.Event2.EventType;
-                        otherToolTipShownEvt = tooltipShownOn != null && tooltipShownOn != event2ComboBox && tooltipShownOn.ClientRectangle.Contains(tooltipShownOn.PointToClient(Cursor.Position));
-                        UpdateTriggerEventControls(SelectedTrigger.Event2, event2Nud, event2ValueComboBox, ref eventArgType2, otherToolTipShownEvt, evt2);
+                        UpdateTriggerEventControls(SelectedTrigger.Event2, event2Nud, event2ValueComboBox, ref eventArgType2, evt2);
                         SelectedTrigger.Event2.FillDataFrom(evt2);
+                        UpdateEvent2ComboBoxToolTip();
+                        UpdateEvent2ValueComboBoxToolTip();
                         // Set action 2
                         TriggerAction act2 = SelectedTrigger.Action2.Clone();
                         action2ComboBox.SelectedItem = SelectedTrigger.Action2?.ActionType;
-                        otherToolTipShownAct = tooltipShownOn != null && tooltipShownOn != action2ValueComboBox && tooltipShownOn.ClientRectangle.Contains(tooltipShownOn.PointToClient(Cursor.Position));
-                        UpdateTriggerActionControls(SelectedTrigger.Action2, action2Nud, action2ValueComboBox, ref actionArgType2, otherToolTipShownAct, act2);
+                        UpdateTriggerActionControls(SelectedTrigger.Action2, action2Nud, action2ValueComboBox, ref actionArgType2, act2);
                         SelectedTrigger.Action2.FillDataFrom(act2);
+                        UpdateAction2ComboBoxToolTip();
+                        UpdateAction2ValueComboBoxToolTip();
                         break;
                 }
                 triggersTableLayoutPanel.Visible = true;
@@ -223,7 +217,7 @@ namespace MobiusEditor.Dialogs
             }
         }
 
-        private void triggersListView_MouseDown(object sender, MouseEventArgs e)
+        private void TriggersListView_MouseDown(object sender, MouseEventArgs e)
         {
             if (e.Button == MouseButtons.Right)
             {
@@ -239,7 +233,7 @@ namespace MobiusEditor.Dialogs
             }
         }
 
-        private void triggersListView_KeyDown(object sender, KeyEventArgs e)
+        private void TriggersListView_KeyDown(object sender, KeyEventArgs e)
         {
             if (e.KeyData == Keys.F2)
             {
@@ -365,6 +359,7 @@ namespace MobiusEditor.Dialogs
                 return emb.ShowDialog() == DialogResult.Cancel;
             }
         }
+
         private List<(string Name1, string Name2)> RemoveNewRenames(List<(string Name1, string Name2)> renameActions, bool clone)
         {
             List<(string Name1, string Name2)> renActions;
@@ -429,7 +424,7 @@ namespace MobiusEditor.Dialogs
         private void ChangeFilter()
         {
             string[] currentTriggers = triggers.Select(t => t.Name).ToArray();
-            using (TriggerFilterDialog tfd = new TriggerFilterDialog(plugin, persistenceLabel.Text, persistenceNames, typeNames, currentTriggers))
+            using (TriggerFilterDialog tfd = new TriggerFilterDialog(plugin, persistenceLabel.Text, persistenceNames, multiStyleNames, currentTriggers))
             {
                 tfd.Filter = triggerFilter;
                 tfd.StartPosition = FormStartPosition.CenterParent;
@@ -468,8 +463,8 @@ namespace MobiusEditor.Dialogs
         private void SetTriggerFilter(TriggerFilter triggerFilter)
         {
             this.triggerFilter = triggerFilter;
-            string filter = triggerFilter.ToString(persistenceLabel.Text[0], persistenceNames, typeNames);
-            lblFilterDetails.Text = triggerFilter.IsEmpty ? "No filters selected." : String.Format("Active filters: {0}", filter);
+            string filter = GeneralUtils.DoubleAmpersands(triggerFilter.ToString());
+            lblFilterDetails.Text = triggerFilter.IsEmpty ? "No filters selected." : String.Format("Active filters: {0}", triggerFilter.ToString());
             lblFilterDetails.ForeColor = triggerFilter.IsEmpty ? SystemColors.ControlText : Color.Red;
         }
 
@@ -548,10 +543,10 @@ namespace MobiusEditor.Dialogs
             if (index >= 0 && triggersListView.Items.Count > index)
                 triggersListView.Items[index].Selected = true;
             btnAdd.Enabled = triggers.Count < maxTriggers;
-            if (triggerFilter.FilterTrigger && String.Equals(triggerFilter.Trigger, name, StringComparison.OrdinalIgnoreCase))
+            if (triggerFilter.FilterTrigger && String.Equals(triggerFilter.TriggerArg, name, StringComparison.OrdinalIgnoreCase))
             {
                 triggerFilter.FilterTrigger = false;
-                triggerFilter.Trigger = Trigger.None;
+                triggerFilter.TriggerArg = Trigger.None;
                 ApplyFilter(triggerFilter);
             }
             AdjustTriggersListViewColWidth();
@@ -596,9 +591,9 @@ namespace MobiusEditor.Dialogs
                 // Force text in there already so listview width recalculation works.
                 triggersListView.Items[e.Item].Text = curName;
                 triggersListView.Items[e.Item].ToolTipText = curName;
-                if (triggerFilter.FilterTrigger && String.Equals(triggerFilter.Trigger, oldName, StringComparison.OrdinalIgnoreCase))
+                if (triggerFilter.FilterTrigger && String.Equals(triggerFilter.TriggerArg, oldName, StringComparison.OrdinalIgnoreCase))
                 {
-                    triggerFilter.Trigger = curName;
+                    triggerFilter.TriggerArg = curName;
                     ApplyFilter(triggerFilter);
                 }
                 AdjustTriggersListViewColWidth();
@@ -627,7 +622,7 @@ namespace MobiusEditor.Dialogs
             // You never know if someone makes a circular trigger...
             Trigger curr = SelectedTrigger;
             bool updateUi = curr != null && curr.Action1.Trigger == name || curr.Action2.Trigger == name;
-            if (plugin.GameInfo.GameType != GameType.RedAlert)
+            if (gameType != GameType.RedAlert)
             {
                 return;
             }
@@ -644,39 +639,50 @@ namespace MobiusEditor.Dialogs
             }
             if (updateUi)
             {
-                triggersListView_SelectedIndexChanged(triggersListView, new EventArgs());
+                TriggersListView_SelectedIndexChanged(triggersListView, new EventArgs());
             }
         }
 
+        #region TypeComboBox events
         private void TypeComboBox_SelectedValueChanged(object sender, EventArgs e)
         {
-            if (plugin.GameInfo.GameType == GameType.RedAlert && SelectedTrigger != null)
+            if (gameType != GameType.RedAlert || SelectedTrigger == null)
             {
-                var eventType = (TriggerMultiStyleType)typeComboBox.SelectedValue;
-                bool hasEvent2 = eventType != TriggerMultiStyleType.Only;
-                if (!hasEvent2)
-                {
-                    // Set event to "None".
-                    event2ComboBox.SelectedIndex = 0;
-                }
-                triggersTableLayoutPanel.SuspendLayout();
-                RemoveFromLayout(triggersTableLayoutPanel, event2Label, event2ComboBox, event2Flp);
-                RemoveFromLayout(triggersTableLayoutPanel, action1Label, action1ComboBox, action1Flp);
-                if (eventType != TriggerMultiStyleType.Linked)
-                {
-                    // Normal order: E1, [E2 → A1], A2
-                    AddToLayout(triggersTableLayoutPanel, event2Label, event2ComboBox, event2Flp, 4);
-                    AddToLayout(triggersTableLayoutPanel, action1Label, action1ComboBox, action1Flp, 5);
-                }
-                else
-                {
-                    // Flipped order: E1 → [A1, E2] → A2
-                    AddToLayout(triggersTableLayoutPanel, action1Label, action1ComboBox, action1Flp, 4);
-                    AddToLayout(triggersTableLayoutPanel, event2Label, event2ComboBox, event2Flp, 5);
-                }
-                event2Label.Visible = event2ComboBox.Visible = event2Flp.Visible = hasEvent2;
-                triggersTableLayoutPanel.ResumeLayout(false);
-                triggersTableLayoutPanel.PerformLayout();
+                return;
+            }
+            TriggerMultiStyleType eventType = ListItem.GetValueFromComboBox<TriggerMultiStyleType>(typeComboBox);
+            bool hasEvent2 = eventType != TriggerMultiStyleType.Only;
+            if (!hasEvent2)
+            {
+                // Set event to "None".
+                event2ComboBox.SelectedIndex = 0;
+            }
+            triggersTableLayoutPanel.SuspendLayout();
+            RemoveFromLayout(triggersTableLayoutPanel, event2Label, event2ComboBox, event2Flp);
+            RemoveFromLayout(triggersTableLayoutPanel, action1Label, action1ComboBox, action1Flp);
+            if (eventType != TriggerMultiStyleType.Linked)
+            {
+                // Normal order: E1, [E2 → A1], A2
+                AddToLayout(triggersTableLayoutPanel, event2Label, event2ComboBox, event2Flp, 4);
+                AddToLayout(triggersTableLayoutPanel, action1Label, action1ComboBox, action1Flp, 5);
+            }
+            else
+            {
+                // Flipped order: E1 → [A1, E2] → A2
+                AddToLayout(triggersTableLayoutPanel, action1Label, action1ComboBox, action1Flp, 4);
+                AddToLayout(triggersTableLayoutPanel, event2Label, event2ComboBox, event2Flp, 5);
+            }
+            event2Label.Visible = event2ComboBox.Visible = event2Flp.Visible = hasEvent2;
+            triggersTableLayoutPanel.ResumeLayout(false);
+            triggersTableLayoutPanel.PerformLayout();
+        }
+        #endregion
+        #region Event1Combobox events
+        private void UpdateEvent1ComboBoxToolTip()
+        {
+            if (MouseOnControl(event1ComboBox))
+            {
+                Event1ComboBox_MouseEnter(event1ComboBox, EventArgs.Empty);
             }
         }
 
@@ -686,32 +692,21 @@ namespace MobiusEditor.Dialogs
             {
                 SelectedTrigger.Event1.EventType = event1ComboBox.SelectedItem.ToString();
             }
-            bool otherToolTipIsShown = tooltipShownOn != sender && tooltipShownOn != null && tooltipShownOn.ClientRectangle.Contains(tooltipShownOn.PointToClient(Cursor.Position));
-            UpdateTriggerEventControls(SelectedTrigger?.Event1, event1Nud, event1ValueComboBox, ref eventArgType1, otherToolTipIsShown, null);
+            UpdateTriggerEventControls(SelectedTrigger?.Event1, event1Nud, event1ValueComboBox, ref eventArgType1, null);
             UpdateEvent1ComboBoxToolTip();
-        }
-
-        private void UpdateEvent1ComboBoxToolTip()
-        {
-            if (event1ComboBox != null)
-            {
-                Event1ComboBox_MouseEnter(event1ComboBox, EventArgs.Empty);
-            }
         }
 
         private void Event1ComboBox_MouseEnter(object sender, EventArgs e)
         {
             Control target = sender as Control;
-            string evt = SelectedTrigger?.Event1?.EventType;
-            string trigDescrTd = null;
-            bool hasDesc = evt != null && TiberianDawn.EventTypes.TypesInfo.TryGetValue(evt, out trigDescrTd);
-            if (hasDesc && !String.IsNullOrEmpty(trigDescrTd))
-            {
-                ShowToolTip(toolTip1, target, trigDescrTd);
-            }
-            else if (tooltipShownOn != null && !tooltipShownOn.ClientRectangle.Contains(tooltipShownOn.PointToClient(Cursor.Position)))
+            string trigDescr = plugin.TriggerEventInfo(triggers, SelectedTrigger?.Event1?.EventType);
+            if (String.IsNullOrEmpty(trigDescr))
             {
                 HideToolTip(toolTip1, tooltipShownOn, true);
+            }
+            else
+            {
+                ShowToolTip(toolTip1, target, trigDescr);
             }
         }
 
@@ -719,116 +714,35 @@ namespace MobiusEditor.Dialogs
         {
             if (tooltipShownOn != sender)
             {
-                Event1ComboBox_MouseEnter(sender, e);
+                UpdateEvent1ComboBoxToolTip();
             }
         }
-
-        private void Action1ComboBox_SelectedIndexChanged(object sender, EventArgs e)
+        #endregion
+        #region Event1ValueComboBox events
+        private void UpdateEvent1ValueComboBoxToolTip()
         {
-            if (SelectedTrigger != null)
+            if (MouseOnControl(event1ValueComboBox))
             {
-                SelectedTrigger.Action1.ActionType = action1ComboBox.SelectedItem.ToString();
+                Event1ComboBox_MouseEnter(event1ValueComboBox, EventArgs.Empty);
             }
-            bool otherToolTipIsShown = tooltipShownOn != sender && tooltipShownOn != null && tooltipShownOn.ClientRectangle.Contains(tooltipShownOn.PointToClient(Cursor.Position));
-            UpdateTriggerActionControls(SelectedTrigger?.Action1, action1Nud, action1ValueComboBox, ref actionArgType1, otherToolTipIsShown, null);
-            UpdateAction1ComboBoxToolTip();
-        }
-
-        private void UpdateAction1ComboBoxToolTip()
-        {
-            if (action1ComboBox != null)
-            {
-                Action1ComboBox_MouseEnter(action1ComboBox, EventArgs.Empty);
-            }
-        }
-
-        private void Action1ComboBox_MouseEnter(object sender, EventArgs e)
-        {
-            Control target = sender as Control;
-            string trigDescrTd = CheckTdSpecialTrigger(SelectedTrigger?.Action1);
-            if (trigDescrTd != null)
-            {
-                ShowToolTip(toolTip1, target, trigDescrTd);
-            }
-            else if (tooltipShownOn != null && !tooltipShownOn.ClientRectangle.Contains(tooltipShownOn.PointToClient(Cursor.Position)))
-            {
-                HideToolTip(toolTip1, tooltipShownOn, true);
-            }
-        }
-
-        private void Action1ComboBox_MouseMove(object sender, MouseEventArgs e)
-        {
-            if (tooltipShownOn != sender)
-            {
-                Action1ComboBox_MouseEnter(sender, e);
-            }
-        }
-
-        private string CheckTdSpecialTrigger(TriggerAction action)
-        {
-            if (plugin.GameInfo.GameType != GameType.TiberianDawn
-                || action == null || action.ActionType == null)
-            {
-                return null;
-            }
-            string delTrig = null;
-            bool isFlare = false;
-            switch (action.ActionType)
-            {
-                case TiberianDawn.ActionTypes.ACTION_DESTROY_XXXX: delTrig = "XXXX"; break;
-                case TiberianDawn.ActionTypes.ACTION_DESTROY_YYYY: delTrig = "YYYY"; break;
-                case TiberianDawn.ActionTypes.ACTION_DESTROY_ZZZZ: delTrig = "ZZZZ"; break;
-                case TiberianDawn.ActionTypes.ACTION_DESTROY_UUUU: delTrig = "UUUU"; break;
-                case TiberianDawn.ActionTypes.ACTION_DESTROY_VVVV: delTrig = "VVVV"; break;
-                case TiberianDawn.ActionTypes.ACTION_DESTROY_WWWW: delTrig = "WWWW"; break;
-                case TiberianDawn.ActionTypes.ACTION_DZ: isFlare= true; break;
-            }
-            if (delTrig != null)
-            {
-                Trigger toDestr = triggers.FirstOrDefault(tr => delTrig.Equals(tr.Name, StringComparison.OrdinalIgnoreCase));
-                if (toDestr == null)
-                {
-                    return delTrig + ": not found";
-                }
-                else
-                {
-                    return plugin.TriggerSummary(toDestr, true, true);
-                }
-            }
-            else if (isFlare)
-            {
-                string wp = "Waypoint 'Z' (flare): ";
-                Waypoint z = plugin.Map.Waypoints.FirstOrDefault(w => w.Flags.HasFlag(WaypointFlag.Flare));
-                if (z == null)
-                    return wp + "Not found.";
-                if (!z.Point.HasValue)
-                    return wp + "Not set.";
-                Point p = z.Point.Value;
-                return String.Format("{0}[{1},{2}] (cell {3})", wp, p.X, p.Y, z.Cell.Value);
-            }
-            return null;
         }
 
         private void Event1ValueComboBox_SelectedIndexChanged(object sender, EventArgs e)
         {
-            ComboBox valCombo = sender as ComboBox;
-            if (valCombo.ClientRectangle.Contains(valCombo.PointToClient(Cursor.Position)))
-            {
-                Event1ValueComboBox_MouseEnter(sender, e);
-            }
+            UpdateEvent1ValueComboBoxToolTip();
         }
 
         private void Event1ValueComboBox_MouseEnter(object sender, EventArgs e)
         {
-            ComboBox valCombo = sender as ComboBox;
-            string eventValueLabel = GetActionValueLabel(valCombo, eventArgType1);
-            if (eventValueLabel != null)
+            ComboBox target = sender as ComboBox;
+            string eventValueLabel = GetValueComboboxLabel(target, eventArgType1);
+            if (String.IsNullOrEmpty(eventValueLabel))
             {
-                ShowToolTip(toolTip1, valCombo, eventValueLabel);
+                HideToolTip(toolTip1, target, true);
             }
-            else if (tooltipShownOn != null && !tooltipShownOn.ClientRectangle.Contains(tooltipShownOn.PointToClient(Cursor.Position)))
+            else
             {
-                HideToolTip(toolTip1, valCombo, true);
+                ShowToolTip(toolTip1, target, eventValueLabel);
             }
         }
 
@@ -836,69 +750,16 @@ namespace MobiusEditor.Dialogs
         {
             if (tooltipShownOn != sender)
             {
-                Event1ValueComboBox_MouseEnter(sender, e);
+                UpdateEvent1ValueComboBoxToolTip();
             }
         }
-
-        private void Event2ValueComboBox_SelectedIndexChanged(object sender, EventArgs e)
+        #endregion
+        #region Event2ComboBox events
+        private void UpdateEvent2ComboBoxToolTip()
         {
-            ComboBox valCombo = sender as ComboBox;
-            if (valCombo.ClientRectangle.Contains(valCombo.PointToClient(Cursor.Position)))
+            if (MouseOnControl(event2ComboBox))
             {
-                Event2ValueComboBox_MouseEnter(sender, e);
-            }
-        }
-
-        private void Event2ValueComboBox_MouseEnter(object sender, EventArgs e)
-        {
-            ComboBox valCombo = sender as ComboBox;
-            string eventValueLabel = GetActionValueLabel(valCombo, eventArgType2);
-            if (eventValueLabel != null)
-            {
-                ShowToolTip(toolTip1, valCombo, eventValueLabel);
-            }
-            else if (tooltipShownOn != null && !tooltipShownOn.ClientRectangle.Contains(tooltipShownOn.PointToClient(Cursor.Position)))
-            {
-                HideToolTip(toolTip1, valCombo, true);
-            }
-        }
-
-        private void Event2ValueComboBox_MouseMove(object sender, MouseEventArgs e)
-        {
-            if (tooltipShownOn != sender)
-            {
-                Event2ValueComboBox_MouseEnter(sender, e);
-            }
-        }
-
-        private void Action1ValueComboBox_SelectedIndexChanged(object sender, EventArgs e)
-        {
-            ComboBox valCombo = sender as ComboBox;
-            if (valCombo != null && valCombo.ClientRectangle.Contains(valCombo.PointToClient(Cursor.Position)))
-            {
-                Action1ValueComboBox_MouseEnter(sender, e);
-            }
-        }
-
-        private void Action1ValueComboBox_MouseEnter(object sender, EventArgs e)
-        {
-            ComboBox valCombo = sender as ComboBox;
-            string actionValueLabel = GetActionValueLabel(valCombo, actionArgType1);
-            if (actionValueLabel != null)
-            {
-                ShowToolTip(toolTip1, valCombo, actionValueLabel);
-            }
-            else if (tooltipShownOn != null && !tooltipShownOn.ClientRectangle.Contains(tooltipShownOn.PointToClient(Cursor.Position)))
-            {
-                HideToolTip(toolTip1, valCombo, true);
-            }
-        }
-
-        private void Action1ValueComboBox_MouseMove(object sender, MouseEventArgs e)
-        {
-            if (tooltipShownOn != sender)
-            {
-                Action1ValueComboBox_MouseEnter(sender, e);
+                Event2ComboBox_MouseEnter(event2ComboBox, EventArgs.Empty);
             }
         }
 
@@ -908,8 +769,157 @@ namespace MobiusEditor.Dialogs
             {
                 SelectedTrigger.Event2.EventType = event2ComboBox.SelectedItem.ToString();
             }
-            bool otherToolTipShownEvt = tooltipShownOn != null && tooltipShownOn != event2ComboBox && tooltipShownOn.ClientRectangle.Contains(tooltipShownOn.PointToClient(Cursor.Position));
-            UpdateTriggerEventControls(SelectedTrigger?.Event2, event2Nud, event2ValueComboBox, ref eventArgType2, otherToolTipShownEvt, null);
+            UpdateTriggerEventControls(SelectedTrigger?.Event2, event2Nud, event2ValueComboBox, ref eventArgType1, null);
+            UpdateEvent2ComboBoxToolTip();
+        }
+
+        private void Event2ComboBox_MouseEnter(object sender, EventArgs e)
+        {
+            Control target = sender as Control;
+            string trigDescr = plugin.TriggerEventInfo(triggers, SelectedTrigger?.Event2?.EventType);
+            if (String.IsNullOrEmpty(trigDescr))
+            {
+                HideToolTip(toolTip1, tooltipShownOn, true);
+            }
+            else
+            {
+                ShowToolTip(toolTip1, target, trigDescr);
+            }
+        }
+
+        private void Event2ComboBox_MouseMove(object sender, MouseEventArgs e)
+        {
+            if (tooltipShownOn != sender)
+            {
+                UpdateEvent2ComboBoxToolTip();
+            }
+        }
+        #endregion
+        #region Event2ValueComboBox events
+        private void UpdateEvent2ValueComboBoxToolTip()
+        {
+            if (MouseOnControl(event2ValueComboBox))
+            {
+                Event2ComboBox_MouseEnter(event2ValueComboBox, EventArgs.Empty);
+            }
+        }
+
+        private void Event2ValueComboBox_SelectedIndexChanged(object sender, EventArgs e)
+        {
+            UpdateEvent2ValueComboBoxToolTip();
+        }
+
+        private void Event2ValueComboBox_MouseEnter(object sender, EventArgs e)
+        {
+            ComboBox target = sender as ComboBox;
+            string eventValueLabel = GetValueComboboxLabel(target, eventArgType2);
+            if (String.IsNullOrEmpty(eventValueLabel))
+            {
+                HideToolTip(toolTip1, target, true);
+            }
+            else
+            {
+                ShowToolTip(toolTip1, target, eventValueLabel);
+            }
+        }
+
+        private void Event2ValueComboBox_MouseMove(object sender, MouseEventArgs e)
+        {
+            if (tooltipShownOn != sender)
+            {
+                UpdateEvent2ValueComboBoxToolTip();
+            }
+        }
+        #endregion
+        #region Action1Combobox events
+        private void UpdateAction1ComboBoxToolTip()
+        {
+            if (MouseOnControl(action1ComboBox))
+            {
+                Action1ComboBox_MouseEnter(action1ComboBox, EventArgs.Empty);
+            }
+        }
+
+        private void Action1ComboBox_SelectedIndexChanged(object sender, EventArgs e)
+        {
+            if (SelectedTrigger != null)
+            {
+                SelectedTrigger.Action1.ActionType = action1ComboBox.SelectedItem.ToString();
+            }
+            UpdateTriggerActionControls(SelectedTrigger?.Action1, action1Nud, action1ValueComboBox, ref actionArgType1, null);
+            UpdateAction1ComboBoxToolTip();
+            UpdateAction1ValueComboBoxToolTip();
+        }
+
+        private void Action1ComboBox_MouseEnter(object sender, EventArgs e)
+        {
+            Control target = sender as Control;
+            if (!MouseOnControl(target))
+            {
+                return;
+            }
+            string trigDescr = plugin.TriggerActionInfo(triggers, SelectedTrigger?.Action1?.ActionType);
+            if (String.IsNullOrEmpty(trigDescr))
+            {
+                HideToolTip(toolTip1, tooltipShownOn, true); 
+            }
+            else
+            {
+                ShowToolTip(toolTip1, target, trigDescr);
+            }
+        }
+
+        private void Action1ComboBox_MouseMove(object sender, MouseEventArgs e)
+        {
+            if (tooltipShownOn != sender)
+            {
+                UpdateAction1ComboBoxToolTip();
+            }
+        }
+        #endregion
+        #region Action1ValueComboBox events
+        private void UpdateAction1ValueComboBoxToolTip()
+        {
+            if (MouseOnControl(action1ValueComboBox))
+            {
+                Action1ValueComboBox_MouseEnter(action1ValueComboBox, EventArgs.Empty);
+            }
+        }
+
+        private void Action1ValueComboBox_SelectedIndexChanged(object sender, EventArgs e)
+        {
+            UpdateAction1ValueComboBoxToolTip();
+        }
+
+        private void Action1ValueComboBox_MouseEnter(object sender, EventArgs e)
+        {
+            ComboBox target = sender as ComboBox;
+            string actionValueLabel = GetValueComboboxLabel(target, actionArgType1);
+            if (String.IsNullOrEmpty(actionValueLabel))
+            {
+                HideToolTip(toolTip1, target, true);
+            }
+            else
+            {
+                ShowToolTip(toolTip1, target, actionValueLabel);
+            }
+        }
+
+        private void Action1ValueComboBox_MouseMove(object sender, MouseEventArgs e)
+        {
+            if (tooltipShownOn != sender)
+            {
+                UpdateAction1ValueComboBoxToolTip();
+            }
+        }
+        #endregion
+        #region Action2ComboBox events
+        private void UpdateAction2ComboBoxToolTip()
+        {
+            if (MouseOnControl(action2ComboBox))
+            {
+                Action2ComboBox_MouseEnter(action2ComboBox, EventArgs.Empty);
+            }
         }
 
         private void Action2ComboBox_SelectedIndexChanged(object sender, EventArgs e)
@@ -918,30 +928,57 @@ namespace MobiusEditor.Dialogs
             {
                 SelectedTrigger.Action2.ActionType = action2ComboBox.SelectedItem.ToString();
             }
-            bool otherToolTipIsShown = action1ValueComboBox.ClientRectangle.Contains(action1ValueComboBox.PointToClient(Cursor.Position));
-            UpdateTriggerActionControls(SelectedTrigger?.Action2, action2Nud, action2ValueComboBox, ref actionArgType2, otherToolTipIsShown, null);
+            UpdateTriggerActionControls(SelectedTrigger?.Action2, action2Nud, action2ValueComboBox, ref actionArgType2, null);
+            UpdateAction2ComboBoxToolTip();
+            UpdateAction2ValueComboBoxToolTip();
         }
 
+        private void Action2ComboBox_MouseEnter(object sender, EventArgs e)
+        {
+            Control target = sender as Control;
+            string trigDescr = plugin.TriggerActionInfo(triggers, SelectedTrigger?.Action2?.ActionType);
+            if (String.IsNullOrEmpty(trigDescr))
+            {
+                HideToolTip(toolTip1, tooltipShownOn, true);
+            }
+            else
+            {
+                ShowToolTip(toolTip1, target, trigDescr);
+            }
+        }
+
+        private void Action2ComboBox_MouseMove(object sender, MouseEventArgs e)
+        {
+            if (tooltipShownOn != sender)
+            {
+                UpdateAction2ComboBoxToolTip();
+            }
+        }
+        #endregion
+        #region Action2ValueComboBox events
+        private void UpdateAction2ValueComboBoxToolTip()
+        {
+            if (MouseOnControl(action2ValueComboBox))
+            {
+                Action2ValueComboBox_MouseEnter(action2ValueComboBox, EventArgs.Empty);
+            }
+        }
         private void Action2ValueComboBox_SelectedIndexChanged(object sender, EventArgs e)
         {
-            ComboBox valCombo = sender as ComboBox;
-            if (valCombo != null && valCombo.ClientRectangle.Contains(valCombo.PointToClient(Cursor.Position)))
-            {
-                Action2ValueComboBox_MouseEnter(sender, e);
-            }
+            UpdateAction2ValueComboBoxToolTip();
         }
 
         private void Action2ValueComboBox_MouseEnter(object sender, EventArgs e)
         {
-            ComboBox valCombo = sender as ComboBox;
-            string actionValueLabel = GetActionValueLabel(valCombo, actionArgType2);
-            if (actionValueLabel != null)
+            ComboBox target = sender as ComboBox;
+            string actionValueLabel = GetValueComboboxLabel(target, actionArgType2);
+            if (String.IsNullOrEmpty(actionValueLabel))
             {
-                ShowToolTip(toolTip1, valCombo, actionValueLabel);
+                HideToolTip(toolTip1, target, true);
             }
-            else if (tooltipShownOn != null && !tooltipShownOn.ClientRectangle.Contains(tooltipShownOn.PointToClient(Cursor.Position)))
+            else
             {
-                HideToolTip(toolTip1, valCombo, true);
+                ShowToolTip(toolTip1, target, actionValueLabel);
             }
         }
 
@@ -949,30 +986,34 @@ namespace MobiusEditor.Dialogs
         {
             if (tooltipShownOn != sender)
             {
-                Action2ValueComboBox_MouseEnter(sender, e);
+                UpdateAction2ValueComboBoxToolTip();
             }
         }
-
+        #endregion
+        #region TeamComboBox events
+        private void UpdateTeamComboBoxToolTip()
+        {
+            if (MouseOnControl(teamComboBox))
+            {
+                TeamComboBox_MouseEnter(teamComboBox, EventArgs.Empty);
+            }
+        }
         private void TeamComboBox_SelectedIndexChanged(object sender, EventArgs e)
         {
-            ComboBox teamCombo = sender as ComboBox;
-            if (teamCombo.ClientRectangle.Contains(teamCombo.PointToClient(Cursor.Position)))
-            {
-                TeamComboBox_MouseEnter(sender, e);
-            }
+            UpdateTeamComboBoxToolTip();
         }
 
         private void TeamComboBox_MouseEnter(object sender, EventArgs e)
         {
-            ComboBox teamCombo = sender as ComboBox;
-            string teamDescrTd = GetActionValueLabel(teamCombo, ArgType.TeamType);
-            if (teamDescrTd != null)
+            ComboBox target = sender as ComboBox;
+            string teamDescrTd = GetValueComboboxLabel(target, ArgType.TeamType);
+            if (String.IsNullOrEmpty(teamDescrTd))
             {
-                ShowToolTip(toolTip1, teamCombo, teamDescrTd);
+                HideToolTip(toolTip1, target, true);
             }
-            else if (tooltipShownOn != null && !tooltipShownOn.ClientRectangle.Contains(tooltipShownOn.PointToClient(Cursor.Position)))
+            else
             {
-                HideToolTip(toolTip1, teamCombo, true);
+                ShowToolTip(toolTip1, target, teamDescrTd);
             }
         }
 
@@ -980,15 +1021,17 @@ namespace MobiusEditor.Dialogs
         {
             if (tooltipShownOn != sender)
             {
-                TeamComboBox_MouseEnter(sender, e);
+                UpdateTeamComboBoxToolTip();
             }
         }
-
+        #endregion
+        #region Common tooltip combobox events
         private void ToolTipComboBox_MouseLeave(object sender, EventArgs e)
         {
             Control target = sender as Control;
             HideToolTip(toolTip1, target, false);
         }
+        #endregion
 
         private void RemoveFromLayout(TableLayoutPanel panel, Label lblname, ComboBox cmbselect, FlowLayoutPanel flpargs)
         {
@@ -1005,8 +1048,7 @@ namespace MobiusEditor.Dialogs
             panel.SetColumnSpan(flpargs, 2);
         }
 
-        private void UpdateTriggerEventControls(TriggerEvent triggerEvent, NumericUpDown eventNud, ComboBox eventValueComboBox, ref ArgType eventArgType, bool dontHideTooltip,
-            TriggerEvent triggerEventData)
+        private void UpdateTriggerEventControls(TriggerEvent triggerEvent, NumericUpDown eventNud, ComboBox eventValueComboBox, ref ArgType eventArgType, TriggerEvent triggerEventData)
         {
             eventNud.Visible = false;
             eventNud.DataBindings.Clear();
@@ -1032,7 +1074,7 @@ namespace MobiusEditor.Dialogs
                     triggerEvent.FillDataFrom(triggerEventData);
                 }
                 long correctedData = triggerEvent.Data;
-                switch (plugin.GameInfo.GameType)
+                switch (gameType)
                 {
                     case GameType.TiberianDawn:
                     case GameType.SoleSurvivor:
@@ -1207,7 +1249,7 @@ namespace MobiusEditor.Dialogs
         }
 
         private void UpdateTriggerActionControls(TriggerAction triggerAction, NumericUpDown actionNud, ComboBox actionValueComboBox, ref ArgType actionArgType,
-            bool dontHideTooltip, TriggerAction triggerActionData)
+            TriggerAction triggerActionData)
         {
             actionNud.Visible = false;
             actionNud.DataBindings.Clear();
@@ -1234,9 +1276,8 @@ namespace MobiusEditor.Dialogs
                 {
                     triggerAction.FillDataFrom(triggerActionData);
                 }
-                bool tooltipShown = false;
                 long correctedData = triggerAction.Data;
-                switch (plugin.GameInfo.GameType)
+                switch (gameType)
                 {
                     case GameType.RedAlert:
                         switch (triggerAction.ActionType)
@@ -1251,13 +1292,7 @@ namespace MobiusEditor.Dialogs
                                 triggerAction.Team = correctedTeam;
                                 actionValueComboBox.DataBindings.Add("SelectedValue", triggerAction, "Team", true, DataSourceUpdateMode.OnPropertyChanged);
                                 actionValueComboBox.SelectedItem = correctedTeam;
-                                string teamTooltip = GetTeamLabel(correctedTeam);
                                 actionArgType = ArgType.TeamType;
-                                if (teamTooltip != null && actionValueComboBox.ClientRectangle.Contains(actionValueComboBox.PointToClient(Cursor.Position)))
-                                {
-                                    ShowToolTip(toolTip1, actionValueComboBox, teamTooltip);
-                                    tooltipShown = true;
-                                }
                                 break;
                             case RedAlert.ActionTypes.TACTION_WIN:
                             case RedAlert.ActionTypes.TACTION_LOSE:
@@ -1286,12 +1321,6 @@ namespace MobiusEditor.Dialogs
                                 actionValueComboBox.DataBindings.Add("SelectedValue", triggerAction, "Trigger", true, DataSourceUpdateMode.OnPropertyChanged);
                                 actionValueComboBox.SelectedItem = correctedTrigger;
                                 actionArgType = ArgType.Trigger;
-                                string trigTooltip = RefreshTriggerLabel(correctedTrigger);
-                                if (trigTooltip != null && actionValueComboBox.ClientRectangle.Contains(actionValueComboBox.PointToClient(Cursor.Position)))
-                                {
-                                    ShowToolTip(toolTip1, actionValueComboBox, trigTooltip);
-                                    tooltipShown = true;
-                                }
                                 break;
                             case RedAlert.ActionTypes.TACTION_DZ:
                             case RedAlert.ActionTypes.TACTION_REVEAL_SOME:
@@ -1442,10 +1471,6 @@ namespace MobiusEditor.Dialogs
                         }
                         break;
                 }
-                if (!tooltipShown)
-                {
-                    HideToolTip(toolTip1, actionValueComboBox, false);
-                }
             }
         }
 
@@ -1475,7 +1500,7 @@ namespace MobiusEditor.Dialogs
             }
         }
 
-        private string GetActionValueLabel(ComboBox cbbVal, ArgType type)
+        private string GetValueComboboxLabel(ComboBox cbbVal, ArgType type)
         {
             if (cbbVal == null || !cbbVal.Visible || cbbVal.Items.Count == 0 || cbbVal.SelectedIndex == -1 || cbbVal.SelectedItem == null)
             {
@@ -1508,18 +1533,31 @@ namespace MobiusEditor.Dialogs
             return trigger == null ? null : plugin.TriggerSummary(trigger, true, false);
         }
 
+        /// <summary>Checks if the mouse is currently hovering over this control.</summary>
+        /// <param name="target">Control to check for mouseover.</param>
+        /// <returns>True if the mouse is currently hovering over this control.</returns>
+        private bool MouseOnControl(Control target)
+        {
+            return target.ClientRectangle.Contains(target.PointToClient(Cursor.Position));
+        }
+
         private bool ShowToolTip(ToolTip toolTip, Control target, string message)
         {
-            if (target == null || message == null || !target.ClientRectangle.Contains(target.PointToClient(Cursor.Position)))
+            if (target == null || message == null || !MouseOnControl(target))
             {
                 HideToolTip(toolTip, target, true);
                 return false;
+            }
+            if (!message.Equals(tooltipShown))
+            {
+                HideToolTip(toolTip, target, true);
             }
             Point resPoint = target.PointToScreen(new Point(0, target.Height));
             MethodInfo m = toolTip.GetType().GetMethod("SetTool",
                        BindingFlags.Instance | BindingFlags.NonPublic);
             m.Invoke(toolTip, new object[] { target, message, 2, resPoint });
             tooltipShownOn = target;
+            tooltipShown = message;
             return true;
         }
 
@@ -1538,6 +1576,7 @@ namespace MobiusEditor.Dialogs
             }
             catch { /* ignore */ }
             tooltipShownOn = null;
+            tooltipShown = null;
         }
     }
 }

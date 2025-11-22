@@ -11,15 +11,16 @@
 //    TERMS AND CONDITIONS FOR COPYING, DISTRIBUTION AND MODIFICATION
 //
 //   0. You just DO WHAT THE FUCK YOU WANT TO.
+using MobiusEditor.Interface;
+using MobiusEditor.Model;
+using MobiusEditor.Utility;
 using System;
 using System.Collections.Generic;
 using System.Drawing;
 using System.IO;
 using System.Linq;
+using System.Security.AccessControl;
 using System.Text.RegularExpressions;
-using MobiusEditor.Interface;
-using MobiusEditor.Model;
-using MobiusEditor.Utility;
 
 namespace MobiusEditor.TiberianDawn
 {
@@ -91,6 +92,8 @@ namespace MobiusEditor.TiberianDawn
         public override int MaxUnits => Constants.MaxUnits;
         public override int MaxTriggers => Constants.MaxTriggers;
         public override int MaxTeams => Constants.MaxTeams;
+        public override int MaxTeamClasses => Globals.MaxTeamClasses;
+        public override int MaxTeamMissions => Globals.MaxTeamMissions;
         public override int HitPointsGreenMinimum => 127;
         public override int HitPointsYellowMinimum => 63;
         public override bool LandedHelis => Globals.LandedHelisTd;

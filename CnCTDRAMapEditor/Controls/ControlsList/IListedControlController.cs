@@ -17,13 +17,17 @@ namespace MobiusEditor.Controls.ControlsList
     /// This interface should be implemented by an object that can manage the listed info objects. It will get updates from the listed objects to adjust its versions of these objects.
     /// </summary>
     /// <typeparam name="TU">The type of the info object. Can be chosen freely.</typeparam>
-    public interface ListedControlController<in TU>
+    /// <typeparam name="TA">The type for update actions. Can be chosen freely.</typeparam>
+    /// <typeparam name="TR">Return type of the update function. Can be chosen freely.</typeparam>
+    public interface IListedControlController<in TU, TA, TR>
     {
         /// <summary>
         /// To sends an update from the UI back to the controller, and adjust the values kept there.
         /// A call to this should be linked to listeners on the controls.
         /// </summary>
         /// <param name="updateInfo">The info object adjusted to the new UI data.</param>
-        void UpdateControlInfo(TU updateInfo);
+        /// <param name="action">Action to perform on update.</param>
+        /// <returns>The result of the update.</returns>
+        TR UpdateControlInfo(TU updateInfo, TA action);
     }
 }

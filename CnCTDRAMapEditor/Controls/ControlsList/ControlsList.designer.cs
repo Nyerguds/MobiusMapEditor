@@ -13,7 +13,7 @@
 //   0. You just DO WHAT THE FUCK YOU WANT TO.
 namespace MobiusEditor.Controls.ControlsList
 {
-    partial class ControlsList<T,TU>
+    partial class ControlsList<T, TU, TA, TR>
     {
         /// <summary>
         /// Required designer variable.

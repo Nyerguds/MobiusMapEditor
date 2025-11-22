@@ -19,12 +19,12 @@ using System.Windows.Forms;
 
 namespace MobiusEditor.Controls
 {
-    internal class MissionItemInfo : CustomControlInfo<MissionItemControl, TeamTypeMission>
+    internal class MissionItemInfo : CustomControlInfo<MissionItemControl, TeamTypeMission, char, int>
     {
-        TeamMission[] missions;
-        ListItem<int>[] waypoints;
-        int mapSize;
-        ToolTip tooltip;
+        readonly TeamMission[] missions;
+        readonly ListItem<int>[] waypoints;
+        readonly int mapSize;
+        readonly ToolTip tooltip;
 
         public MissionItemInfo(string name, IEnumerable<TeamTypeMission> properties, IEnumerable<TeamMission> missions, IEnumerable<ListItem<int>> waypoints, int mapSize, ToolTip tooltip)
         {
@@ -41,12 +41,12 @@ namespace MobiusEditor.Controls
             return controls.FirstOrDefault(ctrl => ReferenceEquals(ctrl.Info, property));
         }
 
-        public override MissionItemControl MakeControl(TeamTypeMission property, ListedControlController<TeamTypeMission> controller)
+        public override MissionItemControl MakeControl(TeamTypeMission property, IListedControlController<TeamTypeMission, char, int> controller)
         {
             return new MissionItemControl(property, controller, missions, waypoints, mapSize, tooltip);
         }
 
-        public override void UpdateControl(TeamTypeMission property, ListedControlController<TeamTypeMission> controller, MissionItemControl control)
+        public override void UpdateControl(TeamTypeMission property, IListedControlController<TeamTypeMission, char, int> controller, MissionItemControl control)
         {
             control.SetInfo(property, controller, missions, waypoints, mapSize, tooltip);
         }

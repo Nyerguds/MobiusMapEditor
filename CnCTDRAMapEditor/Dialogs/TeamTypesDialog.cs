@@ -28,7 +28,7 @@ using System.Windows.Forms;
 
 namespace MobiusEditor.Dialogs
 {
-    public partial class TeamTypesDialog : Form, ListedControlController<TeamTypeClass>, ListedControlController<TeamTypeMission>
+    public partial class TeamTypesDialog : Form, IListedControlController<TeamTypeClass, char, int>, IListedControlController<TeamTypeMission, char, int>
     {
         private Bitmap infoImage;
         private Control tooltipShownOn;
@@ -40,6 +40,8 @@ namespace MobiusEditor.Dialogs
         private const int maxLength = 8;
         private readonly IGamePlugin plugin;
         private readonly int maxTeams;
+        private readonly int maxClasses;
+        private readonly int maxMissions;
         private readonly IEnumerable<ITechnoType> technoTypes;
         private readonly List<TeamType> teamTypes;
         private readonly List<TeamType> backupTeamTypes;
@@ -126,6 +128,8 @@ namespace MobiusEditor.Dialogs
             initialTeam = selectteam;
             this.plugin = plugin;
             maxTeams = plugin.GameInfo.MaxTeams;
+            maxClasses = plugin.GameInfo.MaxTeamClasses;
+            maxMissions = plugin.GameInfo.MaxTeamMissions;
             technoTypes = plugin.Map.TeamTechnoTypes;
 
             InitializeComponent();
@@ -348,8 +352,8 @@ namespace MobiusEditor.Dialogs
                 missionItemInfo = new MissionItemInfo(null, selected.Missions, teamMissionTypes, wayPoints, plugin.Map.Metrics.Length, toolTip1);
                 milMissions.Populate(missionItemInfo, this);
                 milMissions.TabStop = selected.Missions.Count > 0;
-                btnAddTeam.Enabled = selected.Classes.Count < Globals.MaxTeamClasses;
-                btnAddMission.Enabled = SelectedTeamType.Missions.Count < Globals.MaxTeamMissions;
+                btnAddTeam.Enabled = selected.Classes.Count < maxClasses;
+                btnAddMission.Enabled = SelectedTeamType.Missions.Count < maxMissions;
                 teamTypeTableLayoutPanel.Visible = true;
             }
             else
@@ -659,10 +663,14 @@ namespace MobiusEditor.Dialogs
             }
         }
 
-        public void UpdateControlInfo(TeamTypeClass updateInfo)
+        public int UpdateControlInfo(TeamTypeClass updateInfo, char action)
         {
             // Detect delete signal
-            if (SelectedTeamType != null && updateInfo.Type == null)
+            if (SelectedTeamType == null)
+            {
+                return 0;
+            }
+            if (action == 'R')
             {
                 // Still the same object reference, so this should be found.
                 int index = SelectedTeamType.Classes.IndexOf(updateInfo);
@@ -670,7 +678,7 @@ namespace MobiusEditor.Dialogs
                 // Reset list controller with new list
                 teamItemInfo = new TeamItemInfo(null, SelectedTeamType.Classes, technoTypes);
                 tilTeams.Populate(teamItemInfo, this);
-                btnAddTeam.Enabled = SelectedTeamType.Classes.Count < Globals.MaxTeamClasses;
+                btnAddTeam.Enabled = SelectedTeamType.Classes.Count < maxClasses;
                 int teams = SelectedTeamType.Classes.Count;
                 if (teams > 0)
                 {
@@ -680,37 +688,96 @@ namespace MobiusEditor.Dialogs
                 }
                 tilTeams.TabStop = teams > 0;
             }
+            return 0;
         }
 
-        public void UpdateControlInfo(TeamTypeMission updateInfo)
+        public int UpdateControlInfo(TeamTypeMission updateInfo, char action)
         {
             // Detect delete signal
-            if (SelectedTeamType != null && updateInfo.Mission == null)
+            if (SelectedTeamType == null)
             {
-                // Still the same object reference, so this should be found.
-                int index = SelectedTeamType.Missions.IndexOf(updateInfo);
-                SelectedTeamType.Missions.Remove(updateInfo);
-                // Reset list controller with new list
-                missionItemInfo = new MissionItemInfo(null, SelectedTeamType.Missions, teamMissionTypes, wayPoints, plugin.Map.Metrics.Length, toolTip1);
-                milMissions.Populate(missionItemInfo, this);
-                btnAddMission.Enabled = SelectedTeamType.Missions.Count < Globals.MaxTeamMissions;
-                int missions = SelectedTeamType.Missions.Count;
-                if (missions > 0)
-                {
-                    index = Math.Min(index, missions - 1);
-                    MissionItemControl newCtrl = missionItemInfo.GetControlByProperty(SelectedTeamType.Missions[index], milMissions.Contents);
-                    pnlTeamsScroll.ScrollControlIntoView(newCtrl);
-                }
-                tilTeams.TabStop = missions > 0;
-                milMissions.TabStop = missions > 0;
+                return action == 'I' || action == 'L' || action == 'M' ? -1 : 0;
             }
+            List<TeamTypeMission> missionsList = SelectedTeamType.Missions;
+            int index = -1;
+            // Must look for actual object, not equality.
+            for (int i = 0; i < missionsList.Count; i++)
+            {
+                if (ReferenceEquals(updateInfo, missionsList[i]))
+                {
+                    index = i;
+                    break;
+                }
+            }
+            int scrollIndex = index;
+            switch (action)
+            {
+                case 'I': // Request for Index in list
+                    return scrollIndex;
+                case 'L': // Request for Length of list
+                    return missionsList.Count;
+                case 'M': // Request for Maximum possible list length.
+                    return maxMissions;
+                case 'R': // Remove
+                    // Still the same object reference, so this should be found.
+                    missionsList.Remove(updateInfo);
+                    scrollIndex = Math.Max(0, index - 1);
+                    break;
+                case 'A': // Add at current item's location
+                    // Still the same object reference, so this should be found.
+                    TeamTypeMission newTeam = new TeamTypeMission() { Mission = defaultMission, Argument = -1 };
+                    missionsList.Insert(index, newTeam);
+                    scrollIndex = Math.Max(0, index);
+                    break;
+                case 'C': // Clone
+                    // Still the same object reference, so this should be found.
+                    TeamTypeMission clone = new TeamTypeMission() { Mission = updateInfo.Mission, Argument = updateInfo.Argument };
+                    missionsList.Insert(index + 1, clone);
+                    scrollIndex = Math.Max(0, index + 1);
+                    break;
+                case 'U': // Move Up
+                    if (index > 0)
+                    {
+                        TeamTypeMission prev = missionsList[index - 1];
+                        missionsList[index - 1] = updateInfo;
+                        missionsList[index] = prev;
+                        scrollIndex = index - 1;
+                    }
+                    break;
+                case 'D': // Move Down
+                    if (index + 1 < missionsList.Count)
+                    {
+                        TeamTypeMission next = missionsList[index + 1];
+                        missionsList[index + 1] = updateInfo;
+                        missionsList[index] = next;
+                        scrollIndex = index + 1;
+                    }
+                    break;
+                default:
+                    return 0;
+            }
+            // Reset list controller with new list
+            missionItemInfo = new MissionItemInfo(null, missionsList, teamMissionTypes, wayPoints, plugin.Map.Metrics.Length, toolTip1);
+            milMissions.Populate(missionItemInfo, this);
+            btnAddMission.Enabled = missionsList.Count < maxMissions;
+            bool hasMissions = missionsList.Count > 0;
+            if (hasMissions)
+            {
+                index = scrollIndex.Restrict(0, missionsList.Count - 1);
+                MissionItemControl newCtrl = missionItemInfo.GetControlByProperty(missionsList[index], milMissions.Contents);
+                pnlMissionsScroll.ScrollControlIntoView(newCtrl);
+                newCtrl.FocusButton();
+            }
+            tilTeams.TabStop = hasMissions;
+            milMissions.TabStop = hasMissions;
+            return 0;
         }
 
         private void BtnAddTeam_Click(object sender, EventArgs e)
         {
             if (SelectedTeamType != null)
             {
-                if (SelectedTeamType.Classes.Count <= Globals.MaxTeamClasses)
+                if (SelectedTeamType.Classes.Count <= maxClasses)
                 {
                     TeamTypeClass newItem = new TeamTypeClass() { Type = defaultTeam, Count = 1 };
                     SelectedTeamType.Classes.Add(newItem);
@@ -719,7 +786,7 @@ namespace MobiusEditor.Dialogs
                     TeamItemControl newCtrl = teamItemInfo.GetControlByProperty(newItem, tilTeams.Contents);
                     pnlTeamsScroll.ScrollControlIntoView(newCtrl);
                 }
-                btnAddTeam.Enabled = SelectedTeamType.Classes.Count < Globals.MaxTeamClasses;
+                btnAddTeam.Enabled = SelectedTeamType.Classes.Count < maxClasses;
                 tilTeams.TabStop = SelectedTeamType.Classes.Count > 0;
              }
         }
@@ -728,7 +795,7 @@ namespace MobiusEditor.Dialogs
         {
             if (SelectedTeamType != null)
             {
-                if (SelectedTeamType.Missions.Count <= Globals.MaxTeamMissions)
+                if (SelectedTeamType.Missions.Count <= maxMissions)
                 {
                     TeamTypeMission newItem = new TeamTypeMission() { Mission = defaultMission, Argument = -1 };
                     SelectedTeamType.Missions.Add(newItem);
@@ -736,9 +803,10 @@ namespace MobiusEditor.Dialogs
                     milMissions.Populate(missionItemInfo, this);
                     MissionItemControl newCtrl = missionItemInfo.GetControlByProperty(newItem, milMissions.Contents);
                     pnlMissionsScroll.ScrollControlIntoView(newCtrl);
+                    newCtrl.FocusButton();
                 }
                 milMissions.TabStop = SelectedTeamType.Missions.Count > 0;
-                btnAddMission.Enabled = SelectedTeamType.Missions.Count < Globals.MaxTeamMissions;
+                btnAddMission.Enabled = SelectedTeamType.Missions.Count < maxMissions;
             }
         }
 

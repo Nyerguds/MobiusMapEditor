@@ -16,7 +16,7 @@ using MobiusEditor.Model;
 
 namespace MobiusEditor.Controls
 {
-    public class TeamItemsList : ControlsList<TeamItemControl, TeamTypeClass>
+    public class TeamItemsList : ControlsList<TeamItemControl, TeamTypeClass, char, int>
     {
         protected override void FocusItem(TeamItemControl control)
         {

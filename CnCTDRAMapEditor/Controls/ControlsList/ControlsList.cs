@@ -24,16 +24,16 @@ namespace MobiusEditor.Controls.ControlsList
     /// </summary>
     /// <typeparam name="T">Type of the user controls with which to populate the list.</typeparam>
     /// <typeparam name="TU">Type of the information objects that contain all information to create/manage a listed control.</typeparam>
-    public abstract partial class ControlsList<T,TU> : UserControl where T : Control
+    public abstract partial class ControlsList<T,TU, TA, TR> : UserControl where T : Control
     {
-        protected List<T> m_Contents = new List<T>();
-        protected CustomControlInfo<T, TU> m_CustomControlInfo;
+        protected List<T> contents = new List<T>();
+        protected CustomControlInfo<T, TU, TA, TR> customControlInfo;
 
-        public T[] Contents => m_Contents.ToArray();
+        public T[] Contents => contents.ToArray();
 
         protected ControlsList()
         {
-            this.InitializeComponent();
+            InitializeComponent();
         }
 
         /// <summary>
@@ -41,55 +41,60 @@ namespace MobiusEditor.Controls.ControlsList
         /// </summary>
         /// <param name="cci">Contains a list of information objects with which to create the custom controls.</param>
         /// <param name="ebc">The controller to assign to the created custom controls.</param>
-        public void Populate(CustomControlInfo<T, TU> cci, ListedControlController<TU> ebc)
+        public void Populate(CustomControlInfo<T, TU, TA, TR> cci, IListedControlController<TU, TA, TR> ebc)
         {
             if (cci == null)
             {
-                this.Reset();
+                Reset();
                 return;
             }
             // Optimised reset
-            int contentsCount = this.m_CustomControlInfo == null ? 0 : this.m_CustomControlInfo.Properties.Length;
-            Dictionary<TU, T> mutualControls = new Dictionary<TU, T>();
-            this.SuspendLayout();
-            if (contentsCount > 0) {
-
-                for (int i = 0; i < contentsCount; ++i)
-                {
-                    TU prop = this.m_CustomControlInfo.Properties[i];
-                    T control = this.m_CustomControlInfo.GetControlByProperty(prop, this.m_Contents);
-                    this.Controls.Remove(control);
-                    if (cci.Properties.Contains(prop))
-                    {
-                        mutualControls[prop] = control;
-                    }
-                    else
-                    {
-                        control.Dispose();
-                    }
-                }
-                this.m_Contents.Clear();
-            }
-            this.m_CustomControlInfo = cci;
-            this.lblTypeName.Text = cci.Name;
-            this.lblTypeName.Visible = !String.IsNullOrEmpty(cci.Name);
             TU[] props = cci.Properties;
-            int nrOfProps = props.Length;
+            int oldCount = customControlInfo == null ? 0 : customControlInfo.Properties.Length;
+            int newCount = props.Length;
+            SuspendLayout();
+            // Reuse all existing controls, but just reinitialize them.
+            // Remove excess:
+            if (newCount < oldCount)
+            {
+                List<T> removed = new List<T>();
+                for (int i = newCount; i < oldCount; ++i)
+                {
+                    removed.Add(contents[i]);
+                }
+                for (int i = 0; i < removed.Count; ++i)
+                {
+                    T control = removed[i];
+                    contents.Remove(control);
+                    Controls.Remove(control);
+                    control.Dispose();
+                }
+            }
+            customControlInfo = cci;
+            lblTypeName.Text = cci.Name;
+            lblTypeName.Visible = !String.IsNullOrEmpty(cci.Name);
             int finalHeight = 0;
-            for (int i = 0; i < nrOfProps; ++i)
+            // Get trimmed height as start point.
+            if (contents.Count > 0)
+            {
+                T lastControl = contents[contents.Count - 1];
+                finalHeight = lastControl.Location.Y + lastControl.Size.Height;
+            }
+            for (int i = 0; i < newCount; ++i)
             {
                 try
                 {
                     T newControl;
-                    if (mutualControls.TryGetValue(props[i], out newControl))
+                    if (i < contents.Count)
                     {
+                        newControl = contents[i];
                         cci.UpdateControl(props[i], ebc, newControl);
                     }
                     else
                     {
                         newControl = cci.MakeControl(props[i], ebc);
+                        finalHeight = AddControl(newControl, false);
                     }
-                    finalHeight = this.AddControl(newControl, false);
                 }
                 catch (NotImplementedException)
                 {
@@ -97,15 +102,15 @@ namespace MobiusEditor.Controls.ControlsList
                 }
             }
             // Only update height at the end.
-            this.Size = new Size(this.Size.Width, finalHeight);
-            this.PerformLayout();
+            Size = new Size(Size.Width, finalHeight);
+            PerformLayout();
         }
 
         public virtual T GetListedControlByInfoObject(TU infoObject)
         {
-            if (this.m_CustomControlInfo == null)
+            if (customControlInfo == null)
                 return null;
-            return this.m_CustomControlInfo.GetControlByProperty(infoObject, m_Contents);
+            return customControlInfo.GetControlByProperty(infoObject, contents);
         }
 
         /// <summary>
@@ -113,10 +118,10 @@ namespace MobiusEditor.Controls.ControlsList
         /// </summary>
         public void FocusFirst()
         {
-            if (this.m_Contents.Count == 0)
+            if (contents.Count == 0)
                 return;
             //this.Select();
-            this.FocusItem(this.m_Contents[0]);
+            FocusItem(contents[0]);
         }
 
         /// <summary>
@@ -131,57 +136,57 @@ namespace MobiusEditor.Controls.ControlsList
         protected int AddControl(T control, bool refresh)
         {
             if (refresh)
-                this.SuspendLayout();
-            int ySpacing = this.lblTypeName.Location.Y;
+                SuspendLayout();
+            int ySpacing = lblTypeName.Location.Y;
             // Can't count on "lblTypeName.Visible" inside suspended layout.
             bool addSpacing = !String.IsNullOrEmpty(lblTypeName.Text);
-            int YPos;
-            if (this.m_Contents.Count == 0)
-                YPos = ySpacing + (addSpacing ? this.lblTypeName.Height + ySpacing : 0);
+            int yPos;
+            if (contents.Count == 0)
+                yPos = ySpacing + (addSpacing ? lblTypeName.Height + ySpacing : 0);
             else
             {
-                T lastControl = this.m_Contents[this.m_Contents.Count - 1];
-                YPos = lastControl.Location.Y + lastControl.Size.Height;
+                T lastControl = contents[contents.Count - 1];
+                yPos = lastControl.Location.Y + lastControl.Size.Height;
             }
-            control.Location = new Point(0, YPos);
-            this.m_Contents.Add(control);
-            this.Controls.Add(control);
-            control.TabIndex = this.Controls.Count;
-            control.Size = new Size(this.DisplayRectangle.Width, control.Size.Height);
-            int newHeight = YPos + control.Size.Height;
+            control.Location = new Point(0, yPos);
+            contents.Add(control);
+            Controls.Add(control);
+            control.TabIndex = Controls.Count;
+            control.Size = new Size(DisplayRectangle.Width, control.Size.Height);
+            int newHeight = yPos + control.Size.Height;
             if (refresh)
-                this.Size = new Size(this.Size.Width, newHeight);
+                Size = new Size(Size.Width, newHeight);
             control.Visible = true;
             if (refresh)
-                this.PerformLayout();
+                PerformLayout();
             return newHeight;
         }
 
         public void Reset()
         {
-            this.SuspendLayout();
-            this.lblTypeName.Text = String.Empty;
-            int contentsCount = this.m_Contents.Count;
+            SuspendLayout();
+            lblTypeName.Text = String.Empty;
+            int contentsCount = contents.Count;
             for (int i = 0; i < contentsCount; ++i)
             {
-                T c = this.m_Contents[i];
-                this.Controls.Remove(c);
+                T c = contents[i];
+                Controls.Remove(c);
                 c.Dispose();
             }
-            this.m_Contents.Clear();
-            this.PerformLayout();
+            contents.Clear();
+            PerformLayout();
         }
 
         protected void EffectBarList_Resize(object sender, EventArgs e)
         {
-            this.SuspendLayout();
-            int contentsCount = this.m_Contents.Count;
+            SuspendLayout();
+            int contentsCount = contents.Count;
             for (int i = 0; i < contentsCount; ++i)
             {
-                T c = this.m_Contents[i];
-                c.Size = new Size(this.DisplayRectangle.Width, c.Size.Height);
+                T c = contents[i];
+                c.Size = new Size(DisplayRectangle.Width, c.Size.Height);
             }
-            this.PerformLayout();
+            PerformLayout();
         }
     }
 }

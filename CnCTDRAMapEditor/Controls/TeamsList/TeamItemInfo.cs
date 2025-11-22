@@ -19,7 +19,7 @@ using System.Linq;
 
 namespace MobiusEditor.Controls
 {
-    public class TeamItemInfo : CustomControlInfo<TeamItemControl, TeamTypeClass>
+    public class TeamItemInfo : CustomControlInfo<TeamItemControl, TeamTypeClass, char, int>
     {
         ITechnoType[] technos;
 
@@ -35,12 +35,12 @@ namespace MobiusEditor.Controls
             return controls.FirstOrDefault(ctrl => ReferenceEquals(ctrl.Info, property));
         }
 
-        public override TeamItemControl MakeControl(TeamTypeClass property, ListedControlController<TeamTypeClass> controller)
+        public override TeamItemControl MakeControl(TeamTypeClass property, IListedControlController<TeamTypeClass, char, int> controller)
         {
             return new TeamItemControl(property, controller, technos);
         }
 
-        public override void UpdateControl(TeamTypeClass property, ListedControlController<TeamTypeClass> controller, TeamItemControl control)
+        public override void UpdateControl(TeamTypeClass property, IListedControlController<TeamTypeClass, char, int> controller, TeamItemControl control)
         {
             control.SetInfo(property, controller, technos);
         }

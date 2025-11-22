@@ -137,6 +137,36 @@ namespace MobiusEditor.Model
     [DebuggerDisplay("{EventControl}: EV1:{Event1} | EV2:{Event2} → AC1{Action1} | AC2:{Action2}, {PersistentType}")]
     public class Trigger : INamedType, ICloneable, IEquatable<Trigger>
     {
+        public static readonly IReadOnlyCollection<String> PersistenceNames = new List<string>()
+        {
+            "On first triggering",
+            "When all linked objects are triggered",
+            "On each triggering"
+        }.AsReadOnly();
+
+        public static readonly IReadOnlyCollection<String> PersistenceNamesShort = new List<string>()
+        {
+            "First",
+            "All",
+            "Each"
+        }.AsReadOnly();
+
+        public static readonly IReadOnlyCollection<String> MultiStyleNames = new List<string>()
+        {
+            "Event → Action1 [+ Action2]",
+            "Event1 AND Event2 → Action1 [+ Action2]",
+            "Event1 OR Event2 → Action1 [+ Action2]",
+            "Event1 → Action1; Event2 → Action2",
+        }.AsReadOnly();
+
+        public static readonly IReadOnlyCollection<String> MultiStyleNamesShort = new List<string>()
+        {
+            "E → A1 [+ A2]",
+            "E1 && E2 → A1 [+ A2]",
+            "E1 || E2 → A1 [+ A2]",
+            "E1 → A1; E2 → A2",
+        }.AsReadOnly();
+
         public static readonly string None = "None";
 
         public static bool IsEmpty(string trigger)

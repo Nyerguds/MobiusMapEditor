@@ -697,7 +697,7 @@ Unreleased
 * The editor title now explicitly shows when the editor is connected to Steam.
 * The editor will now only connect to Steam after performing all the required map validations.
 * Added the ability to open and save the Nintendo 64 map type for Tiberian Dawn. This type does not support megamaps, and has some limitations in its tileset and units.
-* When removing the obsolete old "clear" terrain in RA interior maps, the generated open areas for allowing reinforcements now use the default dark floor type, rather than the first-found passable 1x1 tile in the tileset list.
+* When converting the obsolete old "clear" terrain in RA interior maps, the generated open areas for allowing reinforcements now use the default dark floor type, rather than the first-found passable 1x1 tile in the tileset list.
 * When FilterTheaterObjects is disabled, the icons in the top bar will now still prefer an existing object to show as example.
 * Fixed bug that made the fallback dummy texture not show correctly after loading a second map where it is used.
 * Fixed bug where the hashing of occupied buildings didn't work unless either map land types hashing was also enabled, or there were units on the map to also show the hashing for.
@@ -716,7 +716,7 @@ Unreleased
 * When the editor only has a single game enabled in "EnabledGames", the "Open from Mix" menu will leave out the folder with the game name.
 * Added compatibility system for loading different language and version variations of the classic Tiberian Dawn strings file.
 * Red Alert's "FAKE" labels in classic graphics mode are now loaded from the game graphics rather than generated from text, meaning they adapt to the game language.
-* Tiberian Dawn trigger events will now give a detailed tooltip when hovering over the Event dropdown.
+* In the Triggers dialog, Tiberian Dawn trigger Actions and Events will now give a detailed tooltip when hovering over the dropdown lists.
 * When selecting the Home waypoint, single player missions will now show a "Start view" box indicating the initial area the player will see when starting the mission. This will show both the DOS and Win95 viewport, which roughly correspond to respectively being fully zoomed in and fully zoomed out in the Remaster. Like the area reveal indicators on waypoints, this can be shown permanently through an option in the Extra Indicators, with this new one linked to the F8 key.
 * A warning is now shown when trying to publish a map but not setting it "Public", since the C&C Remaster relies on an external maps server that can only find the items if they're fully public.
 * Fixed inconsistencies in zoom level when zooming in and out. The calculation for the zoom factor when zooming out is now the exact inversion of the one done when zooming in.
@@ -750,3 +750,5 @@ Unreleased
 * The editor will no longer accept a random file dropped into the editor as being a binary map file for TD/Sole if an ini file of the same name is found. If the ini file is a self-contained map, or the opened file does not match any known .bin format, the file is simply rejected.
 * Added file existence checks into the code to open maps, preventing issues with drag-and-drop from programs that don't give correct existing paths.
 * Fixed bug where centering on a waypoint didn't work when zoomed in to a state where only one scrollbar was shown.
+* Optimised the Teamtypes window, making it a lot more responsive.
+* Added more  options in the Teamtypes orders list to insert, clone, and move orders.

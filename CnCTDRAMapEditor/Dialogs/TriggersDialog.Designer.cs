@@ -328,6 +328,9 @@ namespace MobiusEditor.Dialogs
             this.action2ComboBox.Size = new System.Drawing.Size(141, 21);
             this.action2ComboBox.TabIndex = 19;
             this.action2ComboBox.SelectedIndexChanged += new System.EventHandler(this.Action2ComboBox_SelectedIndexChanged);
+            this.action2ComboBox.MouseEnter += new System.EventHandler(this.Action2ComboBox_MouseEnter);
+            this.action2ComboBox.MouseLeave += new System.EventHandler(this.ToolTipComboBox_MouseLeave);
+            this.action2ComboBox.MouseMove += new System.Windows.Forms.MouseEventHandler(this.Action2ComboBox_MouseMove);
             // 
             // persistenceLabel
             // 
@@ -393,6 +396,9 @@ namespace MobiusEditor.Dialogs
             this.event2ComboBox.Size = new System.Drawing.Size(141, 21);
             this.event2ComboBox.TabIndex = 13;
             this.event2ComboBox.SelectedIndexChanged += new System.EventHandler(this.Event2ComboBox_SelectedIndexChanged);
+            this.event2ComboBox.MouseEnter += new System.EventHandler(this.Event2ComboBox_MouseEnter);
+            this.event2ComboBox.MouseLeave += new System.EventHandler(this.ToolTipComboBox_MouseLeave);
+            this.event2ComboBox.MouseMove += new System.Windows.Forms.MouseEventHandler(this.Event2ComboBox_MouseMove);
             // 
             // teamLabel
             // 
@@ -625,9 +631,9 @@ namespace MobiusEditor.Dialogs
             this.triggersListView.UseCompatibleStateImageBehavior = false;
             this.triggersListView.View = System.Windows.Forms.View.Details;
             this.triggersListView.AfterLabelEdit += new System.Windows.Forms.LabelEditEventHandler(this.triggersListView_AfterLabelEdit);
-            this.triggersListView.SelectedIndexChanged += new System.EventHandler(this.triggersListView_SelectedIndexChanged);
-            this.triggersListView.KeyDown += new System.Windows.Forms.KeyEventHandler(this.triggersListView_KeyDown);
-            this.triggersListView.MouseDown += new System.Windows.Forms.MouseEventHandler(this.triggersListView_MouseDown);
+            this.triggersListView.SelectedIndexChanged += new System.EventHandler(this.TriggersListView_SelectedIndexChanged);
+            this.triggersListView.KeyDown += new System.Windows.Forms.KeyEventHandler(this.TriggersListView_KeyDown);
+            this.triggersListView.MouseDown += new System.Windows.Forms.MouseEventHandler(this.TriggersListView_MouseDown);
             // 
             // nameColumnHeader
             // 

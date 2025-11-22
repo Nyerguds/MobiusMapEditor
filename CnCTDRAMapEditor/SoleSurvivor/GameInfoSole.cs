@@ -66,6 +66,8 @@ namespace MobiusEditor.SoleSurvivor
         public override int MaxUnits => Constants.MaxUnitsClassic;
         public override int MaxTriggers => Constants.MaxTriggersClassic;
         public override int MaxTeams => Constants.MaxTeamsClassic;
+        public override int MaxTeamClasses => Globals.MaxTeamClasses;
+        public override int MaxTeamMissions => Globals.MaxTeamMissions;
         public override OverlayTypeFlag OverlayIconType => OverlayTypeFlag.FlagPlace;
         public override Bitmap WorkshopPreviewGeneric => null;
         public override Bitmap WorkshopPreviewGenericGame => null;

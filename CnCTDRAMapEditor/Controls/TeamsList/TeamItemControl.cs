@@ -25,7 +25,7 @@ namespace MobiusEditor.Controls
     {
         public TeamTypeClass Info { get; set; }
         private bool m_Loading;
-        private ListedControlController<TeamTypeClass> m_Controller;
+        private IListedControlController<TeamTypeClass, char, int> m_Controller;
         private ITechnoType defaultType;
 
 
@@ -34,13 +34,13 @@ namespace MobiusEditor.Controls
         {
         }
 
-        public TeamItemControl(TeamTypeClass info, ListedControlController<TeamTypeClass> controller, IEnumerable<ITechnoType> technos)
+        public TeamItemControl(TeamTypeClass info, IListedControlController<TeamTypeClass, char, int> controller, IEnumerable<ITechnoType> technos)
         {
             InitializeComponent();
             SetInfo(info, controller, technos);
         }
 
-        public void SetInfo(TeamTypeClass info, ListedControlController<TeamTypeClass> controller, IEnumerable<ITechnoType> technos)
+        public void SetInfo(TeamTypeClass info, IListedControlController<TeamTypeClass, char, int> controller, IEnumerable<ITechnoType> technos)
         {
             try
             {
@@ -102,7 +102,7 @@ namespace MobiusEditor.Controls
             Info.Count = (byte)numAmount.Value;
             if (m_Controller != null)
             {
-                m_Controller.UpdateControlInfo(Info);
+                m_Controller.UpdateControlInfo(Info, 'E');
             }
         }
 
@@ -112,10 +112,10 @@ namespace MobiusEditor.Controls
             {
                 return;
             }
-            // Setting type to null is the signal to delete.
-            Info.Type = null;
             if (m_Controller != null)
-                m_Controller.UpdateControlInfo(Info);
+            {
+                m_Controller.UpdateControlInfo(Info, 'R');
+            }
         }
     }
 }

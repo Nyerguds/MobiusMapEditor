@@ -77,10 +77,10 @@ namespace MobiusEditor.Dialogs
             }
             if (isRA)
             {
-                chkEventControl.Checked = filter.FilterEventControl;
+                chkEventControl.Checked = filter.FilterMultiStyle;
                 if (chkEventControl.Checked)
                 {
-                    cmbEventControl.SelectedIndex = ListItem.GetIndexInComboBox(filter.EventControl, cmbEventControl);
+                    cmbEventControl.SelectedIndex = ListItem.GetIndexInComboBox(filter.MultiStyle, cmbEventControl);
                 }
             }
             chkEventType.Checked = filter.FilterEventType;
@@ -96,9 +96,9 @@ namespace MobiusEditor.Dialogs
             chkTeamType.Checked = filter.FilterTeamType;
             if (chkTeamType.Checked)
             {
-                cmbTeamType.SelectedIndex = ListItem.GetIndexInComboBox(filter.TeamType, cmbTeamType);
+                cmbTeamType.SelectedIndex = ListItem.GetIndexInComboBox(filter.TeamTypeArg, cmbTeamType);
             }
-            string correctCaseName = currentTrigs.FirstOrDefault(tr => String.Equals(tr, filter.Trigger, StringComparison.Ordinal));
+            string correctCaseName = currentTrigs.FirstOrDefault(tr => String.Equals(tr, filter.TriggerArg, StringComparison.Ordinal));
             chkTrigger.Checked = filter.FilterTrigger && correctCaseName != null;
             if (chkTrigger.Checked)
             {
@@ -271,20 +271,20 @@ namespace MobiusEditor.Dialogs
             filter.House = filter.FilterHouse ? (string)cmbHouse.SelectedValue: null;
             filter.FilterPersistenceType = chkPersistenceType.Checked;
             filter.PersistenceType = filter.FilterPersistenceType ? (TriggerPersistentType)cmbPersistenceType.SelectedValue : TriggerPersistentType.Volatile;
-            filter.FilterEventControl = chkEventControl.Checked;
-            filter.EventControl = filter.FilterEventControl ? (TriggerMultiStyleType)cmbEventControl.SelectedValue : TriggerMultiStyleType.Only;
+            filter.FilterMultiStyle = chkEventControl.Checked;
+            filter.MultiStyle = filter.FilterMultiStyle ? (TriggerMultiStyleType)cmbEventControl.SelectedValue : TriggerMultiStyleType.Only;
             filter.FilterEventType = chkEventType.Checked;
             filter.EventType = filter.FilterEventType ? (string)cmbEventType.SelectedValue : TriggerEvent.None;
             filter.FilterActionType = chkActionType.Checked;
             filter.ActionType = filter.FilterActionType ? (string)cmbActionType.SelectedValue : TriggerAction.None;
             filter.FilterTeamType = chkTeamType.Checked;
-            filter.TeamType = filter.FilterTeamType ? (string)cmbTeamType.SelectedValue : TeamType.None;
+            filter.TeamTypeArg = filter.FilterTeamType ? (string)cmbTeamType.SelectedValue : TeamType.None;
             filter.FilterWaypoint = chkWaypoint.Checked;
             filter.Waypoint = filter.FilterWaypoint ? (int)cmbWaypoint.SelectedValue : -1;
             filter.FilterGlobal = chkGlobal.Checked;
             filter.Global = filter.FilterGlobal ? nudGlobal.IntValue : 0;
             filter.FilterTrigger= chkTrigger.Checked;
-            filter.Trigger = filter.FilterTrigger ? (string)cmbTrigger.SelectedValue : Trigger.None;
+            filter.TriggerArg = filter.FilterTrigger ? (string)cmbTrigger.SelectedValue : Trigger.None;
         }
 
         private void TriggerFilterDialog_Load(object sender, EventArgs e)

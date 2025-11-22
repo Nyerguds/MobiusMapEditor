@@ -13,6 +13,7 @@
 //   0. You just DO WHAT THE FUCK YOU WANT TO.
 using MobiusEditor.Controls.ControlsList;
 using MobiusEditor.Model;
+using MobiusEditor.Utility;
 using System;
 using System.Collections.Generic;
 using System.Data;
@@ -25,7 +26,8 @@ namespace MobiusEditor.Controls
     {
         public TeamTypeMission Info { get; set; }
         private bool m_Loading;
-        private ListedControlController<TeamTypeMission> m_Controller;
+        private IListedControlController<TeamTypeMission, char, int> m_Controller;
+        private TeamMission[] missionsArr;
         private TeamMission defaultMission;
         private TeamMissionArgType currentType = TeamMissionArgType.None;
         private ListItem<int>[] waypoints;
@@ -37,25 +39,42 @@ namespace MobiusEditor.Controls
         {
         }
 
-        public MissionItemControl(TeamTypeMission info, ListedControlController<TeamTypeMission> controller, IEnumerable<TeamMission> missions, IEnumerable<ListItem<int>> waypoints, int mapSize, ToolTip tooltip)
+        public MissionItemControl(TeamTypeMission info, IListedControlController<TeamTypeMission, char, int> controller,
+            IEnumerable<TeamMission> missions, IEnumerable<ListItem<int>> waypoints, int mapSize, ToolTip tooltip)
         {
             InitializeComponent();
             SetInfo(info, controller, missions, waypoints, mapSize, tooltip);
         }
 
-        public void SetInfo(TeamTypeMission info, ListedControlController<TeamTypeMission> controller, IEnumerable<TeamMission> missions, IEnumerable<ListItem<int>> waypoints, int mapSize, ToolTip tooltip)
+        public void SetInfo(TeamTypeMission info, IListedControlController<TeamTypeMission, char, int> controller,
+            IEnumerable<TeamMission> missions, IEnumerable<ListItem<int>> waypoints, int mapSize, ToolTip tooltip)
         {
+            TeamTypeMission old = Info;
+            bool updatedMissions = false;
+            bool updatedWaypoints = false;
+            bool updatedMapSize = false;
             try
             {
                 m_Loading = true;
                 Info = null;
                 m_Controller = controller;
-                TeamMission[] missionsArr = missions.ToArray();
-                defaultMission = missionsArr.FirstOrDefault();
-                cmbMission.DisplayMember = null;
-                cmbMission.DataSource = missionsArr;
-                cmbMission.DisplayMember = "Mission";
-                this.waypoints = waypoints.ToArray();
+                TeamMission[] tmpMissArr = missions.ToArray();
+                if (!ArrayUtils.ArraysAreEqual(missionsArr, tmpMissArr))
+                {
+                    updatedMissions = true;
+                    missionsArr = tmpMissArr;
+                    defaultMission = missionsArr.FirstOrDefault();
+                    cmbMission.DisplayMember = null;
+                    cmbMission.DataSource = missionsArr;
+                    cmbMission.DisplayMember = "Mission";
+                }
+                ListItem<int>[] tmpWpArr = waypoints.ToArray();
+                if (!ArrayUtils.ArraysAreEqual(this.waypoints, tmpWpArr))
+                {
+                    updatedWaypoints = true;
+                    this.waypoints = waypoints.ToArray();
+                }
+                updatedMapSize = this.mapSize != mapSize;
                 this.mapSize = mapSize;
                 this.tooltip = tooltip;
             }
@@ -65,7 +84,15 @@ namespace MobiusEditor.Controls
             }
             if (info != null)
             {
-                UpdateInfo(info);
+                if (!updatedMissions && !updatedWaypoints && !updatedMapSize &&
+                    old != null && info.Mission == old.Mission && info.Argument == old.Argument)
+                {
+                    Info = info;
+                }
+                else
+                {
+                    UpdateInfo(info);
+                }
             }
         }
 
@@ -93,6 +120,11 @@ namespace MobiusEditor.Controls
         public void FocusValue()
         {
             cmbMission.Select();
+        }
+
+        public void FocusButton()
+        {
+            btnOptions.Select();
         }
 
         private int UpdateValueControl(TeamMission mission, int value)
@@ -205,7 +237,7 @@ namespace MobiusEditor.Controls
                 return;
             }
             Info.Argument = (int)numValue.Value;
-            m_Controller?.UpdateControlInfo(Info);
+            m_Controller?.UpdateControlInfo(Info, 'E');
         }
 
         private void CmbValue_SelectedIndexChanged(object sender, EventArgs e)
@@ -219,18 +251,83 @@ namespace MobiusEditor.Controls
                 return;
             }
             Info.Argument = (byte)item.Value;
-            m_Controller?.UpdateControlInfo(Info);
+            m_Controller?.UpdateControlInfo(Info, 'E');
         }
 
-        private void BtnRemove_Click(object sender, EventArgs e)
+        private void BtnOptions_Click(object sender, EventArgs e)
+        {
+            Control src = sender as Control;
+            if (m_Loading || Info == null || src == null)
+            {
+                return;
+            }
+            if (m_Controller != null)
+            {
+                int index = m_Controller.UpdateControlInfo(Info, 'I');
+                tsmiMoveUp.Visible = index > 0;
+                int length = m_Controller.UpdateControlInfo(Info, 'L');
+                tsmiMoveDown.Visible = index < length - 1;
+                int max = m_Controller.UpdateControlInfo(Info, 'M');
+                Boolean maxNotReached = length < max;
+                tsmiDuplicate.Visible = maxNotReached;
+                tsmiInsert.Visible = maxNotReached;
+            }
+            else
+            {
+                tsmiMoveUp.Visible = true;
+                tsmiMoveDown.Visible = true;
+            }
+            cmsOptions.Show(src, 0, src.Height);
+        }
+
+        private void TsmiDelete_Click(object sender, EventArgs e)
         {
             if (m_Loading || Info == null)
             {
                 return;
             }
-            // Setting type to null is the signal to delete.
-            Info.Mission = null;
-            m_Controller?.UpdateControlInfo(Info);
+            // R = Remove
+            m_Controller?.UpdateControlInfo(Info, 'R');
+        }
+
+        private void TsmiMoveUp_Click(object sender, EventArgs e)
+        {
+            if (m_Loading || Info == null)
+            {
+                return;
+            }
+            // U = move Up
+            m_Controller?.UpdateControlInfo(Info, 'U');
+        }
+
+        private void TsmiMoveDown_Click(object sender, EventArgs e)
+        {
+            if (m_Loading || Info == null)
+            {
+                return;
+            }
+            // D = move Down
+            m_Controller?.UpdateControlInfo(Info, 'D');
+        }
+
+        private void TsmiDuplicate_Click(object sender, EventArgs e)
+        {
+            if (m_Loading || Info == null)
+            {
+                return;
+            }
+            // C = Clone
+            m_Controller?.UpdateControlInfo(Info, 'C');
+        }
+
+        private void TsmiInsert_Click(object sender, EventArgs e)
+        {
+            if (m_Loading || Info == null)
+            {
+                return;
+            }
+            // A = Add
+            m_Controller?.UpdateControlInfo(Info, 'A');
         }
     }
 }

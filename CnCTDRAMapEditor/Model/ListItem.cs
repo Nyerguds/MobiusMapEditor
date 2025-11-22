@@ -242,7 +242,7 @@ namespace MobiusEditor.Model
         public bool Equals(ListItem<T> other)
         {
             return other != null
-                && ((this.Value == null && other.Value == null) || this.Value.Equals(other.Value))
+                && ((this.Value == null && other.Value == null) || (this.Value != null && this.Value.Equals(other.Value)))
                 && String.Equals(this.Label, other.Label, StringComparison.InvariantCultureIgnoreCase);
         }
 

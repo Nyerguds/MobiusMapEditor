@@ -1263,7 +1263,7 @@ namespace MobiusEditor.TiberianDawn
                     int numClasses = int.Parse(tokens[(int)TeamTypeOptions.Classes]);
                     int classesIndex = (int)TeamTypeOptions.Classes + 1;
                     int classesIndexEnd = classesIndex + numClasses;
-                    int classesMax = Math.Min(Globals.MaxTeamClasses, numClasses);
+                    int classesMax = Math.Min(GameInfo.MaxTeamClasses, numClasses);
                     int classesIndexMax = classesIndex + classesMax;
                     for (int i = classesIndex; i < classesIndexMax; ++i)
                     {
@@ -1290,15 +1290,15 @@ namespace MobiusEditor.TiberianDawn
                             modified = true;
                         }
                     }
-                    if (numClasses > Globals.MaxTeamClasses)
+                    if (numClasses > GameInfo.MaxTeamClasses)
                     {
-                        errors.Add(String.Format("Team '{0}' has more classes than the game can handle (has {1}, maximum is {2}).", kvp.Key, numClasses, Globals.MaxTeamClasses));
+                        errors.Add(String.Format("Team '{0}' has more classes than the game can handle (has {1}, maximum is {2}).", kvp.Key, numClasses, GameInfo.MaxTeamClasses));
                         modified = true;
                     }
                     int numMissions = int.Parse(tokens[classesIndexEnd]);
                     int missionsIndex = classesIndexEnd + 1;
                     int missionsIndexEnd = missionsIndex + numMissions;
-                    int missionsMax = Math.Min(Globals.MaxTeamMissions, numMissions);
+                    int missionsMax = Math.Min(GameInfo.MaxTeamMissions, numMissions);
                     int missionsIndexMax = missionsIndex + missionsMax;
                     for (int i = missionsIndex; i < missionsIndexMax; ++i)
                     {
@@ -1356,9 +1356,9 @@ namespace MobiusEditor.TiberianDawn
                         }
                         teamType.Missions.Add(new TeamTypeMission { Mission = mission, Argument = arg });
                     }
-                    if (numMissions > Globals.MaxTeamMissions)
+                    if (numMissions > GameInfo.MaxTeamMissions)
                     {
-                        errors.Add(String.Format("Team '{0}' has more orders than the game can handle (has {1}, maximum is {2}).", kvp.Key, numMissions, Globals.MaxTeamMissions));
+                        errors.Add(String.Format("Team '{0}' has more orders than the game can handle (has {1}, maximum is {2}).", kvp.Key, numMissions, GameInfo.MaxTeamMissions));
                         modified = true;
                     }
                     int reinforceIndex = missionsIndexEnd;
@@ -4549,6 +4549,92 @@ namespace MobiusEditor.TiberianDawn
             }
             string persistence = GameInfo.PERSISTENCE_NAMES[(int)trigger.PersistentType];
             return String.Format(trigFormat, trigger.House, persistence, evt, act, trigger.Name);
+        }
+
+        public String TriggerEventInfo(List<Trigger> triggers, string eventName)
+        {
+            if (eventName == null)
+            {
+                return null;
+            }
+            List<String> info = new List<string>();
+            if (EventTypes.TypesInfo.TryGetValue(eventName, out string trigInfoTd))
+            {
+                info.Add(trigInfoTd);
+            }
+            if (EventTypes.TypesDescription.TryGetValue(eventName, out string trigDescrTd))
+            {
+                info.Add(trigDescrTd);
+            }
+            return String.Join("\n", info.ToArray());
+        }
+
+        public String TriggerActionInfo(List<Trigger> triggers, string actionName)
+        {
+            if (actionName == null)
+            {
+                return null;
+            }
+            List<String> info = new List<string>();
+            if (ActionTypes.TypesInfo.TryGetValue(actionName, out string trigInfoTd))
+            {
+                info.Add(trigInfoTd);
+            }
+            if (ActionTypes.TypesDescription.TryGetValue(actionName, out string trigDescrTd))
+            {
+                info.Add(trigDescrTd);
+            }
+            string delTrig = null;
+            bool isFlare = false;
+            switch (actionName)
+            {
+                case ActionTypes.ACTION_DESTROY_XXXX: delTrig = "XXXX"; break;
+                case ActionTypes.ACTION_DESTROY_YYYY: delTrig = "YYYY"; break;
+                case ActionTypes.ACTION_DESTROY_ZZZZ: delTrig = "ZZZZ"; break;
+                case ActionTypes.ACTION_DESTROY_UUUU: delTrig = "UUUU"; break;
+                case ActionTypes.ACTION_DESTROY_VVVV: delTrig = "VVVV"; break;
+                case ActionTypes.ACTION_DESTROY_WWWW: delTrig = "WWWW"; break;
+                case ActionTypes.ACTION_DZ: isFlare = true; break;
+            }
+            if (delTrig != null)
+            {
+                Trigger toDestr = triggers.FirstOrDefault(tr => delTrig.Equals(tr.Name, StringComparison.OrdinalIgnoreCase));
+                if (toDestr == null)
+                {
+                    info.Add(delTrig + ": not found");
+                }
+                else
+                {
+                    info.Add(TriggerSummary(toDestr, true, true));
+                    // Check special case on removing "Allow Win" trigger.
+                    String targetAct = toDestr.Action1?.ActionType;
+                    if (ActionTypes.ACTION_ALLOWWIN.Equals(targetAct)
+                        && ActionTypes.TypesDescription.TryGetValue(targetAct, out string actDescrTd))
+                    {
+                        info.Add(actDescrTd);
+                    }
+                }
+            }
+            else if (isFlare)
+            {
+                string wp = "Waypoint 25";
+                Waypoint z = Map.Waypoints.FirstOrDefault(w => w.Flags.HasFlag(WaypointFlag.Flare));
+                if (z == null)
+                {
+                    // Should never happen.
+                    info.Add(wp + " not found!");
+                }
+                else if (!z.Point.HasValue)
+                {
+                    info.Add(wp + " is not set.");
+                }
+                else
+                {
+                    Point p = z.Point.Value;
+                    info.Add(String.Format("{0}: [{1},{2}] (cell {3})", wp, p.X, p.Y, z.Cell.Value));
+                }
+            }
+            return String.Join("\n", info.ToArray());
         }
 
         public virtual ITeamColor[] GetFlagColors()

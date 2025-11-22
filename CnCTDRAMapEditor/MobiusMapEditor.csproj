@@ -145,7 +145,7 @@
       <DependentUpon>ControlsList.cs</DependentUpon>
     </Compile>
     <Compile Include="Controls\ControlsList\CustomControlInfo.cs" />
-    <Compile Include="Controls\ControlsList\ListedControlController.cs" />
+    <Compile Include="Controls\ControlsList\IListedControlController.cs" />
     <Compile Include="Controls\EnhNumericUpDown.cs">
       <SubType>Component</SubType>
     </Compile>

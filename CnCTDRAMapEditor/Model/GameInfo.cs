@@ -137,8 +137,12 @@ namespace MobiusEditor.Model
         public abstract int MaxUnits { get; }
         /// <summary>Maximum amount of triggers that can be added into a map of this game.</summary>
         public abstract int MaxTriggers { get; }
-        /// <summary>Maximum amount of teams that can be added into a map of this game.</summary>
+        /// <summary>Maximum amount of teamtypes that can be added into a map of this game.</summary>
         public abstract int MaxTeams { get; }
+        /// <summary>Maximum amount of different unit classes in a teamtype for this game.</summary>
+        public abstract int MaxTeamClasses { get; }
+        /// <summary>Maximum amount of missions (orders) in a teamtype for this game.</summary>
+        public abstract int MaxTeamMissions { get; }
         /// <summary>Threshold (1-256) at which the health bar colour changes from yellow to green in this game.</summary>
         public abstract int HitPointsGreenMinimum { get; }
         /// <summary>Threshold (1-256) at which the health bar colour changes from red to yellow in this game.</summary>

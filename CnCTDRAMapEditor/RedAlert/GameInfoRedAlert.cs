@@ -80,6 +80,8 @@ namespace MobiusEditor.RedAlert
         public override int MaxUnits => Constants.MaxUnits;
         public override int MaxTriggers => Constants.MaxTriggers;
         public override int MaxTeams => Constants.MaxTeams;
+        public override int MaxTeamClasses => Globals.MaxTeamClasses;
+        public override int MaxTeamMissions => Globals.MaxTeamMissions;
         public override int HitPointsGreenMinimum => 128;
         public override int HitPointsYellowMinimum => 64;
         public override bool LandedHelis => Globals.LandedHelisRa;
