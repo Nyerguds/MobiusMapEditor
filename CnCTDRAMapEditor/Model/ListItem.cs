@@ -24,23 +24,42 @@ namespace MobiusEditor.Model
     /// </summary>
     public static class ListItem
     {
-        public static ListItem<T> MakeListItem<T>(T value, string Label)
+        public static ListItem<T> Create<T>(T value)
+        {
+            return new ListItem<T>(value);
+        }
+
+        public static ListItem<T> Create<T>(T value, string Label)
         {
             return new ListItem<T>(value, Label);
         }
 
-        public static T GetValueFromComboBox<T>(ComboBox dropdown)
+        public static T GetValueFromComboBox<T>(ComboBox comboBox)
         {
-            return GetValueFromComboBox(dropdown, default(T));
+            return GetValueFromComboBox(comboBox, default(T));
         }
 
-        public static T GetValueFromComboBox<T>(ComboBox dropdown, T defaultValue)
+        public static T GetValueFromComboBox<T>(ComboBox comboBox, T defaultValue)
         {
-            if (dropdown.SelectedItem is ListItem<T> li)
+            if (comboBox.SelectedItem is ListItem<T> li)
             {
                 return li.Value;
             }
             return defaultValue;
+        }
+
+        public static ListItem<T> GetItemFromComboBox<T>(ComboBox comboBox)
+        {
+            if (comboBox.SelectedItem is ListItem<T> li)
+            {
+                return li;
+            }
+            return null;
+        }
+
+        public static ListItem<T> GetItemFromComboBoxAtIndex<T>(ComboBox comboBox, int i)
+        {
+            return comboBox.Items[i] as ListItem<T>;
         }
 
         public static T GetValueFromListBox<T>(ListBox listBox)
@@ -55,6 +74,20 @@ namespace MobiusEditor.Model
                 return li.Value;
             }
             return defaultValue;
+        }
+
+        public static ListItem<T> GetItemFromListBox<T>(ListBox listBox)
+        {
+            if (listBox.SelectedItem is ListItem<T> li)
+            {
+                return li;
+            }
+            return null;
+        }
+
+        public static ListItem<T> GetItemFromListBoxAtIndex<T>(ListBox listBox, int i)
+        {
+            return listBox.Items[i] as ListItem<T>;
         }
 
         public static int GetIndexInList<T>(T value, ListItem<T>[] items)
@@ -113,16 +146,16 @@ namespace MobiusEditor.Model
             return defaultIndex;
         }
 
-        public static int GetIndexInDropdownByLabel<T>(string label, ComboBox dropdown)
+        public static int GetIndexInComboBoxByLabel<T>(string label, ComboBox comboBox)
         {
-            return GetIndexInDropdownByLabel<T>(label, dropdown, -1);
+            return GetIndexInComboBoxByLabel<T>(label, comboBox, -1);
         }
 
-        public static int GetIndexInDropdownByLabel<T>(string label, ComboBox dropdown, int defaultIndex)
+        public static int GetIndexInComboBoxByLabel<T>(string label, ComboBox comboBox, int defaultIndex)
         {
-            for (int i = 0; i < dropdown.Items.Count; ++i)
+            for (int i = 0; i < comboBox.Items.Count; ++i)
             {
-                ListItem<T> item = dropdown.Items[i] as ListItem<T>;
+                ListItem<T> item = comboBox.Items[i] as ListItem<T>;
                 if (item != null && item.Label.Equals(label))
                 {
                     return i;
@@ -169,6 +202,19 @@ namespace MobiusEditor.Model
             }
             return defaultValue;
         }
+
+        public static ListItem<T> FindInComboBox<T>(T value, ComboBox comboBox)
+        {
+            for (int i = 0; i < comboBox.Items.Count; ++i)
+            {
+                ListItem<T> item = comboBox.Items[i] as ListItem<T>;
+                if (item != null && item.Value.Equals(value))
+                {
+                    return item;
+                }
+            }
+            return null;
+        }
     }
 
     /// <summary>
@@ -178,8 +224,14 @@ namespace MobiusEditor.Model
     /// <typeparam name="T">Type of the value.</typeparam>
     public class ListItem<T> : IEquatable<ListItem<T>>, IComparable<ListItem<T>>
     {
-        public string Label { get; private set; }
+        public string Label { get; set; }
         public T Value { get; private set; }
+
+        public ListItem(T obj)
+        {
+            Value = obj;
+            Label = obj.ToString();
+        }
 
         public ListItem(T value, string label)
         {
@@ -190,7 +242,7 @@ namespace MobiusEditor.Model
         public bool Equals(ListItem<T> other)
         {
             return other != null
-                && ((this.Value == null && other.Value == null) || this.Value.Equals(other.Value))
+                && ((this.Value == null && other.Value == null) || (this.Value != null && this.Value.Equals(other.Value)))
                 && String.Equals(this.Label, other.Label, StringComparison.InvariantCultureIgnoreCase);
         }
 

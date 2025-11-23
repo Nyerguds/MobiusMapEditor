@@ -55,7 +55,7 @@ namespace MobiusEditor.TiberianDawn
             //MISSION_CAPTURE,
             MISSION_HARVEST,
             MISSION_AREA_GUARD,
-            //MISSION_RETURN,
+            MISSION_RETURN,
             MISSION_STOP,
             MISSION_AMBUSH,
             MISSION_HUNT,
@@ -69,9 +69,40 @@ namespace MobiusEditor.TiberianDawn
             //MISSION_MISSILE,
         };
 
+        private static readonly string[] UnassignableTypes = new string[]
+        {
+            //MISSION_SLEEP,
+            MISSION_ATTACK,
+            MISSION_MOVE,
+            //MISSION_RETREAT,
+            //MISSION_GUARD,
+            //MISSION_STICKY,
+            MISSION_ENTER,
+            MISSION_CAPTURE,
+            //MISSION_HARVEST,
+            //MISSION_AREA_GUARD,
+            //MISSION_RETURN,
+            //MISSION_STOP,
+            //MISSION_AMBUSH,
+            //MISSION_HUNT,
+            MISSION_TIMED_HUNT,
+            //MISSION_UNLOAD,
+            MISSION_SABOTAGE,
+            MISSION_CONSTRUCTION,
+            MISSION_SELLING,
+            MISSION_REPAIR,
+            MISSION_RESCUE,
+            MISSION_MISSILE,
+        };
+
         public static IEnumerable<string> GetTypes()
         {
             return Types;
+        }
+
+        public static IEnumerable<string> GetUnassignableTypes()
+        {
+            return UnassignableTypes;
         }
     }
 }

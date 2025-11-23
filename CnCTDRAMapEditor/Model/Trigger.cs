@@ -137,6 +137,36 @@ namespace MobiusEditor.Model
     [DebuggerDisplay("{EventControl}: EV1:{Event1} | EV2:{Event2} → AC1{Action1} | AC2:{Action2}, {PersistentType}")]
     public class Trigger : INamedType, ICloneable, IEquatable<Trigger>
     {
+        public static readonly IReadOnlyCollection<String> PersistenceNames = new List<string>()
+        {
+            "On first triggering",
+            "When all linked objects are triggered",
+            "On each triggering"
+        }.AsReadOnly();
+
+        public static readonly IReadOnlyCollection<String> PersistenceNamesShort = new List<string>()
+        {
+            "Single",
+            "Combined",
+            "Repeat"
+        }.AsReadOnly();
+
+        public static readonly IReadOnlyCollection<String> MultiStyleNames = new List<string>()
+        {
+            "Event → Action1 [+ Action2]",
+            "Event1 AND Event2 → Action1 [+ Action2]",
+            "Event1 OR Event2 → Action1 [+ Action2]",
+            "Event1 → Action1; Event2 → Action2",
+        }.AsReadOnly();
+
+        public static readonly IReadOnlyCollection<String> MultiStyleNamesShort = new List<string>()
+        {
+            "E → A1 [+ A2]",
+            "E1 && E2 → A1 [+ A2]",
+            "E1 || E2 → A1 [+ A2]",
+            "E1 → A1; E2 → A2",
+        }.AsReadOnly();
+
         public static readonly string None = "None";
 
         public static bool IsEmpty(string trigger)
@@ -194,18 +224,18 @@ namespace MobiusEditor.Model
             return base.Equals(obj);
         }
 
-        public Boolean Equals(Trigger other)
+        public bool Equals(Trigger other)
         {
             return ReferenceEquals(this, other)
                 || (other != null
-                && this.Name == other.Name
-                && this.PersistentType == other.PersistentType
-                && this.House.EqualsOrDefaultIgnoreCase(other.House, Model.House.None)
-                && this.EventControl == other.EventControl
-                && this.Event1.Equals(other.Event1)
-                && this.Event2.Equals(other.Event2)
-                && this.Action1.Equals(other.Action1)
-                && this.Action2.Equals(other.Action2));
+                && Name == other.Name
+                && PersistentType == other.PersistentType
+                && House.EqualsOrDefaultIgnoreCase(other.House, Model.House.None)
+                && EventControl == other.EventControl
+                && Event1.Equals(other.Event1)
+                && Event2.Equals(other.Event2)
+                && Action1.Equals(other.Action1)
+                && Action2.Equals(other.Action2));
         }
 
         public override int GetHashCode()
@@ -223,7 +253,7 @@ namespace MobiusEditor.Model
             return Clone();
         }
 
-        public static Boolean CheckForChanges(List<Trigger> list1, List<Trigger> list2)
+        public static bool CheckForChanges(List<Trigger> list1, List<Trigger> list2)
         {
             // Might need to migrate this to the map.
             if (list1.Count != list2.Count)

@@ -22,7 +22,7 @@ using System.Runtime.CompilerServices;
 
 namespace MobiusEditor.Model
 {
-    [DebuggerDisplay("{Type}: {Trigger}")]
+    [DebuggerDisplay("{Type}; House={House}, Trig={Trigger}")]
     public class Building : ITechno, ICellOverlapper, ICellOccupier, INotifyPropertyChanged, ICloneable
     {
         public event PropertyChangedEventHandler PropertyChanged;
@@ -32,12 +32,16 @@ namespace MobiusEditor.Model
         public ITechnoType TechnoType => type;
 
         public Rectangle OverlapBounds => Type.OverlapBounds;
-        public bool[,][] OpaqueMask => Type.OpaqueMask;
+        public bool[,][] OverlapMask => Type.OverlapMask;
+        public Point OverlapMaskOffset => Type.OverlapMaskOffset;
+        public bool[,][] ContentMask => Type.ContentMask;
+        public Point ContentMaskOffset => Type.ContentMaskOffset;
         public bool[,] OccupyMask => Type.OccupyMask;
         public bool[,] BaseOccupyMask => Type.BaseOccupyMask;
         public int ZOrder => Type.ZOrder;
         public int DrawOrderCache { get; set; }
         public int DrawFrameCache { get; set; }
+        public bool IsOverlapped { get; set; }
         public Size Size => type.Size;
 
         private HouseType house;
@@ -138,17 +142,17 @@ namespace MobiusEditor.Model
             return Clone();
         }
 
-        public Boolean DataEquals(Building other)
+        public bool DataEquals(Building other)
         {
-            return this.Type == other.Type &&
-                this.House == other.House &&
-                this.Strength == other.Strength &&
-                this.Direction == other.Direction &&
-                this.Trigger == other.Trigger &&
-                this.BasePriority == other.BasePriority &&
-                this.IsPrebuilt == other.IsPrebuilt &&
-                this.Sellable == other.Sellable &&
-                this.Rebuild == other.Rebuild;
+            return Type == other.Type &&
+                House == other.House &&
+                Strength == other.Strength &&
+                Direction == other.Direction &&
+                Trigger == other.Trigger &&
+                BasePriority == other.BasePriority &&
+                IsPrebuilt == other.IsPrebuilt &&
+                Sellable == other.Sellable &&
+                Rebuild == other.Rebuild;
         }
     }
 }

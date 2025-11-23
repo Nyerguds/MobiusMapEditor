@@ -39,7 +39,7 @@ namespace MobiusEditor.Tools
 
         public override bool IsBusy { get { return startedDragging; } }
 
-        public override Object CurrentObject
+        public override object CurrentObject
         {
             get { return mockInfantry; }
             set
@@ -67,7 +67,7 @@ namespace MobiusEditor.Tools
 
         private bool placementMode;
 
-        protected override Boolean InPlacementMode
+        protected override bool InPlacementMode
         {
             get { return placementMode || startedDragging; }
         }
@@ -212,7 +212,7 @@ namespace MobiusEditor.Tools
             {
                 return;
             }
-            bool origDirtyState = plugin.Dirty;
+            bool origEmptyState = plugin.Empty;
             plugin.Dirty = true;
             void undoAction(UndoRedoEventArgs ev)
             {
@@ -225,7 +225,8 @@ namespace MobiusEditor.Tools
                 ev.MapPanel.Invalidate(ev.Map, infantry.InfantryGroup);
                 if (ev.Plugin != null)
                 {
-                    ev.Plugin.Dirty = origDirtyState;
+                    ev.Plugin.Empty = origEmptyState;
+                    ev.Plugin.Dirty = !ev.NewStateIsClean;
                 }
             }
             void redoAction(UndoRedoEventArgs ev)
@@ -239,7 +240,9 @@ namespace MobiusEditor.Tools
                 ev.MapPanel.Invalidate(ev.Map, infantry.InfantryGroup);
                 if (ev.Plugin != null)
                 {
-                    ev.Plugin.Dirty = true;
+                    // Redo can never restore the "empty" state, but CAN be the point at which a save was done.
+                    ev.Plugin.Empty = false;
+                    ev.Plugin.Dirty = !ev.NewStateIsClean;
                 }
             }
             url.Track(undoAction, redoAction, ToolType.Infantry);
@@ -288,9 +291,10 @@ namespace MobiusEditor.Tools
         private void MapPanel_MouseLeave(object sender, EventArgs e)
         {
             ExitPlacementMode();
+            MapPanel_MouseUp(sender, new MouseEventArgs(MouseButtons.None, 0, 0, 0, 0));
         }
 
-        private void MapPanel_MouseWheel(Object sender, MouseEventArgs e)
+        private void MapPanel_MouseWheel(object sender, MouseEventArgs e)
         {
             if (e.Delta == 0 || (Control.ModifierKeys & Keys.Control) == Keys.None)
             {
@@ -417,7 +421,7 @@ namespace MobiusEditor.Tools
             {
                 return;
             }
-            bool origDirtyState = plugin.Dirty;
+            bool origEmptyState = plugin.Empty;
             plugin.Dirty = true;
             Point endLocation = finalLocation.Value;
             void undoAction(UndoRedoEventArgs ev)
@@ -450,7 +454,8 @@ namespace MobiusEditor.Tools
                 }
                 if (ev.Plugin != null)
                 {
-                    ev.Plugin.Dirty = origDirtyState;
+                    ev.Plugin.Empty = origEmptyState;
+                    ev.Plugin.Dirty = !ev.NewStateIsClean;
                 }
             }
             void redoAction(UndoRedoEventArgs ev)
@@ -483,7 +488,9 @@ namespace MobiusEditor.Tools
                 }
                 if (ev.Plugin != null)
                 {
-                    ev.Plugin.Dirty = true;
+                    // Redo can never restore the "empty" state, but CAN be the point at which a save was done.
+                    ev.Plugin.Empty = false;
+                    ev.Plugin.Dirty = !ev.NewStateIsClean;
                 }
             }
             url.Track(undoAction, redoAction, ToolType.Infantry);
@@ -538,7 +545,7 @@ namespace MobiusEditor.Tools
                     infantryGroup.Infantry[placeStop] = infantry;
                     infantry.InfantryGroup = infantryGroup;
                     mapPanel.Invalidate(map, infantryGroup);
-                    bool origDirtyState = plugin.Dirty;
+                    bool origEmptyState = plugin.Empty;
                     plugin.Dirty = true;
                     void undoAction(UndoRedoEventArgs ev)
                     {
@@ -554,7 +561,8 @@ namespace MobiusEditor.Tools
                         }
                         if (ev.Plugin != null)
                         {
-                            ev.Plugin.Dirty = origDirtyState;
+                            ev.Plugin.Empty = origEmptyState;
+                            ev.Plugin.Dirty = !ev.NewStateIsClean;
                         }
                     }
                     void redoAction(UndoRedoEventArgs ev)
@@ -574,7 +582,9 @@ namespace MobiusEditor.Tools
                         }
                         if (ev.Plugin != null)
                         {
-                            ev.Plugin.Dirty = true;
+                            // Redo can never restore the "empty" state, but CAN be the point at which a save was done.
+                            ev.Plugin.Empty = false;
+                            ev.Plugin.Dirty = !ev.NewStateIsClean;
                         }
                     }
                     url.Track(undoAction, redoAction, ToolType.Infantry);
@@ -606,7 +616,7 @@ namespace MobiusEditor.Tools
                 {
                     map.Technos.Remove(infantryGroup);
                 }
-                bool origDirtyState = plugin.Dirty;
+                bool origEmptyState = plugin.Empty;
                 plugin.Dirty = true;
                 void undoAction(UndoRedoEventArgs ev)
                 {
@@ -625,7 +635,8 @@ namespace MobiusEditor.Tools
                     }
                     if (ev.Plugin != null)
                     {
-                        ev.Plugin.Dirty = origDirtyState;
+                        ev.Plugin.Empty = origEmptyState;
+                        ev.Plugin.Dirty = !ev.NewStateIsClean;
                     }
                 }
                 void redoAction(UndoRedoEventArgs ev)
@@ -642,7 +653,9 @@ namespace MobiusEditor.Tools
                     }
                     if (ev.Plugin != null)
                     {
-                        ev.Plugin.Dirty = true;
+                        // Redo can never restore the "empty" state, but CAN be the point at which a save was done.
+                        ev.Plugin.Empty = false;
+                        ev.Plugin.Dirty = !ev.NewStateIsClean;
                     }
                 }
                 url.Track(undoAction, redoAction, ToolType.Infantry);
@@ -767,7 +780,7 @@ namespace MobiusEditor.Tools
                 using (var g = Graphics.FromImage(infantryPreview))
                 {
                     MapRenderer.SetRenderSettings(g, Globals.PreviewSmoothScale);
-                    RenderInfo render = MapRenderer.RenderInfantry(Point.Empty, Globals.PreviewTileSize, mockInfantry, InfantryStoppingType.Center, false);
+                    RenderInfo render = MapRenderer.RenderInfantry(map, Point.Empty, Globals.PreviewTileSize, mockInfantry, InfantryStoppingType.Center, false);
                     if (render.RenderedObject != null)
                     {
                         render.RenderAction(g);
@@ -883,45 +896,47 @@ namespace MobiusEditor.Tools
         public override void Activate()
         {
             base.Activate();
-            this.Deactivate(true);
-            this.mockInfantry.PropertyChanged += MockInfantry_PropertyChanged;
-            this.mapPanel.MouseDown += MapPanel_MouseDown;
-            this.mapPanel.MouseUp += MapPanel_MouseUp;
-            this.mapPanel.MouseDoubleClick += MapPanel_MouseDoubleClick;
-            this.mapPanel.MouseMove += MapPanel_MouseMove;
-            this.mapPanel.MouseLeave += MapPanel_MouseLeave;
-            this.mapPanel.MouseWheel += MapPanel_MouseWheel;
-            this.mapPanel.SuspendMouseZoomKeys = Keys.Control;
-            (this.mapPanel as Control).KeyDown += InfantryTool_KeyDown;
-            (this.mapPanel as Control).KeyUp += InfantryTool_KeyUp;
-            this.navigationWidget.BoundsMouseCellChanged += MouseoverWidget_MouseCellChanged;
-            this.UpdateStatus();
-            this.RefreshPreviewPanel();
+            Deactivate(true);
+            mockInfantry.PropertyChanged += MockInfantry_PropertyChanged;
+            mapPanel.MouseDown += MapPanel_MouseDown;
+            mapPanel.MouseUp += MapPanel_MouseUp;
+            mapPanel.MouseDoubleClick += MapPanel_MouseDoubleClick;
+            mapPanel.MouseMove += MapPanel_MouseMove;
+            mapPanel.MouseLeave += MapPanel_MouseLeave;
+            mapPanel.MouseWheel += MapPanel_MouseWheel;
+            mapPanel.LostFocus += MapPanel_MouseLeave;
+            mapPanel.SuspendMouseZoomKeys = Keys.Control;
+            (mapPanel as Control).KeyDown += InfantryTool_KeyDown;
+            (mapPanel as Control).KeyUp += InfantryTool_KeyUp;
+            navigationWidget.BoundsMouseCellChanged += MouseoverWidget_MouseCellChanged;
+            UpdateStatus();
+            RefreshPreviewPanel();
         }
 
         public override void Deactivate()
         {
-            this.Deactivate(false);
+            Deactivate(false);
         }
 
         public void Deactivate(bool forActivate)
         {
             if (!forActivate)
             {
-                this.ExitPlacementMode();
+                ExitPlacementMode();
                 base.Deactivate();
             }
-            this.mockInfantry.PropertyChanged -= MockInfantry_PropertyChanged;
-            this.mapPanel.MouseDown -= MapPanel_MouseDown;
-            this.mapPanel.MouseUp -= MapPanel_MouseUp;
-            this.mapPanel.MouseDoubleClick -= MapPanel_MouseDoubleClick;
-            this.mapPanel.MouseMove -= MapPanel_MouseMove;
-            this.mapPanel.MouseLeave -= MapPanel_MouseLeave;
-            this.mapPanel.MouseWheel -= MapPanel_MouseWheel;
-            this.mapPanel.SuspendMouseZoomKeys = Keys.None;
-            (this.mapPanel as Control).KeyDown -= InfantryTool_KeyDown;
-            (this.mapPanel as Control).KeyUp -= InfantryTool_KeyUp;
-            this.navigationWidget.BoundsMouseCellChanged -= MouseoverWidget_MouseCellChanged;
+            mockInfantry.PropertyChanged -= MockInfantry_PropertyChanged;
+            mapPanel.MouseDown -= MapPanel_MouseDown;
+            mapPanel.MouseUp -= MapPanel_MouseUp;
+            mapPanel.MouseDoubleClick -= MapPanel_MouseDoubleClick;
+            mapPanel.MouseMove -= MapPanel_MouseMove;
+            mapPanel.MouseLeave -= MapPanel_MouseLeave;
+            mapPanel.MouseWheel -= MapPanel_MouseWheel;
+            mapPanel.LostFocus -= MapPanel_MouseLeave;
+            mapPanel.SuspendMouseZoomKeys = Keys.None;
+            (mapPanel as Control).KeyDown -= InfantryTool_KeyDown;
+            (mapPanel as Control).KeyUp -= InfantryTool_KeyUp;
+            navigationWidget.BoundsMouseCellChanged -= MouseoverWidget_MouseCellChanged;
         }
 
         #region IDisposable Support

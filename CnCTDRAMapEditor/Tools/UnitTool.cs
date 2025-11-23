@@ -45,7 +45,7 @@ namespace MobiusEditor.Tools
 
         public override bool IsBusy { get { return startedDragging; } }
 
-        public override Object CurrentObject
+        public override object CurrentObject
         {
             get { return mockUnit; }
             set
@@ -67,7 +67,7 @@ namespace MobiusEditor.Tools
 
         private bool placementMode;
 
-        protected override Boolean InPlacementMode
+        protected override bool InPlacementMode
         {
             get { return placementMode || startedDragging; }
         }
@@ -90,13 +90,17 @@ namespace MobiusEditor.Tools
                 {
                     if (placementMode && (selectedUnitType != null))
                     {
-                        mapPanel.Invalidate(map, Rectangle.Inflate(new Rectangle(navigationWidget.MouseCell, new Size(1, 1)), 1, 1));
+                        Rectangle bounds = selectedUnitType.OverlapBounds;
+                        Point mouseLoc = new Point(navigationWidget.MouseCell.X + bounds.Location.X, navigationWidget.MouseCell.Y + bounds.Location.Y);
+                        mapPanel.Invalidate(map, new Rectangle(mouseLoc, bounds.Size));
                     }
                     selectedUnitType = value;
                     unitTypeListBox.SelectedValue = selectedUnitType;
                     if (placementMode && (selectedUnitType != null))
                     {
-                        mapPanel.Invalidate(map, Rectangle.Inflate(new Rectangle(navigationWidget.MouseCell, new Size(1, 1)), 1, 1));
+                        Rectangle bounds = selectedUnitType.OverlapBounds;
+                        Point mouseLoc = new Point(navigationWidget.MouseCell.X + bounds.Location.X, navigationWidget.MouseCell.Y + bounds.Location.Y);
+                        mapPanel.Invalidate(map, new Rectangle(mouseLoc, bounds.Size));
                     }
                     mockUnit.Type = selectedUnitType;
                 }
@@ -108,8 +112,7 @@ namespace MobiusEditor.Tools
             : base(mapPanel, layers, statusLbl, plugin, url)
         {
             previewMap = map;
-            // Leaving these in order of definition. Ordering as vehicles, then vessels, then air units, can be done as:
-            // .OrderBy(t => t.IsAircraft).ThenBy(t => t.IsVessel).ThenBy(t => t.ID);
+            // Leaving these in order of definition.
             List<UnitType> unitTypes = plugin.Map.UnitTypes.ToList();
             UnitType unitType = unitTypes.First();
             mockUnit = new Unit()
@@ -209,7 +212,7 @@ namespace MobiusEditor.Tools
             {
                 return;
             }
-            bool origDirtyState = plugin.Dirty;
+            bool origEmptyState = plugin.Empty;
             plugin.Dirty = true;
             void undoAction(UndoRedoEventArgs ev)
             {
@@ -222,7 +225,8 @@ namespace MobiusEditor.Tools
                 ev.MapPanel.Invalidate(ev.Map, unit);
                 if (ev.Plugin != null)
                 {
-                    ev.Plugin.Dirty = origDirtyState;
+                    ev.Plugin.Empty = origEmptyState;
+                    ev.Plugin.Dirty = !ev.NewStateIsClean;
                 }
             }
             void redoAction(UndoRedoEventArgs ev)
@@ -236,7 +240,9 @@ namespace MobiusEditor.Tools
                 ev.MapPanel.Invalidate(ev.Map, unit);
                 if (ev.Plugin != null)
                 {
-                    ev.Plugin.Dirty = true;
+                    // Redo can never restore the "empty" state, but CAN be the point at which a save was done.
+                    ev.Plugin.Empty = false;
+                    ev.Plugin.Dirty = !ev.NewStateIsClean;
                 }
             }
             url.Track(undoAction, redoAction, ToolType.Unit);
@@ -285,9 +291,10 @@ namespace MobiusEditor.Tools
         private void MapPanel_MouseLeave(object sender, EventArgs e)
         {
             ExitPlacementMode();
+            MapPanel_MouseUp(sender, new MouseEventArgs(MouseButtons.None, 0, 0, 0, 0));
         }
 
-        private void MapPanel_MouseWheel(Object sender, MouseEventArgs e)
+        private void MapPanel_MouseWheel(object sender, MouseEventArgs e)
         {
             if (e.Delta == 0 || !Control.ModifierKeys.HasFlag(Keys.Control))
             {
@@ -353,7 +360,7 @@ namespace MobiusEditor.Tools
                 return;
             }
             Point endLocation = finalLocation.Value;
-            bool origDirtyState = plugin.Dirty;
+            bool origEmptyState = plugin.Empty;
             plugin.Dirty = true;
             void undoAction(UndoRedoEventArgs ev)
             {
@@ -363,7 +370,8 @@ namespace MobiusEditor.Tools
                 ev.MapPanel.Invalidate(ev.Map, toMove);
                 if (ev.Plugin != null)
                 {
-                    ev.Plugin.Dirty = origDirtyState;
+                    ev.Plugin.Empty = origEmptyState;
+                    ev.Plugin.Dirty = !ev.NewStateIsClean;
                 }
             }
             void redoAction(UndoRedoEventArgs ev)
@@ -374,7 +382,9 @@ namespace MobiusEditor.Tools
                 ev.MapPanel.Invalidate(ev.Map, toMove);
                 if (ev.Plugin != null)
                 {
-                    ev.Plugin.Dirty = true;
+                    // Redo can never restore the "empty" state, but CAN be the point at which a save was done.
+                    ev.Plugin.Empty = false;
+                    ev.Plugin.Dirty = !ev.NewStateIsClean;
                 }
             }
             url.Track(undoAction, redoAction, ToolType.Unit);
@@ -386,8 +396,11 @@ namespace MobiusEditor.Tools
             {
                 if (SelectedUnitType != null)
                 {
-                    mapPanel.Invalidate(map, Rectangle.Inflate(new Rectangle(e.OldCell, new Size(1, 1)), 1, 1));
-                    mapPanel.Invalidate(map, Rectangle.Inflate(new Rectangle(e.NewCell, new Size(1, 1)), 1, 1));
+                    Rectangle bounds = SelectedUnitType.OverlapBounds;
+                    Point oldLoc = new Point(e.OldCell.X + bounds.Location.X, e.OldCell.Y + bounds.Location.Y);
+                    Point newLoc = new Point(e.NewCell.X + bounds.Location.X, e.NewCell.Y + bounds.Location.Y);
+                    mapPanel.Invalidate(map, new Rectangle(oldLoc, bounds.Size));
+                    mapPanel.Invalidate(map, new Rectangle(newLoc, bounds.Size));
                 }
             }
             else if (selectedUnit != null)
@@ -431,25 +444,28 @@ namespace MobiusEditor.Tools
             var unit = mockUnit.Clone();
             if (map.Technos.Add(location, unit))
             {
-                bool origDirtyState = plugin.Dirty;
+                bool origEmptyState = plugin.Empty;
                 plugin.Dirty = true;
                 mapPanel.Invalidate(map, unit);
-                void undoAction(UndoRedoEventArgs e)
+                void undoAction(UndoRedoEventArgs ev)
                 {
-                    e.MapPanel.Invalidate(e.Map, unit);
-                    e.Map.Technos.Remove(unit);
-                    if (e.Plugin != null)
+                    ev.MapPanel.Invalidate(ev.Map, unit);
+                    ev.Map.Technos.Remove(unit);
+                    if (ev.Plugin != null)
                     {
-                        e.Plugin.Dirty = origDirtyState;
+                        ev.Plugin.Empty = origEmptyState;
+                        ev.Plugin.Dirty = !ev.NewStateIsClean;
                     }
                 }
-                void redoAction(UndoRedoEventArgs e)
+                void redoAction(UndoRedoEventArgs ev)
                 {
-                    e.Map.Technos.Add(location, unit);
-                    e.MapPanel.Invalidate(e.Map, unit);
-                    if (e.Plugin != null)
+                    ev.Map.Technos.Add(location, unit);
+                    ev.MapPanel.Invalidate(ev.Map, unit);
+                    if (ev.Plugin != null)
                     {
-                        e.Plugin.Dirty = true;
+                        // Redo can never restore the "empty" state, but CAN be the point at which a save was done.
+                        ev.Plugin.Empty = false;
+                        ev.Plugin.Dirty = !ev.NewStateIsClean;
                     }
                 }
                 url.Track(undoAction, redoAction, ToolType.Unit);
@@ -462,24 +478,27 @@ namespace MobiusEditor.Tools
             {
                 mapPanel.Invalidate(map, unit);
                 map.Technos.Remove(unit);
-                bool origDirtyState = plugin.Dirty;
+                bool origEmptyState = plugin.Empty;
                 plugin.Dirty = true;
-                void undoAction(UndoRedoEventArgs e)
+                void undoAction(UndoRedoEventArgs ev)
                 {
-                    e.Map.Technos.Add(location, unit);
-                    e.MapPanel.Invalidate(e.Map, unit);
-                    if (e.Plugin != null)
+                    ev.Map.Technos.Add(location, unit);
+                    ev.MapPanel.Invalidate(ev.Map, unit);
+                    if (ev.Plugin != null)
                     {
-                        e.Plugin.Dirty = origDirtyState;
+                        ev.Plugin.Empty = origEmptyState;
+                        ev.Plugin.Dirty = !ev.NewStateIsClean;
                     }
                 }
-                void redoAction(UndoRedoEventArgs e)
+                void redoAction(UndoRedoEventArgs ev)
                 {
-                    e.MapPanel.Invalidate(e.Map, unit);
-                    e.Map.Technos.Remove(unit);
-                    if (e.Plugin != null)
+                    ev.MapPanel.Invalidate(ev.Map, unit);
+                    ev.Map.Technos.Remove(unit);
+                    if (ev.Plugin != null)
                     {
-                        e.Plugin.Dirty = true;
+                        // Redo can never restore the "empty" state, but CAN be the point at which a save was done.
+                        ev.Plugin.Empty = false;
+                        ev.Plugin.Dirty = !ev.NewStateIsClean;
                     }
                 }
                 url.Track(undoAction, redoAction, ToolType.Unit);
@@ -511,10 +530,7 @@ namespace MobiusEditor.Tools
             if (curVal != newVal)
             {
                 unitTypeListBox.SelectedIndex = newVal;
-                if (placementMode)
-                {
-                    mapPanel.Invalidate(map, Rectangle.Inflate(new Rectangle(navigationWidget.MouseCell, new Size(1, 1)), 1, 1));
-                }
+                // If in placement mode, the SelectedUnitType property change takes care of the refresh.
             }
         }
 
@@ -529,7 +545,9 @@ namespace MobiusEditor.Tools
             navigationWidget.PenColor = Color.Red;
             if (SelectedUnitType != null)
             {
-                mapPanel.Invalidate(map, Rectangle.Inflate(new Rectangle(navigationWidget.MouseCell, new Size(1, 1)), 1, 1));
+                Rectangle bounds = SelectedUnitType.OverlapBounds;
+                Point mouseLoc = new Point(navigationWidget.MouseCell.X + bounds.Location.X, navigationWidget.MouseCell.Y + bounds.Location.Y);
+                mapPanel.Invalidate(map, new Rectangle(mouseLoc, bounds.Size));
             }
             UpdateStatus();
         }
@@ -545,7 +563,9 @@ namespace MobiusEditor.Tools
             navigationWidget.PenColor = Color.Yellow;
             if (SelectedUnitType != null)
             {
-                mapPanel.Invalidate(map, Rectangle.Inflate(new Rectangle(navigationWidget.MouseCell, new Size(1, 1)), 1, 1));
+                Rectangle bounds = SelectedUnitType.OverlapBounds;
+                Point mouseLoc = new Point(navigationWidget.MouseCell.X + bounds.Location.X, navigationWidget.MouseCell.Y + bounds.Location.Y);
+                mapPanel.Invalidate(map, new Rectangle(mouseLoc, bounds.Size));
             }
             UpdateStatus();
         }
@@ -581,15 +601,18 @@ namespace MobiusEditor.Tools
 
         protected override void RefreshPreviewPanel()
         {
-            var oldImage = unitTypeMapPanel.MapImage;
+            Image oldImage = unitTypeMapPanel.MapImage;
             if (mockUnit.Type != null)
             {
-                var unitPreview = new Bitmap(Globals.PreviewTileWidth * 3, Globals.PreviewTileWidth * 3);
+                bool flying = mockUnit.Type.IsAircraft && mockUnit.Type.IsFlying;
+                Rectangle renderRect = mockUnit.Type.OverlapBounds.AdjustToScale(Globals.PreviewTileSize);
+                Point renderPoint = new Point(1, mockUnit.Type.OverlapBounds.Height - 2);
+                Bitmap unitPreview = new Bitmap(renderRect.Width, renderRect.Height);
                 unitPreview.SetResolution(96, 96);
                 using (var g = Graphics.FromImage(unitPreview))
                 {
                     MapRenderer.SetRenderSettings(g, Globals.PreviewSmoothScale);
-                    RenderInfo render = MapRenderer.RenderUnit(plugin.GameInfo, new Point(1, 1), Globals.PreviewTileSize, mockUnit, false);
+                    RenderInfo render = MapRenderer.RenderUnit(plugin.GameInfo, map, renderPoint, Globals.PreviewTileSize, mockUnit, false);
                     if (render.RenderedObject != null)
                     {
                         render.RenderAction(g);
@@ -662,7 +685,7 @@ namespace MobiusEditor.Tools
             {
                 MapRenderer.RenderAllBuildingEffectRadiuses(graphics, previewMap, visibleCells, Globals.MapTileSize, map.GapRadius, null);
             }
-            this. HandlePaintOutlines(graphics, previewMap, visibleCells, Globals.MapTileSize, Globals.MapTileScale, this.Layers);
+            this.HandlePaintOutlines(graphics, previewMap, visibleCells, Globals.MapTileSize, Globals.MapTileScale, this.Layers);
             // For bounds, add one more cell to get all borders showing.
             Rectangle boundRenderCells = visibleCells;
             boundRenderCells.Inflate(1, 1);
@@ -709,20 +732,21 @@ namespace MobiusEditor.Tools
         public override void Activate()
         {
             base.Activate();
-            this.Deactivate(true);
-            this.mockUnit.PropertyChanged += MockUnit_PropertyChanged;
-            this.mapPanel.MouseDown += MapPanel_MouseDown;
-            this.mapPanel.MouseUp += MapPanel_MouseUp;
-            this.mapPanel.MouseDoubleClick += MapPanel_MouseDoubleClick;
-            this.mapPanel.MouseMove += MapPanel_MouseMove;
-            this.mapPanel.MouseLeave += MapPanel_MouseLeave;
-            this.mapPanel.MouseWheel += MapPanel_MouseWheel;
-            this.mapPanel.SuspendMouseZoomKeys = Keys.Control;
-            (this.mapPanel as Control).KeyDown += UnitTool_KeyDown;
-            (this.mapPanel as Control).KeyUp += UnitTool_KeyUp;
-            this.navigationWidget.BoundsMouseCellChanged += MouseoverWidget_MouseCellChanged;
-            this.UpdateStatus();
-            this.RefreshPreviewPanel();
+            Deactivate(true);
+            mockUnit.PropertyChanged += MockUnit_PropertyChanged;
+            mapPanel.MouseDown += MapPanel_MouseDown;
+            mapPanel.MouseUp += MapPanel_MouseUp;
+            mapPanel.MouseDoubleClick += MapPanel_MouseDoubleClick;
+            mapPanel.MouseMove += MapPanel_MouseMove;
+            mapPanel.MouseLeave += MapPanel_MouseLeave;
+            mapPanel.MouseWheel += MapPanel_MouseWheel;
+            mapPanel.LostFocus += MapPanel_MouseLeave;
+            mapPanel.SuspendMouseZoomKeys = Keys.Control;
+            (mapPanel as Control).KeyDown += UnitTool_KeyDown;
+            (mapPanel as Control).KeyUp += UnitTool_KeyUp;
+            navigationWidget.BoundsMouseCellChanged += MouseoverWidget_MouseCellChanged;
+            UpdateStatus();
+            RefreshPreviewPanel();
         }
 
         public override void Deactivate()
@@ -737,17 +761,18 @@ namespace MobiusEditor.Tools
                 ExitPlacementMode();
                 base.Deactivate();
             }
-            this.mockUnit.PropertyChanged -= MockUnit_PropertyChanged;
-            this.mapPanel.MouseDown -= MapPanel_MouseDown;
-            this.mapPanel.MouseUp -= MapPanel_MouseUp;
-            this.mapPanel.MouseDoubleClick -= MapPanel_MouseDoubleClick;
-            this.mapPanel.MouseMove -= MapPanel_MouseMove;
-            this.mapPanel.MouseLeave -= MapPanel_MouseLeave;
-            this.mapPanel.MouseWheel -= MapPanel_MouseWheel;
-            this.mapPanel.SuspendMouseZoomKeys = Keys.None;
-            (this.mapPanel as Control).KeyDown -= UnitTool_KeyDown;
-            (this.mapPanel as Control).KeyUp -= UnitTool_KeyUp;
-            this.navigationWidget.BoundsMouseCellChanged -= MouseoverWidget_MouseCellChanged;
+            mockUnit.PropertyChanged -= MockUnit_PropertyChanged;
+            mapPanel.MouseDown -= MapPanel_MouseDown;
+            mapPanel.MouseUp -= MapPanel_MouseUp;
+            mapPanel.MouseDoubleClick -= MapPanel_MouseDoubleClick;
+            mapPanel.MouseMove -= MapPanel_MouseMove;
+            mapPanel.MouseLeave -= MapPanel_MouseLeave;
+            mapPanel.MouseWheel -= MapPanel_MouseWheel;
+            mapPanel.LostFocus -= MapPanel_MouseLeave;
+            mapPanel.SuspendMouseZoomKeys = Keys.None;
+            (mapPanel as Control).KeyDown -= UnitTool_KeyDown;
+            (mapPanel as Control).KeyUp -= UnitTool_KeyUp;
+            navigationWidget.BoundsMouseCellChanged -= MouseoverWidget_MouseCellChanged;
         }
 
         #region IDisposable Support

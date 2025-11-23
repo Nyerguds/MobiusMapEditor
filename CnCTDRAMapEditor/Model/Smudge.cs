@@ -32,12 +32,16 @@ namespace MobiusEditor.Model
         private int icon;
         public int Icon { get => icon; set => SetField(ref icon, value); }
 
-        public bool IsAutoBib => this.AttachedTo != null; // TODO start using this and remove extra "autobib" smudge types.
+        public bool IsAutoBib => this.AttachedTo != null;
         public Building AttachedTo { get; set; }
 
         public Rectangle OverlapBounds => new Rectangle(Point.Empty, Type.Size);
         // Smudge is always drawn first; it can't overlap anything.
-        public bool[,][] OpaqueMask => new bool[1, 1][] { { new bool[5] } };
+        public bool[,][] OverlapMask => new bool[1, 1][] { { new bool[5] } };
+        public Point OverlapMaskOffset => Point.Empty;
+        // Ignore overlap on smudge; never outline it.
+        public bool[,][] ContentMask => new bool[1, 1][] { { new bool[5] } };
+        public Point ContentMaskOffset => Point.Empty;
         public int ZOrder => Globals.ZOrderFloor;
 
         public bool IsPreview { get; set; }
@@ -99,7 +103,7 @@ namespace MobiusEditor.Model
             AttachedTo = other.AttachedTo;
         }
 
-        public Boolean Equals(Smudge other)
+        public bool Equals(Smudge other)
         {
             return this.Type == other.Type && this.Icon == other.Icon;
         }
@@ -126,7 +130,7 @@ namespace MobiusEditor.Model
         /// <param name="cell">Cell of the current smudge object.</param>
         /// <param name="metrics">Cell metrics used to calculate cell numbers.</param>
         /// <returns>The cell where icon 0 of this smudge is located.</returns>
-        public Int32 GetPlacementOrigin(int cell, CellMetrics metrics)
+        public int GetPlacementOrigin(int cell, CellMetrics metrics)
         {
             if (!this.Type.IsMultiCell)
                 return cell;

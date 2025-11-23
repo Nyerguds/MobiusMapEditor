@@ -13,42 +13,39 @@
 //   0. You just DO WHAT THE FUCK YOU WANT TO.
 using LarchenkoCRC32;
 using System;
-using System.Collections.Generic;
-using System.Linq;
 using System.Text;
-using System.Threading.Tasks;
 
 namespace MobiusEditor.Utility.Hashing
 {
     public class HashCrc32 : HashMethod
     {
-        public override String DisplayName { get { return "CRC32 (TS/RA2)"; } }
-        public override String SimpleName { get { return "CRC32"; } }
+        public override string DisplayName { get { return "CRC32 (TS/RA2)"; } }
+        public override string SimpleName { get { return "CRC32"; } }
 
-        public override UInt32 GetNameIdCorrectCase(String name)
+        public override uint GetNameIdCorrectCase(string name)
         {
-            Byte[] data = Encoding.ASCII.GetBytes(name);
+            byte[] data = Encoding.ASCII.GetBytes(name);
             return GetNameIdCorrectCase(data);
         }
 
-        public override UInt32 GetNameIdCorrectCase(Byte[] data)
+        public override uint GetNameIdCorrectCase(byte[] data)
         {
             int l1 = data.Length;
             // Fill buffer up to next multiple of 4 bytes
             if ((l1 & 3) != 0)
             {
-                Int32 l2 = (l1 + 3) & ~3;
-                Byte[] data2 = new Byte[l2];
+                int l2 = (l1 + 3) & ~3;
+                byte[] data2 = new byte[l2];
                 Array.Copy(data, 0, data2, 0, l1);
-                Int32 a = l1 >> 2;
+                int a = l1 >> 2;
                 data2[l1] = (byte)(l1 - (a << 2));
-                for (int i = l1 + 1; i < l2; i++)
+                for (int i = l1 + 1; i < l2; ++i)
                 {
                     data2[i] = data2[a << 2];
                 }
                 data = data2;
             }
-            return ParallelCRC.Compute(new ArraySegment<Byte>(data));
+            return ParallelCRC.Compute(new ArraySegment<byte>(data));
         }
     }
 }

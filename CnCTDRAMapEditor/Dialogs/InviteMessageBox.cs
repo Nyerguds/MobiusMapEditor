@@ -12,6 +12,8 @@
 // distributed with this program. You should have received a copy of the
 // GNU General Public License along with permitted additional restrictions
 // with this program. If not, see https://github.com/electronicarts/CnC_Remastered_Collection
+using MobiusEditor.Utility;
+using Steamworks;
 using System;
 using System.Drawing;
 using System.Windows.Forms;
@@ -25,6 +27,15 @@ namespace MobiusEditor.Dialogs
         public InviteMessageBox()
         {
             InitializeComponent();
+            this.Text = Program.ProgramName;
+            const string Info = "From this moment on, Mobius Map Editor is connected to Steam as the \"{0}\" game. To play the game{1}, please first exit the map editor.";
+            const string InfoInvites = " or accept game invites";
+            string id = SteamUtils.GetAppID().m_AppId.ToString();
+            //SteamAssist.TryGetSteamId(Environment.CurrentDirectory);
+            bool isRemaster = Program.RemasterSteamId.Equals(id);
+            string name = SteamAssist.GetSteamGameName(id);
+            //string name2 = SteamAssist.GetAppName();
+            lblInfo.Text = String.Format(Info, name, isRemaster ? InfoInvites : string.Empty);
         }
 
         private void InviteMessageBox_Load(object sender, EventArgs e)

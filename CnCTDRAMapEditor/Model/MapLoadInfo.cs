@@ -15,13 +15,41 @@ using MobiusEditor.Interface;
 
 namespace MobiusEditor.Model
 {
+    /// <summary>
+    /// Class to store the data for loading maps, and the result of the loading operation.
+    /// </summary>
     public class MapLoadInfo
     {
         public string FileName;
+        public string IniName;
+        public byte[] IniContent;
+        public string BinName;
+        public byte[] BinContent;
+        public bool OpenedFromBin;
+        public string Theater;
+        public bool IsMegaMap;
+        public GameType GameType;
         public FileType FileType;
         public IGamePlugin Plugin;
         public bool MapLoaded;
         public string[] Errors;
+
+        public MapLoadInfo(string fileName, string iniName, byte[] iniContent, string binName, byte[] binContent, bool openedFromBin, string theater, bool isMegaMap, GameType gameType, FileType fileType)
+        {
+            FileName = fileName;
+            IniName = iniName;
+            IniContent = iniContent;
+            BinName = binName;
+            BinContent = binContent;
+            OpenedFromBin = openedFromBin;
+            Theater = theater;
+            IsMegaMap = isMegaMap;
+            GameType = gameType;
+            FileType = fileType;
+            Plugin = null;
+            MapLoaded = false;
+            Errors = new string[0];
+        }
 
         public MapLoadInfo(string fileName, FileType fileType, IGamePlugin plugin, string[] errors, bool mapLoaded)
         {

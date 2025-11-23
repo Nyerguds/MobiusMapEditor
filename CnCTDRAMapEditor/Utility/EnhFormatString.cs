@@ -18,7 +18,7 @@ using System.Text.RegularExpressions;
 namespace MobiusEditor.Utility
 {
     /// <summary>
-    /// When feeding strings into string.Format() as arguments, casting them to this class allows the use of enhanced formatting options.
+    /// When feeding strings into String.Format() as arguments, casting them to this class allows the use of enhanced formatting options.
     /// {0:X} will cut off the string argument at X characters. {0:X-Y} will cut out the substring from index X to Y.
     /// Based on https://stackoverflow.com/a/57704658/395685
     /// </summary>

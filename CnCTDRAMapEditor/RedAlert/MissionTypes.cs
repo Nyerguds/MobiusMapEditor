@@ -71,9 +71,43 @@ namespace MobiusEditor.RedAlert
             MISSION_HARMLESS,
         };
 
+        private static readonly string[] UnassignableTypes = new string[]
+        {
+            // Nyerguds upgrade: Removed irrelevant types for preplaced units.
+            // Note that TeamTypes use a separate list, defined in the TeamMissionTypes class.
+            //MISSION_SLEEP,
+            MISSION_ATTACK,
+            MISSION_MOVE,
+            MISSION_QMOVE,
+            MISSION_RETREAT,
+            //MISSION_STICKY,
+            //MISSION_GUARD,
+            MISSION_ENTER,
+            MISSION_CAPTURE,
+            //MISSION_HARVEST,
+            //MISSION_AREAGUARD,
+            //MISSION_RETURN,
+            //MISSION_STOP,
+            //MISSION_AMBUSH,
+            //MISSION_HUNT,
+            //MISSION_UNLOAD,
+            MISSION_SABOTAGE,
+            MISSION_CONSTRUCTION,
+            MISSION_SELLING,
+            MISSION_REPAIR,
+            MISSION_RESCUE,
+            MISSION_MISSILE,
+            //MISSION_HARMLESS,
+        };
+
         public static IEnumerable<string> GetTypes()
         {
             return Types;
+        }
+
+        public static IEnumerable<string> GetUnassignableTypes()
+        {
+            return UnassignableTypes;
         }
     }
 }

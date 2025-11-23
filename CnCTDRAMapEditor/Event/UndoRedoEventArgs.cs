@@ -28,6 +28,8 @@ namespace MobiusEditor.Event
 
         public bool Cancelled { get; set; }
 
+        public bool NewStateIsClean { get; set; }
+
         public Map Map { get; private set; }
 
         public ToolType Source { get; set; }

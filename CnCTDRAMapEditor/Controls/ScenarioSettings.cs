@@ -22,17 +22,17 @@ namespace MobiusEditor.Controls
         public ScenarioSettings(PropertyTracker<BasicSection> basicSection)
         {
             InitializeComponent();
-            chkToCarryOver.DataBindings.Add("Checked", basicSection, "ToCarryOver");
-            chkToInherit.DataBindings.Add("Checked", basicSection, "ToInherit");
-            chkCivEvac.DataBindings.Add("Checked", basicSection, "CivEvac");
-            chkEndOfGame.DataBindings.Add("Checked", basicSection, "EndOfGame");
-            chkTimerInherit.DataBindings.Add("Checked", basicSection, "TimerInherit");
-            chkNoSpyPlane.DataBindings.Add("Checked", basicSection, "NoSpyPlane");
-            chkSkipScore.DataBindings.Add("Checked", basicSection, "SkipScore");
-            chkSkipMapSelect.DataBindings.Add("Checked", basicSection, "SkipMapSelect");
-            chkOneTimeOnly.DataBindings.Add("Checked", basicSection, "OneTimeOnly");
-            chkTruckCrate.DataBindings.Add("Checked", basicSection, "TruckCrate");
-            chkFillSilos.DataBindings.Add("Checked", basicSection, "FillSilos");
+            chkToCarryOver.DataBindings.Add("Checked", basicSection, "ToCarryOver", false, DataSourceUpdateMode.OnPropertyChanged);
+            chkToInherit.DataBindings.Add("Checked", basicSection, "ToInherit", false, DataSourceUpdateMode.OnPropertyChanged);
+            chkCivEvac.DataBindings.Add("Checked", basicSection, "CivEvac", false, DataSourceUpdateMode.OnPropertyChanged);
+            chkEndOfGame.DataBindings.Add("Checked", basicSection, "EndOfGame", false, DataSourceUpdateMode.OnPropertyChanged);
+            chkTimerInherit.DataBindings.Add("Checked", basicSection, "TimerInherit", false, DataSourceUpdateMode.OnPropertyChanged);
+            chkNoSpyPlane.DataBindings.Add("Checked", basicSection, "NoSpyPlane", false, DataSourceUpdateMode.OnPropertyChanged);
+            chkSkipScore.DataBindings.Add("Checked", basicSection, "SkipScore", false, DataSourceUpdateMode.OnPropertyChanged);
+            chkSkipMapSelect.DataBindings.Add("Checked", basicSection, "SkipMapSelect", false, DataSourceUpdateMode.OnPropertyChanged);
+            chkOneTimeOnly.DataBindings.Add("Checked", basicSection, "OneTimeOnly", false, DataSourceUpdateMode.OnPropertyChanged);
+            chkTruckCrate.DataBindings.Add("Checked", basicSection, "TruckCrate", false, DataSourceUpdateMode.OnPropertyChanged);
+            chkFillSilos.DataBindings.Add("Checked", basicSection, "FillSilos", false, DataSourceUpdateMode.OnPropertyChanged);
         }
     }
 }

@@ -20,12 +20,15 @@ namespace MobiusEditor.Model
 {
     public class TriggerFilter
     {
-        private GameType gameType;
-        private Map map;
+        private readonly string[] persistenceNames = Trigger.PersistenceNamesShort.ToArray();
+        private readonly string[] multiStyleNames = Trigger.MultiStyleNamesShort.ToArray();
+
+        private readonly GameType gameType;
+        private readonly Map map;
 
         public bool FilterHouse { get; set; }
         public bool FilterPersistenceType { get; set; }
-        public bool FilterEventControl { get; set; }
+        public bool FilterMultiStyle { get; set; }
         public bool FilterEventType { get; set; }
         public bool FilterActionType { get; set; }
         public bool FilterTeamType { get; set; }
@@ -34,11 +37,11 @@ namespace MobiusEditor.Model
         public bool FilterTrigger { get; set; }
         public string House { get; set; }
         public TriggerPersistentType PersistenceType { get; set; } = TriggerPersistentType.Volatile;
-        public TriggerMultiStyleType EventControl { get; set; } = TriggerMultiStyleType.Only;
+        public TriggerMultiStyleType MultiStyle { get; set; } = TriggerMultiStyleType.Only;
         public string EventType { get; set; } = TriggerEvent.None;
         public string ActionType { get; set; } = TriggerAction.None;
-        public string TeamType { get; set; } = Model.TeamType.None;
-        public string Trigger { get; set; } = Model.Trigger.None;
+        public string TeamTypeArg { get; set; } = TeamType.None;
+        public string TriggerArg { get; set; } = Trigger.None;
         public int Waypoint { get; set; }
         public int Global { get; set; }
 
@@ -46,22 +49,22 @@ namespace MobiusEditor.Model
         {
             get
             {
-                return !this.FilterHouse &&
-                       !this.FilterPersistenceType &&
-                       !this.FilterEventControl &&
-                       !this.FilterEventType &&
-                       !this.FilterActionType &&
-                       !this.FilterTeamType &&
-                       !this.FilterTrigger &&
-                       !this.FilterWaypoint &&
-                       !this.FilterGlobal;
+                return !FilterHouse &&
+                       !FilterPersistenceType &&
+                       !FilterMultiStyle &&
+                       !FilterEventType &&
+                       !FilterActionType &&
+                       !FilterTeamType &&
+                       !FilterTrigger &&
+                       !FilterWaypoint &&
+                       !FilterGlobal;
             }
         }
 
         public TriggerFilter(IGamePlugin plugin)
         {
-            this.gameType = plugin.GameInfo.GameType;
-            this.map = plugin.Map;
+            gameType = plugin.GameInfo.GameType;
+            map = plugin.Map;
         }
 
         public TriggerFilter(GameType gameType, Map map)
@@ -75,7 +78,7 @@ namespace MobiusEditor.Model
             bool isRA = gameType == GameType.RedAlert;
             if (FilterHouse)
             {
-                House house = map.Houses.Where(h => String.Equals(h.Type.Name, this.House, StringComparison.InvariantCultureIgnoreCase)).FirstOrDefault();
+                House house = map.Houses.Where(h => String.Equals(h.Type.Name, House, StringComparison.InvariantCultureIgnoreCase)).FirstOrDefault();
                 int houseId = house == null ? -1 : house.Type.ID;
                 bool filterMatch = trigger.House == House;
                 if (isRA && !filterMatch)
@@ -102,9 +105,9 @@ namespace MobiusEditor.Model
                     return false;
                 }
             }
-            if (isRA && FilterEventControl)
+            if (isRA && FilterMultiStyle)
             {
-                bool filterMatch = trigger.EventControl == EventControl;
+                bool filterMatch = trigger.EventControl == MultiStyle;
                 if (!filterMatch)
                 {
                     return false;
@@ -136,18 +139,18 @@ namespace MobiusEditor.Model
                 bool filterMatch = false;
                 if (!isRA)
                 {
-                    if (IsTeamMatch(trigger.Action1.Team, TeamType))
+                    if (IsTeamMatch(trigger.Action1.Team, TeamTypeArg))
                         filterMatch = true;
                 }
                 else
                 {
-                    if (IsRATeamEvent(trigger.Event1.EventType) && IsTeamMatch(trigger.Event1.Team, this.TeamType))
+                    if (IsRATeamEvent(trigger.Event1.EventType) && IsTeamMatch(trigger.Event1.Team, TeamTypeArg))
                         filterMatch = true;
-                    if (trigger.EventControl != TriggerMultiStyleType.Only && IsRATeamEvent(trigger.Event2.EventType) && IsTeamMatch(trigger.Event2.Team, this.TeamType))
+                    if (trigger.EventControl != TriggerMultiStyleType.Only && IsRATeamEvent(trigger.Event2.EventType) && IsTeamMatch(trigger.Event2.Team, TeamTypeArg))
                         filterMatch = true;
-                    if (IsRATeamAction(trigger.Action1.ActionType) && IsTeamMatch(trigger.Action1.Team, this.TeamType))
+                    if (IsRATeamAction(trigger.Action1.ActionType) && IsTeamMatch(trigger.Action1.Team, TeamTypeArg))
                         filterMatch = true;
-                    if (IsRATeamAction(trigger.Action2.ActionType) && IsTeamMatch(trigger.Action2.Team, this.TeamType))
+                    if (IsRATeamAction(trigger.Action2.ActionType) && IsTeamMatch(trigger.Action2.Team, TeamTypeArg))
                         filterMatch = true;
                 }
                 if (!filterMatch)
@@ -188,10 +191,10 @@ namespace MobiusEditor.Model
                 if (!isRA)
                 {
                     bool filterMatch = false;
-                    if (String.Equals(trigger.Name, Trigger, StringComparison.InvariantCultureIgnoreCase))
+                    if (String.Equals(trigger.Name, TriggerArg, StringComparison.InvariantCultureIgnoreCase))
                         filterMatch = true;
                     if (IsTDTriggerAction(trigger.Action1.ActionType, out string affectedTrigger)
-                        && String.Equals(affectedTrigger, Trigger, StringComparison.InvariantCultureIgnoreCase))
+                        && String.Equals(affectedTrigger, TriggerArg, StringComparison.InvariantCultureIgnoreCase))
                         filterMatch = true;
                     if (!filterMatch)
                     {
@@ -201,13 +204,13 @@ namespace MobiusEditor.Model
                 else
                 {
                     bool filterMatch = false;
-                    if (String.Equals(trigger.Name, Trigger, StringComparison.InvariantCultureIgnoreCase))
+                    if (String.Equals(trigger.Name, TriggerArg, StringComparison.InvariantCultureIgnoreCase))
                         filterMatch = true;
                     if (IsRATriggerAction(trigger.Action1.ActionType)
-                        && String.Equals(trigger.Action1.Trigger, Trigger, StringComparison.InvariantCultureIgnoreCase))
+                        && String.Equals(trigger.Action1.Trigger, TriggerArg, StringComparison.InvariantCultureIgnoreCase))
                         filterMatch = true;
                     if (IsRATriggerAction(trigger.Action2.ActionType)
-                        && String.Equals(trigger.Action2.Trigger, Trigger, StringComparison.InvariantCultureIgnoreCase))
+                        && String.Equals(trigger.Action2.Trigger, TriggerArg, StringComparison.InvariantCultureIgnoreCase))
                         filterMatch = true;
                     if (!filterMatch)
                     {
@@ -218,7 +221,7 @@ namespace MobiusEditor.Model
             return true;
         }
 
-        private Boolean IsTeamMatch(String trigTeam, String filterTeam)
+        private bool IsTeamMatch(string trigTeam, string filterTeam)
         {
             return (Model.TeamType.IsEmpty(filterTeam) && Model.TeamType.IsEmpty(trigTeam)) || trigTeam == filterTeam;
         }
@@ -239,18 +242,18 @@ namespace MobiusEditor.Model
                     return true;
                 case TiberianDawn.ActionTypes.ACTION_DESTROY_UUUU:
                     affectedTrigger = "UUUU";
-                    return !Globals.Ignore106Scripting;
+                    return Globals.ExpandTdScripting;
                 case TiberianDawn.ActionTypes.ACTION_DESTROY_VVVV:
                     affectedTrigger = "VVVV";
-                    return !Globals.Ignore106Scripting;
+                    return Globals.ExpandTdScripting;
                 case TiberianDawn.ActionTypes.ACTION_DESTROY_WWWW:
                     affectedTrigger = "WWWW";
-                    return !Globals.Ignore106Scripting;
+                    return Globals.ExpandTdScripting;
             }
             return false;
         }
 
-        private bool IsRAHouseEvent(String eventType)
+        private bool IsRAHouseEvent(string eventType)
         {
             switch (eventType)
             {
@@ -269,7 +272,7 @@ namespace MobiusEditor.Model
             return false;
         }
 
-        private Boolean IsRAHouseAction(String actionType)
+        private bool IsRAHouseAction(string actionType)
         {
             switch (actionType)
             {
@@ -284,12 +287,12 @@ namespace MobiusEditor.Model
             return false;
         }
 
-        private Boolean IsRATeamEvent(String eventType)
+        private bool IsRATeamEvent(string eventType)
         {
             return eventType == RedAlert.EventTypes.TEVENT_LEAVES_MAP;
         }
 
-        private Boolean IsRATeamAction(String actionType)
+        private bool IsRATeamAction(string actionType)
         {
             switch (actionType)
             {
@@ -300,7 +303,7 @@ namespace MobiusEditor.Model
             }
             return false;
         }
-        private Boolean IsRAGlobalEvent(String eventType)
+        private bool IsRAGlobalEvent(string eventType)
         {
             switch (eventType)
             {
@@ -311,7 +314,7 @@ namespace MobiusEditor.Model
             return false;
         }
 
-        private Boolean IsRAGlobalAction(String actionType)
+        private bool IsRAGlobalAction(string actionType)
         {
             switch (actionType)
             {
@@ -322,7 +325,7 @@ namespace MobiusEditor.Model
             return false;
         }
 
-        private Boolean IsRAWaypointAction(String actionType)
+        private bool IsRAWaypointAction(string actionType)
         {
             switch (actionType)
             {
@@ -334,7 +337,7 @@ namespace MobiusEditor.Model
             return false;
         }
 
-        private Boolean IsRATriggerAction(String actionType)
+        private bool IsRATriggerAction(string actionType)
         {
             switch (actionType)
             {
@@ -345,52 +348,67 @@ namespace MobiusEditor.Model
             return false;
         }
 
-        public override String ToString()
-        {
-            return ToString('P', null, null);
-        }
-
-        public String ToString(char persistenceLabel, string[] persistenceNames, string[] eventControlNames)
+        public override string ToString()
         {
             List<string> sb = new List<string>();
-            if (this.FilterHouse)
+            if (FilterHouse)
             {
-                sb.Add("Hh:" + this.House);
+                sb.Add("Hs:" + House);
             }
-            if (this.FilterPersistenceType)
+            if (FilterPersistenceType)
             {
-                sb.Add(persistenceLabel + ":" + (persistenceNames == null ? this.PersistenceType.ToString() : persistenceNames[(int)this.PersistenceType]));
+                int persistence = (int)PersistenceType;
+                string persistenceName = persistence >= 0 && persistence < persistenceNames.Length ?
+                        persistenceNames[persistence] : PersistenceType.ToString();
+                sb.Add("Ex:" + persistenceName);
             }
-            if (this.FilterEventControl)
+            if (FilterMultiStyle)
             {
-                sb.Add("Ex:" + (eventControlNames == null ? this.EventControl.ToString() : eventControlNames[(int)this.EventControl]));
+                int multiStyle = (int)MultiStyle;
+                string multiStyleName = multiStyle >= 0 && multiStyle < multiStyleNames.Length ?
+                        multiStyleNames[multiStyle] : MultiStyle.ToString();
+                sb.Add("Tp:" + multiStyleName);
             }
-            if (this.FilterEventType)
+            if (FilterEventType)
             {
-                sb.Add("Ev:" + this.EventType);
+                sb.Add("Ev:" + TrimArg(EventType));
             }
-            if (this.FilterActionType)
+            if (FilterActionType)
             {
-                sb.Add("Ac:" + this.ActionType);
+                sb.Add("Ac:" + TrimArg(ActionType));
             }
-            if (this.FilterTeamType)
+            if (FilterTeamType)
             {
-                sb.Add("Tm:" + this.TeamType);
+                sb.Add("Tm:" + TeamTypeArg);
             }
-            if (this.FilterTrigger)
+            if (FilterTrigger)
             {
-                sb.Add("Tr:" + this.Trigger);
+                sb.Add("Tr:" + TriggerArg);
             }
-            if (this.FilterWaypoint)
+            if (FilterWaypoint)
             {
-                sb.Add("Wp:" + this.Waypoint);
+                sb.Add("Wp:" + Waypoint);
             }
-            if (this.FilterGlobal)
+            if (FilterGlobal)
             {
-                sb.Add("Gl:" + this.Global);
+                sb.Add("Gl:" + Global);
             }
             return String.Join(", ", sb.ToArray());
+        }
 
+        private String TrimArg(string arg)
+        {
+            if (String.IsNullOrEmpty(arg))
+            {
+                return String.Empty;
+            }
+            int bracketIndex = arg.IndexOf('(');
+            if (bracketIndex > 0)
+            {
+                arg = arg.Substring(0, bracketIndex);
+            }
+            arg = arg.TrimEnd('.');
+            return arg;
         }
 
     }

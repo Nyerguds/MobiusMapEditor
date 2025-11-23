@@ -22,21 +22,22 @@ namespace MobiusEditor.Model
     public enum WaypointFlag
     {
         None = 0,
-        Flare        /**/ = 1 << 0,
-        Home         /**/ = 1 << 1,
-        Reinforce    /**/ = 1 << 2,
-        Special      /**/ = 1 << 3,
-        CrateSpawn   /**/ = 1 << 4,
-        PlayerStart  /**/ = 1 << 5,
+        Flare         /**/ = 1 << 0,
+        Home          /**/ = 1 << 1,
+        Reinforce     /**/ = 1 << 2,
+        Special       /**/ = 1 << 3,
+        CrateSpawn    /**/ = 1 << 4,
+        FootballField /**/ = 1 << 5,
+        PlayerStart   /**/ = 1 << 6,
         // Never referenced, but used internally by the flags system. These eight must be reserved on the bits directly following PlayerStart.
-        PlayerStart1 /**/ = PlayerStart | 1 << 6,
-        PlayerStart2 /**/ = PlayerStart | 1 << 7,
-        PlayerStart3 /**/ = PlayerStart | 1 << 8,
-        PlayerStart4 /**/ = PlayerStart | 1 << 9,
-        PlayerStart5 /**/ = PlayerStart | 1 << 10,
-        PlayerStart6 /**/ = PlayerStart | 1 << 11,
-        PlayerStart7 /**/ = PlayerStart | 1 << 12,
-        PlayerStart8 /**/ = PlayerStart | 1 << 13,
+        PlayerStart1  /**/ = PlayerStart | PlayerStart << 1,
+        PlayerStart2  /**/ = PlayerStart | PlayerStart << 2,
+        PlayerStart3  /**/ = PlayerStart | PlayerStart << 3,
+        PlayerStart4  /**/ = PlayerStart | PlayerStart << 4,
+        PlayerStart5  /**/ = PlayerStart | PlayerStart << 5,
+        PlayerStart6  /**/ = PlayerStart | PlayerStart << 6,
+        PlayerStart7  /**/ = PlayerStart | PlayerStart << 7,
+        PlayerStart8  /**/ = PlayerStart | PlayerStart << 8,
     }
 
     public class Waypoint : INamedType
@@ -78,7 +79,7 @@ namespace MobiusEditor.Model
         public string Name { get; set; }
         public string ShortName { get; set; }
 
-        public WaypointFlag Flag { get; set; }
+        public WaypointFlag Flags { get; set; }
 
         public int? Cell { get; set; }
         public Point? Point => !Cell.HasValue || Cell == -1 || Metrics == null ? null : (Point?)new Point(Cell.Value % Metrics.Width, Cell.Value / Metrics.Width);
@@ -90,22 +91,17 @@ namespace MobiusEditor.Model
             Metrics = metrics;
             Name = name;
             ShortName = shortName;
-            Flag = flag;
+            Flags = flag;
             Cell = cell;
         }
 
-        public Waypoint(string name, WaypointFlag flag, CellMetrics metrics, int? cell)
-            : this (name, name, flag, metrics, cell)
+        public Waypoint(string name, CellMetrics metrics, int? cell)
+            : this(name, name, WaypointFlag.None, metrics, cell)
         {
         }
 
         public Waypoint(string name, string shortName, WaypointFlag flag, CellMetrics metrics)
             : this(name, shortName, flag, metrics, null)
-        {
-        }
-
-        public Waypoint(string name, WaypointFlag flag, CellMetrics metrics)
-            : this(name, name, flag, metrics, null)
         {
         }
 

@@ -52,10 +52,16 @@ namespace MobiusEditor.Utility
         private IArchiveManager archiveManager;
         private TheaterType theater;
         private Color[] currentlyLoadedPalette;
+        private Color currentlyLoadedTransparent;
         private Color[] currentlyLoadedPaletteBare;
+        private Color[] currentlyLoadedPaletteOrig;
 
+        /// <summary>Currently loaded colour palette, with the background color set to transparent, and the shadow color replaced by 50% opacity black.</summary>
         public Color[] CurrentlyLoadedPalette => currentlyLoadedPalette.ToArray();
+        /// <summary>Currently loaded colour palette, with the background color set to transparent, but without correction of thev shadow color.</summary>
         public Color[] CurrentlyLoadedPaletteBare => currentlyLoadedPaletteBare.ToArray();
+        /// <summary>Currently loaded colour palette, exactly as it was loaded from the files.</summary>
+        public Color[] CurrentlyLoadedPaletteOrig => currentlyLoadedPaletteOrig.ToArray();
 
         public TilesetManagerClassic(IArchiveManager archiveManager)
         {
@@ -77,7 +83,7 @@ namespace MobiusEditor.Utility
                 }
                 tiles.Clear();
             }
-            this.tileData.Clear();
+            tileData.Clear();
             this.theater = null;
             if (gameType != GameType.None && theater != null && (this.archiveManager.CurrentGameType != gameType || this.archiveManager.CurrentTheater != theater))
             {
@@ -86,15 +92,19 @@ namespace MobiusEditor.Utility
             this.theater = theater;
             Color[] pal = TeamRemapManager.GetPaletteForTheater(this.archiveManager, theater);
             int palLength = 0x100;
-            this.currentlyLoadedPaletteBare = new Color[0x100];
-            this.currentlyLoadedPalette = new Color[0x100];
+            currentlyLoadedPaletteOrig = new Color[0x100];
+            currentlyLoadedPaletteBare = new Color[0x100];
+            currentlyLoadedPalette = new Color[0x100];
             for (int i = 0; i < pal.Length && i < palLength; ++i)
             {
-                this.currentlyLoadedPalette[i] = pal[i];
-                this.currentlyLoadedPaletteBare[i] = pal[i];
+                currentlyLoadedPaletteOrig[i] = pal[i];
+                currentlyLoadedPaletteBare[i] = pal[i];
+                currentlyLoadedPalette[i] = pal[i];
             }
-            ApplySpecialColors(this.currentlyLoadedPalette, true, true);
+            Color shadowCol = theater == null || theater.ClassicShadow == 0 ? Color.Black : pal[((theater.ClassicShadow & 0x0F)-1) | 0xF0];
+            currentlyLoadedTransparent = Color.FromArgb(0x80, shadowCol);
             ApplySpecialColors(this.currentlyLoadedPaletteBare, true, false);
+            ApplySpecialColors(this.currentlyLoadedPalette, true, true);
         }
 
         protected void ApplySpecialColors(Color[] colors, bool adjustTrans, bool adjustShadow)
@@ -107,7 +117,7 @@ namespace MobiusEditor.Utility
             if (adjustShadow)
             {
                 // Set shadow color to semitransparent black. Classic fading table remapping is impossible for this since the editor's main bitmap is high color.
-                colors[4] = Color.FromArgb(0x80, Color.Black);
+                colors[4] = currentlyLoadedTransparent;
             }
         }
 
@@ -144,6 +154,16 @@ namespace MobiusEditor.Utility
 
         public bool GetTeamColorTileData(string name, int shape, ITeamColor teamColor, out Tile tile, bool generateFallback, bool onlyIfDefined, bool withShadow, string remapGraphicsSource, byte[] remapTable, bool clearCachedVersion)
         {
+            return GetTeamColorTileData(name, shape, teamColor, out tile, generateFallback, onlyIfDefined, withShadow, remapGraphicsSource, remapTable, clearCachedVersion, null);
+        }
+
+        public bool GetTeamColorTileData(string name, int shape, out Tile tile, bool generateFallback, bool onlyIfDefined, Color[] customPalette)
+        {
+            return GetTeamColorTileData(name, shape, null, out tile, generateFallback, onlyIfDefined, false, null, null, false, customPalette);
+        }
+
+        private bool GetTeamColorTileData(string name, int shape, ITeamColor teamColor, out Tile tile, bool generateFallback, bool onlyIfDefined, bool withShadow, string remapGraphicsSource, byte[] remapTable, bool clearCachedVersion, Color[] customPalette)
+        {
             tile = null;
             string teamColorName = teamColor == null ? String.Empty : (teamColor.Name ?? String.Empty);
             Dictionary<int, ShapeFrameData> shapeFile;
@@ -166,7 +186,6 @@ namespace MobiusEditor.Utility
                 tileData.Remove(name);
                 cached = false;
             }
-
             if (cached
                 && shapeFile.TryGetValue(shape, out shapeFrame)
                 && shapeFrame.TeamColorTiles.TryGetValue(teamColorName, out tile))
@@ -194,7 +213,7 @@ namespace MobiusEditor.Utility
                     foreach (int key in shapeFile.Keys)
                     {
                         ShapeFrameData sfd = shapeFile[key];
-                        Byte[] frameGfx = sfd.FrameData;
+                        byte[] frameGfx = sfd.FrameData;
                         for (int i = 0; i < frameGfx.Length; ++i)
                         {
                             frameGfx[i] = remapTable[frameGfx[i]];
@@ -203,7 +222,7 @@ namespace MobiusEditor.Utility
                 }
             }
             // Remaps the tile, and takes care of caching it and possibly generating dummies.
-            tile = this.RemapShapeFile(shapeFile, shape, teamColor, generateFallback, withShadow, out shapeFrame);
+            tile = this.RemapShapeFile(shapeFile, shape, teamColor, teamColorName, generateFallback, withShadow, customPalette, out shapeFrame);
             // shapeFrame is ALWAYS filled in if tile isn't null;
             return tile != null && !shapeFrame.IsDummy;
         }
@@ -282,7 +301,7 @@ namespace MobiusEditor.Utility
         {
             bool isShpExt = false;
             bool isFntExt = false;
-            Byte[] fileContents = null;
+            byte[] fileContents = null;
             // If it has an extension, force it.
             if (Path.HasExtension(name))
             {
@@ -323,7 +342,7 @@ namespace MobiusEditor.Utility
 #endif
             int[] widths = null;
             int[] heights = null;
-            Byte[][] shpData = null;
+            byte[][] shpData = null;
             if (!isFntExt)
             {
                 try
@@ -449,7 +468,7 @@ namespace MobiusEditor.Utility
             // Finally, we got our frames; get the data.
             Dictionary<int, ShapeFrameData> shapeFile = new Dictionary<int, ShapeFrameData>();
             int frames = shpData.Length;
-            for (int i = 0; i < frames; i++)
+            for (int i = 0; i < frames; ++i)
             {
                 byte[] frameData = shpData[i];
                 int width = widths[i];
@@ -470,13 +489,44 @@ namespace MobiusEditor.Utility
             return shapeFile;
         }
 
-        private Tile RemapShapeFile(Dictionary<int, ShapeFrameData> shapeFile, int shape, ITeamColor teamColor, bool generateFallback, bool withShadow, out ShapeFrameData shapeFrame)
+        private Tile RemapShapeFile(Dictionary<int, ShapeFrameData> shapeFile, int shape, ITeamColor teamColor, string teamColorName, bool generateFallback, bool withShadow,
+            Color[] customPalette, out ShapeFrameData shapeFrame)
         {
-            string teamColorName = teamColor == null ? String.Empty : teamColor.Name;
-            if (!withShadow)
+            int[] transparentCols = new int[] { 0 };
+            // Special case: if a custom palette is given, append it to the team color name.
+            if (customPalette != null)
             {
-                teamColorName += " no-shadow";
+                List<int> empty = new List<int>();
+                List<string> cols = new List<string>();
+                for (int i = 0; i < customPalette.Length; ++i)
+                {
+                    uint col = (uint)customPalette[i].ToArgb();
+                    byte alpha = (byte)((col >> 24) & 0xFF);
+                    bool opaque = alpha == 0xFF;
+                    if (alpha == 0)
+                    {
+                        empty.Add(i);
+                    }
+                    if (col != 0)
+                    {
+                        cols.Add(i.ToString("X2") + ":" + (opaque ? (col & 0xFFFFFF).ToString("X6") : col.ToString("X8")));
+                    }
+                }
+                if (teamColorName.Length > 0)
+                {
+                    teamColorName += " ";
+                }
+                teamColorName += "pal[" + String.Join(",", cols.ToArray()) + "]";
+                transparentCols = empty.ToArray();
             }
+            else if (!withShadow)
+            {
+                if (teamColorName.Length > 0)
+                {
+                    teamColorName += " ";
+                }
+                teamColorName += "no-shadow";
+            }            
             if (!shapeFile.TryGetValue(shape, out shapeFrame)
                 || shapeFrame.FrameData == null || shapeFrame.FrameData.Length == 0
                 || shapeFrame.Width == 0 || shapeFrame.Height == 0)
@@ -496,27 +546,40 @@ namespace MobiusEditor.Utility
             int width = shapeFrame.Width;
             int height = shapeFrame.Height;
             byte[] data = shapeFrame.FrameData;
-            Rectangle opaqueBounds = ImageUtils.CalculateOpaqueBounds8bpp(data, width, height, width, 0);
+            Rectangle opaqueBounds = ImageUtils.CalculateOpaqueBounds8bpp(data, width, height, width, transparentCols);
             if (teamColor != null && !String.IsNullOrEmpty(teamColorName) && !shapeFrame.IsDummy)
             {
                 // Finally, the actual remapping!
                 byte[] dataRemap = new byte[data.Length];
                 Array.Copy(data, 0, dataRemap, 0, data.Length);
                 teamColor.ApplyToImage(dataRemap, width, height, 1, width, opaqueBounds);
-                data = dataRemap;
                 // If opaque bounds might have changed due to remapping, recalculate bounds.
-                if (teamColor.RemapTable != null && teamColor.RemapTable.Length > 1)
+                if (teamColor.RemapTable != null)
                 {
-                    int maxIndex = Math.Min(teamColor.RemapTable.Length, data.Max());
-                    // To include index "1", we need 1 more item after skipping 0. So maxIndex needs to be used without adjustment.
-                    if (teamColor.RemapTable.Skip(1).Take(maxIndex).Any(i => i == 0))
+                    bool transparencyChanged = false;
+                    for (int i = 0; i < teamColor.RemapTable.Length; ++i)
                     {
-                        opaqueBounds = ImageUtils.CalculateOpaqueBounds8bpp(data, width, height, width, 0);
+                        byte remap = teamColor.RemapTable[i];
+                        // Check if the remapping changed any colour indices to transparent ones.
+                        if (remap != i && transparentCols.Contains(remap))
+                        {
+                            transparencyChanged = true;
+                            break;
+                        }
+                    }
+                    if (transparencyChanged)
+                    {
+                        opaqueBounds = ImageUtils.CalculateOpaqueBounds8bpp(dataRemap, width, height, width, transparentCols);
                     }
                 }
+                data = dataRemap;
             }
-            Color[] pal = withShadow ? currentlyLoadedPalette : currentlyLoadedPaletteBare;
-            if (shapeFrame.IsDummy)
+            Color[] pal;
+            if (!shapeFrame.IsDummy)
+            {
+                pal = customPalette ?? (withShadow ? currentlyLoadedPalette : currentlyLoadedPaletteBare);
+            }
+            else
             {
                 // Make gray colors semitransparent on dummy graphics.
                 pal = new Color[currentlyLoadedPalette.Length];
@@ -544,7 +607,7 @@ namespace MobiusEditor.Utility
             int width = 24;
             int height = 24;
             int length = width * height;
-            byte[] dummyData = Enumerable.Repeat<Byte>(14, length).ToArray();
+            byte[] dummyData = Enumerable.Repeat<byte>(14, length).ToArray();
             // Nevermind the internal border if it's too small.
             if (width > 12 || height > 12)
             {
@@ -553,7 +616,7 @@ namespace MobiusEditor.Utility
                 int smallGrW = width - offsGrX * 2;
                 int smallGrH = height - offsGrY * 2;
                 int smallGrLen = smallGrW * smallGrH;
-                byte[] dataSmallGr = Enumerable.Repeat<Byte>(13, smallGrLen).ToArray();
+                byte[] dataSmallGr = Enumerable.Repeat<byte>(13, smallGrLen).ToArray();
                 ImageUtils.PasteOn8bpp(dummyData, width, height, width, dataSmallGr, smallGrW, smallGrH, smallGrW, new Rectangle(offsGrX, offsGrY, smallGrW, smallGrH), null, true);
             }
             int offsWhX =  width / 6;
@@ -561,7 +624,7 @@ namespace MobiusEditor.Utility
             int smallWhW = width - offsWhX * 2;
             int smallWhH = height - offsWhY * 2;
             int smallWhLen = smallWhW * smallWhH;
-            byte[] dataSmallWh = Enumerable.Repeat<Byte>(15, smallWhLen).ToArray();
+            byte[] dataSmallWh = Enumerable.Repeat<byte>(15, smallWhLen).ToArray();
             ImageUtils.PasteOn8bpp(dummyData, width, height, width, dataSmallWh, smallWhW, smallWhH, smallWhW, new Rectangle(offsWhX, offsWhY, smallWhW, smallWhH), null, true);
             // Fill frame daya object.
             ShapeFrameData frameData = new ShapeFrameData();

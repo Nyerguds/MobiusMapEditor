@@ -11,7 +11,6 @@
 //    TERMS AND CONDITIONS FOR COPYING, DISTRIBUTION AND MODIFICATION
 //
 //   0. You just DO WHAT THE FUCK YOU WANT TO.
-using MobiusEditor.Interface;
 using System;
 using System.Collections.Generic;
 using System.ComponentModel;
@@ -36,6 +35,10 @@ namespace MobiusEditor.Utility
         }
     }
 
+    /// <summary>
+    /// Compares strings in the way Windows Explorer does, detecting numbers
+    /// inside the strings and logically ordering them by numeric value.
+    /// </summary>
     public class ExplorerComparer : IComparer<string>
     {
         [DllImport("shlwapi.dll", CharSet = CharSet.Unicode, ExactSpelling = true)]
@@ -49,62 +52,6 @@ namespace MobiusEditor.Utility
 
     public static class GeneralUtils
     {
-        /// <summary>
-        /// Returns the contents of the ini, or null if no ini content could be found in the file.
-        /// </summary>
-        /// <param name="path">Path</param>
-        /// <param name="fileType">Detected file type.</param>
-        /// <returns></returns>
-        public static INI GetIniContents(string path, FileType fileType)
-        {
-            try
-            {
-                Encoding encDOS = Encoding.GetEncoding(437);
-                string iniContents = null;
-                switch (fileType)
-                {
-                    case FileType.INI:
-                    case FileType.BIN:
-                        string iniPath = fileType == FileType.INI ? path : Path.ChangeExtension(path, ".ini");
-                        byte[] bytes = File.ReadAllBytes(path);
-                        iniContents = encDOS.GetString(bytes);
-                        break;
-                    case FileType.MEG:
-                    case FileType.PGM:
-                        using (var megafile = new Megafile(path))
-                        {
-                            Regex ext = new Regex("^\\.((ini)|(mpr))$");
-                            string testIniFile = megafile.Where(p => ext.IsMatch(Path.GetExtension(p).ToLower())).FirstOrDefault();
-                            if (testIniFile != null)
-                            {
-                                using (StreamReader iniReader = new StreamReader(megafile.OpenFile(testIniFile), encDOS))
-                                {
-                                    iniContents = iniReader.ReadToEnd();
-                                }
-                            }
-                        }
-                        break;
-                    case FileType.MIX:
-                        byte[] iniBytes = MixPath.ReadFile(path, FileType.INI, out _);
-                        if (iniBytes != null)
-                        {
-                            iniContents = encDOS.GetString(iniBytes);
-                        }
-                        break;
-                }
-                if (iniContents == null)
-                {
-                    return null;
-                }
-                INI checkIni = new INI();
-                checkIni.Parse(iniContents);
-                return checkIni.Sections.Count == 0 ? null : checkIni;
-            }
-            catch
-            {
-                return null;
-            }
-        }
 
         /// <summary>
         /// Reads all remaining bytes from a stream behind the current Position. This does not close the stream.
@@ -186,7 +133,7 @@ namespace MobiusEditor.Utility
                 }
             }
             byte[] buffer;
-            for (int i = 0; i < iniText.Length; i++)
+            for (int i = 0; i < iniText.Length; ++i)
             {
                 string currLine = iniText[i].Trim();
                 bool foundAlt = false;
@@ -480,13 +427,13 @@ namespace MobiusEditor.Utility
             }
             if (options != StringSplitOptions.RemoveEmptyEntries)
             {
-                for (int i = 0; i < split.Length; i++)
+                for (int i = 0; i < split.Length; ++i)
                     split[i] = split[i].Trim();
                 return split;
             }
             // code to remove additional empty entries after trim.
             int actualIndex = 0;
-            for (int i = 0; i < split.Length; i++)
+            for (int i = 0; i < split.Length; ++i)
             {
                 split[actualIndex] = split[i].Trim();
                 if (split[actualIndex].Length > 0)
@@ -516,26 +463,9 @@ namespace MobiusEditor.Utility
         }
 
         /// <summary>
-        /// Gets the actual bounds box to use on an image, based on a cell number, a size in cells, a cell-based radius to extend
-        /// from the center cell, and the tile size. Note that this calculates a deliberately rounded-down "center cell", as the game
-        /// does it, and then centers the box on that cell, so this does not necessarily match the actual center of the building.
-        /// </summary>
-        /// <param name="cell">The top left cell of the object</param>
-        /// <param name="cellsWide">How wide the object is, in cells. Should be at least 1.</param>
-        /// <param name="cellsHigh">How high the object is, in cells. Should be at least 1.</param>
-        /// <param name="radiusX">Cell radius in X-direction from the center of the object.</param>
-        /// <param name="radiusY">Cell radius in Y-direction from the center of the object.</param>
-        /// <param name="tileSize">Tile size to translate cells to actual dimensions.</param>
-        /// <returns>Bounds for the radius around the object.</returns>
-        public static Rectangle GetBoxFromCenterCell(Point cell, int cellsWide, int cellsHigh, double radiusX, double radiusY, Size tileSize)
-        {
-            return GetBoxFromCenterCell(cell, cellsWide, cellsHigh, radiusX, radiusY, tileSize, out _);
-        }
-
-        /// <summary>
-        /// Gets the actual bounds box to use on an image, based on a cell number, a size in cells, a cell-based radius to extend
-        /// from the center cell, and the tile size. Note that this calculates a deliberately rounded-down "center cell", as the game
-        /// does it, and then centers the box on that cell, so this does not necessarily match the actual center of the building.
+        /// Gets the actual bounds box to use on an image, based on a cell number, a size in cells, a cell-based radius to extend from
+        /// the center of the center cell, and the tile size. Note that this calculates a deliberately rounded-down "center cell", as the
+        /// game does it, and then centers the box on that cell, so this does not necessarily match the actual center of the building.
         /// </summary>
         /// <remarks>This function is used for indicating the area-of-effect circle of special abilities.</remarks>
         /// <param name="cell">The top left cell of the object</param>
@@ -550,14 +480,44 @@ namespace MobiusEditor.Utility
         {
             cellsWide = Math.Max(1, Math.Abs(cellsWide));
             cellsHigh = Math.Max(1, Math.Abs(cellsHigh));
-            int realDiamX = (int)Math.Round((radiusX * 2 + 1) * tileSize.Width);
+            int realDiamX = (int)Math.Round(radiusX * 2 * tileSize.Width + 0.5f);
             int realRadX = realDiamX / 2;
-            int realDiamY = (int)Math.Round((radiusY * 2 + 1) * tileSize.Height);
+            int realDiamY = (int)Math.Round(radiusY * 2 * tileSize.Height + 0.5f);
             int realRadY = realDiamY / 2;
             int centerX = (cell.X + (cellsWide - 1) / 2) * tileSize.Width + tileSize.Width / 2;
             int centerY = (cell.Y + (cellsHigh - 1) / 2) * tileSize.Height + tileSize.Height / 2;
             center = new Point(centerX, centerY);
             return new Rectangle(centerX - realRadX, centerY - realRadY, realDiamX, realDiamY);
+        }
+
+        public static Rectangle ConstrainToBounds(Rectangle rectangle, Rectangle bounds)
+        {
+            Rectangle returnRect = new Rectangle(rectangle.Location, rectangle.Size);
+            if (bounds.Contains(returnRect))
+            {
+                return returnRect;
+            }
+            int spaceRight = bounds.Right - returnRect.Right;
+            if (spaceRight < 0)
+            {
+                returnRect.Offset(spaceRight, 0);
+            }
+            int spaceLeft = returnRect.Left - bounds.Left;
+            if (spaceLeft < 0)
+            {
+                returnRect.Offset(-spaceLeft, 0);
+            }
+            int spaceBottom = bounds.Bottom - returnRect.Bottom;
+            if (spaceBottom < 0)
+            {
+                returnRect.Offset(0, spaceBottom);
+            }
+            int spaceTop = returnRect.Top - bounds.Top;
+            if (spaceTop < 0)
+            {
+                returnRect.Offset(0, -spaceTop);
+            }
+            return returnRect;
         }
 
         /// <summary>
@@ -583,9 +543,9 @@ namespace MobiusEditor.Utility
             if (string.IsNullOrEmpty(argex.ParamName))
                 return string.Empty;
             if (argex is ArgumentNullException)
-                return string.Format("\"{0}\" is null.", argex.ParamName);
+                return String.Format("\"{0}\" is null.", argex.ParamName);
             if (argex is ArgumentOutOfRangeException)
-                return string.Format("\"{0}\" out of range.", argex.ParamName);
+                return String.Format("\"{0}\" out of range.", argex.ParamName);
             return argex.ParamName;
         }
 
@@ -638,6 +598,7 @@ namespace MobiusEditor.Utility
 
         /// <summary>
         /// Chops up an image into cells and determines for each sub-cell of each cell if it can be considered "mostly opaque".
+        /// Note that the coordinates inside the result are [Height, Width].
         /// </summary>
         /// <param name="image">Image to scan.</param>
         /// <param name="size">Size of the object in cells.</param>
@@ -645,6 +606,7 @@ namespace MobiusEditor.Utility
         /// <param name="centerThreshold">Threshold percentage of pixels in the center that make the image count as opaque.</param>
         /// <param name="borderThreshold">If center is not deemed opaque enough, threshold percentage of pixels in the outer border that make the image still count as opaque.</param>
         /// <param name="minAlpha">Minimum alpha value to consider a pixel to be opaque.</param>
+        /// <param name="ignoreBlack">Ignore all pure black areas and consider them to be transparent.</param>
         /// <returns></returns>
         public static bool[,][] MakeOpaqueMask(Bitmap image, Size size, int borderPercentage, int centerThreshold, int borderThreshold, int minAlpha, bool ignoreBlack)
         {
@@ -814,9 +776,9 @@ namespace MobiusEditor.Utility
             int maxOccX = -1;
             int minOccY = int.MaxValue;
             int maxOccY = -1;
-            for (int y = 0; y < height; y++)
+            for (int y = 0; y < height; ++y)
             {
-                for (int x = 0; x < width; x++)
+                for (int x = 0; x < width; ++x)
                 {
                     if (occupyMask[y, x])
                     {
@@ -859,7 +821,7 @@ namespace MobiusEditor.Utility
                     sb.Append(lineBreak);
                     continue;
                 }
-                else if (c == '\\')
+                if (c == '\\')
                 {
                     // Skip escape character.
                     i++;

@@ -24,13 +24,13 @@ namespace MobiusEditor.SoleSurvivor
     {
         private static readonly IEnumerable<string> commonTilesets = new string[] { "TD_Units", "TD_Structures", "TD_VFX", "Common_VFX" };
 
-        public static readonly TheaterType Desert = new TheaterType(0, "Desert", "desert", "des", "TD_Terrain_Desert", commonTilesets);
-        public static readonly TheaterType Jungle = new TheaterType(1, "Jungle", "jungle", "jun", true, "TD_Terrain_Jungle", commonTilesets);
-        public static readonly TheaterType Temperate = new TheaterType(2, "Temperate", "temperat", "tem", "TD_Terrain_Temperate", commonTilesets);
-        // Winter seems to fall back on Temperate for the Haystack graphics.
-        public static readonly TheaterType Winter = new TheaterType(3, "Winter", "winter", "win", "TD_Terrain_Winter", commonTilesets.Concat("TD_Terrain_Temperate".Yield()));
-        //public static readonly TheaterType Snow = new TheaterType(4, "Snow", "snow", "sno", true, "TD_Terrain_Snow", commonTilesets);
-        //public static readonly TheaterType Caribbean = new TheaterType(5, "Caribbean", "caribbea", "car", true, "TD_Terrain_Caribbean", commonTilesets);
+        public static readonly TheaterType Desert = new TheaterType(0, "Desert", "desert", "des", 1, "TD_Terrain_Desert", commonTilesets);
+        public static readonly TheaterType Jungle = new TheaterType(1, "Jungle", "jungle", "jun", 1, true, "TD_Terrain_Jungle", commonTilesets);
+        public static readonly TheaterType Temperate = new TheaterType(2, "Temperate", "temperat", "tem", 1, "TD_Terrain_Temperate", commonTilesets);
+        // Remastered Winter seems to fall back on Temperate for the Haystack graphics.
+        public static readonly TheaterType Winter = new TheaterType(3, "Winter", "winter", "win", 1, "TD_Terrain_Winter", commonTilesets.Concat("TD_Terrain_Temperate".Yield()));
+        //public static readonly TheaterType Snow = new TheaterType(4, "Snow", "snow", "sno", 3, true, "TD_Terrain_Snow", commonTilesets);
+        //public static readonly TheaterType Caribbean = new TheaterType(5, "Caribbean", "caribbea", "car", 1, true, "TD_Terrain_Caribbean", commonTilesets);
 
         private static TheaterType[] Types;
 

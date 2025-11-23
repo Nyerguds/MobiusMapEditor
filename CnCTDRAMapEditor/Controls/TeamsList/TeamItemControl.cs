@@ -14,7 +14,6 @@
 using MobiusEditor.Controls.ControlsList;
 using MobiusEditor.Interface;
 using MobiusEditor.Model;
-using MobiusEditor.Utility;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -26,7 +25,7 @@ namespace MobiusEditor.Controls
     {
         public TeamTypeClass Info { get; set; }
         private bool m_Loading;
-        private ListedControlController<TeamTypeClass> m_Controller;
+        private IListedControlController<TeamTypeClass, char, int> m_Controller;
         private ITechnoType defaultType;
 
 
@@ -35,30 +34,30 @@ namespace MobiusEditor.Controls
         {
         }
 
-        public TeamItemControl(TeamTypeClass info, ListedControlController<TeamTypeClass> controller, IEnumerable<ITechnoType> technos)
+        public TeamItemControl(TeamTypeClass info, IListedControlController<TeamTypeClass, char, int> controller, IEnumerable<ITechnoType> technos)
         {
             InitializeComponent();
             SetInfo(info, controller, technos);
         }
 
-        public void SetInfo(TeamTypeClass info, ListedControlController<TeamTypeClass> controller, IEnumerable<ITechnoType> technos)
+        public void SetInfo(TeamTypeClass info, IListedControlController<TeamTypeClass, char, int> controller, IEnumerable<ITechnoType> technos)
         {
             try
             {
-                this.m_Loading = true;
-                this.Info = null;
-                this.m_Controller = controller;
-                ListItem<ITechnoType>[] technoTypes = technos.Select(t => ListItem.MakeListItem(t, t.DisplayName)).ToArray();
-                this.defaultType = technoTypes.FirstOrDefault()?.Value;
-                this.cmbTechno.DisplayMember = null;
-                this.cmbTechno.DataSource = null;
-                this.cmbTechno.Items.Clear();
-                this.cmbTechno.DataSource = technoTypes;
-                this.cmbTechno.DisplayMember = "DisplayName";
+                m_Loading = true;
+                Info = null;
+                m_Controller = controller;
+                ListItem<ITechnoType>[] technoTypes = technos.Select(t => ListItem.Create(t, t.DisplayName)).ToArray();
+                defaultType = technoTypes.FirstOrDefault()?.Value;
+                cmbTechno.DisplayMember = null;
+                cmbTechno.DataSource = null;
+                cmbTechno.Items.Clear();
+                cmbTechno.DataSource = technoTypes;
+                cmbTechno.DisplayMember = "DisplayName";
             }
             finally
             {
-                this.m_Loading = false;
+                m_Loading = false;
             }
             if (info != null)
                 UpdateInfo(info);
@@ -68,53 +67,55 @@ namespace MobiusEditor.Controls
         {
             try
             {
-                this.m_Loading = true;
-                this.Info = info;
-                this.cmbTechno.SelectedIndex = ListItem.GetIndexInComboBox(info != null ? info.Type : defaultType, this.cmbTechno);
+                m_Loading = true;
+                Info = info;
+                cmbTechno.SelectedIndex = ListItem.GetIndexInComboBox(info != null ? info.Type : defaultType, cmbTechno);
                 //this.cmbTechno.SelectedItem = info != null ? info.Type : defaultType;
-                this.numAmount.Value = info != null ? info.Count : 0;
+                numAmount.Value = info != null ? info.Count : 0;
             }
             finally
             {
-                this.m_Loading = false;
+                m_Loading = false;
             }
         }
 
         public void FocusValue()
         {
-            this.cmbTechno.Select();
+            cmbTechno.Select();
         }
 
-        private void cmbTechno_SelectedIndexChanged(Object sender, EventArgs e)
+        private void CmbTechno_SelectedIndexChanged(object sender, EventArgs e)
         {
-            if (this.m_Loading || this.Info == null)
+            if (m_Loading || Info == null)
             {
                 return;
             }
-            this.Info.Type = ListItem.GetValueFromComboBox(this.cmbTechno, defaultType);
+            Info.Type = ListItem.GetValueFromComboBox(cmbTechno, defaultType);
         }
 
-        private void numAmount_ValueChanged(Object sender, EventArgs e)
+        private void NumAmount_ValueChanged(object sender, EventArgs e)
         {
-            if (this.m_Loading || this.Info == null)
+            if (m_Loading || Info == null)
             {
                 return;
             }
-            this.Info.Count = (Byte)this.numAmount.Value;
-            if (this.m_Controller != null)
-                this.m_Controller.UpdateControlInfo(this.Info);
+            Info.Count = (byte)numAmount.Value;
+            if (m_Controller != null)
+            {
+                m_Controller.UpdateControlInfo(Info, 'E');
+            }
         }
 
-        private void btnRemove_Click(Object sender, EventArgs e)
+        private void BtnRemove_Click(object sender, EventArgs e)
         {
-            if (this.m_Loading || this.Info == null)
+            if (m_Loading || Info == null)
             {
                 return;
             }
-            // Setting type to null is the signal to delete.
-            this.Info.Type = null;
-            if (this.m_Controller != null)
-                this.m_Controller.UpdateControlInfo(this.Info);
+            if (m_Controller != null)
+            {
+                m_Controller.UpdateControlInfo(Info, 'R');
+            }
         }
     }
 }

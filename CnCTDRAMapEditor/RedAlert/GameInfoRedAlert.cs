@@ -29,20 +29,36 @@ namespace MobiusEditor.RedAlert
         public override string Name => "Red Alert";
         public override string ShortName => "RA";
         public override string IniName => "RedAlert";
+        public override string SteamId => "1213210";
+        public override bool PublishedMapsUseMirrorServer => true;
+        public override string SteamGameName => "Command & Conquer: Remastered";
+        public override string SteamGameNameShort => "C&C:Rem";
+        public override string SteamFileExtensionSolo => ".PGM";
+        public override string SteamFileExtensionMulti => ".PGM";
+        public override FileType SteamFileType => FileType.PGM;
+        public override string[] SteamDefaultTags => new string[] { "RA" };
+        public override string[] SteamSoloTags => new string[] { "singleplayer" };
+        public override string[] SteamMultiTags => new string[] { "multiplayer" };
+        public override string[] SteamSoloExtraTags => new string[] { };
+        public override string[] SteamMultiExtraTags => new string[] { "FFA", "1v1", "2v2" };
         public override string DefaultSaveDirectory => Path.Combine(Globals.RootSaveDirectory, "Red_Alert");
-        public override string SaveFilter => Constants.FileFilter;
-        public override string OpenFilter => Constants.FileFilter;
-        public override string DefaultExtension => ".mpr";
-        public override string DefaultExtensionFromMix => ".ini";
+        // Multiple extensions automatically get split into separate save types
+        public override FileTypeInfo[] SupportedFileTypes => new FileTypeInfo[] {
+            new FileTypeInfo(FileType.MPR, "Red Alert map", new string[] {"mpr", "ini"}, new string[] {"mpr", "ini"}),
+            new FileTypeInfo(FileType.PGM, "Red Alert map PGM", FileTypeFlags.InternalUse, new string[] {"pgm" }, new string[] { "pgm" })
+        };
+        public override FileType DefaultSaveType => FileType.MPR;
+        public override FileType DefaultSaveTypeFromMix => FileType.MPR;
+        public override FileType DefaultSaveTypeFromPgm => FileType.MPR;
         public override string ModFolder => Path.Combine(Globals.ModDirectory, "Red_Alert");
         public override string ModIdentifier => "RA";
         public override string ModsToLoad => Properties.Settings.Default.ModsToLoadRA;
         public override string ModsToLoadSetting => "ModsToLoadRA";
-        public override string WorkshopTypeId => "RA";
+        public override string[] RemasterMegFiles => new string[] {"CONFIG.MEG", "TEXTURES_COMMON_SRGB.MEG", "TEXTURES_SRGB.MEG", "TEXTURES_RA_SRGB.MEG" };
         public override string ClassicFolder => Properties.Settings.Default.ClassicPathRA;
         public override string ClassicFolderRemaster => "CNCDATA\\RED_ALERT";
         public override string ClassicFolderRemasterData => ClassicFolderRemaster + "\\AFTERMATH";
-        public override string ClassicFolderDefault => "Classic\\RA\\";
+        public override string ClassicFolderDefault => "Classic\\RA";
         public override string ClassicFolderSetting => "ClassicPathRA";
         public override string ClassicStringsFile => "conquer.eng";
         public override Size MapSize => Constants.MaxSize;
@@ -55,13 +71,52 @@ namespace MobiusEditor.RedAlert
         public override bool MegamapIsOfficial => true;
         public override bool HasSinglePlayer => true;
         public override bool CanUseNewMixFormat => true;
+        public override long MaxDataSize => Globals.MaxMapSize;
+        public override int MaxAircraft => Constants.MaxAircraft;
+        public override int MaxVessels => Constants.MaxVessels;
+        public override int MaxBuildings => Constants.MaxBuildings;
+        public override int MaxInfantry => Constants.MaxInfantry;
+        public override int MaxTerrain => Constants.MaxTerrain;
+        public override int MaxUnits => Constants.MaxUnits;
         public override int MaxTriggers => Constants.MaxTriggers;
+        public override int MaxTriggerNameLength => Constants.MaxTriggerNameLength;
         public override int MaxTeams => Constants.MaxTeams;
+        public override int MaxTeamNameLength => Constants.MaxTeamNameLength;
+        public override int MaxTeamClasses => Globals.MaxTeamClasses;
+        public override int MaxTeamMissions => Globals.MaxTeamMissions;
         public override int HitPointsGreenMinimum => 128;
         public override int HitPointsYellowMinimum => 64;
+        public override bool LandedHelis => Globals.LandedHelisRa;
+        public override Size ViewportSizeSmall => new Size(240, 192);
+        public override Size ViewportSidebarSmall => new Size(80,192);
+        public override Point ViewportOffsetSmall => new Point(-108, -84);
+        public override Size ViewportSizeLarge => new Size(480, 384);
+        public override Size ViewportSidebarLarge => new Size(160, 384); // Technically empty, but whatevs.
+        public override Point ViewportOffsetLarge => new Point(-228, -180);
         public override OverlayTypeFlag OverlayIconType => OverlayTypeFlag.Crate;
+        public override Bitmap WorkshopPreviewGeneric => Properties.Resources.UI_CustomMissionPreviewDefault;
+        public override Bitmap WorkshopPreviewGenericGame => Properties.Resources.RA_Head;
 
-        public override IGamePlugin CreatePlugin(Boolean mapImage, Boolean megaMap) => new GamePluginRA(mapImage);
+        public override FileType IdentifyMap(INI iniContents, byte[] binContents, bool contentWasSwapped, bool acceptBin, out bool isMegaMap, out string theater)
+        {
+            isMegaMap = true;
+            theater = null;
+            if (contentWasSwapped)
+            {
+                // Primary read file is just some unsupported file that happens to have the same
+                // name as a valid ini file in the same folder. Reject the original loaded file.
+                return FileType.None;
+            }
+            bool iniMatch = IsCnCIni(iniContents) && GamePluginRA.CheckForRAMap(iniContents);
+            if (!iniMatch)
+            {
+                return FileType.None;
+            }
+            theater = GetTheater(iniContents);
+            return FileType.MPR;
+        }
+
+        public override IGamePlugin CreatePlugin(bool mapImage, bool megaMap) => new GamePluginRA(mapImage);
 
         public override void InitClassicFiles(MixfileManager mfm, List<string> loadErrors, List<string> fileLoadErrors, bool forRemaster)
         {
@@ -73,11 +128,16 @@ namespace MobiusEditor.RedAlert
             mfm.LoadArchive(GameType.RedAlert, "expand.mix", false, false, false, true);
             // Container archives.
             mfm.LoadArchive(GameType.RedAlert, "redalert.mix", false, true, false, true);
+            // Reverse order, so more updated files are given priority. This fixes the shadowless Convoy Truck, since Aftermath has that fixed.
+            mfm.LoadArchive(GameType.RedAlert, "main4.mix", false, true, false, true);
+            mfm.LoadArchive(GameType.RedAlert, "main3.mix", false, true, false, true);
+            mfm.LoadArchive(GameType.RedAlert, "main2.mix", false, true, false, true);
+            mfm.LoadArchive(GameType.RedAlert, "main1.mix", false, true, false, true);
             mfm.LoadArchive(GameType.RedAlert, "main.mix", false, true, false, true);
             // Needed for theater palettes and the remap settings in palette.cps
             mfm.LoadArchive(GameType.RedAlert, "local.mix", false, false, true, true);
             // Mod addons. Loaded with a special function.
-            mfm.LoadArchives(GameType.RedAlert, "sc*.mix", true);
+            mfm.LoadArchives(GameType.RedAlert, "sc*.mix", true, "scores.mix");
             // Not normally needed, but in the beta this contains palette.cps.
             mfm.LoadArchive(GameType.RedAlert, "general.mix", false, false, true, true);
             // Main graphics archive
@@ -93,19 +153,19 @@ namespace MobiusEditor.RedAlert
             }
             // Check files
             mfm.Reset(GameType.RedAlert, null);
-            List<string> loadedFiles = mfm.ToList();
+            HashSet<string> loadedFiles = mfm.Select(s => Path.GetFileName(s)).ToHashSet(StringComparer.OrdinalIgnoreCase);
             string prefix = ShortName + ": ";
             // Allow loading without expansion files.
-            //TestMixExists(loadedFiles, loadErrors, prefix, "expand2.mix");
+            //StartupLoader.TestMixExists(loadedFiles, loadErrors, prefix, "expand2.mix");
             StartupLoader.TestMixExists(loadedFiles, loadErrors, prefix, "local.mix");
             if (!forRemaster)
             {
                 StartupLoader.TestMixExists(loadedFiles, loadErrors, prefix, "conquer.mix");
                 StartupLoader.TestMixExists(loadedFiles, loadErrors, prefix, "lores.mix");
                 // Allow loading without expansion files.
-                //TestMixExists(loadedFiles, loadErrors, prefix, "lores1.mix");
+                //StartupLoader.TestMixExists(loadedFiles, loadErrors, prefix, "lores1.mix");
             }
-            // Required theaters
+            // Theaters
             foreach (TheaterType raTheater in AllTheaters)
             {
                 StartupLoader.TestMixExists(loadedFiles, loadErrors, prefix, raTheater, !raTheater.IsModTheater);
@@ -117,8 +177,8 @@ namespace MobiusEditor.RedAlert
             }
             StartupLoader.TestFileExists(mfm, fileLoadErrors, prefix, "rules.ini");
             // Allow loading without expansion files.
-            //TestFileExists(mfm, loadErrors,prefix, "aftrmath.ini");
-            //TestFileExists(mfm, loadErrors,prefix, "mplayer.ini");
+            //StartupLoader.TestFileExists(mfm, loadErrors,prefix, "aftrmath.ini");
+            //StartupLoader.TestFileExists(mfm, loadErrors,prefix, "mplayer.ini");
         }
 
         public override string GetClassicOpposingPlayer(string player) => HouseTypes.GetClassicOpposingPlayer(player);
@@ -130,7 +190,7 @@ namespace MobiusEditor.RedAlert
 
         public override Bitmap GetWaypointIcon()
         {
-            return Globals.TheTilesetManager.GetTile("beacon", 0, "mouse", 15, null);
+            return Globals.TheTilesetManager.GetTexture(@"DATA\ART\TEXTURES\SRGB\ICON_SELECT_FRIENDLY_X2_00.DDS", "mouse", 15, true);
         }
 
         public override Bitmap GetCellTriggerIcon()
@@ -240,37 +300,37 @@ namespace MobiusEditor.RedAlert
             return String.IsNullOrEmpty(name) || Constants.EmptyMapName.Equals(name, StringComparison.OrdinalIgnoreCase);
         }
 
-        public override string GetClassicFontInfo(ClassicFont font, TilesetManagerClassic tsmc, TeamRemapManager trm, Color textColor, out bool crop, out TeamRemap remap)
+        public override string GetClassicFontInfo(ClassicFont font, TilesetManagerClassic tsmc, Color textColor, out bool crop, out Color[] palette)
         {
             crop = false;
-            remap = null;
+            palette = null;
             string fontName = null;
             switch (font)
             {
                 case ClassicFont.Waypoints:
                     crop = true;
                     fontName = "8point.fnt";
-                    remap = GetClassicFontRemapSimple(fontName, tsmc, trm, textColor, 2, 3);
+                    palette = GetClassicFontPalette(textColor, 2, 3);
                     break;
                 case ClassicFont.WaypointsLong:
                     crop = true;
                     fontName = "editfnt.fnt";
-                    remap = GetClassicFontRemapSimple(fontName, tsmc, trm, textColor, 2, 3);
+                    palette = GetClassicFontPalette(textColor, 2, 3);
                     break;
                 case ClassicFont.CellTriggers:
                     crop = true;
                     fontName = "scorefnt.fnt";
-                    remap = GetClassicFontRemapSimple(fontName, tsmc, trm, textColor);
+                    palette = GetClassicFontPalette(textColor);
                     break;
                 case ClassicFont.RebuildPriority:
                     crop = true;
                     fontName = "scorefnt.fnt";
-                    remap = GetClassicFontRemapSimple(fontName, tsmc, trm, textColor);
+                    palette = GetClassicFontPalette(textColor);
                     break;
                 case ClassicFont.TechnoTriggers:
                     crop = true;
                     fontName = "editfnt.fnt";
-                    remap = GetClassicFontRemapSimple(fontName, tsmc, trm, textColor, 2, 3);
+                    palette = GetClassicFontPalette(textColor, 2, 3);
                     break;
                 case ClassicFont.TechnoTriggersSmall:
                     crop = true;
@@ -279,12 +339,12 @@ namespace MobiusEditor.RedAlert
                     {
                         fontName = "3point.fnt";
                     }
-                    remap = GetClassicFontRemapSimple(fontName, tsmc, trm, textColor);
+                    palette = GetClassicFontPalette(textColor);
                     break;
                 case ClassicFont.FakeLabels:
                     crop = true;
                     fontName = "editfnt.fnt";
-                    remap = GetClassicFontRemapSimple(fontName, tsmc, trm, textColor, 2, 3);
+                    palette = GetClassicFontPalette(textColor, 2, 3);
                     break;
             }
             if (!tsmc.TileExists(fontName))
@@ -292,6 +352,16 @@ namespace MobiusEditor.RedAlert
                 fontName = null;
             }
             return fontName;
+        }
+
+        public override Tile GetClassicFakeLabel(TilesetManagerClassic tsm)
+        {
+            return tsm.GetTileData("pips", 18, out Tile tile) ? tile : null;
+        }
+
+        public override string GetSteamWorkshopFileName(IGamePlugin plugin)
+        {
+            return "MAPDATA";
         }
     }
 }

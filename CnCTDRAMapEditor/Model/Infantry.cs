@@ -33,7 +33,7 @@ namespace MobiusEditor.Model
         LowerRight /**/ = 4
     }
 
-    [DebuggerDisplay("{Type}: {Trigger}")]
+    [DebuggerDisplay("{Type}; House={House}, Trig={Trigger}")]
     public class Infantry : ITechno, INotifyPropertyChanged, ICloneable
     {
         public event PropertyChangedEventHandler PropertyChanged;
@@ -62,6 +62,7 @@ namespace MobiusEditor.Model
         public bool IsPreview { get; set; }
         public int DrawOrderCache { get; set; }
         public int DrawFrameCache { get; set; }
+        public bool IsOverlapped { get; set; }
 
         public Infantry(InfantryGroup infantryGroup)
         {
@@ -109,14 +110,14 @@ namespace MobiusEditor.Model
             return Clone();
         }
 
-        public Boolean DataEquals(Infantry other)
+        public bool DataEquals(Infantry other)
         {
-            return this.Type == other.Type &&
-                this.House == other.House &&
-                this.Strength == other.Strength &&
-                this.Direction == other.Direction &&
-                this.Trigger == other.Trigger &&
-                this.Mission == other.Mission;
+            return Type == other.Type &&
+                House == other.House &&
+                Strength == other.Strength &&
+                Direction == other.Direction &&
+                Trigger == other.Trigger &&
+                Mission == other.Mission;
         }
     }
 
@@ -125,7 +126,10 @@ namespace MobiusEditor.Model
         private static readonly Point[] stoppingLocations = new Point[Globals.NumInfantryStops];
 
         public Rectangle OverlapBounds => new Rectangle(-1, -1, 3, 3);
-        public bool[,][] OpaqueMask => new bool[1, 1][] { { Infantry.Select(loc => loc != null).ToArray() } };
+        public bool[,][] OverlapMask => new bool[1, 1][] { { Infantry.Select(loc => loc != null).ToArray() } };
+        public Point OverlapMaskOffset => Point.Empty;
+        public bool[,][] ContentMask => OverlapMask;
+        public Point ContentMaskOffset => Point.Empty;
         public bool[,] OccupyMask => new bool[1, 1] { { true } };
         public bool[,] BaseOccupyMask => new bool[1, 1] { { true } };
         public int ZOrder => Globals.ZOrderDefault;
@@ -205,7 +209,7 @@ namespace MobiusEditor.Model
             "Bottom right"
         };
 
-        public static String GetStoppingTypeName(InfantryStoppingType stopLocation)
+        public static string GetStoppingTypeName(InfantryStoppingType stopLocation)
         {
             int index = (int)stopLocation;
             if (index >= 0 && index < Enum.GetValues(typeof(InfantryStoppingType)).Length)

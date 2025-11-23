@@ -23,7 +23,7 @@ namespace MobiusEditor.Utility
 {
     public class MixParseException : Exception
     {
-        protected readonly String AffectedEntryIdTag = "MixParseExceptionAffectedEntryId";
+        protected readonly string AffectedEntryIdTag = "MixParseExceptionAffectedEntryId";
 
         public MixParseException()
         {
@@ -77,7 +77,7 @@ namespace MobiusEditor.Utility
         private List<uint> headerIds = new List<uint>();
         private HashMethod hasher = HashMethod.GetRegisteredMethods().FirstOrDefault();
 
-        /// <summary>Path the file was loaded from. For embedded mix files, this will be the original path with the deeper opened mix file(s) indicated behind " -&gt; ".</summary>
+        /// <summary>Path the file was loaded from. For embedded mix files, this will be the original path with the deeper opened mix file(s) indicated behind " → ".</summary>
         public string FilePath { get; private set; }
         /// <summary>Filename to display. Will be null if it is loaded by id from inside another mix archive and its name is not known.</summary>
         public string FileName { get; private set; }
@@ -117,6 +117,17 @@ namespace MobiusEditor.Utility
         /// </summary>
         public static bool CheckValidMix(string mixPath, bool handleAdvanced)
         {
+            try
+            {
+                if (!File.Exists(mixPath))
+                {
+                    return false;
+                }
+            }
+            catch
+            {
+                return false;
+            }
             MixFile dummy = new MixFile();
             FileInfo mixFile = new FileInfo(mixPath);
             dummy.fileStart = 0;

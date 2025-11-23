@@ -47,7 +47,7 @@ namespace MobiusEditor.Utility.Hashing
             return Calculate(bytes, 0, bytes.Length);
         }
 
-        public static uint Calculate(byte[] bytes, Int32 start, Int32 length)
+        public static uint Calculate(byte[] bytes, int start, int length)
         {
             if (bytes == null)
             {
@@ -55,7 +55,7 @@ namespace MobiusEditor.Utility.Hashing
             }
 
             uint crc = 0xFFFFFFFFU;
-            Int32 end = start + length;
+            int end = start + length;
             for (var i = start; i < end; ++i)
             {
                 uint index = (crc & 0xFF) ^ bytes[i];

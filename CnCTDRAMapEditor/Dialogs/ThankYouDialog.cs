@@ -22,7 +22,7 @@ namespace MobiusEditor.Dialogs
 {
     public partial class ThankYouDialog : Form
     {
-        readonly Object spLock = new Object();
+        readonly object spLock = new object();
         readonly Random random;
         SoundPlayer soundPlayer;
         int clicks = 0;
@@ -42,7 +42,7 @@ namespace MobiusEditor.Dialogs
             this.lblLink.Text = GeneralUtils.DoubleAmpersands(Program.GithubUrl);
         }
 
-        private void lblImage_Click(Object sender, EventArgs e)
+        private void lblImage_Click(object sender, EventArgs e)
         {
             this.PlaySound(this.clicks);
             if (this.clicks < maxclicks)
@@ -63,8 +63,11 @@ namespace MobiusEditor.Dialogs
                     try { soundPlayer.Dispose(); } catch { /* ignore */ }
                     if (stream != null)
                     {
+                        // Disposing these isn't REALLY necessary; the UnmanagedMemoryStream type returned
+                        // from the Resources is just a wrapper around a bare pointer to a byte array.
                         try { stream.Dispose(); } catch { /* ignore */ }
                     }
+                    soundPlayer = null;
                 }
             }
         }
@@ -72,7 +75,7 @@ namespace MobiusEditor.Dialogs
         private void PlaySound(int clicks)
         {
             StopSound();
-            using (MemoryStream ms = GetClipFromClicks(clicks))
+            using (Stream ms = GetClipFromClicks(clicks))
             {
                 if (ms != null)
                 {
@@ -85,7 +88,7 @@ namespace MobiusEditor.Dialogs
             }
         }
 
-        private MemoryStream GetClipFromClicks(int clicks)
+        private Stream GetClipFromClicks(int clicks)
         {
             // Before reaching maxclicks: take sounds from switch-case, in reverse order.
             if (clicks < maxclicks)
@@ -98,25 +101,16 @@ namespace MobiusEditor.Dialogs
             return GetClip(randomNr);
         }
 
-        private MemoryStream GetClip(int number)
+        private Stream GetClip(int number)
         {
             switch (number)
             {
                 case 0:
-                    return GetMemoryStream(Properties.Resources.Mmg1);
+                    return Properties.Resources.Mmg1;
                 case 1:
-                    return GetMemoryStream(Properties.Resources.Mtiber1);
+                    return Properties.Resources.Mtiber1;
                 default:
-                    return GetMemoryStream(Properties.Resources.Mthanks1);
-            }
-        }
-
-
-        private MemoryStream GetMemoryStream(UnmanagedMemoryStream umm)
-        {
-            using (umm)
-            {
-                return GeneralUtils.CopyToMemoryStream(umm);
+                    return Properties.Resources.Mthanks1;
             }
         }
 
@@ -134,17 +128,17 @@ namespace MobiusEditor.Dialogs
             base.Dispose(disposing);
         }
 
-        private void ThankYou_FormClosing(Object sender, FormClosingEventArgs e)
+        private void ThankYou_FormClosing(object sender, FormClosingEventArgs e)
         {
             this.StopSound();
         }
 
-        private void ThankYouDialog_Shown(Object sender, EventArgs e)
+        private void ThankYouDialog_Shown(object sender, EventArgs e)
         {
             this.lblLink.Left = (this.ClientSize.Width - this.lblLink.Width) / 2;
         }
 
-        private void lblLink_Click(Object sender, EventArgs e)
+        private void lblLink_Click(object sender, EventArgs e)
         {
             Process.Start(Program.GithubUrl);
         }

@@ -11,8 +11,6 @@
 //    TERMS AND CONDITIONS FOR COPYING, DISTRIBUTION AND MODIFICATION
 //
 //   0. You just DO WHAT THE FUCK YOU WANT TO.
-using System;
-
 namespace MobiusEditor.Utility.Hashing
 {
     public class HashRor : HashMethod
@@ -23,7 +21,7 @@ namespace MobiusEditor.Utility.Hashing
         public override uint GetNameIdCorrectCase(byte[] data)
         {
             uint id = 0;
-            for (int i = 0; i < data.Length; i++)
+            for (int i = 0; i < data.Length; ++i)
             {
                 uint rotatedValue = BitFunctions.RotateRight(id, 6);
                 id = (uint)((data[i] - 48) & 63) + rotatedValue;
@@ -34,7 +32,7 @@ namespace MobiusEditor.Utility.Hashing
         public override uint GetNameIdCorrectCase(string name)
         {
             uint id = 0;
-            for (int i = 0; i < name.Length; i++)
+            for (int i = 0; i < name.Length; ++i)
             {
                 uint rotatedValue = BitFunctions.RotateRight(id, 6);
                 id = (uint)((name[i] - 48) & 63) + rotatedValue;

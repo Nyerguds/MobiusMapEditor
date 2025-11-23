@@ -42,7 +42,7 @@ namespace MobiusEditor.Tools
         public override bool IsBusy { get { return undoOverlays.Count > 0; } }
 
         public int currentVal;
-        public override Object CurrentObject
+        public override object CurrentObject
         {
             get { return currentVal; }
             set
@@ -60,7 +60,7 @@ namespace MobiusEditor.Tools
         private bool placementMode;
         private bool additivePlacement;
 
-        protected override Boolean InPlacementMode
+        protected override bool InPlacementMode
         {
             get { return placementMode || Control.ModifierKeys.HasFlag(Keys.Shift); }
         }
@@ -81,10 +81,10 @@ namespace MobiusEditor.Tools
             Update();
         }
 
-        private void Url_UndoRedoDone(object sender, UndoRedoEventArgs e)
+        private void Url_UndoRedoDone(object sender, UndoRedoEventArgs ev)
         {
             // Only update this stuff if the undo/redo event was actually a resources change.
-            if ((e.Source & ToolType.Resources) == ToolType.None)
+            if ((ev.Source & ToolType.Resources) == ToolType.None)
             {
                 return;
             }
@@ -162,9 +162,10 @@ namespace MobiusEditor.Tools
         private void MapPanel_MouseLeave(object sender, EventArgs e)
         {
             ExitPlacementMode();
+            MapPanel_MouseUp(sender, new MouseEventArgs(MouseButtons.None, 0, 0, 0, 0));
         }
 
-        private void MapPanel_MouseWheel(Object sender, MouseEventArgs e)
+        private void MapPanel_MouseWheel(object sender, MouseEventArgs e)
         {
             if (e.Delta == 0 || (Control.ModifierKeys & Keys.Control) == Keys.None)
             {
@@ -226,11 +227,12 @@ namespace MobiusEditor.Tools
                 }
                 if (map.Metrics.GetCell(subLocation, out int cell))
                 {
-                    if (map.Overlay[cell] == null)
+                    Overlay cur = map.Overlay[cell];
+                    if (cur == null || Map.IsIgnorableOverlay(cur))
                     {
                         if (!undoOverlays.ContainsKey(cell))
                         {
-                            undoOverlays[cell] = map.Overlay[cell];
+                            undoOverlays[cell] = cur;
                         }
                         Overlay overlay = new Overlay { Type = resourceType, Icon = 0 };
                         map.Overlay[cell] = overlay;
@@ -247,6 +249,7 @@ namespace MobiusEditor.Tools
         {
             Rectangle rectangle = new Rectangle(location, new Size(1, 1));
             rectangle.Inflate(navigationWidget.MouseoverSize.Width / 2, navigationWidget.MouseoverSize.Height / 2);
+            HashSet<Point> removed = new HashSet<Point>();
             foreach (Point subLocation in rectangle.Points())
             {
                 if (map.Metrics.GetCell(subLocation, out int cell))
@@ -259,6 +262,7 @@ namespace MobiusEditor.Tools
                         }
                         map.Overlay[cell] = null;
                         redoOverlays[cell] = null;
+                        removed.Add(subLocation);
                     }
                 }
             }
@@ -305,45 +309,47 @@ namespace MobiusEditor.Tools
 
         private void CommitChange()
         {
-            bool origDirtyState = plugin.Dirty;
+            bool origEmptyState = plugin.Empty;
             plugin.Dirty = true;
-            Dictionary<Int32, Overlay> undoOverlays2 = new Dictionary<int, Overlay>(undoOverlays);
-            void undoAction(UndoRedoEventArgs e)
+            Dictionary<int, Overlay> undoOverlays2 = new Dictionary<int, Overlay>(undoOverlays);
+            void undoAction(UndoRedoEventArgs ev)
             {
-                foreach (KeyValuePair<Int32, Overlay> kv in undoOverlays2)
+                foreach (KeyValuePair<int, Overlay> kv in undoOverlays2)
                 {
-                    e.Map.Overlay[kv.Key] = kv.Value;
+                    ev.Map.Overlay[kv.Key] = kv.Value;
                 }
-                e.MapPanel.Invalidate(e.Map, undoOverlays2.Keys.Select(k =>
+                ev.MapPanel.Invalidate(ev.Map, undoOverlays2.Keys.Select(k =>
                 {
-                    e.Map.Metrics.GetLocation(k, out Point location);
+                    ev.Map.Metrics.GetLocation(k, out Point location);
                     Rectangle rectangle = new Rectangle(location, new Size(1, 1));
                     rectangle.Inflate(1, 1);
                     return rectangle;
                 }));
-                if (e.Plugin != null)
+                if (ev.Plugin != null)
                 {
-                    e.Plugin.Dirty = origDirtyState;
+                    ev.Plugin.Empty = origEmptyState;
+                    ev.Plugin.Dirty = !ev.NewStateIsClean;
                 }
             }
-
-            Dictionary<Int32, Overlay> redoOverlays2 = new Dictionary<int, Overlay>(redoOverlays);
-            void redoAction(UndoRedoEventArgs e)
+            Dictionary<int, Overlay> redoOverlays2 = new Dictionary<int, Overlay>(redoOverlays);
+            void redoAction(UndoRedoEventArgs ev)
             {
-                foreach (KeyValuePair<Int32, Overlay> kv in redoOverlays2)
+                foreach (KeyValuePair<int, Overlay> kv in redoOverlays2)
                 {
-                    e.Map.Overlay[kv.Key] = kv.Value;
+                    ev.Map.Overlay[kv.Key] = kv.Value;
                 }
-                e.MapPanel.Invalidate(e.Map, redoOverlays2.Keys.Select(k =>
+                ev.MapPanel.Invalidate(ev.Map, redoOverlays2.Keys.Select(k =>
                 {
-                    e.Map.Metrics.GetLocation(k, out Point location);
+                    ev.Map.Metrics.GetLocation(k, out Point location);
                     Rectangle rectangle = new Rectangle(location, new Size(1, 1));
                     rectangle.Inflate(1, 1);
                     return rectangle;
                 }));
-                if (e.Plugin != null)
+                if (ev.Plugin != null)
                 {
-                    e.Plugin.Dirty = true;
+                    // Redo can never restore the "empty" state, but CAN be the point at which a save was done.
+                    ev.Plugin.Empty = false;
+                    ev.Plugin.Dirty = !ev.NewStateIsClean;
                 }
             }
             undoOverlays.Clear();
@@ -423,19 +429,20 @@ namespace MobiusEditor.Tools
         public override void Activate()
         {
             base.Activate();
-            this.Deactivate(true);
-            this.mapPanel.MouseDown += MapPanel_MouseDown;
-            this.mapPanel.MouseUp += MapPanel_MouseUp;
-            this.mapPanel.MouseLeave += MapPanel_MouseLeave;
-            this.mapPanel.MouseWheel += MapPanel_MouseWheel;
-            this.mapPanel.SuspendMouseZoomKeys = Keys.Control;
-            (this.mapPanel as Control).KeyDown += ResourceTool_KeyDown;
-            (this.mapPanel as Control).KeyUp += ResourcesTool_KeyUpDown;
-            this.navigationWidget.BoundsMouseCellChanged += MouseoverWidget_MouseCellChanged;
-            this.url.Undone += Url_UndoRedoDone;
-            this.url.Redone += Url_UndoRedoDone;
-            this.UpdateStatus();
-            this.RefreshPreviewPanel();
+            Deactivate(true);
+            mapPanel.MouseDown += MapPanel_MouseDown;
+            mapPanel.MouseUp += MapPanel_MouseUp;
+            mapPanel.MouseLeave += MapPanel_MouseLeave;
+            mapPanel.MouseWheel += MapPanel_MouseWheel;
+            mapPanel.LostFocus += MapPanel_MouseLeave;
+            mapPanel.SuspendMouseZoomKeys = Keys.Control;
+            (mapPanel as Control).KeyDown += ResourceTool_KeyDown;
+            (mapPanel as Control).KeyUp += ResourcesTool_KeyUpDown;
+            navigationWidget.BoundsMouseCellChanged += MouseoverWidget_MouseCellChanged;
+            url.Undone += Url_UndoRedoDone;
+            url.Redone += Url_UndoRedoDone;
+            UpdateStatus();
+            RefreshPreviewPanel();
         }
 
         public override void Deactivate()
@@ -450,16 +457,17 @@ namespace MobiusEditor.Tools
                 ExitPlacementMode();
                 base.Deactivate();
             }
-            this.mapPanel.MouseDown -= MapPanel_MouseDown;
-            this.mapPanel.MouseUp -= MapPanel_MouseUp;
-            this.mapPanel.MouseLeave -= MapPanel_MouseLeave;
-            this.mapPanel.MouseWheel -= MapPanel_MouseWheel;
-            this.mapPanel.SuspendMouseZoomKeys = Keys.None;
-            (this.mapPanel as Control).KeyDown -= ResourceTool_KeyDown;
-            (this.mapPanel as Control).KeyUp -= ResourcesTool_KeyUpDown;
-            this.navigationWidget.BoundsMouseCellChanged -= MouseoverWidget_MouseCellChanged;
-            this.url.Undone -= Url_UndoRedoDone;
-            this.url.Redone -= Url_UndoRedoDone;
+            mapPanel.MouseDown -= MapPanel_MouseDown;
+            mapPanel.MouseUp -= MapPanel_MouseUp;
+            mapPanel.MouseLeave -= MapPanel_MouseLeave;
+            mapPanel.MouseWheel -= MapPanel_MouseWheel;
+            mapPanel.LostFocus -= MapPanel_MouseLeave;
+            mapPanel.SuspendMouseZoomKeys = Keys.None;
+            (mapPanel as Control).KeyDown -= ResourceTool_KeyDown;
+            (mapPanel as Control).KeyUp -= ResourcesTool_KeyUpDown;
+            navigationWidget.BoundsMouseCellChanged -= MouseoverWidget_MouseCellChanged;
+            url.Undone -= Url_UndoRedoDone;
+            url.Redone -= Url_UndoRedoDone;
         }
 
         #region IDisposable Support

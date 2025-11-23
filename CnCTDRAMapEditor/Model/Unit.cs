@@ -22,7 +22,7 @@ using System.Runtime.CompilerServices;
 
 namespace MobiusEditor.Model
 {
-    [DebuggerDisplay("{Type}: {Trigger}")]
+    [DebuggerDisplay("{Type}; House={House}, Trig={Trigger}")]
     public class Unit : ITechno, ICellOverlapper, ICellOccupier, INotifyPropertyChanged, ICloneable
     {
         public event PropertyChangedEventHandler PropertyChanged;
@@ -32,13 +32,17 @@ namespace MobiusEditor.Model
         public ITechnoType TechnoType => type;
 
         public Rectangle OverlapBounds => Type.OverlapBounds;
-        public bool[,][] OpaqueMask => Type.OpaqueMask;
+        public bool[,][] OverlapMask => Type.OverlapMask;
+        public Point OverlapMaskOffset => Type.OverlapMaskOffset;
+        public bool[,][] ContentMask => Type.ContentMask;
+        public Point ContentMaskOffset => Type.ContentMaskOffset;
 
         public bool[,] OccupyMask => Type.OccupyMask;
         public bool[,] BaseOccupyMask => Type.OccupyMask;
         public int ZOrder => Type.ZOrder;
         public int DrawOrderCache { get; set; }
         public int DrawFrameCache { get; set; }
+        public bool IsOverlapped { get; set; }
 
         private HouseType house;
         public HouseType House { get => house; set => SetField(ref house, value); }
@@ -98,14 +102,14 @@ namespace MobiusEditor.Model
             return Clone();
         }
 
-        public Boolean DataEquals(Unit other)
+        public bool DataEquals(Unit other)
         {
-            return this.Type == other.Type &&
-                this.House == other.House &&
-                this.Strength == other.Strength &&
-                this.Direction == other.Direction &&
-                this.Mission == other.Mission &&
-                this.Trigger == other.Trigger;
+            return Type == other.Type &&
+                House == other.House &&
+                Strength == other.Strength &&
+                Direction == other.Direction &&
+                Mission == other.Mission &&
+                Trigger == other.Trigger;
         }
     }
 }

@@ -42,6 +42,7 @@ namespace MobiusEditor.Dialogs
         /// </summary>
         private void InitializeComponent()
         {
+            this.components = new System.ComponentModel.Container();
             this.tableLayoutPanel1 = new System.Windows.Forms.TableLayoutPanel();
             this.flowLayoutPanel1 = new System.Windows.Forms.FlowLayoutPanel();
             this.btnCancel = new System.Windows.Forms.Button();
@@ -55,6 +56,7 @@ namespace MobiusEditor.Dialogs
             this.chkMegamap = new System.Windows.Forms.CheckBox();
             this.lblWarnMegamap = new System.Windows.Forms.Label();
             this.lblWarnModTheater = new System.Windows.Forms.Label();
+            this.toolTip1 = new System.Windows.Forms.ToolTip(this.components);
             this.tableLayoutPanel1.SuspendLayout();
             this.flowLayoutPanel1.SuspendLayout();
             this.flowLayoutPanel2.SuspendLayout();
@@ -186,6 +188,7 @@ namespace MobiusEditor.Dialogs
             this.chkSingleplayer.Size = new System.Drawing.Size(132, 17);
             this.chkSingleplayer.TabIndex = 2;
             this.chkSingleplayer.Text = "Single-Player Scenario";
+            this.toolTip1.SetToolTip(this.chkSingleplayer, "This can still be modified later, through Settings → Map Settings");
             this.chkSingleplayer.UseVisualStyleBackColor = true;
             this.chkSingleplayer.CheckedChanged += new System.EventHandler(this.ChkMegamap_CheckedChanged);
             // 
@@ -272,5 +275,6 @@ namespace MobiusEditor.Dialogs
         private System.Windows.Forms.ListBox lbTheaters;
         private System.Windows.Forms.CheckBox chkSingleplayer;
         private System.Windows.Forms.Label lblWarnModTheater;
+        private System.Windows.Forms.ToolTip toolTip1;
     }
 }

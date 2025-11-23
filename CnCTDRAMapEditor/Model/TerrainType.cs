@@ -26,24 +26,30 @@ namespace MobiusEditor.Model
     {
         public int ID { get; private set; }
         public string Name { get; private set; }
+        public bool Ownable => false;
         public string DisplayName { get; private set; }
-        public Rectangle OverlapBounds => new Rectangle(Point.Empty, this.Size);
-        public bool[,][] OpaqueMask { get; private set; }
+        public Rectangle OverlapBounds => new Rectangle(Point.Empty, Size);
+        public bool[,][] OverlapMask { get; private set; }
+        public Point OverlapMaskOffset => Point.Empty;
+        public bool[,][] ContentMask { get; private set; }
+        public Point ContentMaskOffset => Point.Empty;
         public bool[,] OccupyMask { get; private set; }
-        public Size Size => this.OccupyMask.GetDimensions();
+        public Size Size => OccupyMask.GetDimensions();
         public bool[,] BaseOccupyMask => OccupyMask;
         public int ZOrder => Globals.ZOrderDefault;
         public bool ExistsInTheater { get; private set; }
         public int DisplayIcon { get; private set; }
         public LandType PlacementLand { get; private set; }
-        public String GraphicsSource { get; private set; }
+        public string GraphicsSource { get; private set; }
         public bool IsArmed => false;
         public bool IsAircraft => false;
         public bool IsFixedWing => false;
         public bool IsHarvester => false;
         public bool IsExpansionOnly => false;
         public bool CanRemap => false;
+        public string ImageOverride => null;
         public Point CenterPoint { get; private set; }
+        public bool GraphicsFound { get; private set; }
         private string nameId;
 
         public Bitmap Thumbnail { get; set; }
@@ -63,18 +69,18 @@ namespace MobiusEditor.Model
         /// <param name="placementLand">Land type this should be placed down on. Currently unused.</param>
         public TerrainType(int id, string name, string textId, int width, int height, Point centerPoint, string occupyMask, string graphicsSource, int displayIcon, LandType placementLand)
         {
-            this.ID = id;
-            this.Name = name;
-            this.nameId = textId;
-            this.OccupyMask = GeneralUtils.GetMaskFromString(width, height, occupyMask, '0', ' ');
+            ID = id;
+            Name = name;
+            nameId = textId;
+            OccupyMask = GeneralUtils.GetMaskFromString(width, height, occupyMask, '0', ' ');
             if (centerPoint == Point.Empty)
             {
                 centerPoint = GeneralUtils.GetOccupiedCenter(OccupyMask, new Size(Globals.PixelWidth, Globals.PixelHeight));
             }
-            this.CenterPoint = centerPoint;
-            this.GraphicsSource = graphicsSource == null ? name : graphicsSource;
-            this.DisplayIcon = displayIcon;
-            this.PlacementLand = placementLand;
+            CenterPoint = centerPoint;
+            GraphicsSource = graphicsSource == null ? name : graphicsSource;
+            DisplayIcon = displayIcon;
+            PlacementLand = placementLand;
         }
 
         /// <summary>
@@ -88,7 +94,7 @@ namespace MobiusEditor.Model
         /// <param name="occupyMask">String indicating the occupied cells. Spaces are ignored, '0' means unoccupied, any other value means occupied. A null value indicates it is fully occupied.</param>
         /// <param name="graphicsSource">Override for the graphics source. If null, the name is used.</param>
         /// <param name="displayIcon">Override for the frame to display. Normally 0.</param>
-        public TerrainType(int id, string name, string textId, int width, int height, Point centerPoint, string occupyMask, String graphicsSource, int displayIcon)
+        public TerrainType(int id, string name, string textId, int width, int height, Point centerPoint, string occupyMask, string graphicsSource, int displayIcon)
             : this(id, name, textId, width, height, centerPoint, occupyMask, graphicsSource, displayIcon, LandType.Clear)
         {
         }
@@ -103,7 +109,7 @@ namespace MobiusEditor.Model
         /// <param name="height">Height of the terrain object, in cells.</param>
         /// <param name="occupyMask">String indicating the occupied cells. Spaces are ignored, '0' means unoccupied, any other value means occupied. A null value indicates it is fully occupied.</param>
         /// <param name="graphicsSource">Override for the graphics source. If null, the name is used.</param>
-        public TerrainType(int id, string name, string textId, int width, int height, Point centerPoint, string occupyMask, String graphicsSource)
+        public TerrainType(int id, string name, string textId, int width, int height, Point centerPoint, string occupyMask, string graphicsSource)
             : this(id, name, textId, width, height, centerPoint, occupyMask, graphicsSource, 0, LandType.Clear)
         {
         }
@@ -160,11 +166,11 @@ namespace MobiusEditor.Model
             }
             else if (obj is sbyte)
             {
-                return this.ID == (sbyte)obj;
+                return ID == (sbyte)obj;
             }
             else if (obj is string)
             {
-                return string.Equals(this.Name, obj as string, StringComparison.OrdinalIgnoreCase);
+                return string.Equals(Name, obj as string, StringComparison.OrdinalIgnoreCase);
             }
 
             return base.Equals(obj);
@@ -172,30 +178,30 @@ namespace MobiusEditor.Model
 
         public override int GetHashCode()
         {
-            return this.ID.GetHashCode();
+            return ID.GetHashCode();
         }
 
         public override string ToString()
         {
-            return (this.Name ?? String.Empty).ToUpperInvariant();
+            return (Name ?? String.Empty).ToUpperInvariant();
         }
 
         public void InitDisplayName()
         {
-            this.DisplayName = !String.IsNullOrEmpty(this.nameId) && !String.IsNullOrEmpty(Globals.TheGameTextManager[this.nameId])
-                ? Globals.TheGameTextManager[this.nameId] + " (" + this.Name.ToUpperInvariant() + ")"
-                : this.Name.ToUpperInvariant();
+            DisplayName = !String.IsNullOrEmpty(nameId) && !String.IsNullOrEmpty(Globals.TheGameTextManager[nameId])
+                ? Globals.TheGameTextManager[nameId] + " (" + Name.ToUpperInvariant() + ")"
+                : Name.ToUpperInvariant();
         }
 
         public void Init()
         {
-            this.InitDisplayName();
-            this.ExistsInTheater = Globals.TheTilesetManager.TileExists(this.GraphicsSource);
-            if (!this.ExistsInTheater && !String.Equals(this.GraphicsSource, this.Name, StringComparison.InvariantCultureIgnoreCase))
+            InitDisplayName();
+            ExistsInTheater = Globals.TheTilesetManager.TileExists(GraphicsSource);
+            if (!ExistsInTheater && !String.Equals(GraphicsSource, Name, StringComparison.InvariantCultureIgnoreCase))
             {
-                this.ExistsInTheater = Globals.TheTilesetManager.TileExists(this.Name);
+                ExistsInTheater = Globals.TheTilesetManager.TileExists(Name);
             }
-            Bitmap oldImage = this.Thumbnail;
+            Bitmap oldImage = Thumbnail;
             Terrain mockTerrain = new Terrain()
             {
                 Type = this,
@@ -203,19 +209,23 @@ namespace MobiusEditor.Model
             RenderInfo render = MapRenderer.RenderTerrain(Point.Empty, Globals.PreviewTileSize, Globals.PreviewTileScale, mockTerrain, false);
             if (render.RenderedObject != null)
             {
-                Bitmap th = new Bitmap(this.Size.Width * Globals.PreviewTileSize.Width, this.Size.Height * Globals.PreviewTileSize.Height);
+                Bitmap th = new Bitmap(Size.Width * Globals.PreviewTileSize.Width, Size.Height * Globals.PreviewTileSize.Height);
                 th.SetResolution(96, 96);
                 using (Graphics g = Graphics.FromImage(th))
                 {
                     MapRenderer.SetRenderSettings(g, Globals.PreviewSmoothScale);
                     render.RenderAction(g);
                 }
-                this.Thumbnail = th;
-                this.OpaqueMask = GeneralUtils.MakeOpaqueMask(th, this.Size, 25, 10, 20, 0x80, false);
+                GraphicsFound = !render.IsDummy;
+                Thumbnail = th;
+                // calculate the areas of this that can overlap other objects (include shadow)
+                OverlapMask = GeneralUtils.MakeOpaqueMask(th, Size, 25, 10, 20, 0x10, false);
+                // calculate the areas of this that need to be overlapped to consider this covered (exclude shadow)
+                ContentMask = GeneralUtils.MakeOpaqueMask(th, Size, 25, 10, 20, 0xE0, !Globals.UseClassicFiles); 
             }
             else
             {
-                this.Thumbnail = null;
+                Thumbnail = null;
             }
             if (oldImage != null)
             {
@@ -226,8 +236,8 @@ namespace MobiusEditor.Model
 
         public void Reset()
         {
-            Bitmap oldImage = this.Thumbnail;
-            this.Thumbnail = null;
+            Bitmap oldImage = Thumbnail;
+            Thumbnail = null;
             if (oldImage != null)
             {
                 try { oldImage.Dispose(); }

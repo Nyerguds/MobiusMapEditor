@@ -316,7 +316,7 @@ namespace MobiusEditor.Controls
             this.playersListBox.SelectionMode = System.Windows.Forms.SelectionMode.MultiSimple;
             this.playersListBox.Size = new System.Drawing.Size(100, 134);
             this.playersListBox.TabIndex = 18;
-            this.playersListBox.Resize += new System.EventHandler(this.playersListBox_Resize);
+            this.playersListBox.Resize += new System.EventHandler(this.PlayersListBox_Resize);
             // 
             // playerControlCheckBox
             // 

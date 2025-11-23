@@ -30,12 +30,13 @@ namespace MobiusEditor
 {
     static class Program
     {
-        public const string SteamGameId = "1213210";
+        public const string RemasterSteamId = "1213210";
 
         public const string ProgramName = "Mobius Map Editor";
         public const string GithubOwner = "Nyerguds";
         public const string GithubProject = "MobiusMapEditor";
         public const string GithubUrl = "https://github.com/" + GithubOwner + "/" + GithubProject;
+        public const string GithubManualUrl = GithubUrl + "/blob/master/MANUAL.md";
         public const string GithubVerCheckUrl = "https://api.github.com/repos/" + GithubOwner + "/" + GithubProject + "/releases?per_page=1";
         public const string ProgramInfo =
             "Originally created by Petroglyph Games for the Command & Conquer: Remastered project, " +
@@ -63,6 +64,7 @@ namespace MobiusEditor
         public static readonly string AssemblyName = Assembly.GetExecutingAssembly().GetName().Name;
 
         public static readonly string ProgramVersionTitle = ProgramName + " v" + Assembly.GetExecutingAssembly().GetName().Version;
+        public static string RemasterRunPath { get; private set; }
 
         static Program()
         {
@@ -102,19 +104,17 @@ namespace MobiusEditor
             Application.SetCompatibleTextRenderingDefault(false);
             Dictionary<GameType, string[]> modPaths = new Dictionary<GameType, string[]>();
             // Check if any mods are allowed to override the default stuff to load.
-            foreach (GameInfo gic in GameTypeFactory.GetGameInfos())
+            foreach (GameInfo gameInfo in GameTypeFactory.GetGameInfos())
             {
-                modPaths.Add(gic.GameType, StartupLoader.GetModPaths(SteamGameId, gic.ModsToLoad, gic.ModFolder, gic.ModIdentifier));
+                if (gameInfo != null)
+                {
+                    modPaths.Add(gameInfo.GameType, StartupLoader.GetModPaths(RemasterSteamId, gameInfo.ModsToLoad, gameInfo.ModFolder, gameInfo.ModIdentifier));
+                }
             }
-            String runPath = StartupLoader.GetRemasterRunPath(SteamGameId, !Globals.UseClassicFiles);
-            if (runPath != null)
-            {
-                // Required for Steam interface to work.
-                Environment.CurrentDirectory = runPath;
-            }
+            RemasterRunPath = StartupLoader.GetRemasterRunPath(RemasterSteamId, !Globals.UseClassicFiles);
             bool loadOk = false;
             string mixContentFile = Globals.MixContentInfoFile;
-            if (!string.IsNullOrEmpty(mixContentFile)) {
+            if (!String.IsNullOrEmpty(mixContentFile)) {
                 mixContentFile = mixContentFile.Replace('\\', Path.DirectorySeparatorChar);
             }
             string mixPath = Path.Combine(Program.ApplicationPath, Globals.MixContentInfoFile);
@@ -153,22 +153,41 @@ namespace MobiusEditor
             {
                 // todo: log this somehow.
             }
-            if (!Globals.UseClassicFiles && runPath != null)
+            if (!Globals.UseClassicFiles && RemasterRunPath != null)
             {
-                loadOk = StartupLoader.LoadEditorRemastered(runPath, modPaths, romfis);
+                loadOk = StartupLoader.LoadEditorRemastered(RemasterRunPath, modPaths, romfis);
             }
             else if (Globals.UseClassicFiles)
             {
-                loadOk = StartupLoader.LoadEditorClassic(ApplicationPath, modPaths, romfis);
+                loadOk = StartupLoader.LoadEditorClassic(ApplicationPath, RemasterRunPath, modPaths, romfis);
             }
             if (!loadOk)
             {
                 return;
             }
+            // Always default the run path to the app path.
+            Environment.CurrentDirectory = Program.ApplicationPath;
             bool steamEnabled = false;
-            if (SteamworksUGC.IsSteamBuild && !Properties.Settings.Default.LazyInitSteam)
+            if (!Properties.Settings.Default.LazyInitSteam)
             {
-                steamEnabled = SteamworksUGC.Init();
+                string runPath = RemasterRunPath;
+                if (runPath != null)
+                {
+                    // Required for Steam interface to work.
+                    Environment.CurrentDirectory = runPath;
+                    if (SteamAssist.TryGetSteamId(Environment.CurrentDirectory) != null)
+                    {
+                        try
+                        {
+                            steamEnabled = SteamworksUGC.Init();
+                        }
+                        catch (DllNotFoundException ex)
+                        {
+                            MessageBox.Show(ex.Message, "Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
+                            return;
+                        }
+                    }
+                }
             }
             if (steamEnabled & Properties.Settings.Default.ShowInviteWarning)
             {
@@ -182,7 +201,7 @@ namespace MobiusEditor
                     Properties.Settings.Default.Save();
                 }
             }
-            String arg = null;
+            string arg = null;
             try
             {
                 if (args.Length > 0 && File.Exists(args[0]))
@@ -238,7 +257,7 @@ namespace MobiusEditor
         /// </summary>
         /// <param name="currentSettingsVer">Curent version fetched from the settings.</param>
         /// <param name="versionSetter">Delegate to set the version into the settings after the process is complete.</param>
-        private static void CopyLastUserConfig(String currentSettingsVer, Action<String> versionSetter)
+        private static void CopyLastUserConfig(string currentSettingsVer, Action<string> versionSetter)
         {
             AssemblyName assn = Assembly.GetExecutingAssembly().GetName();
             Version currentVersion = assn.Version;
@@ -329,8 +348,8 @@ namespace MobiusEditor
                         break;
                 }
             }
-            string previousVersionConfigFile = previousSettingsDir == null ? null : string.Concat(previousSettingsDir.FullName, @"\", userConfigFileName);
-            string currentVersionConfigFile = string.Concat(currentVersionConfigFileDir.FullName, @"\", userConfigFileName);
+            string previousVersionConfigFile = previousSettingsDir == null ? null : String.Concat(previousSettingsDir.FullName, @"\", userConfigFileName);
+            string currentVersionConfigFile = String.Concat(currentVersionConfigFileDir.FullName, @"\", userConfigFileName);
             if (!currentVersionConfigFileDir.Exists)
             {
                 Directory.CreateDirectory(currentVersionConfigFileDir.FullName);

@@ -11,7 +11,6 @@
 //    TERMS AND CONDITIONS FOR COPYING, DISTRIBUTION AND MODIFICATION
 //
 //   0. You just DO WHAT THE FUCK YOU WANT TO.
-using System;
 using System.Collections.Generic;
 using System.Windows.Forms;
 
@@ -22,18 +21,21 @@ namespace MobiusEditor.Controls.ControlsList
     /// </summary>
     /// <typeparam name="T">Type of the user controls with which to populate the list.</typeparam>
     /// <typeparam name="TU">Type of the information objects that contain all information to create/manage a listed control.</typeparam>
-    public abstract class CustomControlInfo<T, TU> where T : Control
+    /// <typeparam name="TA">Type of the actions information sent to the controller's update function.</typeparam>
+    /// <typeparam name="TR">Return type of the controller's update function.</typeparam>
+    public abstract class CustomControlInfo<T, TU, TA, TR> where T : Control
     {
-        public String Name { get; set; }
+        public string Name { get; set; }
         public TU[] Properties { get; set; }
 
-        public abstract T MakeControl(TU property, ListedControlController<TU> controller);
-        public abstract void UpdateControl(TU property, ListedControlController<TU> controller, T control);
+        public abstract T MakeControl(TU property, IListedControlController<TU, TA, TR> controller, int index);
+        public abstract void UpdateControl(TU property, IListedControlController<TU, TA, TR> controller, T control, int index);
         public abstract T GetControlByProperty(TU property, IEnumerable<T> controls);
+        public abstract void HideControlTooltips(T control);
 
-        public override String ToString()
+        public override string ToString()
         {
-            return this.Name;
+            return Name ?? GetType().Name;
         }
     }
 }

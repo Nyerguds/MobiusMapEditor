@@ -47,5 +47,19 @@ namespace MobiusEditor.RedAlert
         [TypeConverter(typeof(OneZeroBooleanTypeConverter))]
         [DefaultValue(0)]
         public bool Buildable { get; set; }
+
+        public void CloneFrom(LandIniSection landInfo)
+        {
+            Foot = landInfo.Foot;
+            Track = landInfo.Track;
+            Wheel = landInfo.Wheel;
+            Float = landInfo.Float;
+            Buildable = landInfo.Buildable;
+        }
+
+        public LandIniSection Clone()
+        {
+            return new LandIniSection(Foot, Track, Wheel, Float, Buildable);
+        }
     }
 }

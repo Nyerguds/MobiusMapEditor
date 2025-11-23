@@ -14,23 +14,30 @@
 using MobiusEditor.Controls.ControlsList;
 using MobiusEditor.Interface;
 using MobiusEditor.Model;
-using System;
 using System.Collections.Generic;
 using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 
 namespace MobiusEditor.Controls
 {
-    public class TeamItemInfo : CustomControlInfo<TeamItemControl, TeamTypeClass>
+    public class TeamItemInfo : CustomControlInfo<TeamItemControl, TeamTypeClass, char, int>
     {
         ITechnoType[] technos;
 
-        public TeamItemInfo(String name, IEnumerable<TeamTypeClass> properties, IEnumerable<ITechnoType> technos)
+        public TeamItemInfo(string name, IEnumerable<TeamTypeClass> properties, IEnumerable<ITechnoType> technos)
         {
             Name = name;
             Properties = properties.ToArray();
             this.technos = technos.ToArray();
+        }
+
+        public override TeamItemControl MakeControl(TeamTypeClass property, IListedControlController<TeamTypeClass, char, int> controller, int index)
+        {
+            return new TeamItemControl(property, controller, technos);
+        }
+
+        public override void UpdateControl(TeamTypeClass property, IListedControlController<TeamTypeClass, char, int> controller, TeamItemControl control, int index)
+        {
+            control.SetInfo(property, controller, technos);
         }
 
         public override TeamItemControl GetControlByProperty(TeamTypeClass property, IEnumerable<TeamItemControl> controls)
@@ -38,14 +45,9 @@ namespace MobiusEditor.Controls
             return controls.FirstOrDefault(ctrl => ReferenceEquals(ctrl.Info, property));
         }
 
-        public override TeamItemControl MakeControl(TeamTypeClass property, ListedControlController<TeamTypeClass> controller)
+        public override void HideControlTooltips(TeamItemControl control)
         {
-            return new TeamItemControl(property, controller, technos);
-        }
-
-        public override void UpdateControl(TeamTypeClass property, ListedControlController<TeamTypeClass> controller, TeamItemControl control)
-        {
-            control.SetInfo(property, controller, technos);
+            // Nothing to do; no tooltips on these.
         }
     }
 }

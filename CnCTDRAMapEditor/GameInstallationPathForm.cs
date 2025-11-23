@@ -53,13 +53,13 @@ namespace MobiusEditor
 
         private void btnContinue_Click(object sender, EventArgs e)
         {
-            String dir = textBox1.Text;
-            Boolean checkPassed = false;
+            string dir = textBox1.Text;
+            bool checkPassed = false;
             try
             {
                 if (new FileInfo(dir).Attributes.HasFlag(FileAttributes.Directory))
                     dir = dir.TrimEnd(Path.DirectorySeparatorChar) + Path.DirectorySeparatorChar;
-                String fileToCheck = Path.Combine(Path.GetDirectoryName(dir), "DATA", "CONFIG.MEG");
+                string fileToCheck = Path.Combine(Path.GetDirectoryName(dir), "DATA", "CONFIG.MEG");
                 checkPassed = File.Exists(fileToCheck);
             }
             catch (SecurityException) { /* Check not passed */}

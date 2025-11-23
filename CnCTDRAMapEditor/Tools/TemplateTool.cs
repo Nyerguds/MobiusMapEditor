@@ -39,7 +39,7 @@ namespace MobiusEditor.Tools
         {
             get
             {
-                MapLayerFlag handled = MapLayerFlag.Boundaries | MapLayerFlag.LandTypes | MapLayerFlag.TechnoOccupancy;
+                MapLayerFlag handled = MapLayerFlag.Boundaries | MapLayerFlag.LandTypes | MapLayerFlag.TechnoOccupancy | MapLayerFlag.HomeAreaBox;
                 if (boundsMode)
                 {
                     handled |= MapLayerFlag.MapSymmetry;
@@ -59,7 +59,7 @@ namespace MobiusEditor.Tools
 
         private readonly Dictionary<int, Template> undoTemplates = new Dictionary<int, Template>();
         private readonly Dictionary<int, Template> redoTemplates = new Dictionary<int, Template>();
-        private String lastPlaced;
+        private string lastPlaced;
 
         private Map previewMap;
         protected override Map RenderMap => previewMap;
@@ -67,7 +67,7 @@ namespace MobiusEditor.Tools
         public override bool IsBusy { get { return undoTemplates.Count > 0; } }
 
         // Uses a dummy Template object with the type and selected cell, with -1 if no specific cell is selected.
-        public override Object CurrentObject
+        public override object CurrentObject
         {
             get
             {
@@ -116,7 +116,7 @@ namespace MobiusEditor.Tools
 
         private bool placementMode;
 
-        protected override Boolean InPlacementMode
+        protected override bool InPlacementMode
         {
             get { return placementMode || fillMode; }
         }
@@ -142,7 +142,7 @@ namespace MobiusEditor.Tools
                     // Get clear terrain from list entries.
                     foreach (ListViewItem item in templateTypeListView.Items)
                     {
-                        if (item.Tag is TemplateType tt && tt.Flag == TemplateTypeFlag.Clear)
+                        if (item.Tag is TemplateType tt && tt.Flags == TemplateTypeFlag.Clear)
                         {
                             value = tt;
                             break;
@@ -234,7 +234,7 @@ namespace MobiusEditor.Tools
                 return m.Success ? m.Groups[1].Value : string.Empty;
             }
             TheaterType theater = plugin.Map.Theater;
-            TemplateType clear = plugin.Map.TemplateTypes.Where(t => t.Flag.HasFlag(TemplateTypeFlag.Clear)).FirstOrDefault();
+            TemplateType clear = plugin.Map.TemplateTypes.Where(t => t.Flags.HasFlag(TemplateTypeFlag.Clear)).FirstOrDefault();
             if (clear.Thumbnail == null || !clear.Initialised)
             {
                 // Clear should ALWAYS be initialised and available, even if missing.
@@ -249,8 +249,8 @@ namespace MobiusEditor.Tools
             }
             var templateTypes = plugin.Map.TemplateTypes
                 .Where(t => t.Thumbnail != null && (!Globals.FilterTheaterObjects || t.ExistsInTheater)
-                    && !t.Flag.HasFlag(TemplateTypeFlag.Clear)
-                    && !t.Flag.HasFlag(TemplateTypeFlag.IsGrouped))
+                    && !t.Flags.HasFlag(TemplateTypeFlag.Clear)
+                    && !t.Flags.HasFlag(TemplateTypeFlag.IsGrouped))
                 .OrderBy(t => t.Name, expl)
                 .GroupBy(t => templateCategory(t)).OrderBy(g => g.Key, expl);
             List<Bitmap> templateTypeImages = new List<Bitmap>();
@@ -333,10 +333,10 @@ namespace MobiusEditor.Tools
             GeneralUtils.SendMessage(listview.Handle, LVM_SETICONSPACING, IntPtr.Zero, (IntPtr)arg);
         }
 
-        private void Url_UndoRedoDone(object sender, UndoRedoEventArgs e)
+        private void Url_UndoRedoDone(object sender, UndoRedoEventArgs ev)
         {
             // Only update this stuff if the undo/redo event was actually a map change.
-            if (!e.Source.HasFlag(ToolType.Map))
+            if (!ev.Source.HasFlag(ToolType.Map))
             {
                 return;
             }
@@ -460,9 +460,9 @@ namespace MobiusEditor.Tools
                     using (Pen selectedIconPen = new Pen(Color.LightSkyBlue, Math.Max(1, scale / 16)))
                     {
                         Size cellSize = new Size(scale, scale);
-                        for (int y = 0; y < height; y++)
+                        for (int y = 0; y < height; ++y)
                         {
-                            for (int x = 0; x < width; x++)
+                            for (int x = 0; x < width; ++x)
                             {
                                 if (icon >= selected.NumIcons)
                                 {
@@ -490,7 +490,7 @@ namespace MobiusEditor.Tools
                 Alignment = StringAlignment.Center,
                 LineAlignment = StringAlignment.Center
             };
-            string text = string.Format("{0} ({1}x{2})", selected.DisplayName, selected.IconWidth, selected.IconHeight);
+            string text = String.Format("{0} ({1}x{2})", selected.DisplayName, selected.IconWidth, selected.IconHeight);
             SizeF textSize = e.Graphics.MeasureString(text, SystemFonts.CaptionFont) + new SizeF(6.0f, 6.0f);
             RectangleF textBounds = new RectangleF(new PointF(0, 0), textSize);
             using (SolidBrush sizeBackgroundBrush = new SolidBrush(Color.FromArgb(128, Color.Black)))
@@ -595,7 +595,7 @@ namespace MobiusEditor.Tools
             TemplateType selected = SelectedTemplateType;
             if (button == MouseButtons.Left)
             {
-                if (selected == null || selected.Flag.HasFlag(TemplateTypeFlag.Clear))
+                if (selected == null || selected.Flags.HasFlag(TemplateTypeFlag.Clear))
                 {
                     RemoveTemplate(navigationWidget.ActualMouseCell);
                 }
@@ -633,7 +633,7 @@ namespace MobiusEditor.Tools
             if (place || is1x1)
             {
                 TemplateType toFind = map.Templates[currentCell]?.Type;
-                if (toFind != null && toFind.Flag.HasFlag(TemplateTypeFlag.IsGrouped) && toFind.GroupTiles.Length == 1)
+                if (toFind != null && toFind.Flags.HasFlag(TemplateTypeFlag.IsGrouped) && toFind.GroupTiles.Length == 1)
                 {
                     string owningType = toFind.GroupTiles[0];
                     TemplateType group = map.TemplateTypes.Where(t => t.Name.Equals(owningType, StringComparison.InvariantCultureIgnoreCase)).FirstOrDefault();
@@ -662,7 +662,7 @@ namespace MobiusEditor.Tools
                 // Detect any group types inside it and get the full list.
                 foreach (TemplateType tp in typesToFind)
                 {
-                    if (tp != null && tp.Flag.HasFlag(TemplateTypeFlag.IsGrouped) && tp.GroupTiles.Length == 1)
+                    if (tp != null && tp.Flags.HasFlag(TemplateTypeFlag.IsGrouped) && tp.GroupTiles.Length == 1)
                     {
                         string owningType = tp.GroupTiles[0];
                         TemplateType group = map.TemplateTypes.Where(t => t.Name.Equals(owningType, StringComparison.InvariantCultureIgnoreCase)).FirstOrDefault();
@@ -739,7 +739,7 @@ namespace MobiusEditor.Tools
             undoTemplates.Clear();
             redoTemplates.Clear();
             // Prevent it from placing down actual clear terrain.
-            bool isClear = clear || selected.Flag.HasFlag(TemplateTypeFlag.Clear);
+            bool isClear = clear || selected.Flags.HasFlag(TemplateTypeFlag.Clear);
             if (isClear || icon.HasValue || is1x1)
             {
                 foreach (Point fill in fillPoints)
@@ -800,7 +800,7 @@ namespace MobiusEditor.Tools
             CommitTileChanges(true);
         }
 
-        public static String RandomizeTiles(IGamePlugin plugin, MapPanel mapPanel, UndoRedoList<UndoRedoEventArgs, ToolType> url)
+        public static string RandomizeTiles(IGamePlugin plugin, MapPanel mapPanel, UndoRedoList<UndoRedoEventArgs, ToolType> url)
         {
             Random rnd = new Random();
             Dictionary<int, Template> undoTemplates = new Dictionary<int, Template>();
@@ -815,7 +815,7 @@ namespace MobiusEditor.Tools
             for (int i = 0; i < mapLength; ++i)
             {
                 Point location = new Point(i / mapWidth, i % mapWidth);
-                // For grouped tiles, PickTemplate will return the Group, not the individual tile. So RandomCell is enabled on the result.
+                // For grouped tiles, PickTemplate will return the Group, not the individual tile. So the RandomCell flag is enabled on the result.
                 TemplateType cur = PickTemplate(map, location, true, out _);
                 if (cur == null || !cur.IsRandom)
                 {
@@ -839,9 +839,10 @@ namespace MobiusEditor.Tools
         private void MapPanel_MouseLeave(object sender, EventArgs e)
         {
             ExitAllModes();
+            MapPanel_MouseUp(sender, new MouseEventArgs(MouseButtons.None, 0, 0, 0, 0));
         }
 
-        private void MapPanel_MouseWheel(Object sender, MouseEventArgs e)
+        private void MapPanel_MouseWheel(object sender, MouseEventArgs e)
         {
             if (e.Delta == 0 || !Control.ModifierKeys.HasFlag(Keys.Control))
             {
@@ -1131,18 +1132,18 @@ namespace MobiusEditor.Tools
                 }
                 // Consider placing an alternate if something is already placed, and the selected tile has alternates.
                 if (Globals.TileDragRandomize && redoTemplates.Count > 0
-                    && selected.Flag.HasFlag(TemplateTypeFlag.HasEquivalents)
+                    && selected.Flags.HasFlag(TemplateTypeFlag.HasEquivalents)
                     && selected.GroupTiles != null && selected.GroupTiles.Length > 0)
                 {
                     // Remove last-placed from possible placed tiles so each new placed one is unique.
-                    List<String> alts = selected.GroupTiles.Where(x => x != null && !x.Equals(lastPlaced, StringComparison.OrdinalIgnoreCase)).ToList();
+                    List<string> alts = selected.GroupTiles.Where(x => x != null && !x.Equals(lastPlaced, StringComparison.OrdinalIgnoreCase)).ToList();
                     // If there is only one alternate, just randomise between both, to avoid getting a repeating alternating pattern.
                     if (alts.Count == 1)
                     {
                         alts.Add(selected.Name);
                     }
                     int entry = random.Next(0, alts.Count);
-                    String tile = alts[entry];
+                    string tile = alts[entry];
                     TemplateType newtile = this.map.TemplateTypes.FirstOrDefault(tt => tile.Equals(tt.Name, StringComparison.OrdinalIgnoreCase));
                     if (newtile != null)
                     {
@@ -1164,20 +1165,43 @@ namespace MobiusEditor.Tools
             }
         }
 
+        /// <summary>
+        /// Places a template or a single template tile down on the map.
+        /// </summary>
+        /// <param name="map">Map to perform the operations on, and to take the available tiles list from.</param>
+        /// <param name="selected">The currently selected template type.</param>
+        /// <param name="location">The location at which to place the template.</param>
+        /// <param name="selectedIcon">The currently selected icon. If null, the entire template will be placed.</param>
+        /// <param name="undoTemplates">Undo list to log the change to.</param>
+        /// <param name="redoTemplates">Redo list to log the change to.</param>
+        /// <param name="randomizer">Randomizer to use for random pick operations.</param>
+        /// <param name="diversify">True if this is a sequential randomization operation, and the adjacent tiles need to be different from the previously placed adjacent ones.</param>
         public static void SetTemplate(Map map, TemplateType selected, Point location, Point? selectedIcon,
-            Dictionary<int, Template> undoTemplates, Dictionary<int, Template> redoTemplates, Random randomiser, bool diversify)
+            Dictionary<int, Template> undoTemplates, Dictionary<int, Template> redoTemplates, Random randomizer, bool diversify)
         {
-            SetTemplate(map.TemplateTypes, map.Templates, selected, location, selectedIcon, undoTemplates, redoTemplates, randomiser, diversify);
+            SetTemplate(map.TemplateTypes, map.Templates, selected, location, selectedIcon, undoTemplates, redoTemplates, randomizer, diversify);
         }
 
+        /// <summary>
+        /// Places a template or a single template tile down on the map.
+        /// </summary>
+        /// <param name="templateTypes">List of available template types.</param>
+        /// <param name="templates">Map layer to place the template tile on.</param>
+        /// <param name="selected">The currently selected template type.</param>
+        /// <param name="location">The location at which to place the template.</param>
+        /// <param name="selectedIcon">The currently selected icon. If null, the entire template will be placed.</param>
+        /// <param name="undoTemplates">Undo list to log the change to.</param>
+        /// <param name="redoTemplates">Redo list to log the change to.</param>
+        /// <param name="randomizer">Randomizer to use for random pick operations.</param>
+        /// <param name="diversify">True if this is a sequential randomization operation, and the adjacent tiles need to be different from the previously placed adjacent ones.</param>
         public static void SetTemplate(List<TemplateType> templateTypes, CellGrid<Template> templates, TemplateType selected, Point location, Point? selectedIcon,
-            Dictionary<int, Template> undoTemplates, Dictionary<int, Template> redoTemplates, Random randomiser, bool diversify)
+            Dictionary<int, Template> undoTemplates, Dictionary<int, Template> redoTemplates, Random randomizer, bool diversify)
         {
             if (selected == null)
             {
                 return;
             }
-            bool isGroup = selected.Flag.HasFlag(TemplateTypeFlag.Group);
+            bool isGroup = selected.Flags.HasFlag(TemplateTypeFlag.Group);
             if (selectedIcon.HasValue)
             {
                 if (templates.Metrics.GetCell(location, out int cell))
@@ -1243,24 +1267,24 @@ namespace MobiusEditor.Tools
                                 if (diversify && selected.NumIcons > 4)
                                 {
                                     Template adjNorth = templates.Adjacent(location, FacingType.North);
-                                    if (adjNorth != null && adjNorth.Type.Flag.HasFlag(TemplateTypeFlag.IsGrouped)
+                                    if (adjNorth != null && adjNorth.Type.Flags.HasFlag(TemplateTypeFlag.IsGrouped)
                                         && adjNorth.Type.GroupTiles[0] == selected.Name)
                                     {
                                         used.Add(adjNorth.Type.ID);
                                     }
                                     Template adjWest = templates.Adjacent(location, FacingType.West);
-                                    if (adjWest != null && adjWest.Type.Flag.HasFlag(TemplateTypeFlag.IsGrouped)
+                                    if (adjWest != null && adjWest.Type.Flags.HasFlag(TemplateTypeFlag.IsGrouped)
                                         && adjWest.Type.GroupTiles[0] == selected.Name)
                                     {
                                         used.Add(adjWest.Type.ID);
                                     }
                                 }
-                                int randomType = randomiser.Next(0, selected.NumIcons);
+                                int randomType = randomizer.Next(0, selected.NumIcons);
                                 placeType = templateTypes.Where(t => t.Name == selected.GroupTiles[randomType]).FirstOrDefault();
                                 placeIcon = 0;
                                 while (used.Contains(placeType.ID))
                                 {
-                                    randomType = randomiser.Next(0, selected.NumIcons);
+                                    randomType = randomizer.Next(0, selected.NumIcons);
                                     placeType = templateTypes.Where(t => t.Name == selected.GroupTiles[randomType]).FirstOrDefault();
                                 }
                             }
@@ -1282,10 +1306,10 @@ namespace MobiusEditor.Tools
                                         used.Add(adjWest.Icon);
                                     }
                                 }
-                                placeIcon = randomiser.Next(0, selected.NumIcons);
+                                placeIcon = randomizer.Next(0, selected.NumIcons);
                                 while (used.Contains(placeIcon))
                                 {
-                                    placeIcon = randomiser.Next(0, selected.NumIcons);
+                                    placeIcon = randomizer.Next(0, selected.NumIcons);
                                 }
                             }
                             else
@@ -1506,7 +1530,7 @@ namespace MobiusEditor.Tools
             FacingType showEdge = dragEdge != FacingType.None ? dragEdge : DetectDragEdge(dragStartPoint.HasValue);
             if (boundsMode && (showEdge != FacingType.None || (dragStartPoint.HasValue && dragStartBounds.HasValue)))
             {
-                string tooltip = string.Format("X = {0}\nY = {1}\nWidth = {2}\nHeight = {3}", dragBounds.Left, dragBounds.Top, dragBounds.Width, dragBounds.Height);
+                string tooltip = String.Format("X = {0}\nY = {1}\nWidth = {2}\nHeight = {3}", dragBounds.Left, dragBounds.Top, dragBounds.Width, dragBounds.Height);
                 Size textSize = TextRenderer.MeasureText(tooltip, SystemFonts.CaptionFont);
                 Size tooltipSize = new Size(textSize.Width + 6, textSize.Height + 6);
                 Point mouseCell = navigationWidget.MouseCell;
@@ -1617,7 +1641,7 @@ namespace MobiusEditor.Tools
             bool groupOwned = false;
             if (template != null)
             {
-                if (template.Type.Flag.HasFlag(TemplateTypeFlag.IsGrouped) && template.Type.GroupTiles.Length == 1)
+                if (template.Type.Flags.HasFlag(TemplateTypeFlag.IsGrouped) && template.Type.GroupTiles.Length == 1)
                 {
                     groupOwned = true;
                     string owningType = template.Type.GroupTiles[0];
@@ -1656,7 +1680,7 @@ namespace MobiusEditor.Tools
             return picked;
         }
 
-        private FacingType DetectDragEdge(Boolean isDragging)
+        private FacingType DetectDragEdge(bool isDragging)
         {
             Point mouseCell = navigationWidget.ClosestMouseCellBorder;
             Point realMouseCell = navigationWidget.MouseCell;
@@ -1742,44 +1766,47 @@ namespace MobiusEditor.Tools
                 {
                     updCells = null;
                 }
-                bool origDirtyState = plugin.Dirty;
+                bool origEmptyState = plugin.Empty;
                 plugin.Dirty = true;
-                void undoAction(UndoRedoEventArgs ure)
+                void undoAction(UndoRedoEventArgs ev)
                 {
-                    ure.Map.Bounds = oldBounds;
+                    ev.Map.Bounds = oldBounds;
                     if (updCells == null)
                     {
-                        ure.MapPanel.Invalidate();
+                        ev.MapPanel.Invalidate();
                     }
                     else
                     {
                         // Tools that paint from a cloned map update this automatically, but not all tools use a cloned map, and undo/redo
                         // actions can happen after switching to a different tool. Also better to just have it correct in the real map.
-                        ure.Map.UpdateResourceOverlays(updCells, true);
-                        ure.MapPanel.Invalidate(ure.Map, updCells);
+                        ev.Map.UpdateResourceOverlays(updCells, true);
+                        ev.MapPanel.Invalidate(ev.Map, updCells);
                     }
-                    if (ure.Plugin != null)
+                    if (ev.Plugin != null)
                     {
-                        ure.Plugin.Dirty = origDirtyState;
+                        ev.Plugin.Empty = origEmptyState;
+                        ev.Plugin.Dirty = !ev.NewStateIsClean;
                     }
                 }
-                void redoAction(UndoRedoEventArgs ure)
+                void redoAction(UndoRedoEventArgs ev)
                 {
-                    ure.Map.Bounds = newBounds;
+                    ev.Map.Bounds = newBounds;
                     if (updCells == null)
                     {
-                        ure.MapPanel.Invalidate();
+                        ev.MapPanel.Invalidate();
                     }
                     else
                     {
                         // Tools that paint from a cloned map update this automatically, but not all tools use a cloned map, and undo/redo
                         // actions can happen after switching to a different tool. Also better to just have it correct in the real map.
-                        ure.Map.UpdateResourceOverlays(updCells, true);
-                        ure.MapPanel.Invalidate(ure.Map, updCells);
+                        ev.Map.UpdateResourceOverlays(updCells, true);
+                        ev.MapPanel.Invalidate(ev.Map, updCells);
                     }
-                    if (ure.Plugin != null)
+                    if (ev.Plugin != null)
                     {
-                        ure.Plugin.Dirty = true;
+                        // Redo can never restore the "empty" state, but CAN be the point at which a save was done.
+                        ev.Plugin.Empty = false;
+                        ev.Plugin.Dirty = !ev.NewStateIsClean;
                     }
                 }
                 map.Bounds = newBounds;
@@ -1816,31 +1843,34 @@ namespace MobiusEditor.Tools
                 return;
             }
             Dictionary<int, Template> undoTemplates2 = new Dictionary<int, Template>(undoTemplates);
-            bool origDirtyState = plugin.Dirty;
+            bool origEmptyState = plugin.Empty;
             plugin.Dirty = true;
-            void undoAction(UndoRedoEventArgs e)
+            void undoAction(UndoRedoEventArgs ev)
             {
                 foreach (KeyValuePair<int, Template> kv in undoTemplates2)
                 {
-                    e.Map.Templates[kv.Key] = kv.Value;
+                    ev.Map.Templates[kv.Key] = kv.Value;
                 }
-                e.MapPanel.Invalidate(e.Map, undoTemplates2.Keys);
-                if (e.Plugin != null)
+                ev.MapPanel.Invalidate(ev.Map, undoTemplates2.Keys);
+                if (ev.Plugin != null)
                 {
-                    e.Plugin.Dirty = origDirtyState;
+                    ev.Plugin.Empty = origEmptyState;
+                    ev.Plugin.Dirty = !ev.NewStateIsClean;
                 }
             }
             Dictionary<int, Template> redoTemplates2 = new Dictionary<int, Template>(redoTemplates);
-            void redoAction(UndoRedoEventArgs e)
+            void redoAction(UndoRedoEventArgs ev)
             {
                 foreach (KeyValuePair<int, Template> kv in redoTemplates2)
                 {
-                    e.Map.Templates[kv.Key] = kv.Value;
+                    ev.Map.Templates[kv.Key] = kv.Value;
                 }
-                e.MapPanel.Invalidate(e.Map, redoTemplates2.Keys);
-                if (e.Plugin != null)
+                ev.MapPanel.Invalidate(ev.Map, redoTemplates2.Keys);
+                if (ev.Plugin != null)
                 {
-                    e.Plugin.Dirty = true;
+                    // Redo can never restore the "empty" state, but CAN be the point at which a save was done.
+                    ev.Plugin.Empty = false;
+                    ev.Plugin.Dirty = !ev.NewStateIsClean;
                 }
             }
             undoTemplates.Clear();
@@ -2000,6 +2030,11 @@ namespace MobiusEditor.Tools
                     }
                 }
             }
+            // Render this after the bounding box.
+            if (Layers.HasFlag(MapLayerFlag.Waypoints | MapLayerFlag.HomeAreaBox) && plugin.Map.BasicSection.SoloMission)
+            {
+                MapRenderer.RenderHomeWayPointBox(graphics, plugin, map, visibleCells, Globals.MapTileSize, null, Color.Orange);
+            }
         }
 
         public override void Activate()
@@ -2011,6 +2046,7 @@ namespace MobiusEditor.Tools
             this.mapPanel.MouseMove += MapPanel_MouseMove;
             this.mapPanel.MouseLeave += MapPanel_MouseLeave;
             this.mapPanel.MouseWheel += MapPanel_MouseWheel;
+            this.mapPanel.LostFocus += MapPanel_MouseLeave;
             this.mapPanel.SuspendMouseZoomKeys = Keys.Control;
             (this.mapPanel as Control).KeyDown += TemplateTool_KeyDown;
             (this.mapPanel as Control).KeyUp += TemplateTool_KeyUp;
@@ -2040,6 +2076,7 @@ namespace MobiusEditor.Tools
             this.mapPanel.MouseMove -= MapPanel_MouseMove;
             this.mapPanel.MouseLeave -= MapPanel_MouseLeave;
             this.mapPanel.MouseWheel -= MapPanel_MouseWheel;
+            this.mapPanel.LostFocus -= MapPanel_MouseLeave;
             this.mapPanel.SuspendMouseZoomKeys = Keys.None;
             (this.mapPanel as Control).KeyDown -= TemplateTool_KeyDown;
             (this.mapPanel as Control).KeyUp -= TemplateTool_KeyUp;

@@ -191,44 +191,76 @@ namespace MobiusEditor.Utility
             return runPath;
         }
 
-        private static bool RemasterFileTest(String basePath)
+        private static bool RemasterFileTest(string basePath)
         {
             return File.Exists(Path.Combine(basePath, "DATA", "CONFIG.MEG"));
         }
 
-        public static bool LoadEditorRemastered(String runPath, Dictionary<GameType, string[]> modPaths, MixFileNameGenerator romfis)
+        public static bool LoadEditorRemastered(string runPath, Dictionary<GameType, string[]> modPaths, MixFileNameGenerator romfis)
         {
             // Initialize megafiles
-            Dictionary<GameType, String> gameFolders = new Dictionary<GameType, string>();
-            foreach (GameInfo gi in GameTypeFactory.GetGameInfos())
+            Dictionary<GameType, string> gameFolders = new Dictionary<GameType, string>();
+            GameInfo[] gameTypeInfo = GameTypeFactory.GetGameInfos();
+            foreach (GameInfo gameInfo in gameTypeInfo)
             {
-                gameFolders.Add(gi.GameType, gi.ClassicFolderRemasterData);
+                if (gameInfo != null)
+                {
+                    gameFolders.Add(gameInfo.GameType, gameInfo.ClassicFolderRemasterData);
+                }
             }
             MegafileManager mfm = new MegafileManager(Path.Combine(runPath, Globals.MegafilePath), runPath, modPaths, romfis, gameFolders);
-            var megafilesLoaded = true;
-            megafilesLoaded &= mfm.LoadArchive("CONFIG.MEG");
-            megafilesLoaded &= mfm.LoadArchive("TEXTURES_COMMON_SRGB.MEG");
-            megafilesLoaded &= mfm.LoadArchive("TEXTURES_RA_SRGB.MEG");
-            megafilesLoaded &= mfm.LoadArchive("TEXTURES_SRGB.MEG");
-            megafilesLoaded &= mfm.LoadArchive("TEXTURES_TD_SRGB.MEG");
-            if (!megafilesLoaded)
+            HashSet<string> remasterFilesFound = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
+            List<string> remasterFilesToLoad = new List<string>();
+            foreach (GameInfo gameInfo in gameTypeInfo)
             {
-                MessageBox.Show("Required data is missing or corrupt; please validate your installation.", "Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
+                if (gameInfo == null)
+                {
+                    continue;
+                }
+                string[] files = gameInfo.RemasterMegFiles;
+                foreach (string file in files)
+                {
+                    if (!remasterFilesFound.Contains(file))
+                    {
+                        remasterFilesToLoad.Add(file);
+                        remasterFilesFound.Add(file);
+                    }
+                }
+            }
+            List<string> megFileLoadErrors = new List<string>();
+            foreach (string remFile in remasterFilesToLoad)
+            {
+                if (!mfm.LoadArchive(remFile))
+                {
+                    megFileLoadErrors.Add(remFile);
+                }
+            }
+            if (megFileLoadErrors.Count > 0)
+            {
+                StringBuilder msg = new StringBuilder();
+                string arg = megFileLoadErrors.Count == 1 ? String.Empty : "s";
+                msg.Append(String.Format("Required data is missing or corrupt; please validate your installation. The following file{0} could not be opened:\n", arg));
+                string errors = String.Join("\n", megFileLoadErrors.ToArray());
+                msg.Append(errors);
+                MessageBox.Show(msg.ToString(), "Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
                 return false;
             }
             // Classic main.mix and theater files, for rules reading and template land type detection in RA.
             List<string> loadErrors = new List<string>();
             List<string> fileLoadErrors = new List<string>();
-            GameInfo[] gameTypeInfo = GameTypeFactory.GetGameInfos();
-            foreach (GameInfo gic in gameTypeInfo)
+            foreach (GameInfo gameInfo in gameTypeInfo)
             {
-                gic.InitClassicFiles(mfm.ClassicFileManager, loadErrors, fileLoadErrors, true);
+                if (gameInfo != null)
+                {
+                    gameInfo.InitClassicFiles(mfm.ClassicFileManager, loadErrors, fileLoadErrors, true);
+                }
             }
             mfm.Reset(GameType.None, null);
             if (loadErrors.Count > 0)
             {
                 StringBuilder msg = new StringBuilder();
-                msg.Append("Required classic data is missing or corrupt; please validate your installation. The following mix files could not be opened:\n");
+                string arg = loadErrors.Count == 1 ? String.Empty : "s";
+                msg.Append(String.Format("Required classic data is missing or corrupt; please validate your installation. The following mix file{0} could not be opened:\n", arg));
                 string errors = String.Join("\n", loadErrors.ToArray());
                 msg.Append(errors);
                 MessageBox.Show(msg.ToString(), "Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
@@ -248,11 +280,14 @@ namespace MobiusEditor.Utility
             TilesetManager tsm = new TilesetManager(mfm, Globals.TilesetsXMLPath, Globals.TexturesPath);
             Globals.TheTilesetManager = tsm;
             Globals.TheShapeCacheManager = new ShapeCacheManager();
-            foreach (GameInfo gic in gameTypeInfo)
+            foreach (GameInfo gameInfo in gameTypeInfo)
             {
-                foreach (TheaterType theater in gic.AllTheaters)
+                if (gameInfo != null)
                 {
-                    theater.IsRemasterTilesetFound = tsm.TilesetExists(theater.MainTileset);
+                    foreach (TheaterType theater in gameInfo.AllTheaters)
+                    {
+                        theater.IsRemasterTilesetFound = tsm.TilesetExists(theater.MainTileset);
+                    }
                 }
             }
             Globals.TheTeamColorManager = new TeamColorManager(mfm);
@@ -270,15 +305,15 @@ namespace MobiusEditor.Utility
                     cultureName = DEFAULT_CULTURE;
                     break;
             }
-            string gameTextFilename = string.Format(Globals.GameTextFilenameFormat, cultureName.ToUpper());
+            string gameTextFilename = String.Format(Globals.GameTextFilenameFormat, cultureName.ToUpper());
             if (!Globals.TheArchiveManager.FileExists(gameTextFilename))
             {
                 cultureName = DEFAULT_CULTURE;
-                gameTextFilename = string.Format(Globals.GameTextFilenameFormat, cultureName.ToUpper());
+                gameTextFilename = String.Format(Globals.GameTextFilenameFormat, cultureName.ToUpper());
             }
             GameTextManager gtm = new GameTextManager(Globals.TheArchiveManager, gameTextFilename);
             //gtm.Dump(Path.Combine(Program.ApplicationPath, "alltext.txt"));
-            AddMissingRemasterText(gtm);
+            gtm.AddMissing = (tm, gt) =>  AddMissingRemasterText(tm, gt);
             Globals.TheGameTextManager = gtm;
             return true;
         }
@@ -323,45 +358,60 @@ namespace MobiusEditor.Utility
             return DEFAULT_CULTURE;
         }
 
-        public static bool LoadEditorClassic(string applicationPath, Dictionary<GameType, string[]> modpaths, MixFileNameGenerator romfis)
+        public static bool LoadEditorClassic(string applicationPath, string remasterPath, Dictionary<GameType, string[]> modpaths, MixFileNameGenerator romfis)
         {
             // The system should scan all mix archives for known filenames of other mix archives so it can do recursive searches.
             // Mix files should be given in order or depth, so first give ones that are in the folder, then ones that may occur inside others.
             // The order of load determines the file priority; only the first found occurrence of a file is used.
-            GameType[] gameTypes = GameTypeFactory.GetGameTypes();
-            GameInfo[] gameTypeInfo = new GameInfo[gameTypes.Length];
+            GameInfo[] gameTypeInfo = GameTypeFactory.GetGameInfos();
             Dictionary<GameType, string> gameFolders = new Dictionary<GameType, string>();
-            foreach (GameType gi in gameTypes)
+            foreach (GameInfo gameInfo in gameTypeInfo)
             {
-                GameInfo gic = GameTypeFactory.GetGameInfo(gi);
-                gameTypeInfo[(int)gic.GameType] = gic;
-                string path = gic.ClassicFolder;
-                string pathFull = Path.GetFullPath(Path.Combine(applicationPath, gic.ClassicFolder));
-                if (!Directory.Exists(pathFull))
+                if (gameInfo == null)
                 {
-                    // Revert to default.
-                    path = gic.ClassicFolderDefault;
-                    pathFull = Path.GetFullPath(Path.Combine(applicationPath, path));
-                    if (!Directory.Exists(pathFull))
-                    {
-                        // As last-ditch effort, try to see if applicationPath is the remastered game folder.
-                        pathFull = Path.GetFullPath(Path.Combine(applicationPath, gic.ClassicFolderRemasterData));
-                        if (Directory.Exists(pathFull))
-                        {
-                            path = gic.ClassicFolderRemasterData;
-                        }
-                    }
+                    continue;
                 }
-                gameFolders.Add(gi, path);
+                string path = gameInfo.ClassicFolder;
+                string pathFull = Path.GetFullPath(Path.Combine(applicationPath, gameInfo.ClassicFolder));
+                bool found = Directory.Exists(pathFull);
+                // Setting is incorrect. Revert to default.
+                if (!found && !String.Equals(path, gameInfo.ClassicFolderDefault))
+                {
+                    path = gameInfo.ClassicFolderDefault;
+                    pathFull = Path.GetFullPath(Path.Combine(applicationPath, path));
+                    found = Directory.Exists(pathFull);
+                }
+                // Default not found. Try to use the remaster's classic files.
+                if (!found && remasterPath != null && Directory.Exists(remasterPath))
+                {
+                    string rPath = Path.Combine(remasterPath, "Data");
+                    path = Path.GetFullPath(Path.Combine(rPath, gameInfo.ClassicFolderRemasterData));
+                    pathFull = path;
+                    found = Directory.Exists(pathFull);
+                }
+                // Remaster data not found. As last-ditch effort, try to see if applicationPath is the remastered game folder.
+                if (!found)
+                {
+                    path = gameInfo.ClassicFolderRemasterData;
+                    pathFull = Path.GetFullPath(Path.Combine(applicationPath, path));
+                    found = Directory.Exists(pathFull);
+                }
+                if (!found)
+                {
+                    path = gameInfo.ClassicFolderDefault;
+                }
+                gameFolders.Add(gameInfo.GameType, path);
             }
             // Check files
             MixfileManager mfm = new MixfileManager(applicationPath, romfis, gameFolders, modpaths);
             List<string> loadErrors = new List<string>();
             List<string> fileLoadErrors = new List<string>();
-            foreach (GameType gi in gameTypes)
+            foreach (GameInfo gameInfo in gameTypeInfo)
             {
-                GameInfo gic = gameTypeInfo[(int)gi];
-                gic.InitClassicFiles(mfm, loadErrors, fileLoadErrors, false);
+                if (gameInfo != null)
+                {
+                    gameInfo.InitClassicFiles(mfm, loadErrors, fileLoadErrors, false);
+                }
             }
             mfm.Reset(GameType.None, null);
             if (loadErrors.Count > 0)
@@ -387,18 +437,19 @@ namespace MobiusEditor.Utility
             Globals.TheTilesetManager = new TilesetManagerClassic(mfm);
             Globals.TheShapeCacheManager = new ShapeCacheManager();
             Globals.TheTeamColorManager = new TeamRemapManager(mfm);
-            Dictionary<GameType, String> gameStringsFiles = new Dictionary<GameType, string>();
-            foreach (GameType gi in gameTypes)
+            Dictionary<GameType, string> gameStringsFiles = new Dictionary<GameType, string>();
+            foreach (GameInfo gameInfo in gameTypeInfo)
             {
-                GameInfo gic = gameTypeInfo[(int)gi];
-                gameStringsFiles.Add(gic.GameType, gic.ClassicStringsFile);
+                if (gameInfo != null)
+                {
+                    gameStringsFiles.Add(gameInfo.GameType, gameInfo.ClassicStringsFile);
+                }
             }
             GameTextManagerClassic gtm = new GameTextManagerClassic(mfm, gameStringsFiles);
-            AddMissingClassicText(gtm);
+            gtm.AddMissing = (tm, gt) => AddMissingClassicText(tm, gt);
             Globals.TheGameTextManager = gtm;
             return true;
         }
-
 
         /// <summary>
         /// Loads the mix file for a theater.
@@ -425,7 +476,7 @@ namespace MobiusEditor.Utility
         /// <param name="errors">Current list of errors to potentially add more to.</param>
         /// <param name="prefix">Prefix string to put before the filename on the newly added error line.</param>
         /// <param name="fileNames">One or more mix files to check. If multiple are given they are seen as interchangeable; if one exists in <paramref name="loadedFiles"/>, the check passes.</param>
-        public static void TestMixExists(List<string> loadedFiles, List<string> errors, string prefix, params string[] fileNames)
+        public static void TestMixExists(HashSet<string> loadedFiles, List<string> errors, string prefix, params string[] fileNames)
         {
             TestMixExists(loadedFiles, errors, prefix, null, true, fileNames);
         }
@@ -438,7 +489,7 @@ namespace MobiusEditor.Utility
         /// <param name="prefix">Prefix string to put before the filename on the newly added error line.</param>
         /// <param name="toInit">The theater for which the mix archive ahould be checked. Marks in the theater info whether it was found.</param>
         /// <param name="giveError">True to add an error in <paramref name="errors"/> if the file is not present.</param>
-        public static void TestMixExists(List<string> loadedFiles, List<string> errors, string prefix, TheaterType toInit, bool giveError)
+        public static void TestMixExists(HashSet<string> loadedFiles, List<string> errors, string prefix, TheaterType toInit, bool giveError)
         {
             if (toInit == null)
             {
@@ -457,7 +508,7 @@ namespace MobiusEditor.Utility
         /// <param name="toInit">If given, indicates that this mix file is the theater archive of a specific theater. Marks in the theater info whether it was found.</param>
         /// <param name="giveError">True to add an error in <paramref name="errors"/> if the file is not present.</param>
         /// <param name="fileNames">One or more mix files to check. If multiple are given they are seen as interchangeable; if one exists in <paramref name="loadedFiles"/>, the check passes.</param>
-        public static void TestMixExists(List<string> loadedFiles, List<string> errors, string prefix, TheaterType toInit, bool giveError, params string[] fileNames)
+        public static void TestMixExists(HashSet<string> loadedFiles, List<string> errors, string prefix, TheaterType toInit, bool giveError, params string[] fileNames)
         {
             bool anyExist = false;
             foreach (string fileName in fileNames)
@@ -498,15 +549,18 @@ namespace MobiusEditor.Utility
         /// in the map editor.
         /// </summary>
         /// <param name="gtm">The game text manager to apply these changes on.</param>
-        private static void AddMissingRemasterText(IGameTextManager gtm)
+        private static void AddMissingRemasterText(IGameTextManager gtm, GameType gameType)
         {
             // == Buildings ==
-            string fake = " (" + gtm["TEXT_UI_FAKE"] + ")";
-            if (!gtm["TEXT_STRUCTURE_RA_WEAF"].EndsWith(fake)) gtm["TEXT_STRUCTURE_RA_WEAF"] += fake;
-            if (!gtm["TEXT_STRUCTURE_RA_FACF"].EndsWith(fake)) gtm["TEXT_STRUCTURE_RA_FACF"] += fake;
-            if (!gtm["TEXT_STRUCTURE_RA_SYRF"].EndsWith(fake)) gtm["TEXT_STRUCTURE_RA_SYRF"] += fake;
-            if (!gtm["TEXT_STRUCTURE_RA_SPEF"].EndsWith(fake)) gtm["TEXT_STRUCTURE_RA_SPEF"] += fake;
-            if (!gtm["TEXT_STRUCTURE_RA_DOMF"].EndsWith(fake)) gtm["TEXT_STRUCTURE_RA_DOMF"] += fake;
+            if (gameType == GameType.RedAlert)
+            {
+                string fake = " (" + gtm["TEXT_UI_FAKE"] + ")";
+                if (!gtm["TEXT_STRUCTURE_RA_WEAF"].EndsWith(fake)) gtm["TEXT_STRUCTURE_RA_WEAF"] += fake;
+                if (!gtm["TEXT_STRUCTURE_RA_FACF"].EndsWith(fake)) gtm["TEXT_STRUCTURE_RA_FACF"] += fake;
+                if (!gtm["TEXT_STRUCTURE_RA_SYRF"].EndsWith(fake)) gtm["TEXT_STRUCTURE_RA_SYRF"] += fake;
+                if (!gtm["TEXT_STRUCTURE_RA_SPEF"].EndsWith(fake)) gtm["TEXT_STRUCTURE_RA_SPEF"] += fake;
+                if (!gtm["TEXT_STRUCTURE_RA_DOMF"].EndsWith(fake)) gtm["TEXT_STRUCTURE_RA_DOMF"] += fake;
+            }
             // == Civilian buildings ==
             gtm["TEXT_STRUCTURE_TITLE_OIL_PUMP"] = "Oil Pump";
             gtm["TEXT_STRUCTURE_TITLE_OIL_TANKER"] = "Oil Tanker";
@@ -514,21 +568,31 @@ namespace MobiusEditor.Utility
             gtm["TEXT_STRUCTURE_TITLE_CIV1B"] = gtm["TEXT_STRUCTURE_TITLE_CIV1"];
             // Haystacks. Extra ID added for classic support. Remaster only has the string "Haystack", so we'll just copy it.
             gtm["TEXT_STRUCTURE_TITLE_CIV12B"] = gtm["TEXT_STRUCTURE_TITLE_CIV12"];
+
             // == Overlay ==
-            gtm["TEXT_OVERLAY_CONCRETE_PAVEMENT"] = "Concrete";
-            gtm["TEXT_OVERLAY_ROAD"] = "Road";
-            gtm["TEXT_OVERLAY_ROAD_FULL"] = "Road (full)";
-            gtm["TEXT_OVERLAY_SQUISH_MARK"] = "Squish mark";
-            gtm["TEXT_OVERLAY_TIBERIUM"] = "Tiberium";
-            // Sole Survivor Teleporter
-            gtm["TEXT_OVERLAY_TELEPORTER"] = "Teleporter";
-            // "Gold" exists as "TEXT_CURRENCY_TACTICAL", so it does not need to be added.
-            gtm["TEXT_OVERLAY_GEMS"] = "Gems";
+            if (gameType == GameType.TiberianDawn || gameType == GameType.SoleSurvivor)
+            {
+                gtm["TEXT_OVERLAY_CONCRETE_PAVEMENT"] = "Concrete";
+                gtm["TEXT_OVERLAY_ROAD"] = "Road";
+                gtm["TEXT_OVERLAY_ROAD_FULL"] = "Road (full)";
+                gtm["TEXT_OVERLAY_SQUISH_MARK"] = "Squish mark";
+                gtm["TEXT_OVERLAY_TIBERIUM"] = "Tiberium";
+                if (gameType == GameType.SoleSurvivor)
+                {
+                    // Sole Survivor Teleporter
+                    gtm["TEXT_OVERLAY_TELEPORTER"] = "Teleporter";
+                }
+            }
+            else if (gameType == GameType.RedAlert)
+            {
+                // "Gold" exists as "TEXT_CURRENCY_TACTICAL", so it does not need to be added.
+                gtm["TEXT_OVERLAY_GEMS"] = "Gems";
+                gtm["TEXT_OVERLAY_WATER_CRATE"] = "Water Crate";
+            }
             gtm["TEXT_OVERLAY_WCRATE"] = "Wood Crate";
             gtm["TEXT_OVERLAY_SCRATE"] = "Steel Crate";
-            gtm["TEXT_OVERLAY_WATER_CRATE"] = "Water Crate";
             // == Terrain ==
-            gtm["TEXT_PROP_TITLE_TREES"] = "Trees";
+            gtm["TEXT_PROP_TITLE_TREES"] = gtm["TEXT_PROP_TITLE_TREE"];
             // == Smudge ==
             gtm["TEXT_SMUDGE_CRATER"] = "Crater";
             gtm["TEXT_SMUDGE_SCORCH"] = "Scorch Mark";
@@ -536,32 +600,39 @@ namespace MobiusEditor.Utility
         }
 
         /// <summary>
-        /// Adds strings that are missing in the classic files. Note that unlike for Remastered text,
-        /// the strings in this function cannot be composed from other strings; the actual strings files differ
-        /// per game, and this function is called before any maps are opened, meaning no game is chosen yet,
-        /// and no actual game files are loaded.
+        /// Adds strings that are missing in the classic files. This function is stored inside the
+        /// GameTextManagerClassic so it can be called whenever the strings are reset.
         /// </summary>
         /// <param name="gtm">The game text manager to apply these changes on.</param>
-        private static void AddMissingClassicText(IGameTextManager gtm)
+        private static void AddMissingClassicText(IGameTextManager gtm, GameType gameType)
         {
-            // Classic game text manager does not clear these extra strings when resetting the strings table.
-            // TD Overlay
-            gtm["TEXT_OVERLAY_ROAD_FULL"] = "Road (full)";
-            // Sole Survivor Teleporter
-            gtm["TEXT_OVERLAY_TELEPORTER"] = "Teleporter";
-            // TD Terrain
-            gtm["TEXT_PROP_TITLE_CACTUS"] = "Cactus";
-            // Terrain general
-            gtm["TEXT_PROP_TITLE_TREES"] = "Trees";
-            // RA Misc
-            gtm["TEXT_UI_FAKE"] = "FAKE";
-            // RA ants
-            gtm["TEXT_UNIT_RA_ANT1"] = "Warrior Ant";
-            gtm["TEXT_UNIT_RA_ANT2"] = "Fire Ant";
-            gtm["TEXT_UNIT_RA_ANT3"] = "Scout Ant";
-            gtm["TEXT_STRUCTURE_RA_QUEE"] = "Queen Ant";
-            gtm["TEXT_STRUCTURE_RA_LAR1"] = "Larva";
-            gtm["TEXT_STRUCTURE_RA_LAR2"] = "Larvae";
+            // == Buildings ==
+            if (gameType == GameType.RedAlert)
+            {
+                // ants
+                gtm["TEXT_UNIT_RA_ANT1"] = "Warrior Ant";
+                gtm["TEXT_UNIT_RA_ANT2"] = "Fire Ant";
+                gtm["TEXT_UNIT_RA_ANT3"] = "Scout Ant";
+                gtm["TEXT_STRUCTURE_RA_QUEE"] = "Queen Ant";
+                gtm["TEXT_STRUCTURE_RA_LAR1"] = "Larva";
+                gtm["TEXT_STRUCTURE_RA_LAR2"] = "Larvae";
+            }
+            // == Overlay ==
+            if (gameType == GameType.TiberianDawn || gameType == GameType.SoleSurvivor)
+            {
+                gtm["TEXT_OVERLAY_ROAD_FULL"] = gtm["TEXT_OVERLAY_ROAD"] + " (" + gtm["TEXT_READY"] + ")";
+            }
+            if (gameType == GameType.SoleSurvivor)
+            {
+                // Sole Survivor Teleporter
+                gtm["TEXT_OVERLAY_TELEPORTER"] = "Teleporter";
+            }
+            // == Terrain ==
+            gtm["TEXT_PROP_TITLE_TREES"] = gtm["TEXT_PROP_TITLE_TREE"];
+            if (gameType == GameType.TiberianDawn || gameType == GameType.SoleSurvivor)
+            {
+                gtm["TEXT_PROP_TITLE_CACTUS"] = "Cactus";
+            }
         }
 
     }

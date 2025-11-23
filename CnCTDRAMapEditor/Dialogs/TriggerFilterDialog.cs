@@ -43,11 +43,19 @@ namespace MobiusEditor.Dialogs
             }
         }
 
-        public TriggerFilterDialog(IGamePlugin plugin, String persistenceLabel, string[] persistenceNames, string[] eventControlNames, string[] currentTrigs)
+        public TriggerFilterDialog(IGamePlugin plugin, string persistenceLabel, string[] persistenceNames, string[] eventControlNames, string[] currentTrigs)
         {
+            if (Enum.GetValues(typeof(TriggerPersistentType)).Length != persistenceNames.Length)
+            {
+                throw new ArgumentException("Incorrect amount of persistence names!", "persistenceNames");
+            }
+            if (Enum.GetValues(typeof(TriggerMultiStyleType)).Length != eventControlNames.Length)
+            {
+                throw new ArgumentException("Incorrect amount of event control names!", "eventControlNames");
+            }
             this.persistenceNames = persistenceNames;
             this.eventControlNames = eventControlNames;
-            this.currentTrigs = (currentTrigs??new string[0]).Where(st => !String.IsNullOrWhiteSpace(st)).ToArray();
+            this.currentTrigs = (currentTrigs ?? new string[0]).Where(st => !String.IsNullOrWhiteSpace(st)).ToArray();
             this.plugin = plugin;
             this.isRA = this.plugin.GameInfo.GameType == GameType.RedAlert;
             InitializeComponent();
@@ -60,7 +68,7 @@ namespace MobiusEditor.Dialogs
             chkHouse.Checked = filter.FilterHouse;
             if (chkHouse.Checked)
             {
-                cmbHouse.SelectedIndex = ListItem.GetIndexInDropdownByLabel<long>(filter.House, cmbHouse);
+                cmbHouse.SelectedIndex = ListItem.GetIndexInComboBox(filter.House, cmbHouse);
             }
             chkPersistenceType.Checked = filter.FilterPersistenceType;
             if (chkPersistenceType.Checked)
@@ -69,32 +77,32 @@ namespace MobiusEditor.Dialogs
             }
             if (isRA)
             {
-                chkEventControl.Checked = filter.FilterEventControl;
+                chkEventControl.Checked = filter.FilterMultiStyle;
                 if (chkEventControl.Checked)
                 {
-                    cmbEventControl.SelectedIndex = ListItem.GetIndexInComboBox(filter.EventControl, cmbEventControl);
+                    cmbEventControl.SelectedIndex = ListItem.GetIndexInComboBox(filter.MultiStyle, cmbEventControl);
                 }
             }
             chkEventType.Checked = filter.FilterEventType;
             if (chkEventType.Checked)
             {
-                cmbEventType.SelectedItem = filter.EventType;
+                cmbEventType.SelectedIndex = ListItem.GetIndexInComboBox(filter.EventType, cmbEventType);
             }
             chkActionType.Checked = filter.FilterActionType;
             if (chkActionType.Checked)
             {
-                cmbActionType.SelectedItem = filter.ActionType;
+                cmbActionType.SelectedIndex = ListItem.GetIndexInComboBox(filter.ActionType, cmbActionType);
             }
             chkTeamType.Checked = filter.FilterTeamType;
             if (chkTeamType.Checked)
             {
-                cmbTeamType.SelectedItem = filter.TeamType;
+                cmbTeamType.SelectedIndex = ListItem.GetIndexInComboBox(filter.TeamTypeArg, cmbTeamType);
             }
-            string correctCaseName = currentTrigs.FirstOrDefault(tr => String.Equals(tr, filter.Trigger, StringComparison.Ordinal));
+            string correctCaseName = currentTrigs.FirstOrDefault(tr => String.Equals(tr, filter.TriggerArg, StringComparison.Ordinal));
             chkTrigger.Checked = filter.FilterTrigger && correctCaseName != null;
             if (chkTrigger.Checked)
             {
-                cmbTrigger.SelectedItem = correctCaseName;
+                cmbTrigger.SelectedIndex = ListItem.GetIndexInComboBox(correctCaseName, cmbTrigger);
             }
             if (isRA)
             {
@@ -123,98 +131,131 @@ namespace MobiusEditor.Dialogs
             chkGlobal.Checked = false;
         }
 
-        private void btnReset_Click(Object sender, EventArgs e)
+        private void btnReset_Click(object sender, EventArgs e)
         {
             ResetOptions();
         }
 
-        private void ChkHouse_CheckedChanged(Object sender, EventArgs e)
+        private void ChkHouse_CheckedChanged(object sender, EventArgs e)
         {
             cmbHouse.DataSource = null;
+            cmbHouse.ValueMember = null;
+            cmbHouse.DisplayMember = null;
             cmbHouse.Enabled = chkHouse.Checked;
             if (chkHouse.Checked)
             {
-                cmbHouse.DataSource = new ListItem<long>(-1, House.None).Yield().Concat(
-                                        this.plugin.Map.Houses.Select(t => new ListItem<long>(t.Type.ID, t.Type.Name))).ToArray();
+                cmbHouse.ValueMember = "Value";
+                cmbHouse.DisplayMember = "Label";
+                cmbHouse.DataSource = ListItem.Create(House.None).Yield().Concat(
+                                        this.plugin.Map.Houses.Select(t => ListItem.Create(t.Type.Name))).ToArray();
             }
         }
 
-        private void ChkPersistenceType_CheckedChanged(Object sender, EventArgs e)
+        private void ChkPersistenceType_CheckedChanged(object sender, EventArgs e)
         {
             cmbPersistenceType.DataSource = null;
+            cmbPersistenceType.ValueMember = null;
+            cmbPersistenceType.DisplayMember = null;
             cmbPersistenceType.Enabled = chkPersistenceType.Checked;
             if (chkPersistenceType.Checked)
             {
+                cmbPersistenceType.ValueMember = "Value";
+                cmbPersistenceType.DisplayMember = "Label";
                 cmbPersistenceType.DataSource = Enum.GetValues(typeof(TriggerPersistentType)).Cast<TriggerPersistentType>()
-                    .Select(v => new ListItem<TriggerPersistentType>(v, persistenceNames[(int)v])).ToArray();
+                    .Select(v => ListItem.Create(v, persistenceNames[(int)v])).ToArray();
             }
         }
 
-        private void ChkEventControl_CheckedChanged(Object sender, EventArgs e)
+        private void ChkEventControl_CheckedChanged(object sender, EventArgs e)
         {
             cmbEventControl.DataSource = null;
+            cmbEventControl.ValueMember = null;
+            cmbEventControl.DisplayMember = null;
             cmbEventControl.Enabled = isRA && chkEventControl.Checked;
             if (isRA && chkEventControl.Checked)
             {
+                cmbEventControl.ValueMember = "Value";
+                cmbEventControl.DisplayMember = "Label";
                 cmbEventControl.DataSource = Enum.GetValues(typeof(TriggerMultiStyleType)).Cast<TriggerMultiStyleType>()
-                    .Select(v => new ListItem<TriggerMultiStyleType>(v, eventControlNames[(int)v])).ToArray();
+                    .Select(v => ListItem.Create(v, eventControlNames[(int)v])).ToArray();
             }
         }
 
-        private void ChkEventType_CheckedChanged(Object sender, EventArgs e)
+        private void ChkEventType_CheckedChanged(object sender, EventArgs e)
         {
             cmbEventType.DataSource = null;
+            cmbEventType.ValueMember = null;
+            cmbEventType.DisplayMember = null;
             cmbEventType.Enabled = chkEventType.Checked;
             if (chkEventType.Checked)
             {
-                cmbEventType.DataSource = plugin.Map.EventTypes.Where(t => !string.IsNullOrEmpty(t)).ToArray();
+                cmbEventType.ValueMember= "Value";
+                cmbEventType.DisplayMember = "Label";
+                cmbEventType.DataSource = plugin.Map.EventTypes.Where(t => !string.IsNullOrEmpty(t)).Select(et => ListItem.Create(et)).ToArray();
             }
         }
 
-        private void ChkActionType_CheckedChanged(Object sender, EventArgs e)
+        private void ChkActionType_CheckedChanged(object sender, EventArgs e)
         {
             cmbActionType.DataSource = null;
+            cmbActionType.ValueMember = null;
+            cmbActionType.DisplayMember = null;
             cmbActionType.Enabled = chkActionType.Checked;
             if (chkActionType.Checked)
             {
-                cmbActionType.DataSource = plugin.Map.ActionTypes.Where(t => !string.IsNullOrEmpty(t)).ToArray();
+                cmbActionType.ValueMember= "Value";
+                cmbActionType.DisplayMember = "Label";
+                cmbActionType.DataSource = plugin.Map.ActionTypes.Where(t => !string.IsNullOrEmpty(t)).Select(at => ListItem.Create(at)).ToArray();
             }
         }
 
-        private void ChkTeamType_CheckedChanged(Object sender, EventArgs e)
+        private void ChkTeamType_CheckedChanged(object sender, EventArgs e)
         {
             cmbTeamType.DataSource = null;
+            cmbTeamType.ValueMember = null;
+            cmbTeamType.DisplayMember = null;
             cmbTeamType.Enabled = chkTeamType.Checked;
             if (chkTeamType.Checked)
             {
-                cmbTeamType.DataSource = TeamType.None.Yield().Concat(plugin.Map.TeamTypes.Select(t => t.Name)).ToArray();
+                cmbTeamType.ValueMember= "Value";
+                cmbTeamType.DisplayMember = "Label";
+                cmbTeamType.DataSource = ListItem.Create(TeamType.None).Yield().Concat(plugin.Map.TeamTypes.Select(t => ListItem.Create(t.Name))).ToArray();
             }
         }
 
-        private void ChkTrigger_CheckedChanged(Object sender, EventArgs e)
+        private void ChkTrigger_CheckedChanged(object sender, EventArgs e)
         {
             cmbTrigger.DataSource = null;
+            cmbTrigger.ValueMember = null;
+            cmbTrigger.DisplayMember = null;
             cmbTrigger.Enabled = chkTrigger.Checked;
             if (chkTrigger.Checked)
             {
-                cmbTrigger.DataSource = Trigger.None.Yield().Concat(this.currentTrigs).ToArray();
+                cmbTrigger.ValueMember= "Value";
+                cmbTrigger.DisplayMember = "Label";
+                cmbTrigger.DataSource = ListItem.Create(Trigger.None).Yield().Concat(this.currentTrigs.Select(tr => ListItem.Create(tr))).ToArray();
             }
         }
 
-        private void ChkWaypoint_CheckedChanged(Object sender, EventArgs e)
+        private void ChkWaypoint_CheckedChanged(object sender, EventArgs e)
         {
             cmbWaypoint.DataSource = null;
+            cmbWaypoint.ValueMember = null;
+            cmbWaypoint.DisplayMember = null;
             if (isRA)
             {
                 cmbWaypoint.Enabled = chkWaypoint.Checked;
                 if (chkWaypoint.Checked)
                 {
-                    cmbWaypoint.DataSource = Waypoint.None.Yield().Concat(plugin.Map.Waypoints.Select(w => w.ToString())).ToArray();
+                    Waypoint[] wp = plugin.Map.Waypoints;
+                    cmbWaypoint.ValueMember = "Value";
+                    cmbWaypoint.DisplayMember = "Label";
+                    cmbWaypoint.DataSource = ListItem.Create(-1, Waypoint.None).Yield().Concat(wp.Select((w, i) => ListItem.Create(i, w.ToString()))).ToArray();
                 }
             }
         }
 
-        private void ChkGlobal_CheckedChanged(Object sender, EventArgs e)
+        private void ChkGlobal_CheckedChanged(object sender, EventArgs e)
         {
             if (isRA)
             {
@@ -223,30 +264,30 @@ namespace MobiusEditor.Dialogs
             }
         }
 
-        private void btnOk_Click(Object sender, EventArgs e)
+        private void btnOk_Click(object sender, EventArgs e)
         {
             filter = new TriggerFilter(plugin);
             filter.FilterHouse = chkHouse.Checked;
-            filter.House = filter.FilterHouse ? (cmbHouse.SelectedItem as ListItem<long>).Label : null;
+            filter.House = filter.FilterHouse ? (string)cmbHouse.SelectedValue: null;
             filter.FilterPersistenceType = chkPersistenceType.Checked;
             filter.PersistenceType = filter.FilterPersistenceType ? (TriggerPersistentType)cmbPersistenceType.SelectedValue : TriggerPersistentType.Volatile;
-            filter.FilterEventControl = chkEventControl.Checked;
-            filter.EventControl = filter.FilterEventControl ? (TriggerMultiStyleType)cmbEventControl.SelectedValue : TriggerMultiStyleType.Only;
+            filter.FilterMultiStyle = chkEventControl.Checked;
+            filter.MultiStyle = filter.FilterMultiStyle ? (TriggerMultiStyleType)cmbEventControl.SelectedValue : TriggerMultiStyleType.Only;
             filter.FilterEventType = chkEventType.Checked;
-            filter.EventType = filter.FilterEventType ? (String)cmbEventType.SelectedItem : TriggerEvent.None;
+            filter.EventType = filter.FilterEventType ? (string)cmbEventType.SelectedValue : TriggerEvent.None;
             filter.FilterActionType = chkActionType.Checked;
-            filter.ActionType = filter.FilterActionType ? (String)cmbActionType.SelectedItem : TriggerAction.None;
+            filter.ActionType = filter.FilterActionType ? (string)cmbActionType.SelectedValue : TriggerAction.None;
             filter.FilterTeamType = chkTeamType.Checked;
-            filter.TeamType = filter.FilterTeamType ? (String)cmbTeamType.SelectedItem : TeamType.None;
+            filter.TeamTypeArg = filter.FilterTeamType ? (string)cmbTeamType.SelectedValue : TeamType.None;
             filter.FilterWaypoint = chkWaypoint.Checked;
-            filter.Waypoint = filter.FilterWaypoint ? cmbWaypoint.SelectedIndex - 1 : -1;
+            filter.Waypoint = filter.FilterWaypoint ? (int)cmbWaypoint.SelectedValue : -1;
             filter.FilterGlobal = chkGlobal.Checked;
             filter.Global = filter.FilterGlobal ? nudGlobal.IntValue : 0;
             filter.FilterTrigger= chkTrigger.Checked;
-            filter.Trigger = filter.FilterTrigger ? (String)cmbTrigger.SelectedItem : Trigger.None;
+            filter.TriggerArg = filter.FilterTrigger ? (string)cmbTrigger.SelectedValue : Trigger.None;
         }
 
-        private void TriggerFilterDialog_Load(Object sender, EventArgs e)
+        private void TriggerFilterDialog_Load(object sender, EventArgs e)
         {
             int origTableHeight = triggersTableLayoutPanel.Height;
             chkEventControl.Visible = this.isRA;

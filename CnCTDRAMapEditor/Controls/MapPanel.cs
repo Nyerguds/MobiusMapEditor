@@ -96,7 +96,6 @@ namespace MobiusEditor.Controls
                 if (zoomStep != value)
                 {
                     zoomStep = value;
-                    Zoom = (Zoom / zoomStep) * zoomStep;
                 }
             }
         }
@@ -157,13 +156,13 @@ namespace MobiusEditor.Controls
         /// <param name="doZoom">True to zoom in as far as possible to the chosen area.</param>
         public void JumpToPosition(CellMetrics metrics, int cellPointX, int cellPointY, int cellsWidth, int cellsHeight, bool doZoom)
         {
-            Rectangle clientNoScroll = new Rectangle(0,0, this.Width, this.Height);
+            Rectangle clientNoScroll = new Rectangle(0, 0, Width, Height);
             if (doZoom)
             {
-                this.Zoom = maxZoom;
-                this.InvalidateScroll();
+                Zoom = maxZoom;
+                InvalidateScroll();
             }
-            Rectangle clientActual = this.ClientRectangle;
+            Rectangle clientActual = ClientRectangle;
             int scaleFull = Math.Min(clientActual.Width, clientActual.Height);
             // (width/height) ratio is smaller for client than for map: map width is the limiting factor.
             bool isWidth = clientActual.Width / (double)clientActual.Height < cellsWidth / (double)cellsHeight;
@@ -171,41 +170,47 @@ namespace MobiusEditor.Controls
             // pixels per tile at zoom level 1.
             // Technically can't handle non-square cells, but, if anyone messes with that they have more problems than this function.
             double basicTileSize = scaleFull / mapSize;
-            double zoom = this.Zoom;
+            double zoom = Zoom;
             if (doZoom)
             {
-                zoom = Math.Min(this.maxZoom, isWidth ? (clientActual.Width / (cellsWidth * basicTileSize)) : (clientActual.Height / (cellsHeight * basicTileSize)));
-                this.Zoom = zoom;
+                zoom = Math.Min(maxZoom, isWidth ? (clientActual.Width / (cellsWidth * basicTileSize)) : (clientActual.Height / (cellsHeight * basicTileSize)));
+                Zoom = zoom;
             }
             // Recalculate for current zoom state
-            Rectangle clientCur = this.ClientRectangle;
+            Rectangle clientCur = ClientRectangle;
             scaleFull = Math.Min(clientCur.Width, clientCur.Height);
             basicTileSize = scaleFull / mapSize;
             // Check whether there are scrollbars.
             bool scrollBarVert = clientNoScroll.Width > clientCur.Width;
             bool scrollBarHor = clientNoScroll.Height > clientCur.Height;
-            this.InvalidateScroll();
+            InvalidateScroll();
             // Get location of the top left coordinates of the rectangle.
-            int x = scrollBarHor ? (int)(scaleFull * zoom * cellPointX / mapSize) : 0;
-            int y = scrollBarVert ? (int)(scaleFull * zoom * cellPointY / mapSize) : 0;
+            int x = 0;
+            int y = 0;
             // Add space if needed to center it.
-            if (scrollBarVert && scrollBarHor)
+            if (scrollBarHor)
             {
-                x -= (clientCur.Width - (int)(cellsWidth * basicTileSize * zoom)) / 2;
-                y -= (clientCur.Height - (int)(cellsHeight * basicTileSize * zoom)) / 2;
+                x = (int)(scaleFull * zoom * cellPointX / mapSize)
+                    - (clientCur.Width - (int)(cellsWidth * basicTileSize * zoom)) / 2;
             }
-            this.AutoScrollPosition = new Point(x, y);
-            this.InvalidateScroll();
+            if (scrollBarVert)
+            {
+                y = (int)(scaleFull * zoom * cellPointY / mapSize)
+                    - (clientCur.Height - (int)(cellsHeight * basicTileSize * zoom)) / 2;
+            }
+            AutoScrollPosition = new Point(x, y);
+            InvalidateScroll();
         }
 
-        public void IncreaseZoomStep()
+        public void IncreaseZoomStep(bool fromMousePos)
         {
-            AdjustZoom(zoom + (zoom * zoomStep), false);
+            AdjustZoom(zoom + (zoom * zoomStep), fromMousePos);
         }
 
-        public void DecreaseZoomStep()
+        public void DecreaseZoomStep(bool fromMousePos)
         {
-            AdjustZoom(zoom - (zoom * zoomStep), false);
+            // Exact inverse calculation from zooming in.
+            AdjustZoom(zoom / (1 + zoomStep), fromMousePos);
         }
 
         private bool smoothScale;
@@ -405,7 +410,14 @@ namespace MobiusEditor.Controls
         {
             if (!SuspendMouseZoom && !Control.ModifierKeys.HasAnyFlags(SuspendMouseZoomKeys))
             {
-                Zoom += Zoom * ZoomStep * Math.Sign(e.Delta);
+                if (e.Delta > 0)
+                {
+                    IncreaseZoomStep(true);
+                }
+                else
+                {
+                    DecreaseZoomStep(true);
+                }
             }
             MouseWheel?.Invoke(this, e);
         }

@@ -13,7 +13,7 @@
 //   0. You just DO WHAT THE FUCK YOU WANT TO.
 namespace MobiusEditor.Controls.ControlsList
 {
-    partial class ControlsList<T,TU>
+    partial class ControlsList<T, TU, TA, TR>
     {
         /// <summary>
         /// Required designer variable.
@@ -52,11 +52,11 @@ namespace MobiusEditor.Controls.ControlsList
             this.lblTypeName.Size = new System.Drawing.Size(0, 13);
             this.lblTypeName.TabIndex = 0;
             //
-            // EffectBarList
+            // ControlsList
             //
             this.Controls.Add(this.lblTypeName);
             this.Name = "ControlsList";
-            this.Resize += new System.EventHandler(this.EffectBarList_Resize);
+            this.Resize += new System.EventHandler(this.ControlsList_Resize);
             this.ResumeLayout(false);
             this.PerformLayout();
 

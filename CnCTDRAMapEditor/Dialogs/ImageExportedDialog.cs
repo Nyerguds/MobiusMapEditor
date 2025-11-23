@@ -27,7 +27,7 @@ namespace MobiusEditor.Dialogs
             this.textBox1.Text = exportedFileName;
         }
 
-        private void BtnGoToFile_Click(Object sender, EventArgs e)
+        private void BtnGoToFile_Click(object sender, EventArgs e)
         {
             if (RuntimeInformation.IsOSPlatform(OSPlatform.Windows))
             {

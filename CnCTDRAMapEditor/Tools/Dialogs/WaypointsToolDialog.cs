@@ -12,33 +12,162 @@
 // distributed with this program. You should have received a copy of the
 // GNU General Public License along with permitted additional restrictions
 // with this program. If not, see https://github.com/electronicarts/CnC_Remastered_Collection
-using System.ComponentModel;
-using System.Linq;
+
+// EDITMODE: uncomment this to edit the form in the visual editor
+//#define EDITMODE
+
+using System.Drawing;
+using System;
+using System.Reflection;
 using System.Windows.Forms;
 using MobiusEditor.Controls;
 using MobiusEditor.Event;
 using MobiusEditor.Interface;
 using MobiusEditor.Model;
 using MobiusEditor.Utility;
+using MobiusEditor.Dialogs;
 
 namespace MobiusEditor.Tools.Dialogs
 {
-    public partial class WaypointsToolDialog : ToolDialog<WaypointsTool>
+    public partial class WaypointsToolDialog :
+#if !EDITMODE
+        ToolDialog<WaypointsTool>
+#else
+        Form
+#endif
     {
-        public ComboBox WaypointCombo => waypointCombo;
-        public Button BtnJumpTo => btnJumpTo;
+        private Control tooltipShownOn;
+        private const string MODE_WP = "Waypoints";
+        private const string MODE_RT = "Team routes";
 
         public WaypointsToolDialog(Form parentForm)
-            : base(parentForm)
+#if !EDITMODE
+        : base(parentForm)
+#endif
         {
             InitializeComponent();
         }
 
+#if !EDITMODE
         protected override void InitializeInternal(MapPanel mapPanel, MapLayerFlag activeLayers, ToolStripStatusLabel toolStatusLabel, ToolTip mouseToolTip,
             IGamePlugin plugin, UndoRedoList<UndoRedoEventArgs, ToolType> undoRedoList)
         {
-            Tool = new WaypointsTool(mapPanel, activeLayers, toolStatusLabel, WaypointCombo, BtnJumpTo, plugin, undoRedoList);
+            Tool = new WaypointsTool(mapPanel, activeLayers, toolStatusLabel, cmbWaypoints, btnJumpTo, cmbTeamRoutes, btnJumpToRoutePoint,
+                lblCurrentRoutePoint, btnEditTeam, btnModeSwitch, plugin, undoRedoList);
+            Tool.OnTeamTypeChanged += Tool_OnTeamTypeChanged;
+            Tool.OnModeChanged += Tool_OnModeChanged;
+            Tool.DoTeamTypeEdit += Tool_DoTeamTypeEdit;
+        }
+#endif
+
+        private void Tool_DoTeamTypeEdit(object sender, EventArgs e)
+        {
+            if (!(sender is ComboBox teams))
+            {
+                return;
+            }
+            string selected = ListItem.GetValueFromComboBox<string>(teams);
+            if (selected != null && !TeamType.None.Equals(selected, StringComparison.OrdinalIgnoreCase))
+            {
+#if !EDITMODE
+                TeamTypesDialog.ShowTeamTypesEditor(parentForm, Tool.Plugin, Tool.Url, selected);
+                Tool.TeamTypeEditDone();
+#endif
+            }
         }
 
+        private void Tool_OnModeChanged(object sender, EventArgs e)
+        {
+            if (!(sender is WaypointsTool wpt))
+            {
+                return;
+            }
+            bool routesMode = wpt.RoutesMode;
+            SuspendLayout();
+            btnModeSwitch.Text = routesMode ? MODE_RT : MODE_WP;
+            lblWaypoint.Visible = !routesMode;
+            cmbWaypoints.Visible = !routesMode;
+            lblRoute.Visible = routesMode;
+            cmbTeamRoutes.Visible = routesMode;
+            btnJumpTo.Visible = !routesMode;
+            btnJumpToRoutePoint.Visible = routesMode;
+            btnEditTeam.Visible = routesMode;
+            lblCurrentRoutePoint.Visible = routesMode;
+            AcceptButton = routesMode ? btnJumpToRoutePoint : btnJumpTo;
+            ResumeLayout();
+        }
+
+        private void Tool_OnTeamTypeChanged(object sender, EventArgs e)
+        {
+            Point pt = MousePosition;
+            Point cmbPos = cmbTeamRoutes.PointToScreen(Point.Empty);
+            Rectangle cmbTrigRect = new Rectangle(cmbPos, cmbTeamRoutes.Size);
+            if (cmbTrigRect.Contains(pt))
+            {
+                this.toolTip1.Hide(cmbTeamRoutes);
+                CmbTeamTypes_MouseEnter(cmbTeamRoutes, e);
+            }
+        }
+
+        private void CmbTeamTypes_MouseEnter(object sender, EventArgs e)
+        {
+            Control target = sender as Control;
+#if !EDITMODE
+            ShowToolTip(target, Tool.TeamTypeToolTip);
+#endif
+        }
+
+        private void CmbTrigger_MouseMove(object sender, MouseEventArgs e)
+        {
+            if (tooltipShownOn != sender)
+            {
+                CmbTeamTypes_MouseEnter(sender, e);
+            }
+        }
+
+        private void BtnEditTeam_MouseEnter(object sender, EventArgs e)
+        {
+            Control target = sender as Control;
+            ShowToolTip(target, "Edit teamtype");
+        }
+
+        private void BtnEditTeam_MouseMove(object sender, MouseEventArgs e)
+        {
+            if (tooltipShownOn != sender)
+            {
+                BtnEditTeam_MouseEnter(sender, e);
+            }
+        }
+
+        private void ShowToolTip(Control target, string message)
+        {
+            if (target == null || message == null)
+            {
+                HideToolTip(target, null);
+                return;
+            }
+            Point resPoint = target.PointToScreen(new Point(0, target.Height));
+            MethodInfo m = toolTip1.GetType().GetMethod("SetTool",
+                       BindingFlags.Instance | BindingFlags.NonPublic);
+            m.Invoke(toolTip1, new object[] { target, message, 2, resPoint });
+            tooltipShownOn = target;
+        }
+
+        private void HideToolTip(object sender, EventArgs e)
+        {
+            try
+            {
+                if (tooltipShownOn != null)
+                {
+                    toolTip1.Hide(tooltipShownOn);
+                }
+                if (sender is Control target)
+                {
+                    toolTip1.Hide(target);
+                }
+            }
+            catch { /* ignore */ }
+            tooltipShownOn = null;
+        }
     }
 }

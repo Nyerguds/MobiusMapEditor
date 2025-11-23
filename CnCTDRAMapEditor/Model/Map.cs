@@ -46,10 +46,10 @@ namespace MobiusEditor.Model
         Resources       /**/ = 1 << 07,
         Smudge          /**/ = 1 << 08,
         Waypoints       /**/ = 1 << 09,
+        FootballArea    /**/ = 1 << 10,
         // Indicators
-        Boundaries      /**/ = 1 << 10,
-        WaypointsIndic  /**/ = 1 << 11,
-        FootballArea    /**/ = 1 << 12,
+        Boundaries      /**/ = 1 << 11,
+        WaypointsIndic  /**/ = 1 << 12,
         CellTriggers    /**/ = 1 << 13,
         TechnoTriggers  /**/ = 1 << 14,
         BuildingRebuild /**/ = 1 << 15,
@@ -61,16 +61,17 @@ namespace MobiusEditor.Model
         LandTypes       /**/ = 1 << 20,
         TechnoOccupancy /**/ = 1 << 21,
         WaypointRadius  /**/ = 1 << 22,
-        EffectRadius    /**/ = 1 << 23,
+        CrateOutlines   /**/ = 1 << 23,
+        EffectRadius    /**/ = 1 << 24,
+        HomeAreaBox     /**/ = 1 << 25,
 
-        OverlayAll = Resources | Walls | Overlay,
         Technos = Terrain | Infantry | Units | Buildings,
+        OverlayAll = Resources | Walls | Overlay,
         /// <summary>Listing of layers that are hard-painted onto the map image.</summary>
-        MapLayers = Template | Terrain | Resources | Walls | Overlay | Smudge | Infantry | Units | Buildings | Waypoints,
+        MapLayers = Template | Terrain | Resources | Walls | Overlay | Smudge | Infantry | Units | Buildings | Waypoints | FootballArea,
         /// <summary>Listing of layers that don't need a full map repaint.</summary>
-        Indicators = Boundaries | MapSymmetry | MapGrid | WaypointsIndic | FootballArea | CellTriggers
-            | TechnoTriggers | BuildingRebuild | BuildingFakes | EffectRadius | WaypointRadius
-            | OverlapOutlines | LandTypes | TechnoOccupancy,
+        Indicators = Boundaries | WaypointsIndic | CellTriggers | TechnoTriggers | BuildingRebuild | BuildingFakes | OverlapOutlines
+            | MapSymmetry | MapGrid | LandTypes | TechnoOccupancy | WaypointRadius | CrateOutlines | EffectRadius | HomeAreaBox,
         All = Int32.MaxValue
     }
 
@@ -87,14 +88,14 @@ namespace MobiusEditor.Model
 
         public PropertyDescriptor PropertyDescriptor { get; private set; }
 
-        public Map Map => this.Instance as Map;
+        public Map Map => Instance as Map;
 
         public readonly bool FractionalPercentages;
 
         public MapContext(Map map, bool fractionalPercentages)
         {
-            this.Instance = map;
-            this.FractionalPercentages = fractionalPercentages;
+            Instance = map;
+            FractionalPercentages = fractionalPercentages;
         }
 
         public object GetService(Type serviceType) => null;
@@ -138,34 +139,36 @@ namespace MobiusEditor.Model
         private const int randomSeed = 1621259415;
 
         // Keep this list synchronised with the MapLayerFlag enum
-        public static String[] MapLayerNames = {
+        public static string[] MapLayerNames = {
             // Map layers
-            "Map templates",
-            "Terrain",
-            "Infantry",
-            "Units",
-            "Buildings",
-            "Overlay",
-            "Walls",
-            "Resources",
-            "Smudge",
-            "Waypoints",
+            /* Template        */ "Map templates",
+            /* Terrain         */ "Terrain",
+            /* Infantry        */ "Infantry",
+            /* Units           */ "Units",
+            /* Buildings       */ "Buildings",
+            /* Overlay         */ "Overlay",
+            /* Walls           */ "Walls",
+            /* Resources       */ "Resources",
+            /* Smudge          */ "Smudge",
+            /* Waypoints       */ "Waypoints",
+            /* FootballArea    */ "Football goal areas",
             // Indicators
-            "Map boundaries",
-            "Waypoint labels",
-            "Football goal areas",
-            "Cell triggers",
-            "Object triggers",
-            "Building rebuild priorities",
-            "Building 'fake' labels",
-            "Overlapped object outlines",
+            /* Boundaries      */ "Map boundaries",
+            /* WaypointsIndic  */ "Waypoint labels",
+            /* CellTriggers    */ "Cell triggers",
+            /* TechnoTriggers  */ "Object triggers",
+            /* BuildingRebuild */ "Building rebuild priorities",
+            /* BuildingFakes   */ "Building 'fake' labels",
+            /* OverlapOutlines */ "Outlines on overlapped objects",
             // Extra indicators
-            "Map symmetry",
-            "Map grid",
-            "Map terrain types hashing",
-            "Object occupancy hashing",
-            "Waypoint reveal radiuses",
-            "Jam / gap radiuses",
+            /* MapSymmetry     */ "Map symmetry",
+            /* MapGrid         */ "Map grid",
+            /* LandTypes       */ "Map land types hashing",
+            /* TechnoOccupancy */ "Object occupancy hashing",
+            /* WaypointRadius  */ "Waypoint reveal radiuses",
+            /* CrateOutlines   */ "Crate outlines",
+            /* EffectRadius    */ "Jam / gap radiuses",
+            /* HomeAreaBox     */ "Home waypoint start view",
         };
 
         private static readonly int[] TiberiumStages = new int[] { 0, 1, 3, 4, 6, 7, 8, 10, 11 };
@@ -205,7 +208,7 @@ namespace MobiusEditor.Model
         {
             if (RulesChanged != null)
             {
-                this.RulesChanged(this, new MapRefreshEventArgs(refreshPoints));
+                RulesChanged(this, new MapRefreshEventArgs(refreshPoints));
             }
         }
 
@@ -214,7 +217,7 @@ namespace MobiusEditor.Model
         {
             if (MapContentsChanged != null)
             {
-                this.MapContentsChanged(this, new MapRefreshEventArgs(refreshPoints));
+                MapContentsChanged(this, new MapRefreshEventArgs(refreshPoints));
             }
         }
 
@@ -231,24 +234,24 @@ namespace MobiusEditor.Model
 
         public readonly SteamSection SteamSection = new SteamSection();
 
-        public TheaterType Theater { get => this.MapSection.Theater; set => this.MapSection.Theater = value; }
+        public TheaterType Theater { get => MapSection.Theater; set => MapSection.Theater = value; }
 
         public Point TopLeft
         {
-            get => new Point(this.MapSection.X, this.MapSection.Y);
-            set { this.MapSection.X = value.X; this.MapSection.Y = value.Y; }
+            get => new Point(MapSection.X, MapSection.Y);
+            set { MapSection.X = value.X; MapSection.Y = value.Y; }
         }
 
         public Size Size
         {
-            get => new Size(this.MapSection.Width, this.MapSection.Height);
-            set { this.MapSection.Width = value.Width; this.MapSection.Height = value.Height; }
+            get => new Size(MapSection.Width, MapSection.Height);
+            set { MapSection.Width = value.Width; MapSection.Height = value.Height; }
         }
 
         public Rectangle Bounds
         {
-            get => this.MapSection.Bounds;
-            set { this.MapSection.X = value.Left; this.MapSection.Y = value.Top; this.MapSection.Width = value.Width; this.MapSection.Height = value.Height; }
+            get => MapSection.Bounds;
+            set { MapSection.X = value.Left; MapSection.Y = value.Top; MapSection.Width = value.Width; MapSection.Height = value.Height; }
         }
 
         public bool ForPreview { get; private set; }
@@ -264,6 +267,24 @@ namespace MobiusEditor.Model
         public readonly List<TheaterType> TheaterTypes;
 
         public readonly List<TemplateType> TemplateTypes;
+
+        /// <summary>Returns the template types that can actually exist in map data, excluding group dummies.</summary>
+        /// <returns>An array of template types where each object is at the index of its own ID.</returns>
+        public TemplateType[] GetMapTemplateTypes()
+        {
+            List<TemplateType> valids = TemplateTypes.Where(tt => !tt.IsGroup).ToList();
+            if (valids.Count == 0)
+            {
+                return new TemplateType[0];
+            }
+            int size = valids.Max(tt => tt.ID) + 1;
+            TemplateType[] templateTypes = new TemplateType[size];
+            foreach (TemplateType tt in valids)
+            {
+                templateTypes[tt.ID] = tt;
+            }
+            return templateTypes;
+        }
 
         public HashSet<LandType> UsedLandTypes = new HashSet<LandType>();
 
@@ -286,6 +307,7 @@ namespace MobiusEditor.Model
         public readonly HashSet<string> TerrainActionTypes;
 
         public readonly string[] MissionTypes;
+        public readonly string[] MissionTypesBad;
 
         private const string defaultMission = "Guard";
         private readonly string inputMissionArmed;
@@ -307,11 +329,11 @@ namespace MobiusEditor.Model
         {
             get
             {
-                if (this.BasicSection == null || !this.BasicSection.ExpansionEnabled)
+                if (BasicSection == null || !BasicSection.ExpansionEnabled)
                 {
-                    return this.AllInfantryTypes.Where(inf => !inf.IsExpansionOnly).ToList();
+                    return AllInfantryTypes.Where(inf => !inf.IsExpansionOnly).ToList();
                 }
-                return this.AllInfantryTypes.ToList();
+                return AllInfantryTypes.ToList();
             }
         }
 
@@ -320,11 +342,11 @@ namespace MobiusEditor.Model
         {
             get
             {
-                if (this.BasicSection == null || !this.BasicSection.ExpansionEnabled)
+                if (BasicSection == null || !BasicSection.ExpansionEnabled)
                 {
-                    return this.AllUnitTypes.Where(un => !un.IsExpansionOnly).ToList();
+                    return AllUnitTypes.Where(un => !un.IsExpansionOnly).ToList();
                 }
-                return this.AllUnitTypes.ToList();
+                return AllUnitTypes.ToList();
             }
         }
 
@@ -335,11 +357,11 @@ namespace MobiusEditor.Model
         {
             get
             {
-                if (this.BasicSection == null || !this.BasicSection.ExpansionEnabled)
+                if (BasicSection == null || !BasicSection.ExpansionEnabled)
                 {
-                    return this.AllTeamTechnoTypes.Where(tc => !tc.IsExpansionOnly).ToList();
+                    return AllTeamTechnoTypes.Where(tc => !tc.IsExpansionOnly).ToList();
                 }
-                return this.AllTeamTechnoTypes.ToList();
+                return AllTeamTechnoTypes.ToList();
             }
         }
 
@@ -388,13 +410,13 @@ namespace MobiusEditor.Model
         private List<Trigger> triggers;
         public List<Trigger> Triggers
         {
-            get { return this.triggers; }
+            get { return triggers; }
             set
             {
-                this.triggers = value;
+                triggers = value;
                 // Only an actual replacing of the list will call these, but they can be called manually after an update.
                 // A bit more manual than the whole ObservableCollection system, but a lot less cumbersome.
-                this.NotifyTriggersUpdate();
+                NotifyTriggersUpdate();
             }
         }
 
@@ -420,7 +442,7 @@ namespace MobiusEditor.Model
         {
             get
             {
-                return this.GetTotalResources(true);
+                return GetTotalResources(true);
             }
         }
 
@@ -449,6 +471,7 @@ namespace MobiusEditor.Model
         /// <param name="buildingActionTypes">The list of all action types applicable to buildings in this game.</param>
         /// <param name="terrainActionTypes">The list of all action types applicable to terrain in this game.</param>
         /// <param name="missionTypes">The list of all mission types (orders) supported by this game.</param>
+        /// <param name="missionTypesBad">The list of mission types (orders) which are supported by this game, but can't be assigned to objects in a mission.</param>
         /// <param name="armedMission">The default mission for armed units.</param>
         /// <param name="unarmedMission">The default mission for unarmed units.</param>
         /// <param name="harvestMission">The default mission for harvesting units.</param>
@@ -475,134 +498,135 @@ namespace MobiusEditor.Model
             IEnumerable<TerrainType> terrainTypes, IEnumerable<OverlayType> overlayTypes, IEnumerable<SmudgeType> smudgeTypes,
             IEnumerable<string> eventTypes, IEnumerable<string> cellEventTypes, IEnumerable<string> unitEventTypes, IEnumerable<string> buildingEventTypes, IEnumerable<string> terrainEventTypes,
             IEnumerable<string> actionTypes, IEnumerable<string> cellActionTypes, IEnumerable<string> unitActionTypes, IEnumerable<string> buildingActionTypes, IEnumerable<string> terrainActionTypes,
-            IEnumerable<string> missionTypes, string armedMission, string unarmedMission, string harvestMission, string aircraftMission,
+            IEnumerable<string> missionTypes, IEnumerable<string> missionTypesBad, string armedMission, string unarmedMission, string harvestMission, string aircraftMission,
             IEnumerable<DirectionType> unitDirectionTypes, IEnumerable<DirectionType> buildingDirectionTypes,
             IEnumerable<InfantryType> infantryTypes, IEnumerable<UnitType> unitTypes, IEnumerable<BuildingType> buildingTypes,
             IEnumerable<TeamMission> teamMissionTypes, IEnumerable<ITechnoType> teamTechnoTypes, IEnumerable<Waypoint> waypoints,
             IEnumerable<string> movieTypes, string emptyMovie, IEnumerable<string> themeTypes, string emptyTheme,
             int dropZoneRadius, int gapRadius, int jamRadius, int tiberiumOrGoldValue, int gemValue)
         {
-            this.MapSection = new MapSection(cellSize);
-            this.BasicSection = basicSection;
-            this.HouseType = houseType;
+            MapSection = new MapSection(cellSize);
+            BasicSection = basicSection;
+            HouseType = houseType;
             HouseType[] allHouseTypes = houseTypes.ToArray();
-            this.HouseTypesIncludingSpecials = houseTypes.ToArray();
-            this.HouseTypes = allHouseTypes.Where(h => !h.Flags.HasFlag(HouseTypeFlag.Special)).ToArray();
-            this.FlagColors = flagColors == null ? new ITeamColor[8] : flagColors;
-            this.TheaterTypes = new List<TheaterType>(theaterTypes);
-            this.TemplateTypes = new List<TemplateType>(templateTypes);
-            this.TerrainTypes = new List<TerrainType>(terrainTypes);
-            this.OverlayTypes = new List<OverlayType>(overlayTypes);
-            this.SmudgeTypes = new List<SmudgeType>(smudgeTypes);
-            this.EventTypes = eventTypes.ToArray();
-            this.CellEventTypes = cellEventTypes.ToHashSet(StringComparer.OrdinalIgnoreCase);
-            this.UnitEventTypes = unitEventTypes.ToHashSet(StringComparer.OrdinalIgnoreCase);
-            this.BuildingEventTypes = buildingEventTypes.ToHashSet(StringComparer.OrdinalIgnoreCase);
-            this.TerrainEventTypes = terrainEventTypes.ToHashSet(StringComparer.OrdinalIgnoreCase);
-            this.CellActionTypes = cellActionTypes.ToHashSet(StringComparer.OrdinalIgnoreCase);
-            this.UnitActionTypes = unitActionTypes.ToHashSet(StringComparer.OrdinalIgnoreCase);
-            this.BuildingActionTypes = buildingActionTypes.ToHashSet(StringComparer.OrdinalIgnoreCase);
-            this.TerrainActionTypes = terrainActionTypes.ToHashSet(StringComparer.OrdinalIgnoreCase);
+            HouseTypesIncludingSpecials = houseTypes.ToArray();
+            HouseTypes = allHouseTypes.Where(h => !h.IsSpecial).ToArray();
+            FlagColors = flagColors == null ? new ITeamColor[8] : flagColors;
+            TheaterTypes = new List<TheaterType>(theaterTypes);
+            TemplateTypes = new List<TemplateType>(templateTypes);
+            TerrainTypes = new List<TerrainType>(terrainTypes);
+            OverlayTypes = new List<OverlayType>(overlayTypes);
+            SmudgeTypes = new List<SmudgeType>(smudgeTypes);
+            EventTypes = eventTypes.ToArray();
+            CellEventTypes = cellEventTypes.ToHashSet(StringComparer.OrdinalIgnoreCase);
+            UnitEventTypes = unitEventTypes.ToHashSet(StringComparer.OrdinalIgnoreCase);
+            BuildingEventTypes = buildingEventTypes.ToHashSet(StringComparer.OrdinalIgnoreCase);
+            TerrainEventTypes = terrainEventTypes.ToHashSet(StringComparer.OrdinalIgnoreCase);
+            CellActionTypes = cellActionTypes.ToHashSet(StringComparer.OrdinalIgnoreCase);
+            UnitActionTypes = unitActionTypes.ToHashSet(StringComparer.OrdinalIgnoreCase);
+            BuildingActionTypes = buildingActionTypes.ToHashSet(StringComparer.OrdinalIgnoreCase);
+            TerrainActionTypes = terrainActionTypes.ToHashSet(StringComparer.OrdinalIgnoreCase);
 
-            this.ActionTypes = actionTypes.ToArray();
-            this.MissionTypes = missionTypes.ToArray();
-            string defMission = this.MissionTypes.Where(m => m.Equals(defaultMission, StringComparison.OrdinalIgnoreCase)).FirstOrDefault() ?? this.MissionTypes.First();
+            ActionTypes = actionTypes.ToArray();
+            MissionTypes = missionTypes.ToArray();
+            MissionTypesBad = missionTypesBad.ToArray();
+            string defMission = MissionTypes.Where(m => m.Equals(defaultMission, StringComparison.OrdinalIgnoreCase)).FirstOrDefault() ?? MissionTypes.First();
             // Unfiltered originals, to ensure this remains correct when cloning.
-            this.inputMissionArmed = armedMission;
-            this.inputMissionUnarmed = unarmedMission;
-            this.inputMissionAircraft = harvestMission;
-            this.inputMissionHarvest = aircraftMission;
+            inputMissionArmed = armedMission;
+            inputMissionUnarmed = unarmedMission;
+            inputMissionAircraft = harvestMission;
+            inputMissionHarvest = aircraftMission;
 
-            this.DefaultMissionArmed = this.MissionTypes.Where(m => m.Equals(armedMission, StringComparison.OrdinalIgnoreCase)).FirstOrDefault() ?? defMission;
-            this.DefaultMissionUnarmed = this.MissionTypes.Where(m => m.Equals(unarmedMission, StringComparison.OrdinalIgnoreCase)).FirstOrDefault() ?? defMission;
+            DefaultMissionArmed = MissionTypes.Where(m => m.Equals(armedMission, StringComparison.OrdinalIgnoreCase)).FirstOrDefault() ?? defMission;
+            DefaultMissionUnarmed = MissionTypes.Where(m => m.Equals(unarmedMission, StringComparison.OrdinalIgnoreCase)).FirstOrDefault() ?? defMission;
             // Reverts to "Stop" if there are no resources (RA indoor)
-            this.DefaultMissionHarvest = this.OverlayTypes.Any(ov => ov.IsResource) ? this.MissionTypes.Where(m => m.Equals(harvestMission, StringComparison.OrdinalIgnoreCase)).FirstOrDefault() ?? this.DefaultMissionUnarmed : this.DefaultMissionUnarmed;
+            DefaultMissionHarvest = OverlayTypes.Any(ov => ov.IsResource) ? MissionTypes.Where(m => m.Equals(harvestMission, StringComparison.OrdinalIgnoreCase)).FirstOrDefault() ?? DefaultMissionUnarmed : DefaultMissionUnarmed;
             // Only "Unload" will make them stay on the spot as expected.
-            this.DefaultMissionAircraft = this.MissionTypes.Where(m => m.Equals(aircraftMission, StringComparison.OrdinalIgnoreCase)).FirstOrDefault() ?? defMission;
-            this.UnitDirectionTypes = new List<DirectionType>(unitDirectionTypes);
-            this.BuildingDirectionTypes = new List<DirectionType>(buildingDirectionTypes);
-            this.AllInfantryTypes = new List<InfantryType>(infantryTypes);
-            this.AllUnitTypes = new List<UnitType>(unitTypes);
-            this.BuildingTypes = new List<BuildingType>(buildingTypes);
-            this.TeamMissionTypes = teamMissionTypes.ToArray();
-            this.AllTeamTechnoTypes = new List<ITechnoType>(teamTechnoTypes);
-            this.MovieEmpty = emptyMovie;
-            this.MovieTypes = new List<string>(movieTypes);
-            this.ThemeEmpty = emptyTheme;
-            this.ThemeTypes = new List<string>(themeTypes);
-            this.TiberiumOrGoldValue = tiberiumOrGoldValue;
-            this.GemValue = gemValue;
-            this.Metrics = new CellMetrics(cellSize);
-            this.Templates = new CellGrid<Template>(this.Metrics);
-            this.Overlay = new CellGrid<Overlay>(this.Metrics);
-            this.Smudge = new CellGrid<Smudge>(this.Metrics);
-            this.Technos = new OccupierSet<ICellOccupier>(this.Metrics);
-            this.Buildings = new OccupierSet<ICellOccupier>(this.Metrics);
-            this.Overlappers = new OverlapperSet<ICellOverlapper>(this.Metrics);
-            this.triggers = new List<Trigger>();
-            this.TeamTypes = new List<TeamType>();
-            House[] allHouses = allHouseTypes.Select(t => { House h = (House)Activator.CreateInstance(this.HouseType, t); h.SetDefault(); return h; }).ToArray();
-            this.HousesIncludingSpecials = allHouses;
-            this.Houses = allHouses.Where(h => !h.Type.Flags.HasFlag(HouseTypeFlag.Special)).ToArray();
+            DefaultMissionAircraft = MissionTypes.Where(m => m.Equals(aircraftMission, StringComparison.OrdinalIgnoreCase)).FirstOrDefault() ?? defMission;
+            UnitDirectionTypes = new List<DirectionType>(unitDirectionTypes);
+            BuildingDirectionTypes = new List<DirectionType>(buildingDirectionTypes);
+            AllInfantryTypes = new List<InfantryType>(infantryTypes);
+            AllUnitTypes = new List<UnitType>(unitTypes);
+            BuildingTypes = new List<BuildingType>(buildingTypes);
+            TeamMissionTypes = teamMissionTypes.ToArray();
+            AllTeamTechnoTypes = new List<ITechnoType>(teamTechnoTypes);
+            MovieEmpty = emptyMovie;
+            MovieTypes = new List<string>(movieTypes);
+            ThemeEmpty = emptyTheme;
+            ThemeTypes = new List<string>(themeTypes);
+            TiberiumOrGoldValue = tiberiumOrGoldValue;
+            GemValue = gemValue;
+            Metrics = new CellMetrics(cellSize);
+            Templates = new CellGrid<Template>(Metrics);
+            Overlay = new CellGrid<Overlay>(Metrics);
+            Smudge = new CellGrid<Smudge>(Metrics);
+            Technos = new OccupierSet<ICellOccupier>(Metrics);
+            Buildings = new OccupierSet<ICellOccupier>(Metrics);
+            Overlappers = new OverlapperSet<ICellOverlapper>(Metrics);
+            triggers = new List<Trigger>();
+            TeamTypes = new List<TeamType>();
+            House[] allHouses = allHouseTypes.Select(t => { House h = (House)Activator.CreateInstance(HouseType, t); h.SetDefault(); return h; }).ToArray();
+            HousesIncludingSpecials = allHouses;
+            Houses = allHouses.Where(h => !h.Type.IsSpecial).ToArray();
             // Build houses list for allies. Special houses not shown in the normal houses lists (e.g. 'Allies' and 'Soviet') are put first.
-            List<House> housesAlly = allHouses.Where(h => h.Type.Flags.HasFlag(HouseTypeFlag.ForAlliances)).ToList();
-            List<House> housesAllySpecial = housesAlly.Where(h => h.Type.Flags.HasFlag(HouseTypeFlag.Special)).OrderBy(h => h.Type.ID).ToList();
-            List<House> housesAllyNormal = housesAlly.Where(h => !h.Type.Flags.HasFlag(HouseTypeFlag.Special)).OrderBy(h => h.Type.ID).ToList();
+            List<House> housesAlly = allHouses.Where(h => h.Type.IsForAlliances).ToList();
+            List<House> housesAllySpecial = housesAlly.Where(h => h.Type.IsSpecial).OrderBy(h => h.Type.ID).ToList();
+            List<House> housesAllyNormal = housesAlly.Where(h => !h.Type.IsSpecial).OrderBy(h => h.Type.ID).ToList();
             // put special types at the start.
-            this.HousesForAlliances = housesAllySpecial.Concat(housesAllyNormal).ToArray();
-            this.HouseNone = allHouses.Where(h => h.Type.Flags.HasFlag(HouseTypeFlag.Special | HouseTypeFlag.BaseHouse)).FirstOrDefault();
+            HousesForAlliances = housesAllySpecial.Concat(housesAllyNormal).ToArray();
+            HouseNone = allHouses.Where(h => h.Type.IsSpecial && h.Type.IsBaseHouse).FirstOrDefault();
             Waypoint[] wp = waypoints.ToArray();
-            this.Waypoints = new Waypoint[wp.Length];
+            Waypoints = new Waypoint[wp.Length];
             for (int i = 0; i < wp.Length; ++i)
             {
                 // Deep clone with current metrics, to allow showing waypoints as cell coordinates.
-                this.Waypoints[i] = new Waypoint(wp[i].Name, wp[i].ShortName, wp[i].Flag, this.Metrics, wp[i].Cell);
+                Waypoints[i] = new Waypoint(wp[i].Name, wp[i].ShortName, wp[i].Flags, Metrics, wp[i].Cell);
             }
-            this.DropZoneRadius = dropZoneRadius;
-            this.GapRadius = gapRadius;
-            this.RadarJamRadius = jamRadius;
-            this.CellTriggers = new CellGrid<CellTrigger>(this.Metrics);
+            DropZoneRadius = dropZoneRadius;
+            GapRadius = gapRadius;
+            RadarJamRadius = jamRadius;
+            CellTriggers = new CellGrid<CellTrigger>(Metrics);
 
             // Optimisation: checks on what is inside the given data, used to prevent unnecessary logic from executing.
-            this.ConcreteOverlaysAvailable = this.OverlayTypes.Any(ovl => ovl.IsConcrete);
-            this.CrateOverlaysAvailable = this.OverlayTypes.Any(ovl => ovl.IsCrate);
-            this.FlareWaypointAvailable = this.Waypoints.Any(wpt => wpt.Flag.HasFlag(WaypointFlag.Flare));
-            this.ExpansionUnitsAvailable = BuildingTypes.Any(tt => tt.IsExpansionOnly)
+            ConcreteOverlaysAvailable = OverlayTypes.Any(ovl => ovl.IsConcrete);
+            CrateOverlaysAvailable = OverlayTypes.Any(ovl => ovl.IsCrate);
+            FlareWaypointAvailable = Waypoints.Any(wpt => wpt.Flags.HasFlag(WaypointFlag.Flare));
+            ExpansionUnitsAvailable = BuildingTypes.Any(tt => tt.IsExpansionOnly)
                 || AllInfantryTypes.Any(tt => tt.IsExpansionOnly)
                 || TerrainTypes.Any(tt => tt.IsExpansionOnly)
                 || AllUnitTypes.Any(tt => tt.IsExpansionOnly);
 
-            this.MapSection.SetDefault();
-            this.BriefingSection.SetDefault();
-            this.SteamSection.SetDefault();
-            this.Templates.Clear();
-            this.Overlay.Clear();
-            this.Smudge.Clear();
-            this.Technos.Clear();
-            this.Overlappers.Clear();
-            this.CellTriggers.Clear();
+            MapSection.SetDefault();
+            BriefingSection.SetDefault();
+            SteamSection.SetDefault();
+            Templates.Clear();
+            Overlay.Clear();
+            Smudge.Clear();
+            Technos.Clear();
+            Overlappers.Clear();
+            CellTriggers.Clear();
 
-            this.TopLeft = new Point(1, 1);
-            this.Size = this.Metrics.Size - new Size(2, 2);
-            this.Theater = theater;
+            TopLeft = new Point(1, 1);
+            Size = Metrics.Size - new Size(2, 2);
+            Theater = theater;
 
-            this.Overlay.CellChanged += this.Overlay_CellChanged;
-            this.Technos.OccupierAdded += this.Technos_OccupierAdded;
-            this.Technos.OccupierRemoved += this.Technos_OccupierRemoved;
-            this.Buildings.OccupierAdded += this.Buildings_OccupierAdded;
-            this.Buildings.OccupierRemoved += this.Buildings_OccupierRemoved;
+            Overlay.CellChanged += Overlay_CellChanged;
+            Technos.OccupierAdded += Technos_OccupierAdded;
+            Technos.OccupierRemoved += Technos_OccupierRemoved;
+            Buildings.OccupierAdded += Buildings_OccupierAdded;
+            Buildings.OccupierRemoved += Buildings_OccupierRemoved;
         }
 
         public void BeginUpdate()
         {
-            this.updateCount++;
+            updateCount++;
         }
 
         public void EndUpdate()
         {
-            if (--this.updateCount == 0)
+            if (--updateCount == 0)
             {
-                this.Update();
+                Update();
             }
         }
 
@@ -610,50 +634,50 @@ namespace MobiusEditor.Model
         {
             try
             {
-                foreach (TemplateType templateType in this.TemplateTypes)
+                foreach (TemplateType templateType in TemplateTypes)
                 {
-                    templateType.Init(gameInfo, this.Theater, Globals.FilterTheaterObjects);
+                    templateType.Init(gameInfo, Theater, Globals.FilterTheaterObjects);
                 }
-                this.UsedLandTypes = this.TemplateTypes
+                UsedLandTypes = TemplateTypes
                     .Where(tmp => tmp.ExistsInTheater)
                     .SelectMany(tmp => tmp.LandTypes ?? new LandType[0])
                     .Distinct()
                     .Where(lt => lt != LandType.None)
                     .ToHashSet();
-                foreach (SmudgeType smudgeType in this.SmudgeTypes)
+                foreach (SmudgeType smudgeType in SmudgeTypes)
                 {
-                    smudgeType.Init(this.Theater);
+                    smudgeType.Init(Theater);
                 }
-                foreach (OverlayType overlayType in this.OverlayTypes)
+                foreach (OverlayType overlayType in OverlayTypes)
                 {
                     overlayType.Init(gameInfo);
                 }
-                string th = this.Theater.Name;
-                foreach (TerrainType terrainType in this.TerrainTypes)
+                string th = Theater.Name;
+                foreach (TerrainType terrainType in TerrainTypes)
                 {
                     terrainType.Init();
                 }
                 // Ignore expansion status for these; they can still be enabled later.
-                DirectionType infDir = this.UnitDirectionTypes.Where(d => d.Facing == FacingType.South).First();
-                foreach (InfantryType infantryType in this.AllInfantryTypes)
+                DirectionType infDir = UnitDirectionTypes.Where(d => d.Facing == FacingType.South).First();
+                foreach (InfantryType infantryType in AllInfantryTypes)
                 {
-                    infantryType.Init(this.HouseTypesIncludingSpecials.Where(h => h.Equals(infantryType.OwnerHouse)).FirstOrDefault(), infDir);
+                    infantryType.Init(HouseTypesIncludingSpecials.Where(h => h.Equals(infantryType.OwnerHouse)).FirstOrDefault(), infDir);
                 }
-                DirectionType unitDir = this.UnitDirectionTypes.Where(d => d.Facing == FacingType.SouthWest).First();
-                foreach (UnitType unitType in this.AllUnitTypes)
+                DirectionType unitDir = UnitDirectionTypes.Where(d => d.Facing == FacingType.SouthWest).First();
+                foreach (UnitType unitType in AllUnitTypes)
                 {
-                    unitType.Init(gameInfo, this.HouseTypesIncludingSpecials.Where(h => h.Equals(unitType.OwnerHouse)).FirstOrDefault(), unitDir);
+                    unitType.Init(gameInfo, HouseTypesIncludingSpecials.Where(h => h.Equals(unitType.OwnerHouse)).FirstOrDefault(), unitDir);
                 }
                 // Required for initialising air unit names for teamtypes if DisableAirUnits is true.
-                foreach (ITechnoType techno in this.AllTeamTechnoTypes)
+                foreach (ITechnoType techno in AllTeamTechnoTypes)
                 {
                     techno.InitDisplayName();
                 }
-                DirectionType bldDir = this.UnitDirectionTypes.Where(d => d.Facing == FacingType.North).First();
+                DirectionType bldDir = UnitDirectionTypes.Where(d => d.Facing == FacingType.North).First();
                 // No restriction. All get attempted and dummies are all filled in.
-                foreach (BuildingType buildingType in this.BuildingTypes)
+                foreach (BuildingType buildingType in BuildingTypes)
                 {
-                    buildingType.Init(gameInfo, this.HouseTypesIncludingSpecials.Where(h => h.Equals(buildingType.OwnerHouse)).FirstOrDefault(), bldDir);
+                    buildingType.Init(gameInfo, HouseTypesIncludingSpecials.Where(h => h.Equals(buildingType.OwnerHouse)).FirstOrDefault(), bldDir);
                 }
             }
             catch (Exception ex)
@@ -672,44 +696,42 @@ namespace MobiusEditor.Model
 
         private void Update()
         {
-            this.updating = true;
-            if (this.invalidateLayers.TryGetValue(MapLayerFlag.Resources, out ISet<Point> locations))
+            updating = true;
+            if (invalidateLayers.TryGetValue(MapLayerFlag.Resources, out ISet<Point> locations))
             {
-                this.UpdateResourceOverlays(locations, true);
+                UpdateResourceOverlays(locations, true);
             }
-            if (this.invalidateLayers.TryGetValue(MapLayerFlag.Walls, out locations))
+            if (invalidateLayers.TryGetValue(MapLayerFlag.Walls, out locations))
             {
-                this.UpdateWallOverlays(locations);
+                // Not sure if needed; Buildings_OccupierAdded and Buildings_OccupierRemoved take care of this, since
+                // adding a wall overlay triggers adding it to the buildings too.
+                UpdateWallOverlays(locations);
             }
-            if (Globals.AllowWallBuildings && this.invalidateLayers.TryGetValue(MapLayerFlag.Buildings, out locations))
+            if (invalidateLayers.TryGetValue(MapLayerFlag.Overlay, out locations))
             {
-                this.UpdateWallOverlays(locations);
+                UpdateConcreteOverlays(locations);
             }
-            if (this.invalidateLayers.TryGetValue(MapLayerFlag.Overlay, out locations))
+            if (invalidateOverlappers)
             {
-                this.UpdateConcreteOverlays(locations);
-            }
-            if (this.invalidateOverlappers)
-            {
-                this.Overlappers.Clear();
-                foreach ((Point location, ICellOccupier techno) in this.Technos)
+                Overlappers.Clear();
+                foreach ((Point location, ICellOccupier techno) in Technos)
                 {
                     if (techno is ICellOverlapper)
                     {
-                        this.Overlappers.Add(location, techno as ICellOverlapper);
+                        Overlappers.Add(location, techno as ICellOverlapper);
                     }
                 }
-                foreach ((Point location, ICellOccupier bld) in this.Buildings)
+                foreach ((Point location, ICellOccupier bld) in Buildings)
                 {
                     if (bld is ICellOverlapper)
                     {
-                        this.Overlappers.Add(location, bld as ICellOverlapper);
+                        Overlappers.Add(location, bld as ICellOverlapper);
                     }
                 }
             }
-            this.invalidateLayers.Clear();
-            this.invalidateOverlappers = false;
-            this.updating = false;
+            invalidateLayers.Clear();
+            invalidateOverlappers = false;
+            updating = false;
         }
 
         /// <summary>
@@ -721,14 +743,14 @@ namespace MobiusEditor.Model
         private int GetTotalResources(bool inBounds)
         {
             int totalResources = 0;
-            foreach ((Int32 cell, Overlay value) in this.Overlay)
+            foreach ((int cell, Overlay value) in Overlay)
             {
                 Point point;
-                if (!value.Type.IsResource || !this.Metrics.GetLocation(cell, out point))
+                if (!value.Type.IsResource || !Metrics.GetLocation(cell, out point))
                 {
                     continue;
                 }
-                if (inBounds && !this.Bounds.Contains(point))
+                if (inBounds && !Bounds.Contains(point))
                 {
                     continue;
                 }
@@ -736,10 +758,10 @@ namespace MobiusEditor.Model
                 foreach (FacingType facing in CellMetrics.AdjacentFacings)
                 {
                     Overlay ovl;
-                    if (this.Metrics.Adjacent(point, facing, out Point adjPoint)
-                        && (ovl = this.Overlay[adjPoint]) != null && ovl.Type.IsResource)
+                    if (Metrics.Adjacent(point, facing, out Point adjPoint)
+                        && (ovl = Overlay[adjPoint]) != null && ovl.Type.IsResource)
                     {
-                        if (inBounds && !this.Bounds.Contains(adjPoint))
+                        if (inBounds && !Bounds.Contains(adjPoint))
                         {
                             continue;
                         }
@@ -751,12 +773,12 @@ namespace MobiusEditor.Model
                 // Harvesting one gem stage fills one bail, plus 3 extra bails. Last stage is 0 (due to that bug), but still gets the extra bails.
                 if (Globals.ApplyHarvestBug)
                 {
-                    totalResources += value.Type.IsGem ? thickness * this.GemValue + this.GemValue * 3 : thickness * this.TiberiumOrGoldValue;
+                    totalResources += value.Type.IsGem ? thickness * GemValue + (thickness + 1) * GemValue * 3 : thickness * TiberiumOrGoldValue;
                 }
                 else
                 {
                     // Fixed logic, in case it is repaired in the code.
-                    totalResources += (thickness + 1) * (value.Type.IsGem ? this.GemValue * 4 : this.TiberiumOrGoldValue);
+                    totalResources += (thickness + 1) * (value.Type.IsGem ? GemValue * 4 : TiberiumOrGoldValue);
                 }
             }
             return totalResources;
@@ -770,21 +792,21 @@ namespace MobiusEditor.Model
         /// <remarks> This function is separate from GetTotalResources because it only updates the specified areas.</remarks>
         public void UpdateResourceOverlays(ISet<Point> locations, bool reduceOutOfBounds)
         {
-            Rectangle checkBounds = reduceOutOfBounds ? this.Bounds : this.Metrics.Bounds;
-            OverlayType[] tiberiumOrGoldTypes = this.OverlayTypes.Where(t => t.IsTiberiumOrGold).ToArray();
+            Rectangle checkBounds = reduceOutOfBounds ? Bounds : Metrics.Bounds;
+            OverlayType[] tiberiumOrGoldTypes = OverlayTypes.Where(t => t.IsTiberiumOrGold).ToArray();
             if (tiberiumOrGoldTypes.Length == 0) tiberiumOrGoldTypes = null;
-            OverlayType[] gemTypes = this.OverlayTypes.Where(t => t.IsGem).ToArray();
+            OverlayType[] gemTypes = OverlayTypes.Where(t => t.IsGem).ToArray();
             if (gemTypes.Length == 0) gemTypes = null;
-            foreach ((Point location, Overlay overlay) in this.Overlay.IntersectsWithPoints(locations).Where(o => o.Value.Type.IsResource))
+            foreach ((Point location, Overlay overlay) in Overlay.IntersectsWithPoints(locations).Where(o => o.Value.Type.IsResource))
             {
                 int count = 0;
                 if (checkBounds.Contains(location))
                 {
                     foreach (FacingType facing in CellMetrics.AdjacentFacings)
                     {
-                        if (this.Metrics.Adjacent(location, facing, out Point adjacent) && checkBounds.Contains(adjacent))
+                        if (Metrics.Adjacent(location, facing, out Point adjacent) && checkBounds.Contains(adjacent))
                         {
-                            Overlay adjacentOverlay = this.Overlay[adjacent];
+                            Overlay adjacentOverlay = Overlay[adjacent];
                             if (adjacentOverlay?.Type.IsResource ?? false)
                             {
                                 count++;
@@ -807,20 +829,20 @@ namespace MobiusEditor.Model
 
         public void UpdateWallOverlays(ISet<Point> locations)
         {
-            foreach ((Point location, Overlay overlay) in this.Overlay.IntersectsWithPoints(locations).Where(o => o.Value.Type.IsWall))
+            foreach ((Point location, Overlay overlay) in Overlay.IntersectsWithPoints(locations).Where(o => o.Value.Type.IsWall))
             {
                 OverlayType ovt = overlay.Type;
-                bool hasNorthWall = this.Overlay.Adjacent(location, FacingType.North)?.Type == ovt;
-                bool hasEastWall = this.Overlay.Adjacent(location, FacingType.East)?.Type == ovt;
-                bool hasSouthWall = this.Overlay.Adjacent(location, FacingType.South)?.Type == ovt;
-                bool hasWestWall = this.Overlay.Adjacent(location, FacingType.West)?.Type == ovt;
+                bool hasNorthWall = Overlay.Adjacent(location, FacingType.North)?.Type == ovt;
+                bool hasEastWall = Overlay.Adjacent(location, FacingType.East)?.Type == ovt;
+                bool hasSouthWall = Overlay.Adjacent(location, FacingType.South)?.Type == ovt;
+                bool hasWestWall = Overlay.Adjacent(location, FacingType.West)?.Type == ovt;
                 if (Globals.AllowWallBuildings)
                 {
-                    String ovtName = overlay.Type.Name;
-                    hasNorthWall |= (this.Metrics.Adjacent(location, FacingType.North, out Point north) ? this.Buildings[north] as Building : null)?.Type.Name == ovtName;
-                    hasEastWall |= (this.Metrics.Adjacent(location, FacingType.East, out Point east) ? this.Buildings[east] as Building : null)?.Type.Name == ovtName;
-                    hasSouthWall |= (this.Metrics.Adjacent(location, FacingType.South, out Point south) ? this.Buildings[south] as Building : null)?.Type.Name == ovtName;
-                    hasWestWall |= (this.Metrics.Adjacent(location, FacingType.West, out Point west) ? this.Buildings[west] as Building : null)?.Type.Name == ovtName;
+                    string ovtName = overlay.Type.Name;
+                    hasNorthWall |= (Metrics.Adjacent(location, FacingType.North, out Point north) ? Buildings[north] as Building : null)?.Type.Name == ovtName;
+                    hasEastWall |= (Metrics.Adjacent(location, FacingType.East, out Point east) ? Buildings[east] as Building : null)?.Type.Name == ovtName;
+                    hasSouthWall |= (Metrics.Adjacent(location, FacingType.South, out Point south) ? Buildings[south] as Building : null)?.Type.Name == ovtName;
+                    hasWestWall |= (Metrics.Adjacent(location, FacingType.West, out Point west) ? Buildings[west] as Building : null)?.Type.Name == ovtName;
                 }
                 int icon = (hasNorthWall ? 1 : 0) | (hasEastWall ? 2 : 0) | (hasSouthWall ? 4 : 0) | (hasWestWall ? 8 : 0);
                 overlay.Icon = icon;
@@ -841,7 +863,7 @@ namespace MobiusEditor.Model
 
         public void UpdateConcreteOverlays(ISet<Point> locations)
         {
-            if (!this.ConcreteOverlaysAvailable)
+            if (!ConcreteOverlaysAvailable)
             {
                 return;
             }
@@ -860,7 +882,7 @@ namespace MobiusEditor.Model
             // Add the points around extra cells
             HashSet<Point> updateLocations = new HashSet<Point>(locations);
             HashSet<Point> newExtraCellsToAdd = new HashSet<Point>();
-            foreach ((Point pt, Overlay overlay) in this.Overlay.IntersectsWithPoints(locations).Where(o => o.Value.Type.IsConcrete))
+            foreach ((Point pt, Overlay overlay) in Overlay.IntersectsWithPoints(locations).Where(o => o.Value.Type.IsConcrete))
             {
                 if (IsIgnorableOverlay(overlay))
                 {
@@ -873,20 +895,20 @@ namespace MobiusEditor.Model
             {
                 HashSet<Point> loopList = new HashSet<Point>(newExtraCellsToAdd);
                 newExtraCellsToAdd.Clear();
-                foreach ((Point pt, Overlay overlay) in this.Overlay.IntersectsWithPoints(loopList).Where(o => o.Value.Type.IsConcrete))
+                foreach ((Point pt, Overlay overlay) in Overlay.IntersectsWithPoints(loopList).Where(o => o.Value.Type.IsConcrete))
                 {
                     if (!IsIgnorableOverlay(overlay))
                     {
                         continue;
                     }
                     FacingType[] adjCells = pt.X % 2 == 1 ? ConcreteCheckOdd : ConcreteCheckEven;
-                    for (int i = 0; i < adjCells.Length; i++)
+                    for (int i = 0; i < adjCells.Length; ++i)
                     {
-                        if (!this.Metrics.Adjacent(pt, adjCells[i], out Point adjacent))
+                        if (!Metrics.Adjacent(pt, adjCells[i], out Point adjacent))
                         {
                             continue;
                         }
-                        Overlay adj = this.Overlay[adjacent];
+                        Overlay adj = Overlay[adjacent];
                         if (adj != null && adj.Type.IsConcrete)
                         {
                             updateLocations.Add(adjacent);
@@ -902,7 +924,7 @@ namespace MobiusEditor.Model
             Dictionary<int, ConcFill> addedCells = new Dictionary<int, ConcFill>();
             Dictionary<int, OverlayType> ovlTypes = new Dictionary<int, OverlayType>();
             HashSet<int> toRemove = new HashSet<int>();
-            foreach ((Int32 cell, Overlay overlay) in this.Overlay.IntersectsWithCells(updateLocations).Where(o => o.Value.Type.IsConcrete))
+            foreach ((int cell, Overlay overlay) in Overlay.IntersectsWithCells(updateLocations).Where(o => o.Value.Type.IsConcrete))
             {
                 if (IsIgnorableOverlay(overlay))
                 {
@@ -917,11 +939,11 @@ namespace MobiusEditor.Model
                 FacingType[] adjCells = isodd ? ConcreteCheckOdd : ConcreteCheckEven;
                 ConcAdj mask = ConcAdj.None;
                 int[] cells = new int[adjCells.Length];
-                for (int i = 0; i < adjCells.Length; i++)
+                for (int i = 0; i < adjCells.Length; ++i)
                 {
-                    Overlay neighbor = this.Overlay.Adjacent(cell, adjCells[i]);
+                    Overlay neighbor = Overlay.Adjacent(cell, adjCells[i]);
                     cells[i] = -1;
-                    if (this.Metrics.Adjacent(cell, adjCells[i], out int adjacent))
+                    if (Metrics.Adjacent(cell, adjCells[i], out int adjacent))
                         cells[i] = adjacent;
                     if (neighbor?.Type == overlay.Type)
                     {
@@ -1000,7 +1022,7 @@ namespace MobiusEditor.Model
             List<int> addCells = addedCells.Keys.ToList();
             addCells.Sort();
             HashSet<Point> addedPoints = new HashSet<Point>();
-            foreach (Int32 cell in addCells)
+            foreach (int cell in addCells)
             {
                 Point? pt = Metrics.GetLocation(cell);
                 toRemove.Remove(cell);
@@ -1009,7 +1031,7 @@ namespace MobiusEditor.Model
                     continue;
                 OverlayType toMake = ovlTypes[cell];
                 ConcFill addState = addedCells[cell];
-                Overlay ovl = this.Overlay[cell];
+                Overlay ovl = Overlay[cell];
                 bool isNew = ovl == null;
                 if (isNew)
                 {
@@ -1026,16 +1048,16 @@ namespace MobiusEditor.Model
                 ovl.Icon = GetConcIcon(addState, cell % 2 == 1);
                 if (isNew)
                 {
-                    this.Overlay[cell] = ovl;
+                    Overlay[cell] = ovl;
                 }
                 if (!forExtraCells && pt.HasValue)
                 {
                     addedPoints.Add(pt.Value);
                 }
             }
-            foreach (Int32 cell in toRemove)
+            foreach (int cell in toRemove)
             {
-                this.Overlay[cell] = null;
+                Overlay[cell] = null;
             }
             if (!forExtraCells && addedPoints.Count > 0)
             {
@@ -1045,15 +1067,15 @@ namespace MobiusEditor.Model
 
         private void UpdateConcreteOverlaysGame(ISet<Point> locations)
         {
-            foreach ((Int32 cell, Overlay overlay) in this.Overlay.IntersectsWithCells(locations).Where(o => o.Value.Type.IsConcrete))
+            foreach ((int cell, Overlay overlay) in Overlay.IntersectsWithCells(locations).Where(o => o.Value.Type.IsConcrete))
             {
                 bool isodd = (cell & 1) == 1;
                 // Cells to check around the current cell. In order: top, top side, side, bottom side, bottom
                 FacingType[] adjCells = isodd ? ConcreteCheckOdd : ConcreteCheckEven;
                 ConcAdj mask = 0;
-                for (int i = 0; i < adjCells.Length; i++)
+                for (int i = 0; i < adjCells.Length; ++i)
                 {
-                    Overlay neighbor = this.Overlay.Adjacent(cell, adjCells[i]);
+                    Overlay neighbor = Overlay.Adjacent(cell, adjCells[i]);
                     if (neighbor != null && neighbor.Type.IsConcrete && !IsIgnorableOverlay(overlay))
                     {
                         mask |= (ConcAdj)(1 << i);
@@ -1157,13 +1179,13 @@ namespace MobiusEditor.Model
 
         public void SetMapTemplatesRaw(byte[] data, int width, int height, Dictionary<int, string> types, string fillType)
         {
-            int maxY = Math.Min(this.Metrics.Height, height);
-            int maxX = Math.Min(this.Metrics.Width, width);
+            int maxY = Math.Min(Metrics.Height, height);
+            int maxX = Math.Min(Metrics.Width, width);
             Dictionary<int, TemplateType> replaceTypes = new Dictionary<int, TemplateType>();
             Dictionary<int, int> replaceIcons = new Dictionary<int, int>();
             int fillIcon;
             TemplateType fillTile;
-            this.SplitTileInfo(fillType, out fillTile, out fillIcon, "fillType", false);
+            SplitTileInfo(fillType, out fillTile, out fillIcon, "fillType", false);
             if (fillTile != null)
             {
                 Point? fillPoint = fillTile.GetIconPoint(fillIcon);
@@ -1177,14 +1199,14 @@ namespace MobiusEditor.Model
                 string tileType = kvp.Value;
                 int tileIcon;
                 TemplateType tile;
-                this.SplitTileInfo(tileType, out tile, out tileIcon, "types", false);
+                SplitTileInfo(tileType, out tile, out tileIcon, "types", false);
                 replaceTypes[kvp.Key] = tile;
                 if (tile != null)
                 {
-                    if (tile.Flag.HasFlag(TemplateTypeFlag.Group))
+                    if (tile.Flags.HasFlag(TemplateTypeFlag.Group))
                     {
                         tile = tileIcon >= tile.GroupTiles.Length ?
-                            null : this.TemplateTypes.Where(t => t.Name == tile.GroupTiles[tileIcon]).FirstOrDefault();
+                            null : TemplateTypes.Where(t => t.Name == tile.GroupTiles[tileIcon]).FirstOrDefault();
                         replaceTypes[kvp.Key] = tile;
                         tileIcon = 0;
                     }
@@ -1199,7 +1221,7 @@ namespace MobiusEditor.Model
                     replaceIcons[kvp.Key] = tileIcon;
                 }
             }
-            this.Templates.Clear();
+            Templates.Clear();
             int lineOffset = 0;
             int stride = width * 4;
             for (int y = 0; y < maxY; ++y)
@@ -1216,12 +1238,12 @@ namespace MobiusEditor.Model
                         if (curr != null)
                         {
                             int icon = replaceIcons.ContainsKey(col) ? replaceIcons[col] : 0;
-                            this.Templates[y, x] = curr == null ? null : new Template { Type = curr, Icon = icon };
+                            Templates[y, x] = curr == null ? null : new Template { Type = curr, Icon = icon };
                         }
                     }
                     else if (fillTile != null)
                     {
-                        this.Templates[y, x] = new Template { Type = fillTile, Icon = fillIcon };
+                        Templates[y, x] = new Template { Type = fillTile, Icon = fillIcon };
                     }
                     offset += 4;
                 }
@@ -1243,8 +1265,8 @@ namespace MobiusEditor.Model
                 tileType = m.Groups[1].Value;
                 tileIcon = Int32.Parse(m.Groups[2].Value);
             }
-            tile = this.TemplateTypes.Where(t => String.Equals(tileType, t.Name, StringComparison.OrdinalIgnoreCase)).FirstOrDefault();
-            string th = this.Theater.Name;
+            tile = TemplateTypes.Where(t => String.Equals(tileType, t.Name, StringComparison.OrdinalIgnoreCase)).FirstOrDefault();
+            string th = Theater.Name;
             if (tile == null)
             {
                 if (!safe)
@@ -1267,26 +1289,26 @@ namespace MobiusEditor.Model
 
         public string GetCellDescription(Point location, Point subPixel)
         {
-            if (!this.Metrics.GetCell(location, out int cell))
+            if (!Metrics.GetCell(location, out int cell))
             {
                 return String.Format("X = {0}, Y = {1}, No cell", location.X, location.Y);
             }
-            bool inBounds = this.Bounds.Contains(location);
+            bool inBounds = Bounds.Contains(location);
             StringBuilder sb = new StringBuilder();
             sb.AppendFormat("X = {0}, Y = {1}, Cell = {2}", location.X, location.Y, cell);
-            Template template = this.Templates[cell];
+            Template template = Templates[cell];
             TemplateType templateType = template?.Type;
             if (templateType != null)
             {
                 sb.AppendFormat(", Template = {0} ({1}) ({2})", templateType.DisplayName, template.Icon, template.Type.GetLandType(template.Icon).ToString());
             }
-            Smudge smudge = this.Smudge[cell];
+            Smudge smudge = Smudge[cell];
             SmudgeType smudgeType = smudge?.Type;
             if (smudgeType != null)
             {
-                sb.AppendFormat(", Smudge = {0}{1}", smudgeType.DisplayName, smudgeType.IsAutoBib ? " (Attached)" : String.Empty);
+                sb.AppendFormat(", Smudge = {0}{1}", smudgeType.DisplayName, smudge.AttachedTo != null ? " (Attached)" : String.Empty);
             }
-            Overlay overlay = this.Overlay[cell];
+            Overlay overlay = Overlay[cell];
             OverlayType overlayType = overlay?.Type;
             if (overlayType != null)
             {
@@ -1303,13 +1325,13 @@ namespace MobiusEditor.Model
                     }
                 }
             }
-            Terrain terrain = this.Technos[location] as Terrain;
+            Terrain terrain = Technos[location] as Terrain;
             TerrainType terrainType = terrain?.Type;
             if (terrainType != null)
             {
                 sb.AppendFormat(", Terrain = {0}", terrainType.DisplayName);
             }
-            if (this.Technos[location] is InfantryGroup infantryGroup)
+            if (Technos[location] is InfantryGroup infantryGroup)
             {
                 InfantryStoppingType i = InfantryGroup.ClosestStoppingTypes(subPixel).First();
                 Infantry inf = infantryGroup.Infantry[(int)i];
@@ -1318,13 +1340,13 @@ namespace MobiusEditor.Model
                     sb.AppendFormat(", Infantry = {0} ({1})", inf.Type.DisplayName, InfantryGroup.GetStoppingTypeName(i));
                 }
             }
-            Unit unit = this.Technos[location] as Unit;
+            Unit unit = Technos[location] as Unit;
             UnitType unitType = unit?.Type;
             if (unitType != null)
             {
                 sb.AppendFormat(", Unit = {0}", unitType.DisplayName);
             }
-            Building building = this.Buildings[location] as Building;
+            Building building = Buildings[location] as Building;
             BuildingType buildingType = building?.Type;
             if (buildingType != null)
             {
@@ -1335,81 +1357,191 @@ namespace MobiusEditor.Model
 
         public HouseType GetBaseHouse(GameInfo gameInfo)
         {
-            if (this.HouseNone != null)
+            if (HouseNone != null)
             {
-                return this.HouseNone.Type;
+                return HouseNone.Type;
             }
-            String oppos = gameInfo.GetClassicOpposingPlayer(this.BasicSection.Player);
-            return this.HouseTypes.Where(h => h.Equals(this.BasicSection.BasePlayer)).FirstOrDefault()
-                ?? this.HouseTypes.Where(h => h.Equals(oppos)).FirstOrDefault()
-                ?? this.HouseTypes.First();
+            string oppos = gameInfo.GetClassicOpposingPlayer(BasicSection.Player);
+            return HouseTypes.Where(h => h.Equals(BasicSection.BasePlayer)).FirstOrDefault()
+                ?? HouseTypes.Where(h => h.Equals(oppos)).FirstOrDefault()
+                ?? HouseTypes.First();
 
         }
 
         private void RemoveBibs(Building building)
         {
-            Int32[] bibCells = this.Smudge.IntersectsWithCells(building.BibCells).Where(x => x.Value.Type.IsAutoBib).Select(x => x.Cell).ToArray();
-            foreach (Int32 cell in bibCells)
+            int[] bibCells = Smudge.IntersectsWithCells(building.BibCells).Where(x => x.Value.AttachedTo == building).Select(x => x.Cell).ToArray();
+            foreach (int cell in bibCells)
             {
-                this.Smudge[cell] = null;
+                Smudge[cell] = null;
             }
             building.BibCells.Clear();
         }
 
         private void AddBibs(Point location, Building building)
         {
-            Dictionary<Point, Smudge> bibPoints = building.GetBib(location, this.SmudgeTypes);
+            Dictionary<Point, Smudge> bibPoints = building.GetBib(location, SmudgeTypes);
             if (bibPoints == null)
             {
                 return;
             }
             foreach (Point p in bibPoints.Keys)
             {
-                if (this.Metrics.GetCell(p, out int subCell))
+                if (Metrics.GetCell(p, out int subCell))
                 {
-                    this.Smudge[subCell] = bibPoints[p];
+                    Smudge[subCell] = bibPoints[p];
                     building.BibCells.Add(subCell);
                 }
             }
         }
 
+        /// <summary>
+        /// Transforms the given teamtype orders list into a list of points forming a route on the map.
+        /// The additional <paramref name="validWayPoints"/> outputs which points on the map correspond to valid waypoints.
+        /// If a valid point exists in the output list, but it is null in <paramref name="validWayPoints"/>, this point is
+        /// the first valid location found after an order to loop back to an earlier order.
+        /// </summary>
+        /// <param name="teamType">The teamtype for which to retrieve the route.</param>
+        /// <param name="validWayPoints">A list matching the output list, in which a positive number indicates a waypoint number,
+        /// -1 indicates a raw cell number, and null is not a real location but a loop order.</param>
+        /// <returns>A list of map cells the route goes through. Null entries are either empty waypoints, or not orders that can be transformed into a location.</returns>
+        public List<int?> GetTeamTypeRoute(string teamType, out List<int?> validWayPoints)
+        {
+            
+            if (teamType == null)
+            {
+                validWayPoints = null;
+                return null;
+            }
+            TeamType team = TeamTypes.FirstOrDefault(t => teamType.Equals(t.Name, StringComparison.OrdinalIgnoreCase));
+            if (team == null)
+            {
+                validWayPoints = null;
+                return null;
+            }
+            return GetTeamTypeRoute(team.Missions, out validWayPoints);
+        }
+
+        /// <summary>
+        /// Transforms the given teamtype orders list into a list of points forming a route on the map.
+        /// The additional <paramref name="validWayPoints"/> outputs which points on the map correspond to valid waypoints.
+        /// If a valid point exists in the output list, but it is null in <paramref name="validWayPoints"/>, this point is
+        /// the first valid location found after an order to loop back to an earlier order.
+        /// </summary>
+        /// <param name="orders">The list of teamtype orders.</param>
+        /// <param name="validWayPoints">A list matching the output list, in which a positive number indicates a waypoint number,
+        /// -1 indicates a raw cell number, and null is not a real location but a loop order.</param>
+        /// <returns>A list of map cells the route goes through. Null entries are either empty waypoints, or not orders that can be transformed into a location.</returns>
+        public List<int?> GetTeamTypeRoute(List<TeamTypeMission> orders, out List<int?> validWayPoints)
+        {
+            List<int?> points = new List<int?>();
+            validWayPoints = new List<int?>();
+            if (orders == null)
+            {
+                return points;
+            }
+            Waypoint[] wps = Waypoints;
+            bool killLoop = false;
+            for (int i = 0; i < orders.Count; ++i)
+            {
+                int? cell = null;
+                int? validWp = null;
+                TeamTypeMission ttm = orders[i];
+                TeamMissionArgType tmArgTp = ttm.Mission.ArgType;
+                int tmArg = ttm.Argument;
+                switch (tmArgTp)
+                {
+                    case TeamMissionArgType.Waypoint:
+                        validWp = tmArg;
+                        if (tmArg >= 0 && tmArg < wps.Length) cell = wps[tmArg].Cell;
+                        break;
+                    case TeamMissionArgType.MapCell:
+                        validWp = -1;
+                        if (tmArg >= 0 && tmArg < Metrics.Length) cell = tmArg;
+                        break;
+                    case TeamMissionArgType.MissionNumber:
+                        int endPoint = tmArg > i ? orders.Count : i;
+                        // looping back invalidates any following instructions.
+                        killLoop = tmArg <= i;
+                        if (!killLoop)
+                        {
+                            // if jumping ahead, skip items in loop.
+                            i = tmArg - 1;
+                        }
+                        bool foundLoopPoint = false;
+                        for (int j = tmArg; j < endPoint; ++j)
+                        {
+                            TeamTypeMission ttm2 = orders[j];
+                            TeamMissionArgType tmArgTp2 = ttm2.Mission.ArgType;
+                            int tmArg2 = ttm2.Argument;
+                            switch (tmArgTp2)
+                            {
+                                case TeamMissionArgType.Waypoint:
+                                    foundLoopPoint = true;
+                                    if (tmArg2 >= 0 && tmArg2 < wps.Length) cell = wps[tmArg2].Cell;
+                                    break;
+                                case TeamMissionArgType.MapCell:
+                                    foundLoopPoint = true;
+                                    if (tmArg2 >= 0 && tmArg2 < Metrics.Length) cell = tmArg2;
+                                    break;
+                                case TeamMissionArgType.MissionNumber:
+                                    foundLoopPoint = true;
+                                    break;
+                            }
+                            if (foundLoopPoint)
+                            {
+                                break;
+                            }
+                        }
+                        break;
+                }
+                points.Add(cell);
+                validWayPoints.Add(validWp);
+                if (killLoop)
+                {
+                    break;
+                }
+            }
+            return points;
+        }
+
         public Map Clone(bool forPreview)
         {
-            Waypoint[] wpPreview = new Waypoint[this.Waypoints.Length + (forPreview ? 1 : 0)];
-            Array.Copy(this.Waypoints, wpPreview, this.Waypoints.Length);
+            Waypoint[] wpPreview = new Waypoint[Waypoints.Length + (forPreview ? 1 : 0)];
+            Array.Copy(Waypoints, wpPreview, Waypoints.Length);
             if (forPreview)
             {
-                wpPreview[this.Waypoints.Length] = new Waypoint("", null);
+                wpPreview[Waypoints.Length] = new Waypoint("", null);
             }
             // This is a shallow clone; the map is new, but the placed contents all still reference the original objects.
             // These shallow copies are used for map preview during editing, where dummy objects can be added without any issue.
-            Map map = new Map(this.BasicSection, this.Theater, this.Metrics.Size, this.HouseType, this.HouseTypesIncludingSpecials,
-                this.FlagColors, this.TheaterTypes, this.TemplateTypes, this.TerrainTypes, this.OverlayTypes, this.SmudgeTypes,
-                this.EventTypes, this.CellEventTypes, this.UnitEventTypes, this.BuildingEventTypes, this.TerrainEventTypes,
-                this.ActionTypes, this.CellActionTypes, this.UnitActionTypes, this.BuildingActionTypes, this.TerrainActionTypes,
-                this.MissionTypes, this.inputMissionArmed, this.inputMissionUnarmed, this.inputMissionHarvest, this.inputMissionAircraft,
-                this.UnitDirectionTypes, this.BuildingDirectionTypes, this.AllInfantryTypes, this.AllUnitTypes, this.BuildingTypes, this.TeamMissionTypes,
-                this.AllTeamTechnoTypes, wpPreview, this.MovieTypes, this.MovieEmpty, this.ThemeTypes, this.ThemeEmpty,
-                this.DropZoneRadius, this.GapRadius, this.RadarJamRadius, this.TiberiumOrGoldValue, this.GemValue)
+            Map map = new Map(BasicSection, Theater, Metrics.Size, HouseType, HouseTypesIncludingSpecials,
+                FlagColors, TheaterTypes, TemplateTypes, TerrainTypes, OverlayTypes, SmudgeTypes,
+                EventTypes, CellEventTypes, UnitEventTypes, BuildingEventTypes, TerrainEventTypes,
+                ActionTypes, CellActionTypes, UnitActionTypes, BuildingActionTypes, TerrainActionTypes,
+                MissionTypes, MissionTypesBad, inputMissionArmed, inputMissionUnarmed, inputMissionHarvest, inputMissionAircraft,
+                UnitDirectionTypes, BuildingDirectionTypes, AllInfantryTypes, AllUnitTypes, BuildingTypes, TeamMissionTypes,
+                AllTeamTechnoTypes, wpPreview, MovieTypes, MovieEmpty, ThemeTypes, ThemeEmpty,
+                DropZoneRadius, GapRadius, RadarJamRadius, TiberiumOrGoldValue, GemValue)
             {
-                UsedLandTypes = this.UsedLandTypes,
+                UsedLandTypes = UsedLandTypes,
                 TopLeft = TopLeft,
                 Size = Size,
                 // Allows functions to check whether they are being applied on the real map or the preview map.
                 ForPreview = forPreview
             };
             map.BeginUpdate();
-            this.MapSection.CopyTo(map.MapSection);
-            this.BriefingSection.CopyTo(map.BriefingSection);
+            MapSection.CopyTo(map.MapSection);
+            BriefingSection.CopyTo(map.BriefingSection);
             // Ignore processing-only "VisibilityAsEnum".
-            this.SteamSection.CopyTo(map.SteamSection, typeof(NonSerializedINIKeyAttribute));
-            Array.Copy(this.Houses, map.Houses, map.Houses.Length);
-            map.Triggers.AddRange(this.Triggers);
-            this.Templates.CopyTo(map.Templates);
-            this.Overlay.CopyTo(map.Overlay);
-            this.Smudge.CopyTo(map.Smudge);
-            this.CellTriggers.CopyTo(map.CellTriggers);
-            foreach ((Point location, ICellOccupier occupier) in this.Technos)
+            SteamSection.CopyTo(map.SteamSection, typeof(NonSerializedINIKeyAttribute));
+            Array.Copy(Houses, map.Houses, map.Houses.Length);
+            map.Triggers.AddRange(Triggers);
+            Templates.CopyTo(map.Templates);
+            Overlay.CopyTo(map.Overlay);
+            Smudge.CopyTo(map.Smudge);
+            CellTriggers.CopyTo(map.CellTriggers);
+            foreach ((Point location, ICellOccupier occupier) in Technos)
             {
                 if (occupier is InfantryGroup infantryGroup)
                 {
@@ -1419,29 +1551,30 @@ namespace MobiusEditor.Model
                     Array.Copy(infantryGroup.Infantry, newInfantryGroup.Infantry, newInfantryGroup.Infantry.Length);
                     map.Technos.Add(location, newInfantryGroup);
                 }
-                else if (!(occupier is Building))
+                else
                 {
                     map.Technos.Add(location, occupier);
                 }
             }
-            foreach ((Point location, ICellOccupier building) in this.Buildings)
+            foreach ((Point location, ICellOccupier building) in Buildings)
             {
                 // Silly side effect: this fixes any building bibs.
                 map.Buildings.Add(location, building);
             }
-            map.TeamTypes.AddRange(this.TeamTypes);
+            map.TeamTypes.AddRange(TeamTypes);
+            // Global update of all things that need updating like wall connections and resource density and such.
             map.EndUpdate();
             return map;
         }
 
         public IEnumerable<Trigger> FilterCellTriggers()
         {
-            return this.FilterCellTriggers(this.Triggers);
+            return FilterCellTriggers(Triggers);
         }
 
         public IEnumerable<Trigger> FilterCellTriggers(IEnumerable<Trigger> triggers)
         {
-            foreach (Trigger trigger in FilterTriggersByEvent(this.CellEventTypes, triggers).Concat(this.FilterTriggersByAction(this.CellActionTypes, triggers).Distinct()))
+            foreach (Trigger trigger in FilterTriggersByEvent(CellEventTypes, triggers).Concat(FilterTriggersByAction(CellActionTypes, triggers).Distinct()))
             {
                 yield return trigger;
             }
@@ -1449,12 +1582,12 @@ namespace MobiusEditor.Model
 
         public IEnumerable<Trigger> FilterUnitTriggers()
         {
-            return this.FilterUnitTriggers(this.Triggers);
+            return FilterUnitTriggers(Triggers);
         }
 
         public IEnumerable<Trigger> FilterUnitTriggers(IEnumerable<Trigger> triggers)
         {
-            foreach (Trigger trigger in FilterTriggersByEvent(this.UnitEventTypes, triggers).Concat(this.FilterTriggersByAction(this.UnitActionTypes, triggers).Distinct()))
+            foreach (Trigger trigger in FilterTriggersByEvent(UnitEventTypes, triggers).Concat(FilterTriggersByAction(UnitActionTypes, triggers).Distinct()))
             {
                 yield return trigger;
             }
@@ -1462,12 +1595,12 @@ namespace MobiusEditor.Model
 
         public IEnumerable<Trigger> FilterStructureTriggers()
         {
-            return this.FilterStructureTriggers(this.Triggers);
+            return FilterStructureTriggers(Triggers);
         }
 
         public IEnumerable<Trigger> FilterStructureTriggers(IEnumerable<Trigger> triggers)
         {
-            foreach (Trigger trigger in FilterTriggersByEvent(this.BuildingEventTypes, triggers).Concat(this.FilterTriggersByAction(this.BuildingActionTypes, triggers).Distinct()))
+            foreach (Trigger trigger in FilterTriggersByEvent(BuildingEventTypes, triggers).Concat(FilterTriggersByAction(BuildingActionTypes, triggers).Distinct()))
             {
                 yield return trigger;
             }
@@ -1475,22 +1608,22 @@ namespace MobiusEditor.Model
 
         public IEnumerable<Trigger> FilterTerrainTriggers()
         {
-            return this.FilterTerrainTriggers(this.Triggers);
+            return FilterTerrainTriggers(Triggers);
         }
 
         public IEnumerable<Trigger> FilterTerrainTriggers(IEnumerable<Trigger> triggers)
         {
-            foreach (Trigger trigger in FilterTriggersByEvent(this.TerrainEventTypes, triggers).Concat(this.FilterTriggersByAction(this.TerrainActionTypes, triggers).Distinct()))
+            foreach (Trigger trigger in FilterTriggersByEvent(TerrainEventTypes, triggers).Concat(FilterTriggersByAction(TerrainActionTypes, triggers).Distinct()))
             {
                 yield return trigger;
             }
         }
 
-        public static IEnumerable<Trigger> FilterTriggersByEvent(HashSet<String> allowedEventTypes, IEnumerable<Trigger> triggers)
+        public static IEnumerable<Trigger> FilterTriggersByEvent(HashSet<string> allowedEventTypes, IEnumerable<Trigger> triggers)
         {
             foreach (Trigger trig in triggers)
             {
-                if (trig.Event1 != null && allowedEventTypes.Contains(trig.Event1.EventType)
+                if (!Globals.EnforceTriggerTypes || (trig.Event1 != null && allowedEventTypes.Contains(trig.Event1.EventType))
                     || ((trig.EventControl == TriggerMultiStyleType.Or || trig.EventControl == TriggerMultiStyleType.And)
                         && trig.Event2 != null && allowedEventTypes.Contains(trig.Event2.EventType)))
                 {
@@ -1499,12 +1632,12 @@ namespace MobiusEditor.Model
             }
         }
 
-        public static String MakeAllowedTriggersToolTip(string[] filteredEvents, string[] filteredActions)
+        public static string MakeAllowedTriggersToolTip(string[] filteredEvents, string[] filteredActions)
         {
             return MakeAllowedTriggersToolTip(filteredEvents, null, filteredActions, null);
         }
 
-        public static String MakeAllowedTriggersToolTip(string[] filteredEvents, string[] filteredActions, Trigger trigger)
+        public static string MakeAllowedTriggersToolTip(string[] filteredEvents, string[] filteredActions, Trigger trigger)
         {
             List<string> indicatedEvents = new List<string>();
             List<string> indicatedActions = new List<string>();
@@ -1524,7 +1657,7 @@ namespace MobiusEditor.Model
             return MakeAllowedTriggersToolTip(filteredEvents, indicatedEvents.ToArray(), filteredActions, indicatedActions.ToArray());
         }
 
-        public static String MakeAllowedTriggersToolTip(string[] filteredEvents, String[] indicatedEvents, string[] filteredActions, string[] indicatedActions)
+        public static string MakeAllowedTriggersToolTip(string[] filteredEvents, string[] indicatedEvents, string[] filteredActions, string[] indicatedActions)
         {
             if (indicatedEvents == null)
             {
@@ -1533,6 +1666,10 @@ namespace MobiusEditor.Model
             if (indicatedActions == null)
             {
                 indicatedActions = new string[0];
+            }
+            if (!Globals.EnforceTriggerTypes)
+            {
+                return "Trigger restricting has been disabled.";
             }
             StringBuilder tooltip = new StringBuilder();
             bool hasEvents = filteredEvents != null && filteredEvents.Length > 0;
@@ -1576,11 +1713,11 @@ namespace MobiusEditor.Model
             return hasEvents || hasActions ? tooltip.ToString() : null;
         }
 
-        public IEnumerable<Trigger> FilterTriggersByAction(HashSet<String> allowedActionTypes, IEnumerable<Trigger> triggers)
+        public IEnumerable<Trigger> FilterTriggersByAction(HashSet<string> allowedActionTypes, IEnumerable<Trigger> triggers)
         {
             foreach (Trigger trig in triggers)
             {
-                if (trig.Action1 != null && allowedActionTypes.Contains(trig.Action1.ActionType)
+                if (!Globals.EnforceTriggerTypes || (trig.Action1 != null && allowedActionTypes.Contains(trig.Action1.ActionType))
                     || (trig.Action2 != null && allowedActionTypes.Contains(trig.Action2.ActionType)))
                 {
                     yield return trig;
@@ -1590,7 +1727,7 @@ namespace MobiusEditor.Model
 
         public IEnumerable<ITechno> GetAllTechnos()
         {
-            foreach ((Point location, ICellOccupier occupier) in this.Technos)
+            foreach ((Point location, ICellOccupier occupier) in Technos)
             {
                 if (occupier is InfantryGroup infantryGroup)
                 {
@@ -1611,44 +1748,44 @@ namespace MobiusEditor.Model
 
         public string GetDefaultMission(ITechnoType techno)
         {
-            return this.GetDefaultMission(techno, this.DefaultMissionArmed);
+            return GetDefaultMission(techno, DefaultMissionArmed);
         }
 
-        public string GetDefaultMission(ITechnoType techno, String currentMission)
+        public string GetDefaultMission(ITechnoType techno, string currentMission)
         {
             if (techno.IsHarvester)
             {
-                return this.DefaultMissionHarvest;
+                return DefaultMissionHarvest;
             }
             if (techno.IsAircraft && !techno.IsFixedWing)
             {
                 // Ground-landable aircraft. Default order should be 'Unload' to make it land on the spot it spawned on.
-                return this.DefaultMissionAircraft;
+                return DefaultMissionAircraft;
             }
             if (!techno.IsArmed)
             {
-                return this.DefaultMissionUnarmed;
+                return DefaultMissionUnarmed;
             }
-            // Automatically switch from other default missions to the general 'Guard' one, but don't change custom-picked mission like 'Hunt4.
-            if (currentMission == this.DefaultMissionHarvest || currentMission == this.DefaultMissionAircraft || currentMission == this.DefaultMissionUnarmed)
+            // Automatically switch from other default missions to the general 'Guard' one, but don't change custom-picked mission like 'Hunt'.
+            if (currentMission == DefaultMissionHarvest || currentMission == DefaultMissionAircraft || currentMission == DefaultMissionUnarmed)
             {
-                return this.DefaultMissionArmed;
+                return DefaultMissionArmed;
             }
             return currentMission;
         }
 
-        public ICellOccupier FindBlockingObject(int cell, ICellOccupier obj, out int blockingCell, out int placementCell)
+        public ICellOccupier FindBlockingObject(int cell, ICellOccupier obj, bool buildingLayer, out int blockingCell, out int placementCell)
         {
-            return FindBlockingObject(cell, obj, out blockingCell, out placementCell, out _);
+            return FindBlockingObject(cell, obj, buildingLayer, out blockingCell, out placementCell, out _);
         }
 
-        public ICellOccupier FindBlockingObject(int cell, ICellOccupier obj, out int blockingCell, out int placementCell, out bool onBib)
+        public ICellOccupier FindBlockingObject(int cell, ICellOccupier obj, bool buildingLayer, out int blockingCell, out int placementCell, out bool onBib)
         {
             onBib = false;
             blockingCell = -1;
             placementCell = -1;
             HashSet<Point> bibIgnoreCells = new HashSet<Point>();
-            if (this.Metrics.GetLocation(cell, out Point p))
+            if (Metrics.GetLocation(cell, out Point p))
             {
                 bool[,] occupyMask = obj.OccupyMask;
                 int ylenOcMask = occupyMask.GetLength(0);
@@ -1661,27 +1798,26 @@ namespace MobiusEditor.Model
                     int xlenMask = mask.GetLength(1);
                     int ylen = Math.Max(ylenMask, ylenOcMask);
                     int xlen = Math.Max(xlenMask, xlenOcMask);
-                    for (Int32 y = 0; y < ylen; ++y)
+                    for (int y = 0; y < ylen; ++y)
                     {
-                        for (Int32 x = 0; x < xlen; ++x)
+                        for (int x = 0; x < xlen; ++x)
                         {
                             if (y < ylenMask && x < xlenMask && mask[y, x])
                             {
-                                if (!this.Metrics.GetCell(new Point(p.X + x, p.Y + y), out int targetCell))
+                                if (!Metrics.GetCell(new Point(p.X + x, p.Y + y), out int targetCell))
                                 {
                                     blockingCell = -1;
                                     placementCell = -1;
                                     return null;
                                 }
-                                ICellOccupier techno = this.Technos[targetCell];
-                                ICellOccupier b = this.Buildings[targetCell];
-                                if (techno != null || b != null)
+                                ICellOccupier techno = buildingLayer ? Buildings[targetCell] : Technos[targetCell];
+                                if (techno != null)
                                 {
                                     blockingCell = targetCell;
-                                    Point? blockingOrigin = techno != null ? this.Technos[techno] : this.Buildings[b];
-                                    placementCell = this.Metrics.GetCell(blockingOrigin.Value).Value;
+                                    Point? blockingOrigin = buildingLayer? Buildings[techno] : Technos[techno];
+                                    placementCell = Metrics.GetCell(blockingOrigin.Value).Value;
                                     onBib = false;
-                                    return techno ?? b;
+                                    return techno;
                                 }
                             }
                             else if (y < ylenOcMask && x < xlenOcMask && occupyMask[y, x])
@@ -1698,37 +1834,37 @@ namespace MobiusEditor.Model
                     }
                 }
                 // Check all other types, and building bibs.
-                for (Int32 y = 0; y < ylenOcMask; ++y)
+                for (int y = 0; y < ylenOcMask; ++y)
                 {
-                    for (Int32 x = 0; x < xlenOcMask; ++x)
+                    for (int x = 0; x < xlenOcMask; ++x)
                     {
                         if (occupyMask[y, x])
                         {
-                            if (!this.Metrics.GetCell(new Point(p.X + x, p.Y + y), out int targetCell))
+                            if (!Metrics.GetCell(new Point(p.X + x, p.Y + y), out int targetCell))
                             {
                                 blockingCell = -1;
                                 placementCell = -1;
                                 return null;
                             }
-                            ICellOccupier techno = this.Technos[targetCell];
-                            ICellOccupier b = this.Buildings[targetCell];
+                            ICellOccupier techno = Technos[targetCell];
+                            ICellOccupier b = Buildings[targetCell];
                             if (techno != null || b != null)
                             {
                                 blockingCell = targetCell;
                                 Point? blockingOrigin = null;
                                 if (b != null)
                                 {
-                                    blockingOrigin = this.Buildings[b];
+                                    blockingOrigin = Buildings[b];
                                     onBib = true;
                                 }
                                 else if (!bibIgnoreCells.Contains(new Point(x, y)))
                                 {
                                     // For checking non-building technos on a building's area, ignore the unoccupied bib cells.
-                                    blockingOrigin = this.Technos[techno];
+                                    blockingOrigin = Technos[techno];
                                 }
                                 if (blockingOrigin.HasValue)
                                 {
-                                    placementCell = this.Metrics.GetCell(blockingOrigin.Value).Value;
+                                    placementCell = Metrics.GetCell(blockingOrigin.Value).Value;
                                     return techno ?? b;
                                 }
                             }
@@ -1746,16 +1882,16 @@ namespace MobiusEditor.Model
 
         public void CheckBuildingBlockingCell(int cell, BuildingType buildingType, List<string> errors, ref bool modified, string rebuildIndex)
         {
-            ICellOccupier techno = FindBlockingObject(cell, buildingType, out int blockingCell, out int placementcell, out bool isbib);
-            String reportString;
+            ICellOccupier techno = FindBlockingObject(cell, buildingType, true, out int blockingCell, out int placementcell, out bool isbib);
+            string reportString;
             if (rebuildIndex != null)
             {
-                String bibRemark = isbib ? "Bib area of b" : "B";
+                string bibRemark = isbib ? "Bib area of b" : "B";
                 reportString = String.Format("{0}ase rebuild entry '{1}', structure '{2}' on cell '{3}'", bibRemark, rebuildIndex, buildingType.Name, cell);
             }
             else
             {
-                String bibRemark = isbib ? "Bib area of s" : "S";
+                string bibRemark = isbib ? "Bib area of s" : "S";
                 reportString = String.Format("{0}tructure '{1}' placed on cell {2}", bibRemark, buildingType.Name, cell);
             }
             string reportCell = blockingCell == -1 ? "<unknown>" : blockingCell.ToString();
@@ -1780,97 +1916,72 @@ namespace MobiusEditor.Model
                 }
                 if (onBib)
                 {
-                    errors.Add(string.Format("{0} overlaps bib area of structure '{1}' placed on cell {2} at cell {3}; skipping.", reportString, building.Type.Name, placementcell, reportCell));
+                    errors.Add(String.Format("{0} overlaps bib area of structure '{1}' placed on cell {2} at cell {3}; skipping.", reportString, building.Type.Name, placementcell, reportCell));
                     modified = true;
                 }
                 else
                 {
-                    errors.Add(string.Format("{0} overlaps structure '{1}' placed on cell {2} at cell {3}; skipping.", reportString, building.Type.Name, placementcell, reportCell));
+                    errors.Add(String.Format("{0} overlaps structure '{1}' placed on cell {2} at cell {3}; skipping.", reportString, building.Type.Name, placementcell, reportCell));
                     modified = true;
                 }
             }
             else if (techno is Overlay overlay)
             {
-                errors.Add(string.Format("{0} overlaps overlay '{1}' on cell {2}; skipping.", reportString, overlay.Type.Name, reportCell));
+                errors.Add(String.Format("{0} overlaps overlay '{1}' on cell {2}; skipping.", reportString, overlay.Type.Name, reportCell));
                 modified = true;
             }
             else if (techno is Terrain terrain)
             {
-                errors.Add(string.Format("{0} overlaps terrain '{1}' placed on cell {2} at cell {3}; skipping.", reportString, terrain.Type.Name, placementcell, reportCell));
+                errors.Add(String.Format("{0} overlaps terrain '{1}' placed on cell {2} at cell {3}; skipping.", reportString, terrain.Type.Name, placementcell, reportCell));
                 modified = true;
             }
             else if (techno is InfantryGroup infantry)
             {
                 Infantry inf = infantry.Infantry.FirstOrDefault(u => u != null);
-                string infInfo = inf == null ? string.Empty : string.Format(" '{0}'", inf.Type.Name);
-                errors.Add(string.Format("{0} overlaps infantry '{1}' on cell {2}; skipping.", reportString, infInfo, reportCell));
+                string infInfo = inf == null ? String.Empty : String.Format(" '{0}'", inf.Type.Name);
+                errors.Add(String.Format("{0} overlaps infantry '{1}' on cell {2}; skipping.", reportString, infInfo, reportCell));
                 modified = true;
             }
             else if (techno is Unit unit)
             {
-                errors.Add(string.Format("{0} overlaps unit '{1}' on cell {2}; skipping.", reportString, unit.Type.Name, reportCell));
+                errors.Add(String.Format("{0} overlaps unit '{1}' on cell {2}; skipping.", reportString, unit.Type.Name, reportCell));
                 modified = true;
             }
             else
             {
                 if (blockingCell != -1)
                 {
-                    errors.Add(string.Format("{0} overlaps unknown techno on cell {1}; skipping.", reportString, blockingCell));
+                    errors.Add(String.Format("{0} overlaps unknown techno on cell {1}; skipping.", reportString, blockingCell));
                     modified = true;
                 }
                 else
                 {
-                    errors.Add(string.Format("{0} crosses outside the map bounds; skipping.", reportString));
+                    errors.Add(String.Format("{0} crosses outside the map bounds; skipping.", reportString));
                     modified = true;
                 }
             }
         }
 
-
-        public TGA GeneratePreview(Size previewSize, IGamePlugin plugin, bool renderAll, bool sharpen)
+        public TGA GenerateMapPreview(IGamePlugin plugin)
         {
-            MapLayerFlag toRender = MapLayerFlag.Template | (renderAll ? MapLayerFlag.OverlayAll | MapLayerFlag.Smudge | MapLayerFlag.Technos : MapLayerFlag.Resources);
-            int?[] backupWps = null;
-            if (!this.BasicSection.SoloMission)
-            {
-                toRender = toRender | MapLayerFlag.Waypoints;
-                // Since there's no way to tell the map renderer to only render flag waypoints, we backup and
-                // clear all other waypoints before the preview generation, and restore them again afterwards.
-                backupWps = new int?[this.Waypoints.Length];
-                for (int i = 0; i < this.Waypoints.Length; ++i)
-                {
-                    // Clear waypoint if not player start.
-                    if (this.Waypoints[i].Cell.HasValue && !this.Waypoints[i].Flag.HasFlag(WaypointFlag.PlayerStart))
-                    {
-                        backupWps[i] = Waypoints[i].Cell;
-                        this.Waypoints[i].Cell = null;
-                    }
-                }
-            }
-            try
-            {
-                return this.GeneratePreview(previewSize, plugin, toRender, true, true, true, sharpen);
-            }
-            finally
-            {
-                // Restore waypoints.
-                if (backupWps != null)
-                {
-                    for (int i = 0; i < this.Waypoints.Length; ++i)
-                    {
-                        if (backupWps[i].HasValue)
-                        {
-                            this.Waypoints[i].Cell = backupWps[i];
-                        }
-                    }
-                }
-            }
+            return GeneratePreview(Globals.MapPreviewSize, plugin, Bounds, true, false);
         }
 
-        public TGA GeneratePreview(Size previewSize, IGamePlugin plugin, MapLayerFlag toRender, bool clearBackgrround, bool smooth, bool crop, bool sharpen)
+        public TGA GenerateWorkshopPreview(IGamePlugin plugin, Rectangle boundsToUse)
         {
-            HashSet<Point> locations = this.Metrics.Bounds.Points().ToHashSet();
-            Rectangle boundsToUse = crop ? this.Bounds : new Rectangle(Point.Empty, this.Metrics.Size);
+            return GeneratePreview(Globals.WorkshopPreviewSize, plugin, boundsToUse, true, false);
+        }
+
+        public TGA GeneratePreview(Size previewSize, IGamePlugin plugin, Rectangle boundsToUse, bool highlightFlags, bool sharpen)
+        {
+            MapLayerFlag toRender = MapLayerFlag.Template | MapLayerFlag.OverlayAll | MapLayerFlag.Smudge | MapLayerFlag.Technos;
+            bool smooth = boundsToUse.Width * Globals.OriginalTileWidth > previewSize.Width;
+            return GeneratePreview(previewSize, plugin, toRender, boundsToUse, true, highlightFlags, smooth, sharpen);
+        }
+
+        public TGA GeneratePreview(Size previewSize, IGamePlugin plugin, MapLayerFlag toRender, Rectangle boundsToUse, bool clearBackground, bool highlightFlags, bool smooth, bool sharpen)
+        {
+            HashSet<Point> locations = Metrics.Bounds.Points().ToHashSet();
             Size originalTileSize = Globals.OriginalTileSize;
             float tileScale = Math.Min((float)previewSize.Width / boundsToUse.Width / originalTileSize.Width, (float)previewSize.Height / boundsToUse.Height / originalTileSize.Height);
             float scaledWidth = originalTileSize.Width * tileScale;
@@ -1889,26 +2000,27 @@ namespace MobiusEditor.Model
             Size scaledSize = new Size((int)Math.Round(previewSize.Width / previewScale), (int)Math.Round(previewSize.Height / previewScale));
 
             using (ShapeCacheManager shapeCache = new ShapeCacheManager())
-            using (Bitmap fullBitmap = new Bitmap(this.Metrics.Width * renderTileSize.Width, this.Metrics.Height * renderTileSize.Height))
+            using (Bitmap fullBitmap = new Bitmap(Metrics.Width * renderTileSize.Width, Metrics.Height * renderTileSize.Height))
             using (Bitmap croppedBitmap = new Bitmap(previewSize.Width, previewSize.Height))
             {
                 using (Graphics g = Graphics.FromImage(fullBitmap))
                 {
-                    MapRenderer.SetRenderSettings(g, smooth);
-                    MapRenderer.Render(plugin.GameInfo, this, g, locations, toRender, tileScale, shapeCache);
+                    MapRenderer.SetRenderSettings(g, !Globals.UseClassicFiles);
+                    MapRenderer.Render(plugin.GameInfo, this, g, locations, toRender, tileScale, highlightFlags, shapeCache);
                     if (toRender.HasAnyFlags(MapLayerFlag.Indicators))
                     {
-                        ViewTool.PostRenderMap(g, plugin, this, tileScale, toRender, MapLayerFlag.None, false, plugin.Map.Metrics.Bounds);
+                        ViewTool.RenderIndicators(g, plugin, this, tileScale, toRender, MapLayerFlag.None, false, plugin.Map.Metrics.Bounds);
                     }
                 }
                 using (Graphics g = Graphics.FromImage(croppedBitmap))
                 {
+                    // Smoothen if sized down.
                     MapRenderer.SetRenderSettings(g, smooth);
                     Matrix transform = new Matrix();
                     transform.Scale(previewScale, previewScale);
                     transform.Translate((scaledSize.Width - mapBounds.Width) / 2, (scaledSize.Height - mapBounds.Height) / 2);
                     g.Transform = transform;
-                    if (clearBackgrround)
+                    if (clearBackground)
                     {
                         g.Clear(Color.Black);
                     }
@@ -1928,36 +2040,22 @@ namespace MobiusEditor.Model
             }
         }
 
-        public TGA GenerateMapPreview(IGamePlugin plugin, bool renderAll)
-        {
-            return this.GeneratePreview(Globals.MapPreviewSize, plugin, renderAll, false);
-        }
-
-        public TGA GenerateWorkshopPreview(IGamePlugin plugin, bool renderAll)
-        {
-            return this.GeneratePreview(Globals.WorkshopPreviewSize, plugin, renderAll, true);
-        }
-
         object ICloneable.Clone()
         {
-            return this.Clone(false);
+            return Clone(false);
         }
 
         private void Overlay_CellChanged(object sender, CellChangedEventArgs<Overlay> e)
         {
             if (e.OldValue != null && (e.OldValue.Type.IsWall || e.OldValue.Type.IsSolid))
             {
-                this.Buildings.Remove(e.OldValue);
+                Buildings.Remove(e.OldValue);
             }
             if (e.Value != null && (e.Value.Type.IsWall || e.Value.Type.IsSolid))
             {
-                this.Buildings.Add(e.Location, e.Value);
+                Buildings.Add(e.Location, e.Value);
             }
-            if (e.Value?.Type.IsConcrete ?? false)
-            {
-                //this.UpdateConcreteOverlays(Rectangle.Inflate(new Rectangle(e.Location, new Size(1, 1)), 1, 1).Points().ToHashSet());
-            }
-            if (this.updating)
+            if (updating)
             {
                 return;
             }
@@ -1967,33 +2065,34 @@ namespace MobiusEditor.Model
                 {
                     continue;
                 }
-                MapLayerFlag layer;
+                List<MapLayerFlag> layers = new List<MapLayerFlag>();
                 if (overlay.Type.IsResource)
                 {
-                    layer = MapLayerFlag.Resources;
+                    layers.Add(MapLayerFlag.Resources);
+                    layers.Add(MapLayerFlag.Overlay);
                 }
                 else if (overlay.Type.IsWall)
                 {
-                    layer = MapLayerFlag.Walls;
+                    layers.Add(MapLayerFlag.Walls);
+                    layers.Add(MapLayerFlag.Overlay);
                 }
                 else if (overlay.Type.IsConcrete)
                 {
-                    layer = MapLayerFlag.Overlay;
+                    layers.Add(MapLayerFlag.Overlay);
                 }
-                else
+                foreach (MapLayerFlag layer in layers)
                 {
-                    continue;
+                    if (!invalidateLayers.TryGetValue(layer, out ISet<Point> locations))
+                    {
+                        locations = new HashSet<Point>();
+                        invalidateLayers[layer] = locations;
+                    }
+                    locations.UnionWith(Rectangle.Inflate(new Rectangle(e.Location, new Size(1, 1)), 1, 1).Points());
                 }
-                if (!this.invalidateLayers.TryGetValue(layer, out ISet<Point> locations))
-                {
-                    locations = new HashSet<Point>();
-                    this.invalidateLayers[layer] = locations;
-                }
-                locations.UnionWith(Rectangle.Inflate(new Rectangle(e.Location, new Size(1, 1)), 1, 1).Points());
             }
-            if (this.updateCount == 0)
+            if (updateCount == 0)
             {
-                this.Update();
+                Update();
             }
         }
 
@@ -2001,13 +2100,13 @@ namespace MobiusEditor.Model
         {
             if (e.Occupier is ICellOverlapper overlapper)
             {
-                if (this.updateCount == 0)
+                if (updateCount == 0)
                 {
-                    this.Overlappers.Add(e.Location, overlapper);
+                    Overlappers.Add(e.Location, overlapper);
                 }
                 else
                 {
-                    this.invalidateOverlappers = true;
+                    invalidateOverlappers = true;
                 }
             }
         }
@@ -2016,13 +2115,13 @@ namespace MobiusEditor.Model
         {
             if (e.Occupier is ICellOverlapper overlapper)
             {
-                if (this.updateCount == 0)
+                if (updateCount == 0)
                 {
-                    this.Overlappers.Remove(overlapper);
+                    Overlappers.Remove(overlapper);
                 }
                 else
                 {
-                    this.invalidateOverlappers = true;
+                    invalidateOverlappers = true;
                 }
             }
         }
@@ -2031,30 +2130,25 @@ namespace MobiusEditor.Model
         {
             if (e.Occupier is ICellOverlapper overlapper)
             {
-                //Debug.WriteLine("update count is " + this.updateCount + "; " + (this.updateCount > 0 ? "not " : string.Empty) + "adding building " + overlapper.ToString() + " to " + (this.ForPreview ? "preview " : string.Empty) + "map.");
-                if (this.updateCount == 0)
+                //Debug.WriteLine("update count is " + this.updateCount + "; " + (this.updateCount > 0 ? "not " : String.Empty) + "adding building " + overlapper.ToString() + " to " + (this.ForPreview ? "preview " : String.Empty) + "map.");
+                if (updateCount == 0)
                 {
-                    this.Overlappers.Add(e.Location, overlapper);
+                    Overlappers.Add(e.Location, overlapper);
                 }
                 else
                 {
-                    this.invalidateOverlappers = true;
+                    invalidateOverlappers = true;
                 }
             }
             if (e.Occupier is Building building)
             {
-                //this.Technos.Add(e.Location, e.Occupier, building.Type.BaseOccupyMask);
-                this.AddBibs(e.Location, building);
+                AddBibs(e.Location, building);
                 if (building.Type.IsWall)
                 {
                     Rectangle toRefresh = new Rectangle(e.Location, building.Type.OverlapBounds.Size);
                     toRefresh.Inflate(1, 1);
-                    this.UpdateWallOverlays(toRefresh.Points().ToHashSet());
+                    UpdateWallOverlays(toRefresh.Points().ToHashSet());
                 }
-            }
-            else
-            {
-                //this.Technos.Add(e.Location, e.Occupier);
             }
         }
 
@@ -2062,61 +2156,61 @@ namespace MobiusEditor.Model
         {
             if (e.Occupier is Building building)
             {
-                this.RemoveBibs(building);
+                RemoveBibs(building);
                 if (building.Type.IsWall)
                 {
                     Rectangle toRefresh = new Rectangle(e.Location, building.Type.OverlapBounds.Size);
                     toRefresh.Inflate(1, 1);
-                    this.UpdateWallOverlays(toRefresh.Points().ToHashSet());
+                    UpdateWallOverlays(toRefresh.Points().ToHashSet());
                 }
             }
             if (e.Occupier is ICellOverlapper overlapper)
             {
-                if (this.updateCount == 0)
+                if (updateCount == 0)
                 {
-                    this.Overlappers.Remove(overlapper);
+                    Overlappers.Remove(overlapper);
                 }
                 else
                 {
-                    this.invalidateOverlappers = true;
+                    invalidateOverlappers = true;
                 }
             }
         }
 
         public void UpdateWaypoints()
         {
-            bool isSolo = this.BasicSection.SoloMission;
+            bool isSolo = BasicSection.SoloMission;
             HashSet<Point> updated = new HashSet<Point>();
-            for (Int32 i = 0; i < this.Waypoints.Length; ++i)
+            for (int i = 0; i < Waypoints.Length; ++i)
             {
-                Waypoint waypoint = this.Waypoints[i];
-                if (waypoint.Flag.HasFlag(WaypointFlag.PlayerStart))
+                Waypoint waypoint = Waypoints[i];
+                if (waypoint.Flags.HasFlag(WaypointFlag.PlayerStart))
                 {
-                    string newName = isSolo ? i.ToString() : string.Format("P{0}", i);
-                    this.Waypoints[i].Name = newName;
-                    this.Waypoints[i].ShortName = newName;
+                    string newName = isSolo ? i.ToString() : String.Format("P{0}", i);
+                    Waypoints[i].Name = newName;
+                    Waypoints[i].ShortName = newName;
                     if (waypoint.Point.HasValue)
                     {
                         updated.Add(waypoint.Point.Value);
                     }
                 }
             }
-            this.NotifyWaypointsUpdate();
-            this.NotifyMapContentsChanged(updated);
+            NotifyWaypointsUpdate();
+            NotifyMapContentsChanged(updated);
         }
 
         public bool RemoveExpansionUnits()
         {
             HashSet<Point> refreshPoints = new HashSet<Point>();
             bool changed = false;
-            if (this.BasicSection.ExpansionEnabled)
+            if (BasicSection.ExpansionEnabled)
             {
                 // Expansion is enabled. Nothing to do.
                 return false;
             }
             // Technos on map
             List<(Point, ICellOccupier)> toDelete = new List<(Point, ICellOccupier)>();
-            foreach ((Point p, ICellOccupier occup) in this.Technos)
+            foreach ((Point p, ICellOccupier occup) in Technos)
             {
                 if (occup is Unit un)
                 {
@@ -2137,13 +2231,13 @@ namespace MobiusEditor.Model
             {
                 if (occup is Unit un)
                 {
-                    Rectangle? refreshArea = this.Overlappers[un];
+                    Rectangle? refreshArea = Overlappers[un];
                     if (refreshArea.HasValue)
                     {
                         refreshPoints.UnionWith(refreshArea.Value.Points());
                     }
                     //mapPanel.Invalidate(map, un);
-                    this.Technos.Remove(occup);
+                    Technos.Remove(occup);
                     changed = true;
                 }
                 else if (occup is InfantryGroup infantryGroup)
@@ -2151,14 +2245,14 @@ namespace MobiusEditor.Model
                     Infantry[] inf = infantryGroup.Infantry;
                     for (int i = 0; i < inf.Length; ++i)
                     {
-                        if (inf[i] != null && inf[i].Type.Flag.HasFlag(UnitTypeFlag.IsExpansionUnit))
+                        if (inf[i] != null && inf[i].Type.IsExpansionOnly)
                         {
                             inf[i] = null;
                             changed = true;
                         }
                     }
                     bool delGroup = inf.All(i => i == null);
-                    Rectangle? refreshArea = this.Overlappers[infantryGroup];
+                    Rectangle? refreshArea = Overlappers[infantryGroup];
                     if (refreshArea.HasValue)
                     {
                         refreshPoints.UnionWith(refreshArea.Value.Points());
@@ -2166,12 +2260,12 @@ namespace MobiusEditor.Model
                     //mapPanel.Invalidate(map, infantryGroup);
                     if (delGroup)
                     {
-                        this.Technos.Remove(infantryGroup);
+                        Technos.Remove(infantryGroup);
                     }
                 }
             }
             // Teamtypes
-            foreach (TeamType teamtype in this.TeamTypes)
+            foreach (TeamType teamtype in TeamTypes)
             {
                 List<TeamTypeClass> toRemove = new List<TeamTypeClass>();
                 foreach (TeamTypeClass ttclass in teamtype.Classes)
@@ -2187,7 +2281,7 @@ namespace MobiusEditor.Model
                     changed = true;
                 }
             }
-            this.NotifyMapContentsChanged(refreshPoints);
+            NotifyMapContentsChanged(refreshPoints);
             return changed;
         }
 
@@ -2200,18 +2294,18 @@ namespace MobiusEditor.Model
         /// <param name="redoList">Redo list, linking objects to their final trigger value</param>
         /// <param name="cellTriggerLocations">Locations for all modified cell triggers</param>
         /// <param name="newTriggers">Triggers list to use to check for trigger links to objects.</param>
-        public void ApplyTriggerNameChanges(List<(String Name1, String Name2)> renameActions, out Dictionary<object, string> undoList, out Dictionary<object, string> redoList, out Dictionary<CellTrigger, int> cellTriggerLocations, List<Trigger> newTriggers)
+        public void ApplyTriggerNameChanges(List<(string Name1, string Name2)> renameActions, out Dictionary<object, string> undoList, out Dictionary<object, string> redoList, out Dictionary<CellTrigger, int> cellTriggerLocations, List<Trigger> newTriggers)
         {
             undoList = new Dictionary<object, string>();
             redoList = new Dictionary<object, string>();
             cellTriggerLocations = new Dictionary<CellTrigger, int>();
-            foreach ((String name1, String name2) in renameActions)
+            foreach ((string name1, string name2) in renameActions)
             {
                 if (Trigger.IsEmpty(name1))
                 {
                     continue;
                 }
-                foreach ((Point location, Building building) in this.Buildings.OfType<Building>().Where(x => x.Occupier.IsPrebuilt))
+                foreach ((Point location, Building building) in Buildings.OfType<Building>().Where(x => x.Occupier.IsPrebuilt))
                 {
                     if (String.Equals(building.Trigger, name1, StringComparison.OrdinalIgnoreCase))
                     {
@@ -2221,7 +2315,7 @@ namespace MobiusEditor.Model
                         building.Trigger = name2;
                     }
                 }
-                foreach (ITechno techno in this.GetAllTechnos())
+                foreach (ITechno techno in GetAllTechnos())
                 {
                     if (String.Equals(techno.Trigger, name1, StringComparison.OrdinalIgnoreCase))
                     {
@@ -2233,7 +2327,7 @@ namespace MobiusEditor.Model
                         techno.Trigger = name2;
                     }
                 }
-                foreach (TeamType team in this.TeamTypes)
+                foreach (TeamType team in TeamTypes)
                 {
                     if (String.Equals(team.Trigger, name1, StringComparison.OrdinalIgnoreCase))
                     {
@@ -2245,7 +2339,7 @@ namespace MobiusEditor.Model
                         team.Trigger = name2;
                     }
                 }
-                foreach ((int cell, CellTrigger value) in this.CellTriggers)
+                foreach ((int cell, CellTrigger value) in CellTriggers)
                 {
                     if (String.Equals(value.Trigger, name1, StringComparison.OrdinalIgnoreCase))
                     {
@@ -2263,39 +2357,39 @@ namespace MobiusEditor.Model
                     }
                 }
             }
-            this.CleanUpTriggers(newTriggers, undoList, redoList, cellTriggerLocations);
+            CleanUpTriggers(newTriggers, undoList, redoList, cellTriggerLocations);
         }
 
         private void CleanUpTriggers(List<Trigger> triggers, Dictionary<object, string> undoList, Dictionary<object, string> redoList, Dictionary<CellTrigger, int> cellTriggerLocations)
         {
             // Clean techno types
             HashSet<string> availableTriggers = triggers.Select(t => t.Name).ToHashSet(StringComparer.OrdinalIgnoreCase);
-            HashSet<string> availableUnitTriggers = this.FilterUnitTriggers(triggers).Select(t => t.Name).ToHashSet(StringComparer.OrdinalIgnoreCase);
-            HashSet<string> availableBuildingTriggers = this.FilterStructureTriggers(triggers).Select(t => t.Name).ToHashSet(StringComparer.OrdinalIgnoreCase);
-            HashSet<string> availableTerrainTriggers = this.FilterTerrainTriggers(triggers).Select(t => t.Name).ToHashSet(StringComparer.OrdinalIgnoreCase);
-            foreach (ITechno techno in this.GetAllTechnos())
+            HashSet<string> availableUnitTriggers = FilterUnitTriggers(triggers).Select(t => t.Name).ToHashSet(StringComparer.OrdinalIgnoreCase);
+            HashSet<string> availableBuildingTriggers = FilterStructureTriggers(triggers).Select(t => t.Name).ToHashSet(StringComparer.OrdinalIgnoreCase);
+            HashSet<string> availableTerrainTriggers = FilterTerrainTriggers(triggers).Select(t => t.Name).ToHashSet(StringComparer.OrdinalIgnoreCase);
+            foreach (ITechno techno in GetAllTechnos())
             {
                 if (techno is Infantry infantry)
                 {
-                    this.CheckTechnoTrigger(infantry, availableUnitTriggers, undoList, redoList);
+                    CheckTechnoTrigger(infantry, availableUnitTriggers, undoList, redoList);
                 }
                 else if (techno is Unit unit)
                 {
-                    this.CheckTechnoTrigger(unit, availableUnitTriggers, undoList, redoList);
+                    CheckTechnoTrigger(unit, availableUnitTriggers, undoList, redoList);
                 }
                 else if (techno is Building building)
                 {
-                    this.CheckTechnoTrigger(building, availableBuildingTriggers, undoList, redoList);
+                    CheckTechnoTrigger(building, availableBuildingTriggers, undoList, redoList);
                 }
                 else if (techno is Terrain terrain)
                 {
-                    this.CheckTechnoTrigger(terrain, availableTerrainTriggers, undoList, redoList);
+                    CheckTechnoTrigger(terrain, availableTerrainTriggers, undoList, redoList);
                 }
             }
             // Clean teamtypes
-            foreach (TeamType team in this.TeamTypes)
+            foreach (TeamType team in TeamTypes)
             {
-                String trig = team.Trigger;
+                string trig = team.Trigger;
                 if (!Trigger.IsEmpty(trig) && !availableUnitTriggers.Contains(trig))
                 {
                     if (undoList != null && !undoList.ContainsKey(team))
@@ -2325,12 +2419,12 @@ namespace MobiusEditor.Model
                     trig.Action2.Trigger = Trigger.None;
                 }
             }
-            this.CleanUpCellTriggers(triggers, undoList, redoList, cellTriggerLocations);
+            CleanUpCellTriggers(triggers, undoList, redoList, cellTriggerLocations);
         }
 
-        private void CheckTechnoTrigger(ITechno techno, HashSet<String> availableTriggers, Dictionary<object, string> undoList, Dictionary<object, string> redoList)
+        private void CheckTechnoTrigger(ITechno techno, HashSet<string> availableTriggers, Dictionary<object, string> undoList, Dictionary<object, string> redoList)
         {
-            String trig = techno.Trigger;
+            string trig = techno.Trigger;
             if (!Trigger.IsEmpty(trig) && !availableTriggers.Contains(trig))
             {
                 if (undoList != null && !undoList.ContainsKey(techno))
@@ -2347,9 +2441,9 @@ namespace MobiusEditor.Model
 
         private void CleanUpCellTriggers(List<Trigger> triggers, Dictionary<object, string> undoList, Dictionary<object, string> redoList, Dictionary<CellTrigger, int> cellTriggerLocations)
         {
-            HashSet<string> placeableTrigs = this.FilterCellTriggers(triggers).Select(t => t.Name).ToHashSet(StringComparer.OrdinalIgnoreCase);
+            HashSet<string> placeableTrigs = FilterCellTriggers(triggers).Select(t => t.Name).ToHashSet(StringComparer.OrdinalIgnoreCase);
             List<int> cellsToClear = new List<int>();
-            foreach ((int cell, CellTrigger value) in this.CellTriggers)
+            foreach ((int cell, CellTrigger value) in CellTriggers)
             {
                 if (Trigger.IsEmpty(value.Trigger) || !placeableTrigs.Contains(value.Trigger))
                 {
@@ -2367,19 +2461,19 @@ namespace MobiusEditor.Model
             }
             for (int i = 0; i < cellsToClear.Count; ++i)
             {
-                this.CellTriggers[cellsToClear[i]] = null;
+                CellTriggers[cellsToClear[i]] = null;
             }
         }
 
-        public void ApplyTeamTypeRenames(List<(String Name1, String Name2)> renameActions)
+        public void ApplyTeamTypeRenames(List<(string Name1, string Name2)> renameActions)
         {
-            foreach ((String name1, String name2) in renameActions)
+            foreach ((string name1, string name2) in renameActions)
             {
                 if (TeamType.IsEmpty(name1))
                 {
                     continue;
                 }
-                foreach (Trigger trigger in this.triggers)
+                foreach (Trigger trigger in triggers)
                 {
                     if (String.Equals(trigger.Event1.Team, name1, StringComparison.OrdinalIgnoreCase))
                     {
@@ -2403,9 +2497,9 @@ namespace MobiusEditor.Model
 
         public IEnumerable<string> AssessPower(HashSet<string> housesWithProd)
         {
-            Dictionary<String, int[]> powerWithUnbuilt = new Dictionary<string, int[]>(StringComparer.OrdinalIgnoreCase);
-            Dictionary<String, int[]> powerWithoutUnbuilt = new Dictionary<string, int[]>(StringComparer.OrdinalIgnoreCase);
-            foreach (HouseType house in this.HouseTypes)
+            Dictionary<string, int[]> powerWithUnbuilt = new Dictionary<string, int[]>(StringComparer.OrdinalIgnoreCase);
+            Dictionary<string, int[]> powerWithoutUnbuilt = new Dictionary<string, int[]>(StringComparer.OrdinalIgnoreCase);
+            foreach (HouseType house in HouseTypes)
             {
                 if (housesWithProd.Contains(house.Name))
                 {
@@ -2413,9 +2507,11 @@ namespace MobiusEditor.Model
                 }
                 powerWithoutUnbuilt[house.Name] = new int[3];
             }
-            HashSet<String> hasDamagedPowerPlants = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
-            foreach ((_, Building bld) in this.Buildings.OfType<Building>())
+            HashSet<string> hasDamagedPowerPlants = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
+            HashSet<string> hasUnbuiltStructures = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
+            foreach ((_, Building bld) in Buildings.OfType<Building>())
             {
+                string bldHouse = bld.House.Name;
                 int bldUsage = bld.Type.PowerUsage;
                 int bldProdHealthy = bld.Type.PowerProduction;
                 int bldProdCur = bld.Type.PowerProduction;
@@ -2433,8 +2529,12 @@ namespace MobiusEditor.Model
                 {
                     foreach (string house in housesWithProd)
                     {
-                        if (powerWithUnbuilt.TryGetValue(house, out housePwr))
+                        if ((HouseNone != null || bld.House.Name == house) && powerWithUnbuilt.TryGetValue(house, out housePwr))
                         {
+                            if (!hasUnbuiltStructures.Contains(house))
+                            {
+                                hasUnbuiltStructures.Add(house);
+                            }
                             housePwr[0] += bldUsage;
                             housePwr[1] += bldProdHealthy;
                             housePwr[2] += bldProdHealthy;
@@ -2456,7 +2556,7 @@ namespace MobiusEditor.Model
             }
             List<string> info = new List<string>();
             List<string> prodHouses = new List<string>();
-            foreach (HouseType house in this.HouseTypes)
+            foreach (HouseType house in HouseTypes)
             {
                 if (housesWithProd.Contains(house.Name))
                 {
@@ -2464,7 +2564,7 @@ namespace MobiusEditor.Model
                 }
             }
             info.Add("Production-capable Houses: " + (prodHouses.Count == 0 ? "None" : String.Join(", ", prodHouses.ToArray())));
-            foreach (HouseType house in this.HouseTypes)
+            foreach (HouseType house in HouseTypes)
             {
                 int[] housePwrAll;
                 int[] housePwrBuilt;
@@ -2476,8 +2576,10 @@ namespace MobiusEditor.Model
                     int houseProdBuilt = housePwrBuilt[1]; // PowerProduction at actual strength;
                     int houseProdBuiltHealthy = housePwrBuilt[2]; // PowerProduction when healthy;
                     houseInfo.Append(house.Name).Append(": ");
-                    bool hasUnbuilt = powerWithUnbuilt.TryGetValue(house.Name, out housePwrAll);
-                    if (hasUnbuilt)
+                    bool canRebuild = powerWithUnbuilt.TryGetValue(house.Name, out housePwrAll);
+                    bool hasUnbuilt = hasUnbuiltStructures.Contains(house.Name);
+                    bool listUnbuilt = canRebuild && hasUnbuilt;
+                    if (listUnbuilt)
                     {
                         houseInfo.Append("With unbuilt: ");
                         int houseUsage = housePwrAll[0]; // PowerUsage;
@@ -2492,11 +2594,20 @@ namespace MobiusEditor.Model
                         houseInfo.Append(" Without unbuilt: ");
                     }
                     houseInfo.Append(houseProdBuilt < houseUsageBuilt ? "[NOT OK]" : "OK").Append(" - ");
-                    if (hasDamaged && !hasUnbuilt) houseInfo.Append("Has damaged power plants. ");
+                    if (hasDamaged && !listUnbuilt)
+                    {
+                        houseInfo.Append("Has damaged power plants. ");
+                    }
                     houseInfo.Append("Produces ").Append(houseProdBuilt);
                     if (hasDamaged)
+                    {
                         houseInfo.Append(" currently; ").Append(houseProdBuiltHealthy).Append(" at full strength");
+                    }
                     houseInfo.Append(", uses ").Append(houseUsageBuilt).Append(".");
+                    if (canRebuild && !hasUnbuilt)
+                    {
+                        houseInfo.Append(" Has no unbuilt.");
+                    }
                     info.Add(houseInfo.ToString());
                 }
             }
@@ -2505,9 +2616,9 @@ namespace MobiusEditor.Model
 
         public IEnumerable<string> AssessStorage(HashSet<string> housesWithProd)
         {
-            Dictionary<String, int> storageWithUnbuilt = new Dictionary<string, int>(StringComparer.OrdinalIgnoreCase);
-            Dictionary<String, int> storageWithoutUnbuilt = new Dictionary<string, int>(StringComparer.OrdinalIgnoreCase);
-            foreach (HouseType house in this.HouseTypes)
+            Dictionary<string, int> storageWithUnbuilt = new Dictionary<string, int>(StringComparer.OrdinalIgnoreCase);
+            Dictionary<string, int> storageWithoutUnbuilt = new Dictionary<string, int>(StringComparer.OrdinalIgnoreCase);
+            foreach (HouseType house in HouseTypes)
             {
                 if (housesWithProd.Contains(house.Name))
                 {
@@ -2515,7 +2626,7 @@ namespace MobiusEditor.Model
                 }
                 storageWithoutUnbuilt[house.Name] = 0;
             }
-            foreach ((_, Building bld) in this.Buildings.OfType<Building>())
+            foreach ((_, Building bld) in Buildings.OfType<Building>())
             {
                 int bldStorage = bld.Type.Storage;
                 if (!bld.IsPrebuilt)
@@ -2539,7 +2650,7 @@ namespace MobiusEditor.Model
             }
             List<string> info = new List<string>();
             List<string> prodHouses = new List<string>();
-            foreach (HouseType house in this.HouseTypes)
+            foreach (HouseType house in HouseTypes)
             {
                 if (housesWithProd.Contains(house.Name))
                 {
@@ -2547,20 +2658,20 @@ namespace MobiusEditor.Model
                 }
             }
             info.Add("Production-capable Houses: " + (prodHouses.Count == 0 ? "None" : String.Join(", ", prodHouses.ToArray())));
-            foreach (HouseType house in this.HouseTypes)
+            foreach (HouseType house in HouseTypes)
             {
                 int houseStorageBuilt;
                 if (storageWithUnbuilt.TryGetValue(house.Name, out int houseStorageAll))
                 {
                     storageWithoutUnbuilt.TryGetValue(house.Name, out houseStorageBuilt);
 
-                    String houseInfo = String.Format("{0}: Storage capacity: {1}. (Without unbuilt: {2})",
+                    string houseInfo = String.Format("{0}: Storage capacity: {1}. (Without unbuilt: {2})",
                         house.Name, houseStorageAll, houseStorageBuilt);
                     info.Add(houseInfo);
                 }
                 else if (storageWithoutUnbuilt.TryGetValue(house.Name, out houseStorageBuilt))
                 {
-                    String houseInfo = String.Format("{0}: Storage capacity: {1}.",
+                    string houseInfo = String.Format("{0}: Storage capacity: {1}.",
                         house.Name, houseStorageBuilt);
                     info.Add(houseInfo);
                 }
@@ -2572,41 +2683,132 @@ namespace MobiusEditor.Model
         {
             // Dispose of cached images. This is non-destructive; the type objects themselves
             // don't actually get disposed. Their thumbnail simply gets disposed and cleared.
-            foreach (ITechnoType technoType in this.AllTeamTechnoTypes)
+            foreach (ITechnoType technoType in AllTeamTechnoTypes)
             {
                 // units, boats, aircraft, infantry
                 technoType.Reset();
             }
             // probably not needed since it's in the team techno types.
-            foreach (UnitType unitType in this.AllUnitTypes)
+            foreach (UnitType unitType in AllUnitTypes)
             {
                 unitType.Reset();
             }
             // probably not needed since it's in the team techno types.
-            foreach (InfantryType infantryType in this.AllInfantryTypes)
+            foreach (InfantryType infantryType in AllInfantryTypes)
             {
                 infantryType.Reset();
             }
-            foreach (BuildingType buildingType in this.BuildingTypes)
+            foreach (BuildingType buildingType in BuildingTypes)
             {
                 buildingType.Reset();
             }
-            foreach (TemplateType template in this.TemplateTypes)
+            foreach (TemplateType template in TemplateTypes)
             {
                 template.Reset();
             }
-            foreach (TerrainType terrainType in this.TerrainTypes)
+            foreach (TerrainType terrainType in TerrainTypes)
             {
                 terrainType.Reset();
             }
-            foreach (OverlayType overlayType in this.OverlayTypes)
+            foreach (OverlayType overlayType in OverlayTypes)
             {
                 overlayType.Reset();
             }
-            foreach (SmudgeType smudgeType in this.SmudgeTypes)
+            foreach (SmudgeType smudgeType in SmudgeTypes)
             {
                 smudgeType.Reset();
             }
+        }
+
+        public void ClearEvents()
+        {
+            WaypointsUpdated = null;
+            TriggersUpdated = null;
+            RulesChanged = null;
+            MapContentsChanged = null;
+        }
+
+        /// <summary>Gets a view of the initial viewport at the start of a mission</summary>
+        /// <param name="homeWpIsCenter">True if the "Home" waypoint indicates the center of the viewport, not the top left corner.</param>
+        /// <param name="dos">Get the closeup DOS 13x8 cells viewport, rather than the win95 26x16 one.</param>
+        /// <param name="square">Select a square inside the standard rectangular viewport.</param>
+        /// <param name="focusPlayerUnits">If <paramref name="square"/> is true, move the square's horizontal position inside the full viewport to highlight where player units are.</param>
+        /// <returns>A rectangle representing the starting position of a mission.</returns>
+        public Rectangle GetSoloViewport(Size viewportSize, Point viewportOffset, bool square, bool focusPlayerUnits, Size cellSize)
+        {
+            Waypoint startPoint = Waypoints.FirstOrDefault(wp => wp.Flags.HasFlag(WaypointFlag.Home));
+            return GetSoloViewport(viewportSize, viewportOffset, startPoint, square, focusPlayerUnits, cellSize);
+        }
+
+        /// <summary>Gets a view of the initial viewport at the start of a mission</summary>
+        /// <param name="viewportSize">Size of the viewport, in old-cell pixels; see <see cref="Globals.PixelHeight"/> and <see cref="Globals.PixelWidth"/>.</param>
+        /// <param name="viewportOffset">Offset to move away from the start waypoint to get the viewport's the top-left corner.</param>
+        /// <param name="startPoint">Waypoint to render the box from.</param>
+        /// <param name="square">Select a square inside the standard rectangular viewport.</param>
+        /// <param name="focusPlayerUnits">If <paramref name="square"/> is true, move the square's horizontal position inside the full viewport to highlight where player units are.</param>
+        /// <param name="cellSize">Cell size</param>
+        /// <returns>A rectangle representing the starting position of a mission, adjusted to the given <paramref name="cellSize"/>.</returns>
+        public Rectangle GetSoloViewport(Size viewportSize, Point viewportOffset, Waypoint startPoint, bool square, bool focusPlayerUnits, Size cellSize)
+        {
+            int width = viewportSize.Width;
+            int height = viewportSize.Height;
+            Point start = startPoint?.Point ?? Bounds.Location;
+            // Viewport is measured in old-timey pixels, so adjust the start position to that as well.
+            start.X *= Globals.PixelWidth;
+            start.Y *= Globals.PixelHeight;
+            Rectangle viewportRect = new Rectangle(start, new Size(width, height));
+            if (startPoint != null)
+            {
+                viewportRect.Offset(viewportOffset);
+            }
+            Rectangle scaleMapBounds = Bounds.AdjustToScale(Globals.PixelSize, null);
+            Rectangle scaleFullBounds = Metrics.Bounds.AdjustToScale(Globals.PixelSize, null);
+            if (!square)
+            {
+                viewportRect = GeneralUtils.ConstrainToBounds(viewportRect, scaleMapBounds);
+                viewportRect = GeneralUtils.ConstrainToBounds(viewportRect, scaleFullBounds);
+                return viewportRect.AdjustToScale(cellSize, Globals.PixelSize);
+            }
+            // IN CELLS
+            Rectangle viewportRectScan = new Rectangle(
+                viewportRect.X / Globals.PixelWidth,
+                viewportRect.Y / Globals.PixelHeight,
+                (viewportRect.Width + Globals.PixelWidth / 2) / Globals.PixelWidth,
+                (viewportRect.Height + Globals.PixelHeight / 2) / Globals.PixelHeight);
+            // Just to not short-circuit my brain...
+            int squareWidth = height;
+            List<Point> points = null;
+            if (focusPlayerUnits)
+            {
+                HouseType player = HouseTypes.Where(t => t.Equals(BasicSection.Player)).FirstOrDefault() ?? HouseTypes.First();
+                points = Technos
+                    .Where(t => viewportRectScan.Contains(t.Location)
+                    && ((t.Occupier as Unit)?.House == player || ((t.Occupier as InfantryGroup)?.Infantry.Any(i => i != null && i.House == player) ?? false)))
+                    .Select(t => t.Location)
+                    .Concat(Buildings.OfType<Building>().Where(b => b.Occupier.House == player)
+                        .SelectMany(b => OccupierSet.GetOccupyPoints(b.Location, b.Occupier.BaseOccupyMask).Where(p => viewportRectScan.Contains(p))))
+                    .Where(p => Bounds.Contains(p)).Distinct().ToList();
+            }
+            Rectangle returnRect = viewportRect;
+            returnRect.Width = squareWidth;
+            if (points == null || points.Count == 0)
+            {
+                int shift = (width - squareWidth) / 2;
+                returnRect.Offset(shift, 0);
+            }
+            else
+            {
+                int minX = points.Min(p => p.X);
+                int maxX = points.Max(p => p.X) + 1;
+                int newCenter = minX + (maxX - minX) / 2;
+                int newX = newCenter * cellSize.Width - squareWidth / 2;
+                returnRect.X = newX;
+            }
+            // New rect can shift to left or right, but not outside the full viewport bounds.
+            returnRect = GeneralUtils.ConstrainToBounds(returnRect, viewportRect);
+            returnRect = GeneralUtils.ConstrainToBounds(returnRect, scaleMapBounds);
+            returnRect = GeneralUtils.ConstrainToBounds(returnRect, scaleFullBounds);
+            return returnRect.AdjustToScale(cellSize, Globals.PixelSize);
         }
     }
 }

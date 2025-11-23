@@ -14,12 +14,39 @@
 using MobiusEditor.Model;
 using System;
 using System.Collections.Generic;
+using System.IO;
 using System.Linq;
+using System.Text;
 
 namespace MobiusEditor.Utility
 {
     public static class INITools
     {
+        /// <summary>
+        /// Gets the ini contents of a byte array, interpreted as DOS-437 encoding. This is used for quick checks on the existence of certain ini elements.
+        /// </summary>
+        /// <param name="contents">File contents as byte array.</param>
+        /// <returns>The ini contents of the byte array, interpreted as DOS-437 encoding.</returns>
+        public static INI GetIniContents(byte[] contents)
+        {
+            try
+            {
+                Encoding encDOS = Encoding.GetEncoding(437);
+                string stringContents = null;
+                using (MemoryStream ms = new MemoryStream(contents))
+                using (StreamReader iniReader = new StreamReader(ms, encDOS))
+                {
+                    stringContents = iniReader.ReadToEnd();
+                }
+                INI iniContents = new INI();
+                iniContents.Parse(stringContents);
+                return iniContents.Sections.Count == 0 ? null : iniContents;
+            }
+            catch (Exception)
+            {
+                return null;
+            }
+        }
 
         /// <summary>
         /// Returns whether certain ini information was found in the given ini data.
@@ -37,17 +64,36 @@ namespace MobiusEditor.Utility
         /// </summary>
         /// <param name="ini">ini data.</param>
         /// <param name="section">Section to find.</param>
-        /// <param name="key">Optional key to find. If no complete key/value pair is given, only the existence of the section will be checked.</param>
-        /// <param name="value">Optional value to find. If no complete key/value pair is given, only the existence of the section will be checked.</param>
+        /// <param name="key">Optional key to find.</param>
+        /// <returns>True if the ini information was found.</returns>
+        public static bool CheckForIniInfo(INI ini, string section, string key)
+        {
+            return CheckForIniInfo(ini, section, key, null);
+        }
+
+        /// <summary>
+        /// Returns whether certain ini information was found in the given ini data.
+        /// </summary>
+        /// <param name="ini">ini data.</param>
+        /// <param name="section">Section to find.</param>
+        /// <param name="key">Optional key to find.</param>
+        /// <param name="value">Optional value to find.</param>
         /// <returns>True if the ini information was found.</returns>
         public static bool CheckForIniInfo(INI ini, string section, string key, string value)
         {
+            if (ini == null) throw new ArgumentNullException("ini");
+            if (section == null) throw new ArgumentNullException("section");
             INISection iniSection = ini[section];
-            if (key == null || value == null)
+            if (key == null)
             {
                 return iniSection != null;
             }
-            return iniSection != null && iniSection.Keys.Contains(key) && iniSection[key].Trim() == value;
+            bool hasKey = iniSection != null && iniSection.Keys.Contains(key);
+            if (value == null)
+            {
+                return hasKey;
+            }
+            return hasKey && iniSection[key].Trim() == value;
         }
 
         /// <summary>
@@ -56,7 +102,7 @@ namespace MobiusEditor.Utility
         /// <param name="iniKey">The key to check.</param>
         /// <param name="reservedNames">Optional array of reserved names. IF given, any entry in this list will also return false.</param>
         /// <returns>True if the given string is a valid ini key in an ASCII context.</returns>
-        public static bool IsValidKey(String iniKey, params string[] reservedNames)
+        public static bool IsValidKey(string iniKey, params string[] reservedNames)
         {
             if (reservedNames != null)
             {
@@ -207,7 +253,92 @@ namespace MobiusEditor.Utility
                 if (basicSection.Keys.Count() == 0)
                     ini.Sections.Remove(name);
             }
+        }
 
+        public static byte[] DecompressLCWSection(INISection section, CellMetrics metrics, int bytesPerCell, List<string> errors, ref bool modified)
+        {
+            StringBuilder sb = new StringBuilder();
+            foreach (KeyValuePair<string, string> kvp in section)
+            {
+                sb.Append(kvp.Value);
+            }
+            byte[] compressedBytes;
+            try
+            {
+                compressedBytes = Convert.FromBase64String(sb.ToString());
+            }
+            catch (FormatException)
+            {
+                errors.Add("Failed to unpack [" + section.Name + "] from Base64.");
+                modified = true;
+                return null;
+            }
+            int readPtr = 0;
+            int writePtr = 0;
+            byte[] decompressedBytes = new byte[metrics.Width * metrics.Height * bytesPerCell];
+            while ((readPtr + 4) <= compressedBytes.Length)
+            {
+                uint uLength;
+                using (BinaryReader reader = new BinaryReader(new MemoryStream(compressedBytes, readPtr, 4)))
+                {
+                    uLength = reader.ReadUInt32();
+                }
+                int outputLength = (int)((uLength >> 16) & 0xFFFF);
+                int length = (int)(uLength & 0xFFFF);
+                readPtr += 4;
+                byte[] dest = new byte[outputLength];
+                int readPtr2 = readPtr;
+                int decompressed;
+                try
+                {
+                    decompressed = WWCompression.LcwDecompress(compressedBytes, ref readPtr2, dest, 0);
+                }
+                catch
+                {
+                    errors.Add("Error decompressing [" + section.Name + "].");
+                    modified = true;
+                    return decompressedBytes;
+                }
+                if (writePtr + decompressed > decompressedBytes.Length)
+                {
+                    errors.Add("Failed to decompress [" + section.Name + "]: data exceeds map size.");
+                    modified = true;
+                    return decompressedBytes;
+                }
+                Array.Copy(dest, 0, decompressedBytes, writePtr, decompressed);
+                readPtr += length;
+                writePtr += decompressed;
+            }
+            return decompressedBytes;
+        }
+
+        public static INISection CompressLCWSection(INISection section, byte[] uncompressedBytes)
+        {
+            // Default values for writing an LCW ini section.
+            return CompressLCWSection(section, uncompressedBytes, 0x2000, 70);
+        }
+
+        public static INISection CompressLCWSection(INISection section, byte[] uncompressedBytes, int chunkSize, int lineLength)
+        {
+            using (MemoryStream stream = new MemoryStream())
+            using (BinaryWriter writer = new BinaryWriter(stream))
+            {
+                foreach (byte[] uncompressedChunk in uncompressedBytes.Split(chunkSize))
+                {
+                    byte[] compressedChunk = WWCompression.LcwCompress(uncompressedChunk);
+                    writer.Write((ushort)compressedChunk.Length);
+                    writer.Write((ushort)uncompressedChunk.Length);
+                    writer.Write(compressedChunk);
+                }
+                writer.Flush();
+                stream.Position = 0;
+                string[] values = Convert.ToBase64String(stream.ToArray()).Split(lineLength).ToArray();
+                for (int i = 0; i < values.Length; ++i)
+                {
+                    section[(i + 1).ToString()] = values[i];
+                }
+            }
+            return section;
         }
     }
 }

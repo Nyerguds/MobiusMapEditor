@@ -22,7 +22,7 @@ using MobiusEditor.Interface;
 
 namespace MobiusEditor.Model
 {
-    [DebuggerDisplay("{Type}: {Trigger}")]
+    [DebuggerDisplay("{Type}; House={House}, Trig={Trigger}")]
     public class Terrain : ITechno, ICellOverlapper, ICellOccupier, INotifyPropertyChanged, ICloneable, IEquatable<Terrain>
     {
         public event PropertyChangedEventHandler PropertyChanged;
@@ -32,13 +32,17 @@ namespace MobiusEditor.Model
         public ITechnoType TechnoType => type;
 
         public Rectangle OverlapBounds => Type.OverlapBounds;
-        public bool[,][] OpaqueMask => Type.OpaqueMask;
+        public bool[,][] OverlapMask => Type.OverlapMask;
+        public Point OverlapMaskOffset => Type.OverlapMaskOffset;
+        public bool[,][] ContentMask => Type.ContentMask;
+        public Point ContentMaskOffset => Type.ContentMaskOffset;
 
         public bool[,] OccupyMask => Type.OccupyMask;
         public bool[,] BaseOccupyMask => Type.OccupyMask;
         public int ZOrder => Type.ZOrder;
         public int DrawOrderCache { get; set; }
         public int DrawFrameCache { get; set; }
+        public bool IsOverlapped { get; set; }
 
         private string trigger = Model.Trigger.None;
         public string Trigger { get => trigger; set => SetField(ref trigger, value); }
@@ -95,11 +99,11 @@ namespace MobiusEditor.Model
             return Clone();
         }
 
-        public Boolean Equals(Terrain other)
+        public bool Equals(Terrain other)
         {
-            return this.Type == other.Type &&
-                this.Strength == other.Strength &&
-                this.Trigger == other.Trigger;
+            return Type == other.Type &&
+                Strength == other.Strength &&
+                Trigger == other.Trigger;
         }
     }
 }

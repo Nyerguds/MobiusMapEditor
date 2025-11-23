@@ -13,15 +13,10 @@
 //   0. You just DO WHAT THE FUCK YOU WANT TO.
 using MobiusEditor.Controls.ControlsList;
 using MobiusEditor.Model;
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 
 namespace MobiusEditor.Controls
 {
-    public class TeamItemsList : ControlsList<TeamItemControl, TeamTypeClass>
+    public class TeamItemsList : ControlsList<TeamItemControl, TeamTypeClass, char, int>
     {
         protected override void FocusItem(TeamItemControl control)
         {

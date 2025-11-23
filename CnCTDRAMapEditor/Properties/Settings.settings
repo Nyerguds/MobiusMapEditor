@@ -2,6 +2,9 @@
 <SettingsFile xmlns="http://schemas.microsoft.com/VisualStudio/2004/01/settings" CurrentProfile="(Default)" GeneratedClassNamespace="MobiusEditor.Properties" GeneratedClassName="Settings">
   <Profiles />
   <Settings>
+    <Setting Name="EnabledGames" Type="System.String" Scope="Application">
+      <Value Profile="(Default)">TD,RA,SS</Value>
+    </Setting>
     <Setting Name="UseClassicFiles" Type="System.Boolean" Scope="Application">
       <Value Profile="(Default)">False</Value>
     </Setting>
@@ -18,7 +21,7 @@
       <Value Profile="(Default)">True</Value>
     </Setting>
     <Setting Name="ClassicProducesNoMetaFiles" Type="System.Boolean" Scope="Application">
-      <Value Profile="(Default)">False</Value>
+      <Value Profile="(Default)">True</Value>
     </Setting>
     <Setting Name="ClassicEncodesNameAsCp437" Type="System.Boolean" Scope="Application">
       <Value Profile="(Default)">True</Value>
@@ -45,7 +48,7 @@
       <Value Profile="(Default)">2844969675;GraphicsFixesTD</Value>
     </Setting>
     <Setting Name="MixContentInfoFile" Type="System.String" Scope="Application">
-      <Value Profile="(Default)">Classic\mixcontent.ini</Value>
+      <Value Profile="(Default)">Data\mixcontent.ini</Value>
     </Setting>
     <Setting Name="DefaultBoundsObstructFill" Type="System.Boolean" Scope="Application">
       <Value Profile="(Default)">True</Value>
@@ -59,10 +62,10 @@
     <Setting Name="DefaultShowPlacementGrid" Type="System.Boolean" Scope="Application">
       <Value Profile="(Default)">True</Value>
     </Setting>
-    <Setting Name="DefaultOutlineAllCrates" Type="System.Boolean" Scope="Application">
+    <Setting Name="DefaultCratesOnTop" Type="System.Boolean" Scope="Application">
       <Value Profile="(Default)">False</Value>
     </Setting>
-    <Setting Name="DefaultCratesOnTop" Type="System.Boolean" Scope="Application">
+    <Setting Name="DefaultOutlineAllCrates" Type="System.Boolean" Scope="Application">
       <Value Profile="(Default)">False</Value>
     </Setting>
     <Setting Name="DefaultExportScale" Type="System.Double" Scope="Application">
@@ -71,10 +74,16 @@
     <Setting Name="DefaultExportScaleClassic" Type="System.Double" Scope="Application">
       <Value Profile="(Default)">1</Value>
     </Setting>
+    <Setting Name="DefaultExportMultiInBounds" Type="System.Boolean" Scope="Application">
+      <Value Profile="(Default)">True</Value>
+    </Setting>
     <Setting Name="ZoomToBoundsOnLoad" Type="System.Boolean" Scope="Application">
       <Value Profile="(Default)">True</Value>
     </Setting>
     <Setting Name="RememberToolData" Type="System.Boolean" Scope="Application">
+      <Value Profile="(Default)">False</Value>
+    </Setting>
+    <Setting Name="AllowDeleteRoutePoints" Type="System.Boolean" Scope="Application">
       <Value Profile="(Default)">False</Value>
     </Setting>
     <Setting Name="MapScale" Type="System.Double" Scope="Application">
@@ -110,12 +119,6 @@
     <Setting Name="MapGridColor" Type="System.Drawing.Color" Scope="Application">
       <Value Profile="(Default)">40, 0, 0, 255</Value>
     </Setting>
-    <Setting Name="HashColorTechnoPart" Type="System.Drawing.Color" Scope="Application">
-      <Value Profile="(Default)">0, 255, 0</Value>
-    </Setting>
-    <Setting Name="HashColorTechnoFull" Type="System.Drawing.Color" Scope="Application">
-      <Value Profile="(Default)">0, 170, 0</Value>
-    </Setting>
     <Setting Name="HashColorLandClear" Type="System.Drawing.Color" Scope="Application">
       <Value Profile="(Default)">0, 255, 255, 255</Value>
     </Setting>
@@ -137,6 +140,12 @@
     <Setting Name="HashColorLandRough" Type="System.Drawing.Color" Scope="Application">
       <Value Profile="(Default)">186, 128, 186</Value>
     </Setting>
+    <Setting Name="HashColorTechnoPart" Type="System.Drawing.Color" Scope="Application">
+      <Value Profile="(Default)">0, 255, 0</Value>
+    </Setting>
+    <Setting Name="HashColorTechnoFull" Type="System.Drawing.Color" Scope="Application">
+      <Value Profile="(Default)">0, 170, 0</Value>
+    </Setting>
     <Setting Name="OutlineColorCrateWood" Type="System.Drawing.Color" Scope="Application">
       <Value Profile="(Default)">255, 192, 64</Value>
     </Setting>
@@ -152,6 +161,9 @@
     <Setting Name="OutlineColorWall" Type="System.Drawing.Color" Scope="Application">
       <Value Profile="(Default)">0, 192, 0, 192</Value>
     </Setting>
+    <Setting Name="IgnoreShadowOverlap" Type="System.Boolean" Scope="Application">
+      <Value Profile="(Default)">True</Value>
+    </Setting>
     <Setting Name="PreviewAlpha" Type="System.Single" Scope="Application">
       <Value Profile="(Default)">0.5</Value>
     </Setting>
@@ -164,7 +176,7 @@
     <Setting Name="EnforceObjectMaximums" Type="System.Boolean" Scope="Application">
       <Value Profile="(Default)">True</Value>
     </Setting>
-    <Setting Name="Ignore106Scripting" Type="System.Boolean" Scope="Application">
+    <Setting Name="EnforceTriggerTypes" Type="System.Boolean" Scope="Application">
       <Value Profile="(Default)">True</Value>
     </Setting>
     <Setting Name="ConvertRaObsoleteClear" Type="System.Boolean" Scope="Application">
@@ -188,6 +200,9 @@
     <Setting Name="WriteClassicBriefing" Type="System.Boolean" Scope="Application">
       <Value Profile="(Default)">True</Value>
     </Setting>
+    <Setting Name="WriteRemasterBriefing" Type="System.Boolean" Scope="Application">
+      <Value Profile="(Default)">True</Value>
+    </Setting>
     <Setting Name="ApplyHarvestBug" Type="System.Boolean" Scope="Application">
       <Value Profile="(Default)">True</Value>
     </Setting>
@@ -197,11 +212,23 @@
     <Setting Name="NoOwnedObjectsInSole" Type="System.Boolean" Scope="Application">
       <Value Profile="(Default)">True</Value>
     </Setting>
-    <Setting Name="RestrictSoleLimits" Type="System.Boolean" Scope="Application">
+    <Setting Name="ExpandTdScripting" Type="System.Boolean" Scope="Application">
+      <Value Profile="(Default)">False</Value>
+    </Setting>
+    <Setting Name="EnableTd106LineBreaks" Type="System.Boolean" Scope="Application">
       <Value Profile="(Default)">True</Value>
     </Setting>
     <Setting Name="FixClassicEinstein" Type="System.Boolean" Scope="Application">
       <Value Profile="(Default)">True</Value>
+    </Setting>
+    <Setting Name="AllowImageModsInMaps" Type="System.Boolean" Scope="Application">
+      <Value Profile="(Default)">True</Value>
+    </Setting>
+    <Setting Name="TdHelisSpawnOnGround" Type="System.Boolean" Scope="Application">
+      <Value Profile="(Default)">False</Value>
+    </Setting>
+    <Setting Name="RaHelisSpawnOnGround" Type="System.Boolean" Scope="Application">
+      <Value Profile="(Default)">False</Value>
     </Setting>
     <Setting Name="FixConcretePavement" Type="System.Boolean" Scope="Application">
       <Value Profile="(Default)">False</Value>

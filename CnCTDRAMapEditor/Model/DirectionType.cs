@@ -70,17 +70,42 @@ namespace MobiusEditor.Model
             return Name;
         }
 
-        public static DirectionType GetDirectionType(int value, IEnumerable<DirectionType> directions)
+        /// <summary>
+        /// Tries to match a given value to the ID of one of the DirectionType objects in the list.
+        /// If it fails, it returns the one with the closest value, keeping the wraparound at 256 in mind.
+        /// </summary>
+        /// <param name="value">Value to match to an ID.</param>
+        /// <param name="directions">Valid directions to pick from.</param>
+        /// <returns>The direction type with the id the closest to the given value.</returns>
+        public static DirectionType FindClosestDirectionType(int value, IEnumerable<DirectionType> directions)
         {
-            IEnumerable<DirectionType> sortedDirections = directions.OrderBy(d => d.ID);
-            foreach (DirectionType dirType in sortedDirections)
+            List<DirectionType> sortedDirections = directions.OrderBy(d => d.ID).ToList();
+            DirectionType foundType = null;
+            value = value & 0xFF;
+            foreach (DirectionType curType in sortedDirections)
             {
-                if (dirType.ID >= value)
+                if (value == curType.ID)
                 {
-                    return dirType;
+                    return curType;
                 }
             }
-            return sortedDirections.FirstOrDefault();
+            // If no exact match, this gets the closest one in order.
+            if (foundType != null)
+            {
+                return foundType;
+            }            
+            List<int> sortedDirectionIds = directions.Select(d => (int)d.ID).ToList();
+            sortedDirectionIds.Add(directions.First().ID + 256);
+            int lastLower = sortedDirectionIds.FindLastIndex(id => id < value);
+            int firstHigher = sortedDirectionIds.FindIndex(id => id > value);
+            int lowDiff = value - sortedDirectionIds[lastLower];
+            int highDiff = sortedDirectionIds[firstHigher] - value;
+            int foundIndex = lowDiff < highDiff ? lastLower : firstHigher;
+            if (foundIndex == sortedDirections.Count)
+            {
+                foundIndex = 0;
+            }
+            return sortedDirections[foundIndex];
         }
     }
 }

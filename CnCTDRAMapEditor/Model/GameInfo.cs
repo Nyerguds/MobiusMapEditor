@@ -37,7 +37,7 @@ namespace MobiusEditor.Model
         public const string TRIG_ARG_FORMAT = "{0}: {1}";
         public string[] PERSISTENCE_NAMES = { "first triggered", "all triggered", "each triggering" };
         #region properties
-        /// <summary>GqmeType enup for this game.</summary>
+        /// <summary>GameType enum for this game.</summary>
         public abstract GameType GameType { get; }
         /// <summary>Name used for this game.</summary>
         public abstract string Name { get; }
@@ -45,16 +45,40 @@ namespace MobiusEditor.Model
         public abstract string ShortName { get; }
         /// <summary>Name used for this game in the mixcontent.ini definition.</summary>
         public abstract string IniName { get; }
+        /// <summary>The Steam ID for this game.</summary>
+        public abstract string SteamId { get; }
+        /// <summary>True if the Steam map handling uses a mirror server that requires the maps to be public on the Steam workshop.</summary>
+        public abstract bool PublishedMapsUseMirrorServer { get; }
+        /// <summary>The Steam game name linked to this Steam ID.</summary>
+        public abstract string SteamGameName { get; }
+        /// <summary>Short version of the Steam game name linked to this Steam ID.</summary>
+        public abstract string SteamGameNameShort { get; }
+        /// <summary>Filename extension given to the uploaded singleplayer map file on the Steam workshop.</summary>
+        public abstract string SteamFileExtensionSolo { get; }
+        /// <summary>Filename extension given to the uploaded singleplayer map file on the Steam workshop.</summary>
+        public abstract string SteamFileExtensionMulti { get; }
+        /// <summary>File save type for the Steam workshop upload.</summary>
+        public abstract FileType SteamFileType { get; }
+        /// <summary>Default tags put on maps for this game.</summary>
+        public abstract string[] SteamDefaultTags { get; }
+        /// <summary>Tags put on singleplayer maps for this game.</summary>
+        public abstract string[] SteamSoloTags { get; }
+        /// <summary>Tags put on multiplayer maps for this game.</summary>
+        public abstract string[] SteamMultiTags { get; }
+        /// <summary>Extra tags this game's singleplayer maps can use.</summary>
+        public abstract string[] SteamSoloExtraTags { get; }
+        /// <summary>Extra tags this game's multiplayer maps can use.</summary>
+        public abstract string[] SteamMultiExtraTags { get; }
         /// <summary>Default remaster folder for saving maps of this type.</summary>
         public abstract string DefaultSaveDirectory { get; }
-        /// <summary>"Save File" filter for maps for this game.</summary>
-        public abstract string SaveFilter { get; }
-        /// <summary>"Open File" filter for maps for this game.</summary>
-        public abstract string OpenFilter { get; }
+        /// <summary>Types that can be opened and saved by this plugin.</summary>
+        public abstract FileTypeInfo[] SupportedFileTypes { get; }
         /// <summary>Default extension used for maps of this game.</summary>
-        public abstract string DefaultExtension { get; }
+        public abstract FileType DefaultSaveType { get; }
         /// <summary>Default extension used for maps of this game when they were loaded from inside a .mix file.</summary>
-        public abstract string DefaultExtensionFromMix { get; }
+        public abstract FileType DefaultSaveTypeFromMix { get; }
+        /// <summary>Default extension used for maps of this game when they were loaded from inside a .pgm file.</summary>
+        public abstract FileType DefaultSaveTypeFromPgm { get; }
         /// <summary>Location to look for mods for this game in the user's Documents folder.</summary>
         public abstract string ModFolder { get; }
         /// <summary>Identifier for this game in mod definition json files.</summary>
@@ -63,8 +87,8 @@ namespace MobiusEditor.Model
         public abstract string ModsToLoad { get; }
         /// <summary>Name of the setting that configures this game's mods to load.</summary>
         public abstract string ModsToLoadSetting { get; }
-        /// <summary>Workshop identifier for maps for this game. If empty, workshop is not supported for this game.</summary>
-        public abstract string WorkshopTypeId { get; }
+        /// <summary>Gives the list of remastered .meg files to load for this game.</summary>
+        public abstract string[] RemasterMegFiles { get; }
         /// <summary>Configured folder for this this game's Classic files</summary>
         public abstract string ClassicFolder { get; }
         /// <summary>Root folder of this game's Classic files under in the Remastered Collection's "Data" folder.</summary>
@@ -77,9 +101,9 @@ namespace MobiusEditor.Model
         public abstract string ClassicFolderSetting { get; }
         /// <summary>File name of the classic strings file for this game.</summary>
         public abstract string ClassicStringsFile { get; }
-        /// <summary>Map size for normal maps of this type</summary>
+        /// <summary>Map size for normal maps of this type.</summary>
         public abstract Size MapSize { get; }
-        /// <summary>Map size for megamaps of this type</summary>
+        /// <summary>Map size for megamaps of this type.</summary>
         public abstract Size MapSizeMega { get; }
         /// <summary>Lists all theaters theoretically supported by this type.</summary>
         public abstract TheaterType[] AllTheaters { get; }
@@ -97,19 +121,73 @@ namespace MobiusEditor.Model
         public abstract bool HasSinglePlayer { get; }
         /// <summary>Whether mix files of this game can be in the new mix format</summary>
         public abstract bool CanUseNewMixFormat { get; }
+        /// <summary>Maximum length of the saved ini data for a map of this game.</summary>
+        public abstract long MaxDataSize { get; }
+        /// <summary>Maximum amount of aircraft that can be added into a map of this game.</summary>
+        public abstract int MaxAircraft { get; }
+        /// <summary>Maximum amount of vessels that can be added into a map of this game.</summary>
+        public abstract int MaxVessels { get; }
+        /// <summary>Maximum amount of buildings that can be added into a map of this game.</summary>
+        public abstract int MaxBuildings { get; }
+        /// <summary>Maximum amount of infantry that can be added into a map of this game.</summary>
+        public abstract int MaxInfantry { get; }
+        /// <summary>Maximum amount of terrain that can be added into a map of this game.</summary>
+        public abstract int MaxTerrain { get; }
+        /// <summary>Maximum amount of units that can be added into a map of this game.</summary>
+        public abstract int MaxUnits { get; }
         /// <summary>Maximum amount of triggers that can be added into a map of this game.</summary>
         public abstract int MaxTriggers { get; }
-        /// <summary>Maximum amount of teams that can be added into a map of this game.</summary>
+        /// <summary>Maximum length of trigger names.</summary>
+        public abstract int MaxTriggerNameLength { get; }
+        /// <summary>Maximum amount of teamtypes that can be added into a map of this game.</summary>
         public abstract int MaxTeams { get; }
+        /// <summary>Maximum length of teamtypes names.</summary>
+        public abstract int MaxTeamNameLength { get; }
+        /// <summary>Maximum amount of different unit classes in a teamtype for this game.</summary>
+        public abstract int MaxTeamClasses { get; }
+        /// <summary>Maximum amount of missions (orders) in a teamtype for this game.</summary>
+        public abstract int MaxTeamMissions { get; }
         /// <summary>Threshold (1-256) at which the health bar colour changes from yellow to green in this game.</summary>
         public abstract int HitPointsGreenMinimum { get; }
         /// <summary>Threshold (1-256) at which the health bar colour changes from red to yellow in this game.</summary>
         public abstract int HitPointsYellowMinimum { get; }
-        /// <summary>Preferred type of overlay to use as UI icon</summary>
+        /// <summary>True if VTOL / helicopter types do not spawn in the air in this game type.</summary>
+        public abstract bool LandedHelis { get; }
+        /// <summary>Returns the viewport size around the Home waypoint, for DOS resolution, in old pixels.</summary>
+        public abstract Size ViewportSizeSmall { get; }
+        /// <summary>Returns the extra sidebar part of the viewport size, for DOS resolution, in old pixels. This is always added to the left of the main viewport.</summary>
+        public abstract Size ViewportSidebarSmall { get; }
+        /// <summary>Returns the offset of the top-left corner of the viewport from the Home waypoint for DOS resolution, in old pixels.</summary>
+        public abstract Point ViewportOffsetSmall { get; }
+        /// <summary>Returns the viewport size around the Home waypoint, for Win95 resolution, in old pixels.</summary>
+        public abstract Size ViewportSizeLarge { get; }
+        /// <summary>Returns the extra sidebar part of the viewport size, for Win95 resolution, in old pixels. This is always added to the left of the main viewport.</summary>
+        public abstract Size ViewportSidebarLarge { get; }
+        /// <summary>Returns the offset of the top-left corner of the viewport from the Home waypoint for Win95 resolution, in old pixels.</summary>
+        public abstract Point ViewportOffsetLarge { get; }
+        /// <summary>Preferred type of overlay to use as UI icon.</summary>
         public abstract OverlayTypeFlag OverlayIconType { get; }
+        /// <summary>Generic image usable as Steam thumbnail.</summary>
+        public abstract Bitmap WorkshopPreviewGeneric { get; }
+        /// <summary>Generic but game-specific image usable as Steam thumbnail.</summary>
+        public abstract Bitmap WorkshopPreviewGenericGame { get; }
+
         #endregion
 
         #region functions
+        /// <summary>
+        /// Identifies if a given map is for this game, and returns the correct type for it.
+        /// </summary>
+        /// <param name="iniContents">Contents of the loaded ini file.</param>
+        /// <param name="binContents">Contents of the loaded bin file.</param>
+        /// <param name="contentWasSwapped">True if the primary opened file was the .bin one.</param>
+        /// <param name="acceptBin">True if the binary data should be accepted even if it does not fully match the format.
+        /// This is normally only true if <paramref name="contentWasSwapped"/> is true and the loaded file has either the .bin or .map extension.
+        /// </param>
+        /// <param name="isMegaMap">Returns whether the given map is a megamap.</param>
+        /// <param name="theater">Returns the theater of the map.</param>
+        /// <returns></returns>
+        public abstract FileType IdentifyMap(INI iniContents, byte[] binContents, bool contentWasSwapped, bool acceptBin, out bool isMegaMap, out string theater);
         /// <summary>
         /// Create game plugin for this game.
         /// </summary>
@@ -154,49 +232,36 @@ namespace MobiusEditor.Model
         /// <returns>True if the given name is considered empty by this game type.</returns>
         public abstract bool MapNameIsEmpty(string name);
         /// <summary>Retrieves classic font info from this game to use for the requested role.</summary>
-        public abstract string GetClassicFontInfo(ClassicFont font, TilesetManagerClassic tsmc, TeamRemapManager trm, Color textColor, out bool crop, out TeamRemap remap);
+        public abstract string GetClassicFontInfo(ClassicFont font, TilesetManagerClassic tsmc, Color textColor, out bool crop, out Color[] palette);
+        /// <summary>Get the Tile for the classic Fake label. If this returns nothing, the text is drawn using the FakeLables font.</summary>
+        public abstract Tile GetClassicFakeLabel(TilesetManagerClassic tsm);
+        /// <summary>Gets a filename without extension to call the items used for uploading to the Steam workshop</summary>
+        /// <returns>A filename, without extension, to use as basis for how to call the items in the workshop upload.</returns>
+        public abstract string GetSteamWorkshopFileName(IGamePlugin plugin);
         #endregion
 
         #region protected functions
 
         /// <summary>
-        /// Creates a remap object for a specific font, by remapping all indices to the closest color on te palette.
-        /// A list of indices to clear can be given, which remaps those to index 0 on the palette.
+        /// Creates a palette for a specific font.
         /// </summary>
-        /// <param name="fontName">font name, to use in the remap name.</param>
-        /// <param name="tsmc">Classic tileset manager, to get the color info from.</param>
         /// <param name="textColor">Requested color for the text. Probably won't match exactly since it is looked up in the palette.</param>
         /// <param name="clearIndices">Indices on the graphics that need to be cleared to transparent (index 0).</param>
-        /// <returns>A TeamRemap object for the given color.</returns>
-        /// <remarks>The generated remap is cached in the TeamRemapManager.</remarks>
-        protected TeamRemap GetClassicFontRemapSimple(string fontName, TilesetManagerClassic tsmc, TeamRemapManager trm, Color textColor, params int[] clearIndices)
+        /// <returns>A color palette for the given color font.</returns>
+        protected Color[] GetClassicFontPalette(Color textColor, params int[] clearIndices)
         {
-            if (fontName == null)
+            Color[] palette = Enumerable.Repeat(Color.Empty, 0x01)
+                .Concat(Enumerable.Repeat(textColor, 0x0F))
+                .Concat(Enumerable.Repeat(Color.Empty, 0xF0)).ToArray();
+            for (int i = 0; i < clearIndices.Length; ++i)
             {
-                return null;
-            }
-            List<int> indicesFiltered = (clearIndices ?? new int[0]).Where(x => x > 0 && x < 16).ToList();
-            indicesFiltered.Sort();
-            string cleared = String.Join("-", indicesFiltered.Select(i => i.ToString("X")));
-            string remapName = "FontRemap_" + fontName + "_" + textColor.ToArgb().ToString("X4") + (cleared.Length > 0 ? "_" : string.Empty) + cleared;
-            TeamRemap fontRemap = trm.GetItem(remapName);
-            if (fontRemap != null)
-            {
-                return fontRemap;
-            }
-            int color = tsmc.GetClosestColorIndex(textColor, true);
-            // Extremely simple: all indices except 0 remap to the given colour.
-            byte[] remapIndices = 0.Yield().Concat(Enumerable.Repeat(color, 15)).Select(b => (byte)b).ToArray();
-            if (indicesFiltered.Count > 0)
-            {
-                foreach (int index in indicesFiltered)
+                int index = clearIndices[i];
+                if (index > 0 && index < 0x10)
                 {
-                    remapIndices[index] = 0;
+                    palette[index] = Color.Empty;
                 }
             }
-            fontRemap = new TeamRemap(remapName, 0, 0, 0, remapIndices);
-            trm.AddTeamColor(fontRemap);
-            return fontRemap;
+            return palette;
         }
 
         protected static string GetMissionName(char side, int number, string suffix)
@@ -209,6 +274,16 @@ namespace MobiusEditor.Model
             const string formatNormal = "sc{0}{1:00}{2}";
             const string formatAm = "sc{0}{3}{1}{2}";
             return String.Format(aftermathLetter == '\0' ? formatNormal : formatAm, side, number, suffix, aftermathLetter);
+        }
+
+        public static bool IsCnCIni(INI iniContents)
+        {
+            return iniContents != null && INITools.CheckForIniInfo(iniContents, "Map") && INITools.CheckForIniInfo(iniContents, "Basic");
+        }
+
+        public static string GetTheater(INI iniContents)
+        {
+            return !INITools.CheckForIniInfo(iniContents, "Map") ? String.Empty : (iniContents["Map"].TryGetValue("Theater") ?? String.Empty).ToLower();
         }
         #endregion
 

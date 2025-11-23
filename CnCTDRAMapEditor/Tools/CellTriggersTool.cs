@@ -57,16 +57,17 @@ namespace MobiusEditor.Tools
         protected override Map RenderMap => previewMap;
 
         private string currentObj;
-        public override Object CurrentObject
+        public override object CurrentObject
         {
             get { return currentObj; }
             set
             {
                 if (value is string trig)
                 {
-                    if (this.triggerComboBox.Items.Contains(trig))
+                    ListItem<String> found = ListItem.FindInComboBox(trig, triggerComboBox);
+                    if (found != null)
                     {
-                        this.triggerComboBox.SelectedItem = trig;
+                        triggerComboBox.SelectedItem = found;
                     }
                 }
             }
@@ -74,7 +75,7 @@ namespace MobiusEditor.Tools
 
         private bool placementMode;
 
-        protected override Boolean InPlacementMode
+        protected override bool InPlacementMode
         {
             get { return placementMode; }
         }
@@ -96,14 +97,14 @@ namespace MobiusEditor.Tools
             this.triggerComboBox.SelectedIndexChanged += this.TriggerCombo_SelectedIndexChanged;
         }
 
-        private void Url_UndoRedoDone(object sender, UndoRedoEventArgs e)
+        private void Url_UndoRedoDone(object sender, UndoRedoEventArgs ev)
         {
-            if ((e.Source & (ToolType.Infantry | ToolType.Unit | ToolType.Building)) != ToolType.None)
+            if ((ev.Source & (ToolType.Infantry | ToolType.Unit | ToolType.Building)) != ToolType.None)
             {
                 // Moving units and buildings around can affect blobs, since they might be attached to the triggers.
                 UpdateBlobsList(null, null);
             }
-            else if ((e.Source & ToolType.CellTrigger) != ToolType.None)
+            else if ((ev.Source & ToolType.CellTrigger) != ToolType.None)
             {
                 // Can't know for sure which one updated, so update them all.
                 UpdateDataSource();
@@ -117,14 +118,17 @@ namespace MobiusEditor.Tools
 
         private void UpdateDataSource()
         {
-            string selected = triggerComboBox.SelectedItem as string;
+            string selected = ListItem.GetValueFromComboBox<String>(triggerComboBox);
             triggerComboBox.DataSource = null;
-            triggerComboBox.Items.Clear();
+            triggerComboBox.ValueMember = null;
+            triggerComboBox.DisplayMember = null;
             bool hasItems;
             string[] items = GetItems(out hasItems);
             UpdateBlobsList(items, null);
             int selectIndex = selected == null ? 0 : Enumerable.Range(0, items.Length).FirstOrDefault(x => String.Equals(items[x], selected, StringComparison.InvariantCultureIgnoreCase));
-            triggerComboBox.DataSource = items;
+            triggerComboBox.ValueMember = "Value";
+            triggerComboBox.DisplayMember = "Label";
+            triggerComboBox.DataSource = items.Select(tr => ListItem.Create(tr)).ToArray();
             triggerComboBox.SelectedIndex = selectIndex;
             triggerComboBox.Enabled = hasItems;
             // Needed if the index didn't change but the item did.
@@ -137,7 +141,7 @@ namespace MobiusEditor.Tools
             OnTriggerChanged?.Invoke(this, new EventArgs());
         }
 
-        private String[] GetItems(out bool hasItems)
+        private string[] GetItems(out bool hasItems)
         {
             string[] items = plugin.Map.FilterCellTriggers().Select(t => t.Name).Distinct().ToArray();
             hasItems = items.Length > 0;
@@ -178,7 +182,7 @@ namespace MobiusEditor.Tools
             }
             int height = map.Metrics.Height;
             int width = map.Metrics.Width;
-            foreach (String trig in items)
+            foreach (string trig in items)
             {
                 bool[,] cellTrigs = new bool[height, width];
                 List<Point> points = new List<Point>();
@@ -196,20 +200,25 @@ namespace MobiusEditor.Tools
                 // Get blobs for technos
                 cellTrigs = new bool[height, width];
                 points.Clear();
-                foreach ((Point Location, ICellOccupier Occupier) techno in map.Technos.Where(lco => lco.Occupier is ITechno t && t.Trigger == trig))
+                // Execute the same code for both units and buildings.
+                void AddPoints(OccupierSet<ICellOccupier> list, string trigname, List<Point> addList, bool[,] markList)
                 {
-                    // Should cover buildings too.
-                    bool[,] occupyMask = techno.Occupier.OccupyMask;
-                    for (Int32 y = 0; y < occupyMask.GetLength(0); ++y)
+                    foreach ((Point Location, ICellOccupier Occupier) techno in list.Where(lco => lco.Occupier is ITechno t && t.Trigger == trigname))
                     {
-                        for (Int32 x = 0; x < occupyMask.GetLength(1); ++x)
+                        bool[,] occupyMask = techno.Occupier.OccupyMask;
+                        for (int y = 0; y < occupyMask.GetLength(0); ++y)
                         {
-                            Point loc = new Point(techno.Location.X + x, techno.Location.Y + y);
-                            points.Add(loc);
-                            cellTrigs[loc.Y, loc.X] = true;
+                            for (int x = 0; x < occupyMask.GetLength(1); ++x)
+                            {
+                                Point loc = new Point(techno.Location.X + x, techno.Location.Y + y);
+                                addList.Add(loc);
+                                markList[loc.Y, loc.X] = true;
+                            }
                         }
                     }
                 }
+                AddPoints(map.Technos, trig, points, cellTrigs);
+                AddPoints(map.Buildings, trig, points, cellTrigs);
                 foreach ((Point Location, ICellOccupier Occupier) techno in map.Technos
                     .Where(lco => lco.Occupier is InfantryGroup ifg && ifg.Infantry.Any(i => i != null && i.Trigger == trig)))
                 {
@@ -280,9 +289,10 @@ namespace MobiusEditor.Tools
         private void MapPanel_MouseLeave(object sender, EventArgs e)
         {
             ExitPlacementMode();
+            MapPanel_MouseUp(sender, new MouseEventArgs(MouseButtons.None, 0, 0, 0, 0));
         }
 
-        private void MapPanel_MouseWheel(Object sender, MouseEventArgs e)
+        private void MapPanel_MouseWheel(object sender, MouseEventArgs e)
         {
             if (e.Delta == 0 || (Control.ModifierKeys & Keys.Control) == Keys.None)
             {
@@ -326,7 +336,8 @@ namespace MobiusEditor.Tools
 
         private void SetCellTrigger(Point location)
         {
-            if (!(triggerComboBox.SelectedItem is string trigger) || Trigger.IsEmpty(trigger))
+            String trigger = ListItem.GetValueFromComboBox<String>(triggerComboBox);
+            if (Trigger.IsEmpty(trigger))
             {
                 return;
             }
@@ -399,8 +410,13 @@ namespace MobiusEditor.Tools
             {
                 return;
             }
-            String trigger = cellTrigger.Trigger;
-            triggerComboBox.SelectedItem = trigger;
+            string trigger = cellTrigger.Trigger;
+            ListItem<String> liTrigger = ListItem.FindInComboBox(trigger, triggerComboBox);
+            if (liTrigger == null)
+            {
+                return;
+            }
+            triggerComboBox.SelectedItem = liTrigger;
             if (!cellTrigBlobCenters.TryGetValue(trigger, out Rectangle[] locations))
             {
                 return;
@@ -410,7 +426,7 @@ namespace MobiusEditor.Tools
             currentCellTrigIndex = 0;
             // If found, make sure clicking the "jump to next use" button
             // will go to the blob after the currently clicked one.
-            for (Int32 i = 0; i < locations.Length; ++i)
+            for (int i = 0; i < locations.Length; ++i)
             {
                 Rectangle triggerLocation = locations[i];
                 if (triggerLocation.Contains(location))
@@ -423,40 +439,43 @@ namespace MobiusEditor.Tools
 
         private void CommitChange()
         {
-            bool origDirtyState = plugin.Dirty;
+            bool origEmptyState = plugin.Empty;
             plugin.Dirty = true;
             var undoCellTriggers2 = new Dictionary<int, CellTrigger>(undoCellTriggers);
-            string selected = triggerComboBox.SelectedItem as string ?? String.Empty;
+            string selected = ListItem.GetValueFromComboBox<String>(triggerComboBox) ?? String.Empty;
             UpdateBlobsList(null, selected);
-            void undoAction(UndoRedoEventArgs e)
+            void undoAction(UndoRedoEventArgs ev)
             {
-                List<Trigger> valid = e.Map.FilterCellTriggers().ToList();
+                List<Trigger> valid = ev.Map.FilterCellTriggers().ToList();
                 foreach (var kv in undoCellTriggers2)
                 {
                     CellTrigger cellTrig = kv.Value;
                     bool isValid = cellTrig == null || valid.Any(t => t.Name.Equals(cellTrig.Trigger, StringComparison.InvariantCultureIgnoreCase));
-                    e.Map.CellTriggers[kv.Key] = isValid ? cellTrig : null;
-                    e.MapPanel.Invalidate(map, kv.Key);
+                    ev.Map.CellTriggers[kv.Key] = isValid ? cellTrig : null;
+                    ev.MapPanel.Invalidate(map, kv.Key);
                 }
-                if (e.Plugin != null)
+                if (ev.Plugin != null)
                 {
-                    e.Plugin.Dirty = origDirtyState;
+                    ev.Plugin.Empty = origEmptyState;
+                    ev.Plugin.Dirty = !ev.NewStateIsClean;
                 }
             }
             var redoCellTriggers2 = new Dictionary<int, CellTrigger>(redoCellTriggers);
-            void redoAction(UndoRedoEventArgs e)
+            void redoAction(UndoRedoEventArgs ev)
             {
-                List<Trigger> valid = e.Map.FilterCellTriggers().ToList();
+                List<Trigger> valid = ev.Map.FilterCellTriggers().ToList();
                 foreach (var kv in redoCellTriggers2)
                 {
                     CellTrigger cellTrig = kv.Value;
                     bool isValid = cellTrig == null || valid.Any(t => t.Name.Equals(cellTrig.Trigger, StringComparison.InvariantCultureIgnoreCase));
-                    e.Map.CellTriggers[kv.Key] = isValid ? cellTrig : null;
-                    e.MapPanel.Invalidate(map, kv.Key);
+                    ev.Map.CellTriggers[kv.Key] = isValid ? cellTrig : null;
+                    ev.MapPanel.Invalidate(map, kv.Key);
                 }
-                if (e.Plugin != null)
+                if (ev.Plugin != null)
                 {
-                    e.Plugin.Dirty = true;
+                    // Redo can never restore the "empty" state, but CAN be the point at which a save was done.
+                    ev.Plugin.Empty = false;
+                    ev.Plugin.Dirty = !ev.NewStateIsClean;
                 }
             }
             undoCellTriggers.Clear();
@@ -494,9 +513,9 @@ namespace MobiusEditor.Tools
             }
         }
 
-        private void TriggerCombo_SelectedIndexChanged(Object sender, EventArgs e)
+        private void TriggerCombo_SelectedIndexChanged(object sender, EventArgs e)
         {
-            string selected = triggerComboBox.SelectedItem as string;
+            string selected = ListItem.GetValueFromComboBox<String>(triggerComboBox);
             jumpToButton.Enabled = selected != null && cellTrigBlobCenters.TryGetValue(selected, out Rectangle[] locations) && locations != null && locations.Length > 0;
             currentObj = selected;
             if (placementMode)
@@ -512,14 +531,14 @@ namespace MobiusEditor.Tools
             OnTriggerChanged?.Invoke(this, new EventArgs());
         }
 
-        private void JumpToButton_Click(Object sender, EventArgs e)
+        private void JumpToButton_Click(object sender, EventArgs e)
         {
             JumpToNextBlob();
         }
 
         private void JumpToNextBlob()
         {
-            string selected = triggerComboBox.SelectedItem as string;
+            string selected = ListItem.GetValueFromComboBox<String>(triggerComboBox);
             if (!String.Equals(currentCellTrig, selected, StringComparison.OrdinalIgnoreCase))
             {
                 currentCellTrigIndex = 0;
@@ -552,7 +571,7 @@ namespace MobiusEditor.Tools
             {
                 return;
             }
-            string selected = triggerComboBox.SelectedItem as string;
+            string selected = ListItem.GetValueFromComboBox<String>(triggerComboBox);
             if (selected == null || Trigger.IsEmpty(selected))
             {
                 return;
@@ -578,7 +597,7 @@ namespace MobiusEditor.Tools
         protected override void PostRenderMap(Graphics graphics, Rectangle visibleCells)
         {
             base.PostRenderMap(graphics, visibleCells);
-            string selected = triggerComboBox.SelectedItem as string;
+            string selected = ListItem.GetValueFromComboBox<String>(triggerComboBox);
             if (selected != null && Trigger.IsEmpty(selected))
                 selected = null;
             string[] selectedRange = selected != null ? new[] { selected } : new string[] { };
@@ -610,19 +629,20 @@ namespace MobiusEditor.Tools
         {
             base.Activate();
             Deactivate(true);
-            this.jumpToButton.Click += JumpToButton_Click;
+            jumpToButton.Click += JumpToButton_Click;
             plugin.Map.TriggersUpdated += Triggers_CollectionChanged;
-            this.mapPanel.MouseDown += MapPanel_MouseDown;
-            this.mapPanel.MouseUp += MapPanel_MouseUp;
-            this.mapPanel.MouseMove += MapPanel_MouseMove;
-            this.mapPanel.MouseLeave += MapPanel_MouseLeave;
-            this.mapPanel.MouseWheel += MapPanel_MouseWheel;
-            this.mapPanel.SuspendMouseZoomKeys = Keys.Control;
-            (this.mapPanel as Control).KeyDown += CellTriggersTool_KeyDown;
-            (this.mapPanel as Control).KeyUp += CellTriggersTool_KeyUp;
-            this.navigationWidget.BoundsMouseCellChanged += MouseoverWidget_MouseCellChanged;
-            this.url.Undone += Url_UndoRedoDone;
-            this.url.Redone += Url_UndoRedoDone;
+            mapPanel.MouseDown += MapPanel_MouseDown;
+            mapPanel.MouseUp += MapPanel_MouseUp;
+            mapPanel.MouseMove += MapPanel_MouseMove;
+            mapPanel.MouseLeave += MapPanel_MouseLeave;
+            mapPanel.MouseWheel += MapPanel_MouseWheel;
+            mapPanel.LostFocus += MapPanel_MouseLeave;
+            mapPanel.SuspendMouseZoomKeys = Keys.Control;
+            (mapPanel as Control).KeyDown += CellTriggersTool_KeyDown;
+            (mapPanel as Control).KeyUp += CellTriggersTool_KeyUp;
+            navigationWidget.BoundsMouseCellChanged += MouseoverWidget_MouseCellChanged;
+            url.Undone += Url_UndoRedoDone;
+            url.Redone += Url_UndoRedoDone;
             UpdateStatus();
         }
 
@@ -638,19 +658,20 @@ namespace MobiusEditor.Tools
                 ExitPlacementMode();
                 base.Deactivate();
             }
-            this.jumpToButton.Click -= JumpToButton_Click;
+            jumpToButton.Click -= JumpToButton_Click;
             plugin.Map.TriggersUpdated -= Triggers_CollectionChanged;
-            this.mapPanel.MouseDown -= MapPanel_MouseDown;
-            this.mapPanel.MouseUp -= MapPanel_MouseUp;
-            this.mapPanel.MouseMove -= MapPanel_MouseMove;
-            this.mapPanel.MouseLeave -= MapPanel_MouseLeave;
-            this.mapPanel.MouseWheel -= MapPanel_MouseWheel;
-            this.mapPanel.SuspendMouseZoomKeys = Keys.None;
-            (this.mapPanel as Control).KeyDown -= CellTriggersTool_KeyDown;
-            (this.mapPanel as Control).KeyUp -= CellTriggersTool_KeyUp;
-            this.navigationWidget.BoundsMouseCellChanged -= MouseoverWidget_MouseCellChanged;
-            this.url.Undone -= Url_UndoRedoDone;
-            this.url.Redone -= Url_UndoRedoDone;
+            mapPanel.MouseDown -= MapPanel_MouseDown;
+            mapPanel.MouseUp -= MapPanel_MouseUp;
+            mapPanel.MouseMove -= MapPanel_MouseMove;
+            mapPanel.MouseLeave -= MapPanel_MouseLeave;
+            mapPanel.MouseWheel -= MapPanel_MouseWheel;
+            mapPanel.LostFocus -= MapPanel_MouseLeave;
+            mapPanel.SuspendMouseZoomKeys = Keys.None;
+            (mapPanel as Control).KeyDown -= CellTriggersTool_KeyDown;
+            (mapPanel as Control).KeyUp -= CellTriggersTool_KeyUp;
+            navigationWidget.BoundsMouseCellChanged -= MouseoverWidget_MouseCellChanged;
+            url.Undone -= Url_UndoRedoDone;
+            url.Redone -= Url_UndoRedoDone;
         }
 
         #region IDisposable Support

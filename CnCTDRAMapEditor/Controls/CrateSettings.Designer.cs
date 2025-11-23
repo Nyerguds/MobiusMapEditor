@@ -777,7 +777,7 @@ namespace MobiusEditor.Controls
             this.btnDefaults.TabIndex = 3;
             this.btnDefaults.Text = "Reset to defaults";
             this.btnDefaults.UseVisualStyleBackColor = true;
-            this.btnDefaults.Click += new System.EventHandler(this.btnDefaults_Click);
+            this.btnDefaults.Click += new System.EventHandler(this.BtnDefaults_Click);
             // 
             // CrateSettings
             // 

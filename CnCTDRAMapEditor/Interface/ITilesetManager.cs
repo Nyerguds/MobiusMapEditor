@@ -95,20 +95,20 @@ namespace MobiusEditor.Interface
         int GetTileDataLength(string name);
 
         /// <summary>
-        /// Gets the total amount of shapes available for the requested tile, or -1 if no tileset information was found.
+        /// Returns whether a tile exists for the given name in the currently loaded tileset.
         /// </summary>
         /// <param name="name">Name of the tile to fetch.</param>
-        /// <returns>The total amount of shapes available for the requested tile.</returns>
-        /// <remarks>For the Remaster, this is based on xml info. In the classic files, this simply looks at the actual sprite file.</remarks>
+        /// <returns>True if a tile exists for the requested tile name.</returns>
         bool TileExists(string name);
 
         /// <summary>
         /// Gets a tile from the system, with data for retrieving either a remastered or classic shape.
         /// </summary>
         /// <param name="remasterSprite">Name of the sprite to fetch from the currently loaded remastered tilesets.</param>
-        /// <param name="classicicon">Frame to use from the remastered sprite, if this is the remastered tileset manager.</param>
-        /// <param name="classicSprite">Classic sprite to fetch from, if this is the Classic tileset manager</param>
-        /// <param name="classicicon">Frame to use from the classic sprite, if this is the Classic tileset manager</param>
+        /// <param name="remastericon">Frame to use from the remastered sprite, if this is the remastered tileset manager.</param>
+        /// <param name="classicSprite">Classic sprite to fetch from, if this is the Classic tileset manager.</param>
+        /// <param name="classicicon">Frame to use from the classic sprite, if this is the Classic tileset manager.</param>
+        /// <param name="teamColor">Team color to remap the tile's House colors.</param>
         /// <returns>
         /// The requested image. This is a clone of the image in the internal texture manager, and should be disposed after use.
         /// </returns>

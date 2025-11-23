@@ -31,6 +31,7 @@ namespace MobiusEditor.Model
         public string ClassicTileset { get; private set; }
         /// <summary>File extension of the files inside the classic .mix archive.</summary>
         public string ClassicExtension { get; private set; }
+        public byte ClassicShadow { get; private set; }
         /// <summary>True if the theater is not an official one. If false, this theater is required to be available (see <see cref="IsAvailable"/>) by the startup checks.</summary>
         public bool IsModTheater { get; set; }
         /// <summary>Used to store the status of the startup checks that see if the theater mix file was found.</summary>
@@ -40,29 +41,30 @@ namespace MobiusEditor.Model
 
         public IEnumerable<string> Tilesets { get; private set; }
 
-        public TheaterType(sbyte id, string name, string classicTileset, string classicExt, bool modTheater, string mainTileSet, IEnumerable<string> tilesets)
+        public TheaterType(sbyte id, string name, string classicTileset, string classicExt, byte classicShadow, bool modTheater, string mainTileSet, IEnumerable<string> tilesets)
         {
             ID = id;
             Name = name;
             ClassicTileset = classicTileset;
             MainTileset = mainTileSet;
             ClassicExtension = classicExt;
+            ClassicShadow = (byte)(classicShadow & 0xF);
             IsClassicMixFound = false;
             IsRemasterTilesetFound = false;
             IsModTheater = modTheater;
-            Tilesets = mainTileSet.Yield().Concat(tilesets?.Distinct() ?? new List<String>());
+            Tilesets = mainTileSet.Yield().Concat(tilesets?.Distinct() ?? new List<string>());
         }
 
-        public TheaterType(sbyte id, string name, string classicTileset, string classicExt, bool modTheater, string mainTileSet, params string[] tilesets)
-            : this(id, name, classicTileset, classicExt, modTheater, mainTileSet, (IEnumerable<String>)tilesets)
+        public TheaterType(sbyte id, string name, string classicTileset, string classicExt, byte classicShadow, bool modTheater, string mainTileSet, params string[] tilesets)
+            : this(id, name, classicTileset, classicExt, classicShadow, modTheater, mainTileSet, (IEnumerable<string>)tilesets)
         { }
 
-        public TheaterType(sbyte id, string name, string classicTileset, string classicExt, string mainTileSet, IEnumerable<string> tilesets)
-            : this(id, name, classicTileset, classicExt, false, mainTileSet, tilesets)
+        public TheaterType(sbyte id, string name, string classicTileset, string classicExt, byte classicShadow, string mainTileSet, IEnumerable<string> tilesets)
+            : this(id, name, classicTileset, classicExt, classicShadow, false, mainTileSet, tilesets)
         { }
 
-        public TheaterType(sbyte id, string name, string classicTileset, string classicExt, string mainTileSet, params string[] tilesets)
-            : this(id, name, classicTileset, classicExt, false, mainTileSet, (IEnumerable<String>)tilesets)
+        public TheaterType(sbyte id, string name, string classicTileset, string classicExt, byte classicShadow, string mainTileSet, params string[] tilesets)
+            : this(id, name, classicTileset, classicExt, classicShadow, false, mainTileSet, (IEnumerable<string>)tilesets)
         { }
 
         public override bool Equals(object obj)

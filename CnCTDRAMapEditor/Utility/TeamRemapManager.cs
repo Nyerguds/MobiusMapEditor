@@ -31,14 +31,20 @@ namespace MobiusEditor.Utility
         public static readonly TeamRemap RemapTdTealBlue = new TeamRemap("MULTI2", 2, 135, 176, new byte[] { 2, 119, 118, 135, 136, 138, 112, 12, 118, 135, 136, 137, 138, 139, 114, 112 });
         public static readonly TeamRemap RemapTdOrange = new TeamRemap("MULTI5", 24, 26, 176, new byte[] { 24, 25, 26, 27, 29, 31, 46, 47, 26, 27, 28, 29, 30, 31, 43, 47 });
         public static readonly TeamRemap RemapTdGreen = new TeamRemap("MULTI4", 167, 159, 176, new byte[] { 5, 165, 166, 167, 159, 142, 140, 199, 166, 167, 157, 3, 159, 143, 142, 141 });
-        public static readonly TeamRemap RemapTdLtBlue = new TeamRemap("MULTI6", 201, 203, 176, new byte[] { 161, 200, 201, 202, 204, 205, 206, 12, 201, 202, 203, 204, 205, 115, 198, 114 });
+        public static readonly TeamRemap RemapTdGreyBlue = new TeamRemap("MULTI6", 201, 203, 176, new byte[] { 161, 200, 201, 202, 204, 205, 206, 12, 201, 202, 203, 204, 205, 115, 198, 114 });
         public static readonly TeamRemap RemapTdYellow = new TeamRemap("MULTI1", 5, 157, 176, new byte[] { 176, 177, 178, 179, 180, 181, 182, 183, 184, 185, 186, 187, 188, 189, 190, 191 });
         public static readonly TeamRemap RemapTdRed = new TeamRemap("MULTI3", 127, 123, 176, new byte[] { 127, 126, 125, 124, 122, 46, 120, 47, 125, 124, 123, 122, 42, 121, 120, 120 });
         // Extra colors added for flags. With thanks to Kilkakon.
-        public static readonly TeamRemap RemapTdBrown = new TeamRemap("MULTI7", 146, 209, 176, new byte[] { 146, 152, 209, 151, 173, 150, 173, 183, 146, 152, 209, 151, 173, 150, 173, 183 });
+        public static readonly TeamRemap RemapTdBrown = new TeamRemap("MULTI7", 146, 209, 176, new byte[] { 147, 146, 152, 209, 151, 150, 120, 47, 146, 152, 209, 151, 173, 173, 150, 120 });
         public static readonly TeamRemap RemapTdBurgundy = new TeamRemap("MULTI8", 214, 213, 176, new byte[] { 132, 133, 134, 213, 214, 121, 120, 12, 133, 134, 213, 214, 121, 174, 120, 199 });
+
         // 'Too fleshy' according to Chad1233, so I took Burgundy instead.
-        //public static readonly TeamRemap RemapTdPink = new TeamRemap("MULTI8", 217, 218, 176, new byte[] { 17, 17, 217, 218, 209, 213, 174, 120, 217, 217, 218, 209, 213, 214, 214, 174 });
+        public static readonly TeamRemap RemapTdPink = new TeamRemap("PINK", 217, 218, 176, new byte[] { 17, 17, 217, 218, 209, 213, 174, 120, 217, 217, 218, 209, 213, 214, 214, 174 });
+        public static readonly TeamRemap RemapTdFire = new TeamRemap("FIRE", 148, 27, 176, new byte[] { 5, 149, 25, 27, 29, 175, 47, 12, 24, 26, 28, 30, 31, 31, 44, 46 });
+        public static readonly TeamRemap RemapTdDarkGrey = new TeamRemap("DARKGREY", 194, 197, 176, new byte[] { 14, 194, 195, 196, 197, 198, 112, 12, 195, 195, 196, 197, 169, 154, 198, 199 });
+
+        public static readonly TeamRemap RemapTdWarmSilver = new TeamRemap("WARMSILVER", 163, 132, 176, new byte[] { 192, 164, 132, 155, 133, 197, 112, 12, 163, 132, 155, 133, 134, 197, 154, 198 });
+
         // For unowned buildings on the rebuild list.
         public static readonly TeamRemap RemapTdBlack = new TeamRemap("NONE", 199, 199, 176, new byte[] { 195, 196, 196, 13, 169, 198, 199, 112, 196, 13, 13, 169, 154, 198, 198, 199 });
 
@@ -68,7 +74,7 @@ namespace MobiusEditor.Utility
                 "RED",
                 "GREEN",
                 "ORANGE",
-	            "GREY",
+                "GREY",
                 "BLUE",
                 "BROWN",
                 //"TYPE",
@@ -104,12 +110,12 @@ namespace MobiusEditor.Utility
             {
                 return this.currentlyLoadedPalette[this.currentRemapBaseIndex];
             }
-            Byte[] b = new byte[1] { this.currentRemapBaseIndex };
+            byte[] b = new byte[1] { this.currentRemapBaseIndex };
             tc.ApplyToImage(b, 1, 1, 1, 1, null);
             return this.currentlyLoadedPalette[b[0]];
         }
 
-        public Color RemapBaseColor => this.GetBaseColor(null);
+        public Color BaseColorSource => this.GetBaseColor(null);
 
         public void Load(string path)
         {
@@ -147,7 +153,7 @@ namespace MobiusEditor.Utility
                 Array.Copy(cpsData, ptr, remap, 0, 16);
                 // Apparently the same for units and buildings in RA.
                 byte radarColor = cpsData[ptr + 6];
-                TeamRemap col = new TeamRemap(name, radarColor, radarColor, remapSource, remap);
+                TeamRemap col = new TeamRemap(name, remap[0], radarColor, remapSource, remap);
                 raRemapColors.Add(name, col);
             }
             // Assign read remaps to actual remaster-named team colors.

@@ -20,6 +20,7 @@ using System.Collections.Generic;
 using System.ComponentModel;
 using System.Data;
 using System.Drawing;
+using System.Drawing.Drawing2D;
 using System.Linq;
 using System.Reflection;
 using System.Windows.Forms;
@@ -38,7 +39,7 @@ namespace MobiusEditor.Controls
         private Control tooltipShownOn;
         private bool isMockObject;
         private HouseType originalHouse;
-        private String originalTrigger;
+        private string originalTrigger;
         private int originalStrength;
         string[] filteredEvents;
         string[] filteredActions;
@@ -82,20 +83,24 @@ namespace MobiusEditor.Controls
             triggerInfoImage.SetResolution(96, 96);
             using (Graphics g = Graphics.FromImage(triggerInfoImage))
             {
+                g.CompositingQuality = CompositingQuality.HighQuality;
+                g.InterpolationMode = InterpolationMode.HighQualityBicubic;
+                g.SmoothingMode = SmoothingMode.HighQuality;
+                g.PixelOffsetMode = PixelOffsetMode.HighQuality;
                 g.DrawIcon(SystemIcons.Information, new Rectangle(0, 0, triggerInfoImage.Width, triggerInfoImage.Height));
             }
             lblTriggerTypesInfo.Image = triggerInfoImage;
             lblTriggerTypesInfo.ImageAlign = ContentAlignment.MiddleCenter;
         }
 
-        private void ObjectProperties_Load(Object sender, EventArgs e)
+        private void ObjectProperties_Load(object sender, EventArgs e)
         {
             // Fix for the fact the resize in the very first Rebind() call never works correctly,
             // because the UI is not initialised yet at that point.
             //this.Height = tableLayoutPanel1.PreferredSize.Height;
         }
 
-        private void ObjectProperties_Resize(Object sender, EventArgs e)
+        private void ObjectProperties_Resize(object sender, EventArgs e)
         {
             //int prefH = tableLayoutPanel1.PreferredSize.Height + 10;
             //if (this.Height != prefH)
@@ -126,6 +131,10 @@ namespace MobiusEditor.Controls
                 int min = Math.Min(capIcon.Width, capIcon.Height);
                 int xOffs = (capIcon.Width - min) / 2;
                 int yOffs = (capIcon.Height - min) / 2;
+                g.CompositingQuality = CompositingQuality.HighQuality;
+                g.InterpolationMode = InterpolationMode.HighQualityBicubic;
+                g.SmoothingMode = SmoothingMode.HighQuality;
+                g.PixelOffsetMode = PixelOffsetMode.HighQuality;
                 g.DrawImage(capIcon, new Rectangle(0, 0, captureImage.Width, captureImage.Height), new Rectangle(xOffs, yOffs, min, min), GraphicsUnit.Pixel);
             }
             if (captureDisabledImage != null)
@@ -140,6 +149,10 @@ namespace MobiusEditor.Controls
             using (Brush redBrush = new SolidBrush(Color.Red))
             using (Pen crossPen = new Pen(redBrush, 3))
             {
+                g.CompositingQuality = CompositingQuality.HighQuality;
+                g.InterpolationMode = InterpolationMode.HighQualityBicubic;
+                g.SmoothingMode = SmoothingMode.HighQuality;
+                g.PixelOffsetMode = PixelOffsetMode.HighQuality;
                 g.DrawLine(crossPen, new Point(-1, captureDisabledImage.Height), new Point(captureDisabledImage.Width, -1));
             }
             if (captureUnknownImage != null)
@@ -149,8 +162,12 @@ namespace MobiusEditor.Controls
                 captureUnknownImage = null;
             }
             captureUnknownImage = ToolStripRenderer.CreateDisabledImage(captureImage);
-            houseComboBox.DataSource = plugin.Map.Houses.Select(t => new ListItem<HouseType>(t.Type, t.Type.Name)).ToArray();
-            missionComboBox.DataSource = plugin.Map.MissionTypes;
+            houseComboBox.ValueMember = "Value";
+            houseComboBox.DisplayMember = "Label";
+            houseComboBox.DataSource = plugin.Map.Houses.Select(t => ListItem.Create(t.Type, t.Type.Name)).ToArray();
+            missionComboBox.ValueMember = "Value";
+            missionComboBox.DisplayMember = "Label";
+            missionComboBox.DataSource = plugin.Map.MissionTypes.Select(mt => ListItem.Create(mt)).ToArray();
             Disposed += (sender, e) =>
             {
                 Object = null;
@@ -201,12 +218,11 @@ namespace MobiusEditor.Controls
             {
                 return;
             }
-            string selected = triggerComboBox.SelectedItem as string;
+            string selected = ListItem.GetValueFromComboBox<String>(triggerComboBox);
             triggerComboBox.DataBindings.Clear();
             triggerComboBox.SelectedIndexChanged -= this.TriggerComboBox_SelectedIndexChanged;
             triggerComboBox.DataSource = null;
-            triggerComboBox.Items.Clear();
-            string[] items;
+            HashSet<string> allowedTriggers;
             bool isAircraft = obj is Unit un && un.Type.IsAircraft;
             bool isOnMap = true;
             if (selected == null && obj is ITechno tch)
@@ -217,41 +233,43 @@ namespace MobiusEditor.Controls
             {
                 case Infantry infantry:
                 case Unit unit:
-                    items = Plugin.Map.FilterUnitTriggers().Select(t => t.Name).Distinct().ToArray();
+                    allowedTriggers = Plugin.Map.FilterUnitTriggers().Select(t => t.Name).Distinct().ToHashSet(StringComparer.OrdinalIgnoreCase);
                     filteredEvents = Plugin.Map.EventTypes.Where(ev => Plugin.Map.UnitEventTypes.Contains(ev)).Distinct().ToArray();
                     filteredActions = Plugin.Map.ActionTypes.Where(ac => Plugin.Map.UnitActionTypes.Contains(ac)).Distinct().ToArray();
                     break;
                 case Building building:
                     isOnMap = building.IsPrebuilt;
-                    items = Plugin.Map.FilterStructureTriggers().Select(t => t.Name).Distinct().ToArray();
+                    allowedTriggers = Plugin.Map.FilterStructureTriggers().Select(t => t.Name).Distinct().ToHashSet(StringComparer.OrdinalIgnoreCase);
                     filteredEvents = Plugin.Map.EventTypes.Where(ac => Plugin.Map.BuildingEventTypes.Contains(ac)).Distinct().ToArray();
                     filteredActions = Plugin.Map.ActionTypes.Where(ac => Plugin.Map.BuildingActionTypes.Contains(ac)).Distinct().ToArray();
                     break;
                 default:
-                    items = Plugin.Map.Triggers.Select(t => t.Name).Distinct().ToArray();
+                    allowedTriggers = Plugin.Map.Triggers.Select(t => t.Name).Distinct().ToHashSet(StringComparer.OrdinalIgnoreCase);
                     filteredEvents = null;
                     filteredActions = null;
                     break;
             }
-            HashSet<string> allowedTriggers = new HashSet<string>(items);
-            items = Trigger.None.Yield().Concat(Plugin.Map.Triggers.Select(t => t.Name).Where(t => allowedTriggers.Contains(t)).Distinct()).ToArray();
+            // Sort them back into the order they had in the original list.
+            string[] items = Trigger.None.Yield().Concat(Plugin.Map.Triggers.Select(t => t.Name).Where(t => allowedTriggers.Contains(t)).Distinct()).ToArray();
             int selectIndex = selected == null ? 0 : Enumerable.Range(0, items.Length).FirstOrDefault(x => String.Equals(items[x], selected, StringComparison.OrdinalIgnoreCase));
-            triggerComboBox.DataSource = items;
+            triggerComboBox.ValueMember = "Value";
+            triggerComboBox.DisplayMember = "Label";
+            triggerComboBox.DataSource = items.Select(tr => ListItem.Create(tr)).ToArray();
             triggerComboBox.Enabled = !isAircraft && isOnMap;
             if (obj != null)
             {
-                triggerComboBox.DataBindings.Add("SelectedItem", obj, "Trigger");
+                triggerComboBox.DataBindings.Add("SelectedValue", obj, "Trigger", false, DataSourceUpdateMode.OnPropertyChanged);
             }
             int sel = triggerComboBox.SelectedIndex;
             triggerComboBox.SelectedIndexChanged += this.TriggerComboBox_SelectedIndexChanged;
-            triggerComboBox.SelectedItem = items[selectIndex];
+            triggerComboBox.SelectedIndex = selectIndex;
             if (sel == selectIndex)
             {
                 TriggerComboBox_SelectedIndexChanged(triggerComboBox, new EventArgs());
             }
         }
 
-        private void TriggerComboBox_SelectedIndexChanged(Object sender, EventArgs e)
+        private void TriggerComboBox_SelectedIndexChanged(object sender, EventArgs e)
         {
             Point pt = MousePosition;
             if (obj is Building building)
@@ -266,7 +284,8 @@ namespace MobiusEditor.Controls
                     LblCapturable_MouseEnter(lblCapturable, e);
                 }
             }
-            string selected = triggerComboBox.SelectedItem as string;
+            //string selected = triggerComboBox.SelectedItem as string;
+            string selected = ListItem.GetValueFromComboBox<String>(triggerComboBox);
             Trigger trig = this.Plugin.Map.Triggers.FirstOrDefault(t => String.Equals(t.Name, selected, StringComparison.OrdinalIgnoreCase));
             triggerInfoToolTip = Map.MakeAllowedTriggersToolTip(filteredEvents, filteredActions, trig);
             triggerToolTip = Plugin.TriggerSummary(trig, true, false);
@@ -292,11 +311,11 @@ namespace MobiusEditor.Controls
             strengthNud.DataBindings.Clear();
             directionComboBox.DataBindings.Clear();
             directionComboBox.DataSource = null;
-            directionComboBox.Items.Clear();
+            directionComboBox.ValueMember = null;
             missionComboBox.DataBindings.Clear();
             triggerComboBox.DataBindings.Clear();
             triggerComboBox.DataSource = null;
-            triggerComboBox.Items.Clear();
+            triggerComboBox.ValueMember = null;
             basePriorityNud.DataBindings.Clear();
             prebuiltCheckBox.DataBindings.Clear();
             sellableCheckBox.DataBindings.Clear();
@@ -310,8 +329,10 @@ namespace MobiusEditor.Controls
                 case Infantry infantry:
                     {
                         houseComboBox.Enabled = true;
-                        directionComboBox.DataSource = Plugin.Map.UnitDirectionTypes.Select(t => new ListItem<DirectionType>(t, t.Name)).ToArray();
-                        missionComboBox.DataBindings.Add("SelectedItem", obj, "Mission");
+                        directionComboBox.ValueMember = "Value";
+                        directionComboBox.DisplayMember = "Label";
+                        directionComboBox.DataSource = Plugin.Map.UnitDirectionTypes.Select(t => ListItem.Create(t, t.Name)).ToArray();
+                        missionComboBox.DataBindings.Add("SelectedValue", obj, "Mission", false, DataSourceUpdateMode.OnPropertyChanged);
                         missionLabel.Visible = missionComboBox.Visible = true;
                         basePriorityLabel.Visible = basePriorityNud.Visible = false;
                         prebuiltCheckBox.Visible = false;
@@ -322,8 +343,10 @@ namespace MobiusEditor.Controls
                 case Unit unit:
                     {
                         houseComboBox.Enabled = true;
-                        directionComboBox.DataSource = Plugin.Map.UnitDirectionTypes.Select(t => new ListItem<DirectionType>(t, t.Name)).ToArray();
-                        missionComboBox.DataBindings.Add("SelectedItem", obj, "Mission");
+                        directionComboBox.ValueMember = "Value";
+                        directionComboBox.DisplayMember = "Label";
+                        directionComboBox.DataSource = Plugin.Map.UnitDirectionTypes.Select(t => ListItem.Create(t, t.Name)).ToArray();
+                        missionComboBox.DataBindings.Add("SelectedValue", obj, "Mission", false, DataSourceUpdateMode.OnPropertyChanged);
                         missionLabel.Visible = missionComboBox.Visible = true;
                         basePriorityLabel.Visible = basePriorityNud.Visible = false;
                         prebuiltCheckBox.Visible = false;
@@ -335,7 +358,9 @@ namespace MobiusEditor.Controls
                     {
                         houseComboBox.Enabled = building.IsPrebuilt;
                         bool directionVisible = (building.Type != null) && building.Type.HasTurret;
-                        directionComboBox.DataSource = Plugin.Map.BuildingDirectionTypes.Select(t => new ListItem<DirectionType>(t, t.Name)).ToArray();
+                        directionComboBox.ValueMember = "Value";
+                        directionComboBox.DisplayMember = "Label";
+                        directionComboBox.DataSource = Plugin.Map.BuildingDirectionTypes.Select(t => ListItem.Create(t, t.Name)).ToArray();
                         directionLabel.Visible = directionVisible;
                         directionComboBox.Visible = directionVisible;
                         missionLabel.Visible = missionComboBox.Visible = false;
@@ -347,8 +372,8 @@ namespace MobiusEditor.Controls
                                     basePriorityLabel.Visible = basePriorityNud.Visible = true;
                                     prebuiltCheckBox.Visible = true;
                                     prebuiltCheckBox.Enabled = building.BasePriority >= 0;
-                                    basePriorityNud.DataBindings.Add("Value", obj, "BasePriority");
-                                    prebuiltCheckBox.DataBindings.Add("Checked", obj, "IsPrebuilt");
+                                    basePriorityNud.DataBindings.Add("Value", obj, "BasePriority", false, DataSourceUpdateMode.OnPropertyChanged);
+                                    prebuiltCheckBox.DataBindings.Add("Checked", obj, "IsPrebuilt", false, DataSourceUpdateMode.OnPropertyChanged);
                                     sellableCheckBox.Visible = false;
                                     rebuildCheckBox.Visible = false;
                                 }
@@ -358,10 +383,10 @@ namespace MobiusEditor.Controls
                                     basePriorityLabel.Visible = basePriorityNud.Visible = true;
                                     prebuiltCheckBox.Visible = true;
                                     prebuiltCheckBox.Enabled = building.BasePriority >= 0;
-                                    basePriorityNud.DataBindings.Add("Value", obj, "BasePriority");
-                                    prebuiltCheckBox.DataBindings.Add("Checked", obj, "IsPrebuilt");
-                                    sellableCheckBox.DataBindings.Add("Checked", obj, "Sellable");
-                                    rebuildCheckBox.DataBindings.Add("Checked", obj, "Rebuild");
+                                    basePriorityNud.DataBindings.Add("Value", obj, "BasePriority", false, DataSourceUpdateMode.OnPropertyChanged);
+                                    prebuiltCheckBox.DataBindings.Add("Checked", obj, "IsPrebuilt", false, DataSourceUpdateMode.OnPropertyChanged);
+                                    sellableCheckBox.DataBindings.Add("Checked", obj, "Sellable", false, DataSourceUpdateMode.OnPropertyChanged);
+                                    rebuildCheckBox.DataBindings.Add("Checked", obj, "Rebuild", false, DataSourceUpdateMode.OnPropertyChanged);
                                     sellableCheckBox.Visible = true;
                                     rebuildCheckBox.Visible = true;
                                 }
@@ -380,9 +405,9 @@ namespace MobiusEditor.Controls
             }
             // Collapse control to minimum required height.
             this.Height = tableLayoutPanel1.PreferredSize.Height;
-            houseComboBox.DataBindings.Add("SelectedValue", obj, "House");
-            strengthNud.DataBindings.Add("Value", obj, "Strength");
-            directionComboBox.DataBindings.Add("SelectedValue", obj, "Direction");
+            houseComboBox.DataBindings.Add("SelectedValue", obj, "House", false, DataSourceUpdateMode.OnPropertyChanged);
+            strengthNud.DataBindings.Add("Value", obj, "Strength", false, DataSourceUpdateMode.OnPropertyChanged);
+            directionComboBox.DataBindings.Add("SelectedValue", obj, "Direction", false, DataSourceUpdateMode.OnPropertyChanged);
             UpdateDataSource();
         }
 
@@ -451,25 +476,29 @@ namespace MobiusEditor.Controls
                 {
                     // Fix for changing the combobox to one only contain "None".
                     houseComboBox.DataBindings.Clear();
-                    houseComboBox.DataSource = house.Yield().Select(t => new ListItem<HouseType>(t, t.Name)).ToArray();
+                    houseComboBox.ValueMember = "Value";
+                    houseComboBox.DisplayMember = "Label";
+                    houseComboBox.DataSource = house.Yield().Select(t => ListItem.Create(t, t.Name)).ToArray();
                     houseComboBox.SelectedIndex = 0;
                     building.House = house;
-                    houseComboBox.DataBindings.Add("SelectedValue", obj, "House");
+                    houseComboBox.DataBindings.Add("SelectedValue", obj, "House", false, DataSourceUpdateMode.OnPropertyChanged);
                 }
             }
             else
             {
                 // Fix for restoring "None" to a normal House. Only needed for TD.
                 HouseType selected = houseComboBox.SelectedValue as HouseType;
-                if (selected != null && selected.Flags.HasFlag(HouseTypeFlag.BaseHouse | HouseTypeFlag.Special))
+                if (selected != null && selected.IsBaseHouse && selected.IsSpecial)
                 {
                     houseComboBox.DataBindings.Clear();
-                    ListItem<HouseType>[] houses = Plugin.Map.Houses.Select(t => new ListItem<HouseType>(t.Type, t.Type.Name)).ToArray();
+                    houseComboBox.ValueMember = "Value";
+                    houseComboBox.DisplayMember = "Label";
+                    ListItem<HouseType>[] houses = Plugin.Map.Houses.Select(t => ListItem.Create(t.Type, t.Type.Name)).ToArray();
                     houseComboBox.DataSource = houses;
                     string opposing = Plugin.GameInfo.GetClassicOpposingPlayer(Plugin.Map.BasicSection.Player);
                     HouseType restoredHouse = Plugin.Map.Houses.Where(h => h.Type.Equals(opposing)).FirstOrDefault()?.Type ?? houses.First().Value;
                     building.House = restoredHouse;
-                    houseComboBox.DataBindings.Add("SelectedValue", obj, "House");
+                    houseComboBox.DataBindings.Add("SelectedValue", obj, "House", false, DataSourceUpdateMode.OnPropertyChanged);
                 }
             }
             if (!building.IsPrebuilt)
@@ -547,7 +576,7 @@ namespace MobiusEditor.Controls
             }
         }
 
-        private void TriggerComboBox_MouseEnter(Object sender, EventArgs e)
+        private void TriggerComboBox_MouseEnter(object sender, EventArgs e)
         {
             Control target = sender as Control;
             ShowToolTip(target, triggerToolTip);
@@ -561,7 +590,7 @@ namespace MobiusEditor.Controls
             }
         }
 
-        private void LblTriggerTypesInfo_MouseEnter(Object sender, EventArgs e)
+        private void LblTriggerTypesInfo_MouseEnter(object sender, EventArgs e)
         {
             string tooltip;
             if (Object is Building bld && !bld.IsPrebuilt)
@@ -588,7 +617,7 @@ namespace MobiusEditor.Controls
             }
         }
 
-        private void LblCapturable_MouseEnter(Object sender, EventArgs e)
+        private void LblCapturable_MouseEnter(object sender, EventArgs e)
         {
             Control target = sender as Control;
             if (Object is Building)

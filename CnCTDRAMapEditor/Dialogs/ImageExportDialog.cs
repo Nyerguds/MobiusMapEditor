@@ -13,7 +13,6 @@
 //   0. You just DO WHAT THE FUCK YOU WANT TO.
 using MobiusEditor.Interface;
 using MobiusEditor.Model;
-using MobiusEditor.Tools;
 using MobiusEditor.Utility;
 using System;
 using System.Drawing;
@@ -64,8 +63,15 @@ namespace MobiusEditor.Dialogs
             this.lastOpenedFolder = lastOpenedFolder;
             txtScale.Text = Globals.ExportTileScale.ToString(CultureInfo.InvariantCulture);
             chkSmooth.Checked = Globals.ExportSmoothScale;
+            chkOrigPalette.Enabled = Globals.UseClassicFiles;
             // For multiplayer maps, default to only exporting the bounds.
-            chkBoundsOnly.Checked = !gamePlugin.Map.BasicSection.SoloMission;
+            bool isMulti = !gamePlugin.Map.BasicSection.SoloMission;
+            if (Globals.ExportMultiMapsInBounds && isMulti)
+            {
+                chkBoundsOnly.Checked = true;
+                layers &= ~MapLayerFlag.Boundaries;
+            }
+            chkHighlightFlags.Enabled = isMulti;
             SetSizeLabels();
             SetLayers(layers);
             txtScale.Select(0, 0);
@@ -77,7 +83,7 @@ namespace MobiusEditor.Dialogs
 
         private void SetSizeLabels()
         {
-            if (Double.TryParse(txtScale.Text, NumberStyles.AllowDecimalPoint, CultureInfo.InvariantCulture, out double scale))
+            if (double.TryParse(txtScale.Text, NumberStyles.AllowDecimalPoint, CultureInfo.InvariantCulture, out double scale))
             {
                 int scaleWidth = Math.Max(1, (int)Math.Floor(Globals.OriginalTileWidth * scale + 0.0001));
                 int scaleHeight = Math.Max(1, (int)Math.Floor(Globals.OriginalTileHeight * scale + 0.0001));
@@ -95,7 +101,7 @@ namespace MobiusEditor.Dialogs
         {
             layersListBox.Items.Clear();
             indicatorsListBox.Items.Clear();
-            String[] names = Map.MapLayerNames;
+            string[] names = Map.MapLayerNames;
             int len = names.Length;
             for (int i = 0; i < len; ++i)
             {
@@ -105,7 +111,7 @@ namespace MobiusEditor.Dialogs
                 {
                     continue;
                 }
-                ListItem<MapLayerFlag> mli = new ListItem<MapLayerFlag>(mlf, names[i]);
+                ListItem<MapLayerFlag> mli = ListItem.Create(mlf, names[i]);
                 int index;
                 if ((MapLayerFlag.MapLayers & mlf) != MapLayerFlag.None)
                 {
@@ -117,7 +123,7 @@ namespace MobiusEditor.Dialogs
                 }
                 if ((MapLayerFlag.Indicators & mlf) != MapLayerFlag.None)
                 {
-                    index = indicatorsListBox.Items.Add(new ListItem<MapLayerFlag>(mlf, names[i]));
+                    index = indicatorsListBox.Items.Add(ListItem.Create(mlf, names[i]));
                     if ((layers & mlf) != MapLayerFlag.None)
                     {
                         indicatorsListBox.SetSelected(index, true);
@@ -140,14 +146,14 @@ namespace MobiusEditor.Dialogs
             return value;
         }
 
-        private void txtScale_TextChanged(Object sender, EventArgs e)
+        private void txtScale_TextChanged(object sender, EventArgs e)
         {
             TextBox textBox = sender as TextBox;
             if (textBox == null)
             {
                 return;
             }
-            String pattern = "^\\d*(\\.\\d*)?$";
+            string pattern = "^\\d*(\\.\\d*)?$";
             if (Regex.IsMatch(textBox.Text, pattern))
             {
                 SetSizeLabels();
@@ -156,15 +162,15 @@ namespace MobiusEditor.Dialogs
             // something snuck in, probably with ctrl+v. Remove it.
             System.Media.SystemSounds.Beep.Play();
             StringBuilder text = new StringBuilder();
-            String txt = textBox.Text.ToUpperInvariant();
-            Int32 txtLen = txt.Length;
-            Int32 firstIllegalChar = -1;
-            Int32 firstDot = txt.IndexOf(".");
-            for (Int32 i = 0; i < txtLen; ++i)
+            string txt = textBox.Text.ToUpperInvariant();
+            int txtLen = txt.Length;
+            int firstIllegalChar = -1;
+            int firstDot = txt.IndexOf(".");
+            for (int i = 0; i < txtLen; ++i)
             {
-                Char c = txt[i];
-                Boolean isNumRange = c >= '0' && c <= '9';
-                Boolean isLegalDot = c == '.' && i == firstDot;
+                char c = txt[i];
+                bool isNumRange = c >= '0' && c <= '9';
+                bool isLegalDot = c == '.' && i == firstDot;
                 if (!isNumRange && !isLegalDot)
                 {
                     if (firstIllegalChar == -1)
@@ -173,11 +179,11 @@ namespace MobiusEditor.Dialogs
                 }
                 text.Append(c);
             }
-            String filteredText = text.ToString();
-            Decimal value;
+            string filteredText = text.ToString();
+            decimal value;
             NumberStyles ns = NumberStyles.Number | NumberStyles.AllowDecimalPoint;
             // Setting "this.Text" will trigger this function again, but that's okay, it'll immediately succeed in the regex and abort.
-            if (Decimal.TryParse(filteredText, ns, NumberFormatInfo.CurrentInfo, out value))
+            if (decimal.TryParse(filteredText, ns, NumberFormatInfo.CurrentInfo, out value))
             {
                 textBox.Text = value.ToString(CultureInfo.InvariantCulture);
             }
@@ -191,10 +197,10 @@ namespace MobiusEditor.Dialogs
             SetSizeLabels();
         }
 
-        private void BtnSetDimensions_Click(Object sender, EventArgs e)
+        private void BtnSetDimensions_Click(object sender, EventArgs e)
         {
             double scale;
-            if (!Double.TryParse(txtScale.Text, NumberStyles.AllowDecimalPoint, CultureInfo.InvariantCulture, out scale))
+            if (!double.TryParse(txtScale.Text, NumberStyles.AllowDecimalPoint, CultureInfo.InvariantCulture, out scale))
             {
                 scale = 1;
             }
@@ -215,10 +221,10 @@ namespace MobiusEditor.Dialogs
             }
         }
 
-        private void BtnSetCellSize_Click(Object sender, EventArgs e)
+        private void BtnSetCellSize_Click(object sender, EventArgs e)
         {
             double scale;
-            if (!Double.TryParse(txtScale.Text, NumberStyles.AllowDecimalPoint, CultureInfo.InvariantCulture, out scale))
+            if (!double.TryParse(txtScale.Text, NumberStyles.AllowDecimalPoint, CultureInfo.InvariantCulture, out scale))
             {
                 scale = 1;
             }
@@ -236,14 +242,14 @@ namespace MobiusEditor.Dialogs
             }
         }
 
-        private void btnPickFile_Click(Object sender, EventArgs e)
+        private void btnPickFile_Click(object sender, EventArgs e)
         {
             SelectPath();
         }
 
-        private void btnExport_Click(Object sender, EventArgs e)
+        private void btnExport_Click(object sender, EventArgs e)
         {
-            if (String.IsNullOrEmpty(txtPath.Text))
+            if (string.IsNullOrEmpty(txtPath.Text))
             {
                 //MessageBox.Show(this, "Please select a filename to export to.", "Error");
                 if (!SelectPath())
@@ -251,16 +257,18 @@ namespace MobiusEditor.Dialogs
                     return;
                 }
             }
-            if (!Double.TryParse(txtScale.Text, NumberStyles.AllowDecimalPoint, CultureInfo.InvariantCulture, out double scale))
+            if (!double.TryParse(txtScale.Text, NumberStyles.AllowDecimalPoint, CultureInfo.InvariantCulture, out double scale))
             {
                 MessageBox.Show(this, "Could not parse scale factor!", "Error");
                 return;
             }
             MapLayerFlag layers = GetLayers();
             bool smooth = chkSmooth.Checked;
+            bool highlightFlags = chkHighlightFlags.Checked;
             bool inBounds = chkBoundsOnly.Checked;
+            bool origPal = chkOrigPalette.Checked;
             string path = txtPath.Text;
-            Func<String> saveOperation = () => SaveImage(gamePlugin, layers, scale, smooth, inBounds, path);
+            Func<string> saveOperation = () => SaveImage(gamePlugin, layers, scale, smooth, highlightFlags, inBounds, origPal, path);
             multiThreader.ExecuteThreaded(saveOperation, ShowResult, true, EnableControls, "Exporting image");
         }
 
@@ -269,12 +277,13 @@ namespace MobiusEditor.Dialogs
             using (SaveFileDialog sfd = new SaveFileDialog())
             {
                 sfd.AutoUpgradeEnabled = false;
-                sfd.RestoreDirectory = false;
+                sfd.RestoreDirectory = true;
                 sfd.AddExtension = true;
                 sfd.Filter = "PNG files (*.png)|*.png|JPEG files (*.jpg;*.jpeg)|*.jpg;*.jpeg";
                 string current = string.IsNullOrEmpty(txtPath.Text) ? inputFilename : txtPath.Text;
-                if (!String.IsNullOrEmpty(current))
+                if (!string.IsNullOrEmpty(current))
                 {
+                    sfd.RestoreDirectory = true;
                     sfd.InitialDirectory = Path.GetDirectoryName(current);
                     bool isJpeg = Regex.IsMatch(Path.GetExtension(current), "^\\.jpe?g$", RegexOptions.IgnoreCase);
                     sfd.FilterIndex = isJpeg ? 2 : 1;
@@ -294,28 +303,63 @@ namespace MobiusEditor.Dialogs
                     txtPath.Text = sfd.FileName;
                     return true;
                 }
-                return false;
             }
+            return false;
         }
 
-        private static String SaveImage(IGamePlugin gamePlugin, MapLayerFlag layers, double scale, bool smooth, bool inBounds, string outputPath)
+        private static string SaveImage(IGamePlugin gamePlugin, MapLayerFlag layers, double scale, bool smooth, bool highlightFlags, bool inBounds, bool originalPalette, string outputPath)
         {
+            Map map = gamePlugin.Map;
+            CellMetrics metrics = map.Metrics;
             int tileWidth = Math.Max(1, (int)Math.Round(Globals.OriginalTileWidth * scale));
             int tileHeight = Math.Max(1, (int)Math.Round(Globals.OriginalTileHeight * scale));
-            int fullWidth = gamePlugin.Map.Metrics.Width;
-            int fullHeight = gamePlugin.Map.Metrics.Height;
-            int width = inBounds ? gamePlugin.Map.Bounds.Width : fullWidth;
-            int height = inBounds ? gamePlugin.Map.Bounds.Height : fullHeight;
+            int fullWidth = metrics.Width;
+            int fullHeight = metrics.Height;
+            int width = inBounds ? map.Bounds.Width : fullWidth;
+            int height = inBounds ? map.Bounds.Height : fullHeight;
             Size size = new Size(width * tileWidth, height * tileHeight);
             bool clearBg = layers.HasFlag(MapLayerFlag.Template);
-            using (Bitmap exportImage = gamePlugin.Map.GeneratePreview(size, gamePlugin, layers, clearBg, smooth, inBounds, false).ToBitmap())
+            byte[] pngData = null;
+            Rectangle boundsToUse = inBounds ? map.Bounds : new Rectangle(Point.Empty, metrics.Size);
+            using (Bitmap exportImage = gamePlugin.Map.GeneratePreview(size, gamePlugin, layers, boundsToUse, clearBg, highlightFlags, smooth, false).ToBitmap())
             {
-                exportImage.Save(outputPath, ImageFormat.Png);
+                if (!smooth && originalPalette && Globals.TheTilesetManager is TilesetManagerClassic tsmc)
+                {
+                    Color[] paletteTrans = tsmc.CurrentlyLoadedPaletteBare;
+                    Color[] paletteNoTrans = tsmc.CurrentlyLoadedPaletteOrig;
+                    // ConvertToPalette ignores transparent colors and will not match image pixels to it.
+                    using (Bitmap bmPal = ImageUtils.ConvertToPalette(exportImage, 8, paletteTrans))
+                    {
+                        // remove transparent color
+                        ColorPalette pal = bmPal.Palette;
+                        for (int i = 0; i < paletteTrans.Length; ++i)
+                        {
+                            pal.Entries[i] = paletteNoTrans[i];
+                        }
+                        bmPal.Palette = pal;
+                        using (MemoryStream ms = new MemoryStream())
+                        {
+                            bmPal.Save(ms, ImageFormat.Png);
+                            pngData = ms.ToArray();
+                        }
+                    }
+                }
+                else
+                {
+                    using (MemoryStream ms = new MemoryStream())
+                    {
+                        exportImage.Save(ms, ImageFormat.Png);
+                        pngData = ms.ToArray();
+                    }
+                }
             }
+            pngData = ImageUtils.SetPngTextChunk(pngData, "Comment", "Created with " + Program.ProgramVersionTitle);
+            pngData = ImageUtils.SetPngTextChunk(pngData, "Software", Program.ProgramVersionTitle);
+            File.WriteAllBytes(outputPath, pngData);
             return outputPath;
         }
 
-        private void ShowResult(String path)
+        private void ShowResult(string path)
         {
             if (path == null)
             {
@@ -331,12 +375,14 @@ namespace MobiusEditor.Dialogs
             }
         }
 
-        private void EnableControls(Boolean enabled, String processingLabel)
+        private void EnableControls(bool enabled, string processingLabel)
         {
             txtScale.Enabled = enabled;
             btnSetDimensions.Enabled = enabled;
             chkSmooth.Enabled = enabled;
             chkBoundsOnly.Enabled = enabled;
+            chkHighlightFlags.Enabled = enabled && !gamePlugin.Map.BasicSection.SoloMission;
+            layersListBox.Enabled = enabled;
             layersListBox.Enabled = enabled;
             indicatorsListBox.Enabled = enabled;
             btnPickFile.Enabled = enabled;
@@ -349,6 +395,33 @@ namespace MobiusEditor.Dialogs
             else
             {
                 this.multiThreader.CreateBusyLabel(this, processingLabel);
+            }
+        }
+
+        private void ChkSmooth_CheckedChanged(object sender, EventArgs e)
+        {
+            if (chkSmooth.Checked)
+            {
+                chkOrigPalette.Checked = false;
+            }
+            chkOrigPalette.Enabled = Globals.UseClassicFiles && !chkSmooth.Checked;
+        }
+
+        private void ChkBoundsOnly_CheckedChanged(object sender, EventArgs e)
+        {
+            if (!(sender is CheckBox cb) || layersListBox.Items.Count == 0)
+            {
+                return;
+            }
+            bool isChecked = cb.Checked;
+            for (int i = 0; i < indicatorsListBox.Items.Count; ++i)
+            {
+                ListItem<MapLayerFlag> mli = indicatorsListBox.Items[i] as ListItem<MapLayerFlag>;
+                if (mli != null && mli.Value == MapLayerFlag.Boundaries)
+                {
+                    indicatorsListBox.SetSelected(i, !isChecked);
+                    break;
+                }
             }
         }
     }

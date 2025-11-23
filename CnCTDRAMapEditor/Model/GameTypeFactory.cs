@@ -44,6 +44,19 @@ namespace MobiusEditor.Model
 
         public static GameInfo[] GetGameInfos()
         {
+            return GetGameInfos(false);
+        }
+
+        public static GameInfo[] GetAvailableGameInfosOrdered()
+        {
+            GameInfo[] types = GetGameInfos(false);
+            Dictionary<string, int> order = Globals.EnabledGamesOrder;
+            return types.Where(gi => gi != null).OrderBy(gi => order[gi.ShortName]).ToArray();
+        }
+
+        public static GameInfo[] GetGameInfos(bool unfiltered)
+        {
+            HashSet<string> enabledGames = unfiltered ? null : Globals.EnabledGames;
             GameType[] enumTypes = GetGameTypes();
             GameInfo[] types = new GameInfo[enumTypes.Max(gt => (int)gt) + 1];
             foreach (Type gType in gameTypes)
@@ -51,7 +64,7 @@ namespace MobiusEditor.Model
                 try
                 {
                     GameInfo gameInfo = (GameInfo)Activator.CreateInstance(gType);
-                    if (gameInfo != null)
+                    if (gameInfo != null && (enabledGames == null || enabledGames.Contains(gameInfo.ShortName)))
                     {
                         types[(int)gameInfo.GameType] = gameInfo;
                     }
@@ -63,26 +76,13 @@ namespace MobiusEditor.Model
 
         public static Dictionary<GameType, GameInfo> GetGameInfosByType()
         {
-            GameInfo[] types = GetGameInfos();
-            return types.ToDictionary(tp => tp.GameType, tp => tp);
+            return GetGameInfosByType(false);
         }
 
-        public static GameInfo GetGameInfo(GameType gameType)
+        public static Dictionary<GameType, GameInfo> GetGameInfosByType(bool unfiltered)
         {
-            foreach (Type gType in gameTypes)
-            {
-                GameInfo gameTypeObj;
-                try
-                {
-                    gameTypeObj = (GameInfo)Activator.CreateInstance(gType);
-                    if (gameTypeObj != null && gameTypeObj.GameType == gameType)
-                    {
-                        return gameTypeObj;
-                    }
-                }
-                catch { /* ignore */ }
-            }
-            return null;
+            GameInfo[] types = GetGameInfos(unfiltered);
+            return types.Where(tp => tp != null).ToDictionary(tp => tp.GameType, tp => tp);
         }
     }
 }

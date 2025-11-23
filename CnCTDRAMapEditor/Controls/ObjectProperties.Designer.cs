@@ -171,7 +171,6 @@ namespace MobiusEditor.Controls
             this.houseComboBox.Name = "houseComboBox";
             this.houseComboBox.Size = new System.Drawing.Size(114, 21);
             this.houseComboBox.TabIndex = 5;
-            this.houseComboBox.ValueMember = "Value";
             this.houseComboBox.SelectedIndexChanged += new System.EventHandler(this.comboBox_SelectedValueChanged);
             // 
             // strengthNud
@@ -208,7 +207,6 @@ namespace MobiusEditor.Controls
             this.directionComboBox.Name = "directionComboBox";
             this.directionComboBox.Size = new System.Drawing.Size(114, 21);
             this.directionComboBox.TabIndex = 7;
-            this.directionComboBox.ValueMember = "Value";
             this.directionComboBox.SelectedIndexChanged += new System.EventHandler(this.comboBox_SelectedValueChanged);
             // 
             // missionComboBox

@@ -18,7 +18,7 @@ using System.Drawing;
 
 namespace MobiusEditor.Model
 {
-    [DebuggerDisplay("{Name}: {Icon}")]
+    [DebuggerDisplay("{Type.Name}: {Icon}")]
     public class Template : ICellOccupier
     {
         public TemplateType Type { get; set; }

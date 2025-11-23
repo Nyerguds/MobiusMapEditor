@@ -12,9 +12,7 @@
 //
 //   0. You just DO WHAT THE FUCK YOU WANT TO.
 using MobiusEditor.Model;
-using System;
 using System.Collections.Generic;
-using System.Drawing;
 using System.Linq;
 using System.Reflection;
 
@@ -57,19 +55,16 @@ namespace MobiusEditor.SoleSurvivor
         //public static readonly OverlayType ArmagCrate /**/ = new OverlayType(31, "acrate", "Armageddon Crate", OverlayTypeFlag.Crate, "scrate", -1, Color.Red);
         //public static readonly OverlayType HealCrate  /**/ = new OverlayType(32, "hcrate", "Heal Crate", OverlayTypeFlag.Crate, "scrate", -1, Color.Green);
         // Unusable from ini in SS since it has the same ini name as the teleport. Added here and forced to frame 1 because it is used in football fields.
-        public static readonly OverlayType Road       /**/ = new OverlayType(33, "road", "TEXT_OVERLAY_CONCRETE_ROAD", 1);
+        public static readonly OverlayType Road       /**/ = new OverlayType(33, "road", "TEXT_OVERLAY_CONCRETE_ROAD", OverlayTypeFlag.FootballField | OverlayTypeFlag.Unplaceable, 1);
 
         private static OverlayType[] Types;
 
         static OverlayTypes()
         {
-            // ROAD is filtered out of this, but is available to the program for painting the football fields.
             List<OverlayType> types =
                 (from field in typeof(OverlayTypes).GetFields(BindingFlags.Static | BindingFlags.Public)
                  where field.IsInitOnly && typeof(OverlayType).IsAssignableFrom(field.FieldType)
-                 select field.GetValue(null) as OverlayType).Where(t => t.ID != 19).OrderBy(t => t.ID).ToList();
-            // Unusable from ini in SS since it has the same ini name as the teleport.
-            types.Remove(Road);
+                 select field.GetValue(null) as OverlayType).OrderBy(t => t.ID).ToList();
             Types = types.ToArray();
         }
 

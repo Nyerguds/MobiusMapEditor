@@ -41,7 +41,7 @@ namespace MobiusEditor.Tools
 
         public override bool IsBusy { get { return startedDragging; } }
 
-        public override Object CurrentObject
+        public override object CurrentObject
         {
             get { return mockBuilding; }
             set
@@ -69,7 +69,7 @@ namespace MobiusEditor.Tools
 
         private bool placementMode;
 
-        protected override Boolean InPlacementMode
+        protected override bool InPlacementMode
         {
             get { return placementMode || startedDragging; }
         }
@@ -178,7 +178,7 @@ namespace MobiusEditor.Tools
             {
                 return;
             }
-            bool origDirtyState = plugin.Dirty;
+            bool origEmptyState = plugin.Empty;
             plugin.Dirty = true;
             void undoAction(UndoRedoEventArgs ev)
             {
@@ -191,7 +191,7 @@ namespace MobiusEditor.Tools
                 InvalidateBuildingArea(ev.MapPanel, ev.Map, building);
                 if (baseBuildings != null && buildingPrioritiesOld != null && baseBuildings.Length == buildingPrioritiesOld.Length)
                 {
-                    for (Int32 i = 0; i < baseBuildings.Length; ++i)
+                    for (int i = 0; i < baseBuildings.Length; ++i)
                     {
                         Building bld = baseBuildings[i];
                         bld.BasePriority = buildingPrioritiesOld[i];
@@ -200,7 +200,8 @@ namespace MobiusEditor.Tools
                 }
                 if (ev.Plugin != null)
                 {
-                    ev.Plugin.Dirty = origDirtyState;
+                    ev.Plugin.Empty = origEmptyState;
+                    ev.Plugin.Dirty = !ev.NewStateIsClean;
                 }
             }
             void redoAction(UndoRedoEventArgs ev)
@@ -214,7 +215,7 @@ namespace MobiusEditor.Tools
                 InvalidateBuildingArea(ev.MapPanel, ev.Map, building);
                 if (baseBuildings != null && buildingPrioritiesNew != null && baseBuildings.Length == buildingPrioritiesNew.Length)
                 {
-                    for (Int32 i = 0; i < baseBuildings.Length; ++i)
+                    for (int i = 0; i < baseBuildings.Length; ++i)
                     {
                         Building bld = baseBuildings[i];
                         bld.BasePriority = buildingPrioritiesNew[i];
@@ -223,7 +224,9 @@ namespace MobiusEditor.Tools
                 }
                 if (ev.Plugin != null)
                 {
-                    ev.Plugin.Dirty = true;
+                    // Redo can never restore the "empty" state, but CAN be the point at which a save was done.
+                    ev.Plugin.Empty = false;
+                    ev.Plugin.Dirty = !ev.NewStateIsClean;
                 }
             }
             url.Track(undoAction, redoAction, ToolType.Building);
@@ -239,7 +242,7 @@ namespace MobiusEditor.Tools
             {
                 // Fix for House "None" set on unbuilt buildings.
                 HouseType newHouse = mockBuilding.House;
-                if (newHouse == null || newHouse.Flags.HasFlag(HouseTypeFlag.BaseHouse | HouseTypeFlag.Special))
+                if (newHouse == null || (newHouse.IsBaseHouse && newHouse.IsSpecial))
                 {
                     string opposing = plugin.GameInfo.GetClassicOpposingPlayer(plugin.Map.BasicSection.Player);
                     newHouse = plugin.Map.Houses.Where(h => h.Type.Equals(opposing)).FirstOrDefault()?.Type ?? plugin.Map.Houses.First().Type;
@@ -282,9 +285,10 @@ namespace MobiusEditor.Tools
         private void MapPanel_MouseLeave(object sender, EventArgs e)
         {
             ExitPlacementMode();
+            MapPanel_MouseUp(sender, new MouseEventArgs(MouseButtons.None, 0, 0, 0, 0));
         }
 
-        private void MapPanel_MouseWheel(Object sender, MouseEventArgs e)
+        private void MapPanel_MouseWheel(object sender, MouseEventArgs e)
         {
             if (e.Delta == 0 || (Control.ModifierKeys & Keys.Control) == Keys.None)
             {
@@ -372,7 +376,7 @@ namespace MobiusEditor.Tools
             {
                 return;
             }
-            bool origDirtyState = plugin.Dirty;
+            bool origEmptyState = plugin.Empty;
             plugin.Dirty = true;
             Point endLocation = finalLocation.Value;
             void undoAction(UndoRedoEventArgs ev)
@@ -384,7 +388,7 @@ namespace MobiusEditor.Tools
                     foreach (Point p in eatenSm.Keys)
                     {
                         Smudge oldSmudge = ev.Map.Smudge[p];
-                        if (oldSmudge == null || !oldSmudge.Type.IsAutoBib)
+                        if (oldSmudge == null || !oldSmudge.IsAutoBib)
                         {
                             ev.Map.Smudge[p] = eatenSm[p];
                             // DO NOT REMOVE THE POINTS FROM "eaten": the undo might be done again in the future.
@@ -408,7 +412,8 @@ namespace MobiusEditor.Tools
                 //ev.MapPanel.Invalidate(ev.Map, toMove);
                 if (ev.Plugin != null)
                 {
-                    ev.Plugin.Dirty = origDirtyState;
+                    ev.Plugin.Empty = origEmptyState;
+                    ev.Plugin.Dirty = !ev.NewStateIsClean;
                 }
             }
             void redoAction(UndoRedoEventArgs ev)
@@ -420,7 +425,7 @@ namespace MobiusEditor.Tools
                     foreach (Point p in eatenSm.Keys)
                     {
                         Smudge oldSmudge = ev.Map.Smudge[p];
-                        if (oldSmudge == null || !oldSmudge.Type.IsAutoBib)
+                        if (oldSmudge == null || !oldSmudge.IsAutoBib)
                         {
                             ev.Map.Smudge[p] = null;
                             // DO NOT REMOVE THE POINTS FROM "eaten": the undo might be done again in the future.
@@ -443,7 +448,9 @@ namespace MobiusEditor.Tools
                 InvalidateBuildingArea(ev.MapPanel, ev.Map, toMove);
                 if (ev.Plugin != null)
                 {
-                    ev.Plugin.Dirty = true;
+                    // Redo can never restore the "empty" state, but CAN be the point at which a save was done.
+                    ev.Plugin.Empty = false;
+                    ev.Plugin.Dirty = !ev.NewStateIsClean;
                 }
             }
             url.Track(undoAction, redoAction, ToolType.Building);
@@ -504,7 +511,7 @@ namespace MobiusEditor.Tools
                 }
                 if (toMove.Type.HasBib)
                 {
-                    oldBibPoints = map.Smudge.IntersectsWithCells(toMove.BibCells).Where(x => x.Value.Type.IsAutoBib)
+                    oldBibPoints = map.Smudge.IntersectsWithCells(toMove.BibCells).Where(x => x.Value.IsAutoBib)
                         .Select(b => map.Metrics.GetLocation(b.Cell, out Point p) ? p : new Point(-1, -1)).Where(p => p.X >= 0 && p.Y >= 0).ToArray();
                     Dictionary<Point, Smudge> newBib = toMove.GetBib(newLocation, map.SmudgeTypes);
                     newBibPoints = newBib.Keys.ToArray();
@@ -520,7 +527,7 @@ namespace MobiusEditor.Tools
                             continue;
                         }
                         Smudge oldSmudge = map.Smudge[newBibPoint];
-                        if (oldSmudge != null && !oldSmudge.Type.IsAutoBib && !selectedBuildingEatenSmudge.ContainsKey(newBibPoint))
+                        if (oldSmudge != null && !oldSmudge.IsAutoBib && !selectedBuildingEatenSmudge.ContainsKey(newBibPoint))
                         {
                             selectedBuildingEatenSmudge.Add(newBibPoint, oldSmudge);
                         }
@@ -535,7 +542,7 @@ namespace MobiusEditor.Tools
                         if (selectedBuildingEatenSmudge.TryGetValue(p, out Smudge toRestore))
                         {
                             Smudge oldSmudge = map.Smudge[p];
-                            if (oldSmudge == null || !oldSmudge.Type.IsAutoBib)
+                            if (oldSmudge == null || !oldSmudge.IsAutoBib)
                             {
                                 map.Smudge[p] = toRestore;
                                 // Remove any points that are restored and no longer relevant to remember.
@@ -597,7 +604,7 @@ namespace MobiusEditor.Tools
                 foreach (Point newBibPoint in newBibPoints)
                 {
                     Smudge oldSmudge = map.Smudge[newBibPoint];
-                    if (oldSmudge != null && !oldSmudge.Type.IsAutoBib && !eatenSmudge.ContainsKey(newBibPoint))
+                    if (oldSmudge != null && !oldSmudge.IsAutoBib && !eatenSmudge.ContainsKey(newBibPoint))
                     {
                         eatenSmudge.Add(newBibPoint, oldSmudge);
                     }
@@ -612,12 +619,12 @@ namespace MobiusEditor.Tools
                     map.Overlay[location] = null;
                 }
                 InvalidateBuildingArea(mapPanel, map, building);
-                bool origDirtyState = plugin.Dirty;
+                bool origEmptyState = plugin.Empty;
                 plugin.Dirty = true;
-                void undoAction(UndoRedoEventArgs e)
+                void undoAction(UndoRedoEventArgs ev)
                 {
-                    InvalidateBuildingArea(e.MapPanel, e.Map, building);
-                    e.Map.Buildings.Remove(building);
+                    InvalidateBuildingArea(ev.MapPanel, ev.Map, building);
+                    ev.Map.Buildings.Remove(building);
                     if (eatenOverlay != null)
                     {
                         map.Overlay[location] = eatenOverlay;
@@ -626,52 +633,55 @@ namespace MobiusEditor.Tools
                     {
                         foreach (Point p in eatenSmudge.Keys)
                         {
-                            Smudge oldSmudge = e.Map.Smudge[p];
-                            if (oldSmudge == null || !oldSmudge.Type.IsAutoBib)
+                            Smudge oldSmudge = ev.Map.Smudge[p];
+                            if (oldSmudge == null || !oldSmudge.IsAutoBib)
                             {
                                 // DO NOT REMOVE THE POINTS FROM "eatenSmudge": the undo might be done again in the future.
-                                e.Map.Smudge[p] = eatenSmudge[p];
+                                ev.Map.Smudge[p] = eatenSmudge[p];
                             }
                         }
                     }
                     if (baseBuildings != null && buildingPrioritiesOld != null && baseBuildings.Length == buildingPrioritiesOld.Length)
                     {
-                        for (Int32 i = 0; i < baseBuildings.Length; ++i)
+                        for (int i = 0; i < baseBuildings.Length; ++i)
                         {
                             Building bld = baseBuildings[i];
                             // current building was removed by undo, so don't bother adjusting it.
                             if (building != bld)
                             {
                                 bld.BasePriority = buildingPrioritiesOld[i];
-                                InvalidateBuildingArea(e.MapPanel, e.Map, bld);
+                                InvalidateBuildingArea(ev.MapPanel, ev.Map, bld);
                             }
                         }
                     }
-                    if (e.Plugin != null)
+                    if (ev.Plugin != null)
                     {
-                        e.Plugin.Dirty = origDirtyState;
+                        ev.Plugin.Empty = origEmptyState;
+                        ev.Plugin.Dirty = !ev.NewStateIsClean;
                     }
                 }
-                void redoAction(UndoRedoEventArgs e)
+                void redoAction(UndoRedoEventArgs ev)
                 {
-                    e.Map.Buildings.Add(location, building);
+                    ev.Map.Buildings.Add(location, building);
                     if (eatenOverlay != null)
                     {
                         map.Overlay[location] = null;
                     }
                     if (baseBuildings != null && buildingPrioritiesNew != null && baseBuildings.Length == buildingPrioritiesNew.Length)
                     {
-                        for (Int32 i = 0; i < baseBuildings.Length; ++i)
+                        for (int i = 0; i < baseBuildings.Length; ++i)
                         {
                             Building bld = baseBuildings[i];
                             bld.BasePriority = buildingPrioritiesNew[i];
-                            InvalidateBuildingArea(e.MapPanel, e.Map, bld);
+                            InvalidateBuildingArea(ev.MapPanel, ev.Map, bld);
                         }
                     }
-                    InvalidateBuildingArea(e.MapPanel, e.Map, building);
-                    if (e.Plugin != null)
+                    InvalidateBuildingArea(ev.MapPanel, ev.Map, building);
+                    if (ev.Plugin != null)
                     {
-                        e.Plugin.Dirty = true;
+                        // Redo can never restore the "empty" state, but CAN be the point at which a save was done.
+                        ev.Plugin.Empty = false;
+                        ev.Plugin.Dirty = !ev.NewStateIsClean;
                     }
                 }
                 url.Track(undoAction, redoAction, ToolType.Building);
@@ -690,7 +700,7 @@ namespace MobiusEditor.Tools
                 buildingPrioritiesOld = new int[baseBuildings.Length];
                 buildingPrioritiesNew = new int[baseBuildings.Length];
                 // Save old values.
-                for (Int32 i = 0; i < baseBuildings.Length; ++i)
+                for (int i = 0; i < baseBuildings.Length; ++i)
                 {
                     Building baseBuilding = baseBuildings[i];
                     if (building == baseBuilding && bldPreEdit != null)
@@ -704,12 +714,12 @@ namespace MobiusEditor.Tools
                 // To ensure the new priority is correct, remove it from the list and re-insert it at the correct location.
                 sortedBuildings.Remove(building);
                 sortedBuildings.Insert(newPr, building);
-                for (Int32 i = 0; i < sortedBuildings.Count; ++i)
+                for (int i = 0; i < sortedBuildings.Count; ++i)
                 {
                     Building baseBuilding = sortedBuildings[i];
                     baseBuilding.BasePriority = i;
                 }
-                for (Int32 i = 0; i < baseBuildings.Length; ++i)
+                for (int i = 0; i < baseBuildings.Length; ++i)
                 {
                     Building baseBuilding = baseBuildings[i];
                     buildingPrioritiesNew[i] = baseBuilding.BasePriority;
@@ -747,43 +757,46 @@ namespace MobiusEditor.Tools
                         InvalidateBuildingArea(mapPanel, map, baseBuilding);
                     }
                 }
-                bool origDirtyState = plugin.Dirty;
+                bool origEmptyState = plugin.Empty;
                 plugin.Dirty = true;
-                void undoAction(UndoRedoEventArgs e)
+                void undoAction(UndoRedoEventArgs ev)
                 {
-                    e.Map.Buildings.Add(actualPoint, building);
+                    ev.Map.Buildings.Add(actualPoint, building);
                     if (baseBuildings != null && buildingPrioritiesOld != null && baseBuildings.Length == buildingPrioritiesOld.Length)
                     {
-                        for (Int32 i = 0; i < baseBuildings.Length; ++i)
+                        for (int i = 0; i < baseBuildings.Length; ++i)
                         {
                             Building bld = baseBuildings[i];
                             bld.BasePriority = buildingPrioritiesOld[i];
-                            InvalidateBuildingArea(e.MapPanel, e.Map, bld);
+                            InvalidateBuildingArea(ev.MapPanel, ev.Map, bld);
                         }
                     }
-                    e.MapPanel.Invalidate(e.Map, building);
-                    if (e.Plugin != null)
+                    ev.MapPanel.Invalidate(ev.Map, building);
+                    if (ev.Plugin != null)
                     {
-                        e.Plugin.Dirty = origDirtyState;
+                        ev.Plugin.Empty = origEmptyState;
+                        ev.Plugin.Dirty = !ev.NewStateIsClean;
                     }
                 }
-                void redoAction(UndoRedoEventArgs e)
+                void redoAction(UndoRedoEventArgs ev)
                 {
-                    InvalidateBuildingArea(e.MapPanel, e.Map, building);
-                    e.Map.Buildings.Remove(building);
-                    SmudgeTool.RestoreNearbySmudge(e.Map, bibPoints, null);
+                    InvalidateBuildingArea(ev.MapPanel, ev.Map, building);
+                    ev.Map.Buildings.Remove(building);
+                    SmudgeTool.RestoreNearbySmudge(ev.Map, bibPoints, null);
                     if (baseBuildings != null)
                     {
-                        for (Int32 i = 0; i < baseBuildings.Length; ++i)
+                        for (int i = 0; i < baseBuildings.Length; ++i)
                         {
                             Building bld = baseBuildings[i];
                             bld.BasePriority = i;
-                            InvalidateBuildingArea(e.MapPanel, e.Map, bld);
+                            InvalidateBuildingArea(ev.MapPanel, ev.Map, bld);
                         }
                     }
-                    if (e.Plugin != null)
+                    if (ev.Plugin != null)
                     {
-                        e.Plugin.Dirty = true;
+                        // Redo can never restore the "empty" state, but CAN be the point at which a save was done.
+                        ev.Plugin.Empty = false;
+                        ev.Plugin.Dirty = !ev.NewStateIsClean;
                     }
                 }
                 url.Track(undoAction, redoAction, ToolType.Building);
@@ -883,14 +896,26 @@ namespace MobiusEditor.Tools
         {
             BuildingType newPicked = null;
             Building building = map.Buildings[location] as Building;
+            bool neutralOverlay = false;
             if (building != null)
             {
                 newPicked = building.Type;
             }
-            else if (Globals.AllowWallBuildings && map.Overlay[location] is Overlay overlay && overlay.Type.IsWall)
+            else if (map.Overlay[location] is Overlay overlay)
             {
-                string wType = overlay.Type.Name;
-                newPicked = map.BuildingTypes.FirstOrDefault(bl => bl.IsWall && String.Equals(bl.Name, wType, StringComparison.OrdinalIgnoreCase));
+                if (overlay.Type.IsWall && Globals.AllowWallBuildings)
+                {
+                    // Selects buildings-as-walls in the list
+                    string wType = overlay.Type.Name;
+                    newPicked = map.BuildingTypes.FirstOrDefault(bl => bl.IsWall && String.Equals(bl.Name, wType, StringComparison.OrdinalIgnoreCase));
+                }
+                else if (!overlay.Type.IsWall)
+                {
+                    // Selects buildings that have an overlay equivalent, e.g. haystacks.
+                    string wType = overlay.Type.Name;
+                    newPicked = map.BuildingTypes.FirstOrDefault(bl => !bl.IsWall && String.Equals(bl.Name, wType, StringComparison.OrdinalIgnoreCase));
+                    neutralOverlay = true;
+                }
             }
             if (newPicked != null)
             {
@@ -906,6 +931,18 @@ namespace MobiusEditor.Tools
                 mockBuilding.House = building.House;
                 mockBuilding.Sellable = building.Sellable;
                 mockBuilding.Rebuild = building.Rebuild;
+            }
+            else if (neutralOverlay)
+            {
+                HouseType neutral = map.Houses.FirstOrDefault(h => h.Type.IsCivilian)?.Type ?? mockBuilding.House;
+                mockBuilding.Strength = 0x100;
+                mockBuilding.Direction = map.BuildingDirectionTypes.FirstOrDefault();
+                mockBuilding.Trigger = Trigger.None;
+                mockBuilding.BasePriority = -1;
+                mockBuilding.IsPrebuilt = true;
+                mockBuilding.House = neutral;
+                mockBuilding.Sellable = false;
+                mockBuilding.Rebuild = false;
             }
         }
 
@@ -957,7 +994,7 @@ namespace MobiusEditor.Tools
                         bibRender.Add(bibCellRender);
                     }
                 }
-                RenderInfo render = MapRenderer.RenderBuilding(plugin.GameInfo, null, new Point(0, 0), Globals.PreviewTileSize, Globals.PreviewTileScale, mockBuilding, false);
+                RenderInfo render = MapRenderer.RenderBuilding(plugin.GameInfo, map, new Point(0, 0), Globals.PreviewTileSize, Globals.PreviewTileScale, mockBuilding, false);
                 Size previewSize = mockBuilding.OccupyMask.GetDimensions();
                 Bitmap buildingPreview = new Bitmap(previewSize.Width * Globals.PreviewTileWidth, previewSize.Height * Globals.PreviewTileHeight);
                 buildingPreview.SetResolution(96, 96);
@@ -1074,12 +1111,12 @@ namespace MobiusEditor.Tools
             if (placementMode && selectedType != null)
             {
                 List<Point> occupyPoints = OccupierSet.GetOccupyPoints(location, selectedType.BaseOccupyMask).ToList();
-                Boolean isCurrent = map.Buildings.OfType<Building>().Any(lo => lo.Location == location && lo.Occupier.Type == selectedType);
+                bool isCurrent = map.Buildings.OfType<Building>().Any(lo => lo.Location == location && lo.Occupier.Type == selectedType);
                 // If there is already a building of this exact type placed on the current location, don't render anything extra.
                 if (!isCurrent)
                 {
                     // List overlapped points to indicate obstructions.
-                    highlightPoints = occupyPoints.Where(p => map.Buildings[p] != null || (Globals.BlockingBibs && (map.Smudge[p]?.Type.IsAutoBib ?? false)));
+                    highlightPoints = occupyPoints.Where(p => map.Buildings[p] != null || (Globals.BlockingBibs && (map.Smudge[p]?.IsAutoBib ?? false)));
                     // Store info on where to render backup preview outline.
                     place = (location, mockBuilding).Yield();
                 }
@@ -1133,7 +1170,7 @@ namespace MobiusEditor.Tools
             {
                 MapRenderer.RenderBuildingEffectRadius(graphics, boundRenderCells, Globals.MapTileSize, map.GapRadius, selected, loc.Value, selected);
             }
-            this.HandlePaintOutlines(graphics, previewMap, visibleCells, Globals.MapTileSize, Globals.MapTileScale, this.Layers);
+            HandlePaintOutlines(graphics, previewMap, visibleCells, Globals.MapTileSize, Globals.MapTileScale, Layers);
             GameInfo gameInfo = plugin.GameInfo;
             if (Layers.HasFlag(MapLayerFlag.BuildingFakes))
             {
@@ -1152,47 +1189,49 @@ namespace MobiusEditor.Tools
         public override void Activate()
         {
             base.Activate();
-            this.Deactivate(true);
-            this.mockBuilding.PropertyChanged += MockBuilding_PropertyChanged;
-            this.mapPanel.MouseDown += MapPanel_MouseDown;
-            this.mapPanel.MouseUp += MapPanel_MouseUp;
-            this.mapPanel.MouseDoubleClick += MapPanel_MouseDoubleClick;
-            this.mapPanel.MouseMove += MapPanel_MouseMove;
-            this.mapPanel.MouseLeave += MapPanel_MouseLeave;
-            this.mapPanel.MouseWheel += MapPanel_MouseWheel;
-            this.mapPanel.SuspendMouseZoomKeys = Keys.Control;
-            (this.mapPanel as Control).KeyDown += BuildingTool_KeyDown;
-            (this.mapPanel as Control).KeyUp += BuildingTool_KeyUp;
-            this.navigationWidget.BoundsMouseCellChanged += MouseoverWidget_MouseCellChanged;
-            this.navigationWidget.MouseoverSize = new Size(1, 1);
-            this.navigationWidget.PenColor = Color.Yellow;
-            this.UpdateStatus();
-            this.RefreshPreviewPanel();
+            Deactivate(true);
+            mockBuilding.PropertyChanged += MockBuilding_PropertyChanged;
+            mapPanel.MouseDown += MapPanel_MouseDown;
+            mapPanel.MouseUp += MapPanel_MouseUp;
+            mapPanel.MouseDoubleClick += MapPanel_MouseDoubleClick;
+            mapPanel.MouseMove += MapPanel_MouseMove;
+            mapPanel.MouseLeave += MapPanel_MouseLeave;
+            mapPanel.MouseWheel += MapPanel_MouseWheel;
+            mapPanel.LostFocus += MapPanel_MouseLeave;
+            mapPanel.SuspendMouseZoomKeys = Keys.Control;
+            (mapPanel as Control).KeyDown += BuildingTool_KeyDown;
+            (mapPanel as Control).KeyUp += BuildingTool_KeyUp;
+            navigationWidget.BoundsMouseCellChanged += MouseoverWidget_MouseCellChanged;
+            navigationWidget.MouseoverSize = new Size(1, 1);
+            navigationWidget.PenColor = Color.Yellow;
+            UpdateStatus();
+            RefreshPreviewPanel();
         }
 
         public override void Deactivate()
         {
-            this.Deactivate(false);
+            Deactivate(false);
         }
 
         public void Deactivate(bool forActivate)
         {
             if (!forActivate)
             {
-                this.ExitPlacementMode();
+                ExitPlacementMode();
                 base.Deactivate();
             }
-            this.mockBuilding.PropertyChanged -= MockBuilding_PropertyChanged;
-            this.mapPanel.MouseDown -= MapPanel_MouseDown;
-            this.mapPanel.MouseUp -= MapPanel_MouseUp;
-            this.mapPanel.MouseDoubleClick -= MapPanel_MouseDoubleClick;
-            this.mapPanel.MouseMove -= MapPanel_MouseMove;
-            this.mapPanel.MouseLeave -= MapPanel_MouseLeave;
-            this.mapPanel.MouseWheel -= MapPanel_MouseWheel;
-            this.mapPanel.SuspendMouseZoomKeys = Keys.None;
-            (this.mapPanel as Control).KeyDown -= BuildingTool_KeyDown;
-            (this.mapPanel as Control).KeyUp -= BuildingTool_KeyUp;
-            this.navigationWidget.BoundsMouseCellChanged -= MouseoverWidget_MouseCellChanged;
+            mockBuilding.PropertyChanged -= MockBuilding_PropertyChanged;
+            mapPanel.MouseDown -= MapPanel_MouseDown;
+            mapPanel.MouseUp -= MapPanel_MouseUp;
+            mapPanel.MouseDoubleClick -= MapPanel_MouseDoubleClick;
+            mapPanel.MouseMove -= MapPanel_MouseMove;
+            mapPanel.MouseLeave -= MapPanel_MouseLeave;
+            mapPanel.MouseWheel -= MapPanel_MouseWheel;
+            mapPanel.LostFocus -= MapPanel_MouseLeave;
+            mapPanel.SuspendMouseZoomKeys = Keys.None;
+            (mapPanel as Control).KeyDown -= BuildingTool_KeyDown;
+            (mapPanel as Control).KeyUp -= BuildingTool_KeyUp;
+            navigationWidget.BoundsMouseCellChanged -= MouseoverWidget_MouseCellChanged;
         }
 
         #region IDisposable Support

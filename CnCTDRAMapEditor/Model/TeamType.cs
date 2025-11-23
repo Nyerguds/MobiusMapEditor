@@ -17,6 +17,7 @@ using System;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.Linq;
+using System.Text;
 
 namespace MobiusEditor.Model
 {
@@ -93,7 +94,7 @@ namespace MobiusEditor.Model
         {
         }
 
-        public Boolean Equals(TeamMission other)
+        public bool Equals(TeamMission other)
         {
             return Mission == other.Mission;
         }
@@ -136,6 +137,19 @@ namespace MobiusEditor.Model
         {
             return Clone();
         }
+
+        public string GetFormattedArgument()
+        {
+            if (Mission != null && Mission.ArgType == TeamMissionArgType.OptionsList && Mission.DropdownOptions != null)
+            {
+                IEnumerable<(int Value ,string Label)> options = Mission.DropdownOptions.Where(ddo => ddo.Value == Argument);
+                if (options.Count() > 0)
+                {
+                    return options.First().Label;
+                }
+            }
+            return Argument.ToString();
+        }
     }
 
     [DebuggerDisplay("{Name}: {House}, {Classes}, {Missions}")]
@@ -146,6 +160,15 @@ namespace MobiusEditor.Model
         public static bool IsEmpty(string teamtype)
         {
             return teamtype == null || teamtype.Equals(None, StringComparison.OrdinalIgnoreCase);
+        }
+
+        public static TeamType GetTeamType(string name, Map map)
+        {
+            if (String.IsNullOrEmpty(name) || None.Equals(name, StringComparison.OrdinalIgnoreCase))
+            {
+                return null;
+            }
+            return map?.TeamTypes?.FirstOrDefault(t => name.Equals(t.Name, StringComparison.OrdinalIgnoreCase));
         }
 
         public string Name { get; set; }
@@ -207,7 +230,7 @@ namespace MobiusEditor.Model
             return teamType;
         }
 
-        public Boolean IsEmpty() {
+        public bool IsEmpty() {
             // true if nothing is filled in besides a default selected house.
             return
                 IsRoundAbout == false
@@ -233,11 +256,10 @@ namespace MobiusEditor.Model
             {
                 return this == obj;
             }
-            else if (obj is string)
+            else if (obj is string str)
             {
-                return string.Equals(Name, obj as string, StringComparison.OrdinalIgnoreCase);
+                return String.Equals(Name, str, StringComparison.OrdinalIgnoreCase);
             }
-
             return base.Equals(obj);
         }
 
@@ -298,5 +320,72 @@ namespace MobiusEditor.Model
         {
             return Clone();
         }
+
+        public string GetSummaryLabel(bool withLineBreaks)
+        {
+            string[] classes = Classes.Where(cl => cl.Count > 0).Select(cl => String.Format("{0}: {1}", cl.Type.Name, cl.Count)).ToArray();
+            string[] missions = Missions.Select(ms => String.Format("{0}: {1}", ms.Mission.Mission?.TrimEnd('.'), ms.GetFormattedArgument())).ToArray();
+            if (!withLineBreaks)
+            {
+                return House.Name
+                    + ": " + (classes.Length == 0 ? "<none>" : String.Join(", ", classes))
+                    + " → " + (missions.Length == 0 ? "<none>" : String.Join(", ", missions));
+            }
+            const int BREAKLEN = 50;
+            List<string> lines = new List<string>();
+            StringBuilder line = new StringBuilder(House.Name);
+            line.Append(": ");
+            if (classes.Length == 0)
+            {
+                line.Append("<none>");
+            }
+            for (int i = 0; i < classes.Length; ++i)
+            {
+                if (line.Length > BREAKLEN)
+                {
+                    line.Append(",");
+                    lines.Add(line.ToString());
+                    line.Clear();
+                    line.Append(" ");
+                }
+                else if (i > 0)
+                {
+                    line.Append(", ");
+                }
+                line.Append(classes[i]);
+            }
+            if (line.Length > 0)
+            {
+                lines.Add(line.ToString());
+                line.Clear();
+            }
+            line.Append(" → ");
+            if (missions.Length == 0)
+            {
+                line.Append("<none>");
+            }
+            for (int i = 0; i < missions.Length; ++i)
+            {
+                if (line.Length > BREAKLEN)
+                {
+                    line.Append(",");
+                    lines.Add(line.ToString());
+                    line.Clear();
+                    line.Append("   ");
+                }
+                else if (i > 0)
+                {
+                    line.Append(", ");
+                }
+                line.Append(missions[i]);
+            }
+            if (line.Length > 0)
+            {
+                lines.Add(line.ToString());
+                line.Clear();
+            }
+            return String.Join("\n", lines.ToArray());
+        }
+
     }
 }

@@ -41,6 +41,8 @@ namespace MobiusEditor.Dialogs
         /// </summary>
         private void InitializeComponent()
         {
+            this.components = new System.ComponentModel.Container();
+            System.ComponentModel.ComponentResourceManager resources = new System.ComponentModel.ComponentResourceManager(typeof(ImageExportDialog));
             this.layersListBox = new System.Windows.Forms.ListBox();
             this.indicatorsListBox = new System.Windows.Forms.ListBox();
             this.txtScale = new System.Windows.Forms.TextBox();
@@ -60,6 +62,9 @@ namespace MobiusEditor.Dialogs
             this.btnSetCellSize = new System.Windows.Forms.Button();
             this.lblCellSize = new System.Windows.Forms.Label();
             this.lblSizeBounds = new System.Windows.Forms.Label();
+            this.chkOrigPalette = new System.Windows.Forms.CheckBox();
+            this.toolTip1 = new System.Windows.Forms.ToolTip(this.components);
+            this.chkHighlightFlags = new System.Windows.Forms.CheckBox();
             this.tableLayoutPanel1.SuspendLayout();
             this.SuspendLayout();
             // 
@@ -70,7 +75,7 @@ namespace MobiusEditor.Dialogs
             this.layersListBox.Location = new System.Drawing.Point(3, 23);
             this.layersListBox.Name = "layersListBox";
             this.layersListBox.SelectionMode = System.Windows.Forms.SelectionMode.MultiSimple;
-            this.layersListBox.Size = new System.Drawing.Size(216, 186);
+            this.layersListBox.Size = new System.Drawing.Size(216, 200);
             this.layersListBox.TabIndex = 1;
             // 
             // indicatorsListBox
@@ -80,7 +85,7 @@ namespace MobiusEditor.Dialogs
             this.indicatorsListBox.Location = new System.Drawing.Point(240, 23);
             this.indicatorsListBox.Name = "indicatorsListBox";
             this.indicatorsListBox.SelectionMode = System.Windows.Forms.SelectionMode.MultiSimple;
-            this.indicatorsListBox.Size = new System.Drawing.Size(217, 186);
+            this.indicatorsListBox.Size = new System.Drawing.Size(217, 200);
             this.indicatorsListBox.TabIndex = 3;
             // 
             // txtScale
@@ -114,20 +119,19 @@ namespace MobiusEditor.Dialogs
             // chkSmooth
             // 
             this.chkSmooth.AutoSize = true;
-            this.chkSmooth.Checked = true;
-            this.chkSmooth.CheckState = System.Windows.Forms.CheckState.Checked;
             this.chkSmooth.Location = new System.Drawing.Point(18, 52);
             this.chkSmooth.Name = "chkSmooth";
             this.chkSmooth.Size = new System.Drawing.Size(98, 17);
             this.chkSmooth.TabIndex = 6;
             this.chkSmooth.Text = "Smooth scaling";
             this.chkSmooth.UseVisualStyleBackColor = true;
+            this.chkSmooth.CheckedChanged += new System.EventHandler(this.ChkSmooth_CheckedChanged);
             // 
             // label1
             // 
             this.label1.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Bottom | System.Windows.Forms.AnchorStyles.Left)));
             this.label1.AutoSize = true;
-            this.label1.Location = new System.Drawing.Point(11, 314);
+            this.label1.Location = new System.Drawing.Point(11, 380);
             this.label1.Name = "label1";
             this.label1.Size = new System.Drawing.Size(84, 13);
             this.label1.TabIndex = 11;
@@ -137,7 +141,7 @@ namespace MobiusEditor.Dialogs
             // 
             this.txtPath.Anchor = ((System.Windows.Forms.AnchorStyles)(((System.Windows.Forms.AnchorStyles.Bottom | System.Windows.Forms.AnchorStyles.Left) 
             | System.Windows.Forms.AnchorStyles.Right)));
-            this.txtPath.Location = new System.Drawing.Point(14, 335);
+            this.txtPath.Location = new System.Drawing.Point(14, 401);
             this.txtPath.Name = "txtPath";
             this.txtPath.ReadOnly = true;
             this.txtPath.Size = new System.Drawing.Size(418, 20);
@@ -146,7 +150,7 @@ namespace MobiusEditor.Dialogs
             // btnPickFile
             // 
             this.btnPickFile.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Bottom | System.Windows.Forms.AnchorStyles.Right)));
-            this.btnPickFile.Location = new System.Drawing.Point(438, 332);
+            this.btnPickFile.Location = new System.Drawing.Point(438, 398);
             this.btnPickFile.Name = "btnPickFile";
             this.btnPickFile.Size = new System.Drawing.Size(31, 23);
             this.btnPickFile.TabIndex = 13;
@@ -167,12 +171,12 @@ namespace MobiusEditor.Dialogs
             this.tableLayoutPanel1.Controls.Add(this.indicatorsListBox, 2, 1);
             this.tableLayoutPanel1.Controls.Add(this.label2, 0, 0);
             this.tableLayoutPanel1.Controls.Add(this.label3, 2, 0);
-            this.tableLayoutPanel1.Location = new System.Drawing.Point(12, 98);
+            this.tableLayoutPanel1.Location = new System.Drawing.Point(12, 144);
             this.tableLayoutPanel1.Name = "tableLayoutPanel1";
             this.tableLayoutPanel1.RowCount = 2;
             this.tableLayoutPanel1.RowStyles.Add(new System.Windows.Forms.RowStyle(System.Windows.Forms.SizeType.Absolute, 20F));
             this.tableLayoutPanel1.RowStyles.Add(new System.Windows.Forms.RowStyle(System.Windows.Forms.SizeType.Percent, 100F));
-            this.tableLayoutPanel1.Size = new System.Drawing.Size(460, 212);
+            this.tableLayoutPanel1.Size = new System.Drawing.Size(460, 226);
             this.tableLayoutPanel1.TabIndex = 10;
             // 
             // label2
@@ -200,7 +204,7 @@ namespace MobiusEditor.Dialogs
             // btnExport
             // 
             this.btnExport.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Bottom | System.Windows.Forms.AnchorStyles.Right)));
-            this.btnExport.Location = new System.Drawing.Point(298, 363);
+            this.btnExport.Location = new System.Drawing.Point(298, 429);
             this.btnExport.Name = "btnExport";
             this.btnExport.Size = new System.Drawing.Size(84, 23);
             this.btnExport.TabIndex = 0;
@@ -212,7 +216,7 @@ namespace MobiusEditor.Dialogs
             // 
             this.btnCancel.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Bottom | System.Windows.Forms.AnchorStyles.Right)));
             this.btnCancel.DialogResult = System.Windows.Forms.DialogResult.Cancel;
-            this.btnCancel.Location = new System.Drawing.Point(388, 363);
+            this.btnCancel.Location = new System.Drawing.Point(388, 429);
             this.btnCancel.Name = "btnCancel";
             this.btnCancel.Size = new System.Drawing.Size(84, 23);
             this.btnCancel.TabIndex = 1;
@@ -239,6 +243,7 @@ namespace MobiusEditor.Dialogs
             this.chkBoundsOnly.TabIndex = 7;
             this.chkBoundsOnly.Text = "Only export map area inside bounds";
             this.chkBoundsOnly.UseVisualStyleBackColor = true;
+            this.chkBoundsOnly.CheckedChanged += new System.EventHandler(this.ChkBoundsOnly_CheckedChanged);
             // 
             // btnSetCellSize
             // 
@@ -269,19 +274,42 @@ namespace MobiusEditor.Dialogs
             this.lblSizeBounds.TabIndex = 4;
             this.lblSizeBounds.Text = "Cell size in bounds: XXXX * YYYY";
             // 
+            // chkOrigPalette
+            // 
+            this.chkOrigPalette.AutoSize = true;
+            this.chkOrigPalette.Location = new System.Drawing.Point(18, 121);
+            this.chkOrigPalette.Name = "chkOrigPalette";
+            this.chkOrigPalette.Size = new System.Drawing.Size(138, 17);
+            this.chkOrigPalette.TabIndex = 7;
+            this.chkOrigPalette.Text = "Export in original palette";
+            this.toolTip1.SetToolTip(this.chkOrigPalette, resources.GetString("chkOrigPalette.ToolTip"));
+            this.chkOrigPalette.UseVisualStyleBackColor = true;
+            // 
+            // chkHighlightFlags
+            // 
+            this.chkHighlightFlags.AutoSize = true;
+            this.chkHighlightFlags.Location = new System.Drawing.Point(18, 98);
+            this.chkHighlightFlags.Name = "chkHighlightFlags";
+            this.chkHighlightFlags.Size = new System.Drawing.Size(187, 17);
+            this.chkHighlightFlags.TabIndex = 7;
+            this.chkHighlightFlags.Text = "Highlight multiplayer start locations";
+            this.chkHighlightFlags.UseVisualStyleBackColor = true;
+            // 
             // ImageExportDialog
             // 
             this.AcceptButton = this.btnExport;
             this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 13F);
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
             this.CancelButton = this.btnCancel;
-            this.ClientSize = new System.Drawing.Size(484, 398);
+            this.ClientSize = new System.Drawing.Size(484, 464);
             this.Controls.Add(this.btnSetCellSize);
             this.Controls.Add(this.btnSetDimensions);
             this.Controls.Add(this.tableLayoutPanel1);
             this.Controls.Add(this.btnCancel);
             this.Controls.Add(this.btnExport);
             this.Controls.Add(this.btnPickFile);
+            this.Controls.Add(this.chkHighlightFlags);
+            this.Controls.Add(this.chkOrigPalette);
             this.Controls.Add(this.chkBoundsOnly);
             this.Controls.Add(this.chkSmooth);
             this.Controls.Add(this.txtPath);
@@ -294,7 +322,7 @@ namespace MobiusEditor.Dialogs
             this.Icon = global::MobiusEditor.Properties.Resources.GameIcon00;
             this.MaximizeBox = false;
             this.MinimizeBox = false;
-            this.MinimumSize = new System.Drawing.Size(500, 437);
+            this.MinimumSize = new System.Drawing.Size(500, 460);
             this.Name = "ImageExportDialog";
             this.ShowIcon = false;
             this.ShowInTaskbar = false;
@@ -327,5 +355,8 @@ namespace MobiusEditor.Dialogs
         private System.Windows.Forms.Button btnSetCellSize;
         private System.Windows.Forms.Label lblCellSize;
         private System.Windows.Forms.Label lblSizeBounds;
+        private System.Windows.Forms.CheckBox chkOrigPalette;
+        private System.Windows.Forms.ToolTip toolTip1;
+        private System.Windows.Forms.CheckBox chkHighlightFlags;
     }
 }

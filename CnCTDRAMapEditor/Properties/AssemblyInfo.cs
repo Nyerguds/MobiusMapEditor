@@ -18,11 +18,11 @@ using System.Runtime.InteropServices;
 // General Information about an assembly is controlled through the following
 // set of attributes. Change these attribute values to modify the information
 // associated with an assembly.
-[assembly: AssemblyTitle("C&C Tiberian Dawn and Red Alert Map Editor")]
-[assembly: AssemblyDescription("")]
+[assembly: AssemblyTitle("Mobius Map Editor")]
+[assembly: AssemblyDescription("Map editor supporting the original Command & Conquer, Red Alert and Sole Survivor.")]
 [assembly: AssemblyConfiguration("")]
 [assembly: AssemblyCompany("Nyerguds")]
-[assembly: AssemblyProduct("CnC TDRA Map Editor")]
+[assembly: AssemblyProduct("Mobius Map Editor")]
 [assembly: AssemblyCopyright("Command & Conquer and the original map editor © 2020 Electronic Arts Inc. All rights reserved.")]
 [assembly: AssemblyTrademark("")]
 [assembly: AssemblyCulture("")]
@@ -45,5 +45,5 @@ using System.Runtime.InteropServices;
 // You can specify all the values or you can default the Build and Revision Numbers
 // by using the '*' as shown below:
 // [assembly: AssemblyVersion("1.0.*")]
-[assembly: AssemblyVersion("1.6.0.0")]
+[assembly: AssemblyVersion("1.6.1.0")]
 // [assembly: AssemblyFileVersion("1.0.0.0")]

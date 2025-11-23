@@ -172,6 +172,15 @@ namespace MobiusEditor.Model
         [DefaultValue(0)]
         public int Credits { get; set; } = 0;
 
+        [NonSerializedINIKey]
+        public virtual string UnitTeamColor => Type.UnitTeamColor;
+
+        [NonSerializedINIKey]
+        public virtual string BuildingTeamColor => Type.BuildingTeamColor;
+
+        [NonSerializedINIKey]
+        public virtual string OutlineColor => Type.OutlineColor;
+
         public House(HouseType type)
         {
             Type = type;

@@ -28,6 +28,12 @@ namespace MobiusEditor.Model
         [DefaultValue(0)]
         public int Storage { get; set; }
 
+        [DefaultValue(null)]
+        public string Name { get; set; }
+
+        [DefaultValue(null)]
+        public string Image { get; set; }
+
         [TypeConverter(typeof(OneZeroBooleanTypeConverter))]
         [DefaultValue(0)]
         public bool Bib { get; set; }

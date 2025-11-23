@@ -19,6 +19,7 @@ using System;
 using System.Collections.Generic;
 using System.Data;
 using System.Drawing;
+using System.Drawing.Drawing2D;
 using System.Linq;
 using System.Reflection;
 using System.Windows.Forms;
@@ -60,6 +61,10 @@ namespace MobiusEditor.Controls
             infoImage.SetResolution(96, 96);
             using (Graphics g = Graphics.FromImage(infoImage))
             {
+                g.CompositingQuality = CompositingQuality.HighQuality;
+                g.InterpolationMode = InterpolationMode.HighQualityBicubic;
+                g.SmoothingMode = SmoothingMode.HighQuality;
+                g.PixelOffsetMode = PixelOffsetMode.HighQuality;
                 g.DrawIcon(SystemIcons.Information, new Rectangle(0, 0, infoImage.Width, infoImage.Height));
             }
             lblTriggerTypesInfo.Image = infoImage;
@@ -86,48 +91,48 @@ namespace MobiusEditor.Controls
 
         private void UpdateDataSource()
         {
-            string selected = terrain != null ? terrain.Trigger : triggerComboBox.SelectedItem as string;
-            triggerComboBox.DataBindings.Clear();
-            triggerComboBox.SelectedIndexChanged -= this.TriggerComboBox_SelectedIndexChanged;
-            triggerComboBox.DataSource = null;
-            triggerComboBox.Items.Clear();
-            string[] items = Plugin.Map.FilterTerrainTriggers().Select(t => t.Name).Distinct().ToArray();
+            string selected = terrain != null ? terrain.Trigger : ListItem.GetValueFromComboBox<String>(cmbTrigger);
+            cmbTrigger.DataBindings.Clear();
+            cmbTrigger.SelectedIndexChanged -= this.TriggerComboBox_SelectedIndexChanged;
+            cmbTrigger.DataSource = null;
+            HashSet<string> allowedTriggers = Plugin.Map.FilterTerrainTriggers().Select(t => t.Name).Distinct().ToHashSet(StringComparer.OrdinalIgnoreCase);
             filteredEvents = Plugin.Map.EventTypes.Where(ev => Plugin.Map.TerrainEventTypes.Contains(ev)).Distinct().ToArray();
             filteredActions = Plugin.Map.ActionTypes.Where(ev => Plugin.Map.TerrainActionTypes.Contains(ev)).Distinct().ToArray();
-            HashSet<string> allowedTriggers = new HashSet<string>(items, StringComparer.OrdinalIgnoreCase);
-            items = Trigger.None.Yield().Concat(Plugin.Map.Triggers.Select(t => t.Name).Where(t => allowedTriggers.Contains(t)).Distinct()).ToArray();
+            string[] items = Trigger.None.Yield().Concat(Plugin.Map.Triggers.Select(t => t.Name).Where(t => allowedTriggers.Contains(t)).Distinct()).ToArray();
             int selectIndex = String.IsNullOrEmpty(selected) ? 0 : Enumerable.Range(0, items.Length).FirstOrDefault(x => String.Equals(items[x], selected, StringComparison.OrdinalIgnoreCase));
-            triggerComboBox.DataSource = items;
+            cmbTrigger.ValueMember = "Value";
+            cmbTrigger.DisplayMember = "Label";
+            cmbTrigger.DataSource = items.Select(tr => ListItem.Create(tr)).ToArray();
             if (terrain != null)
             {
                 // Ensure that the object's trigger is in the list.
                 terrain.Trigger = items[selectIndex];
-                triggerComboBox.DataBindings.Add("SelectedItem", terrain, "Trigger");
+                cmbTrigger.DataBindings.Add("SelectedValue", terrain, "Trigger", false, DataSourceUpdateMode.OnPropertyChanged);
             }
-            int sel = triggerComboBox.SelectedIndex;
-            triggerComboBox.SelectedIndexChanged += this.TriggerComboBox_SelectedIndexChanged;
-            triggerComboBox.SelectedIndex = selectIndex;
+            int sel = cmbTrigger.SelectedIndex;
+            cmbTrigger.SelectedIndexChanged += this.TriggerComboBox_SelectedIndexChanged;
+            cmbTrigger.SelectedIndex = selectIndex;
             if (sel == selectIndex)
             {
-                TriggerComboBox_SelectedIndexChanged(triggerComboBox, new EventArgs());
+                TriggerComboBox_SelectedIndexChanged(cmbTrigger, new EventArgs());
             }
         }
 
-        private void TriggerComboBox_SelectedIndexChanged(Object sender, EventArgs e)
+        private void TriggerComboBox_SelectedIndexChanged(object sender, EventArgs e)
         {
             if (filteredEvents == null || filteredActions == null)
             {
                 return;
             }
-            string selected = triggerComboBox.SelectedItem as string;
+            string selected = ListItem.GetValueFromComboBox<String>(cmbTrigger);
             Trigger trig = this.Plugin.Map.Triggers.FirstOrDefault(t => String.Equals(t.Name, selected, StringComparison.OrdinalIgnoreCase));
             triggerInfoToolTip = Map.MakeAllowedTriggersToolTip(filteredEvents, filteredActions, trig);
             triggerToolTip = Plugin.TriggerSummary(trig, true, false);
             Point pt = MousePosition;
             Point lblPos = lblTriggerTypesInfo.PointToScreen(Point.Empty);
-            Point cmbPos = triggerComboBox.PointToScreen(Point.Empty);
+            Point cmbPos = cmbTrigger.PointToScreen(Point.Empty);
             Rectangle lblInfoRect = new Rectangle(lblPos, lblTriggerTypesInfo.Size);
-            Rectangle cmbTrigRect = new Rectangle(cmbPos, triggerComboBox.Size);
+            Rectangle cmbTrigRect = new Rectangle(cmbPos, cmbTrigger.Size);
             if (lblInfoRect.Contains(pt))
             {
                 this.toolTip1.Hide(lblTriggerTypesInfo);
@@ -135,12 +140,12 @@ namespace MobiusEditor.Controls
             }
             else if (cmbTrigRect.Contains(pt))
             {
-                this.toolTip1.Hide(triggerComboBox);
-                TriggerComboBox_MouseEnter(triggerComboBox, e);
+                this.toolTip1.Hide(cmbTrigger);
+                TriggerComboBox_MouseEnter(cmbTrigger, e);
             }
         }
 
-        private void TriggerComboBox_MouseEnter(Object sender, EventArgs e)
+        private void TriggerComboBox_MouseEnter(object sender, EventArgs e)
         {
             Control target = sender as Control;
             ShowToolTip(target, triggerToolTip);
@@ -170,7 +175,7 @@ namespace MobiusEditor.Controls
             }
         }
 
-        private void LblTriggerTypesInfo_MouseEnter(Object sender, EventArgs e)
+        private void LblTriggerTypesInfo_MouseEnter(object sender, EventArgs e)
         {
             Control target = sender as Control;
             ShowToolTip(target, triggerInfoToolTip);

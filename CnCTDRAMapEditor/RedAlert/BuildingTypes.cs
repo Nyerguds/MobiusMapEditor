@@ -13,9 +13,7 @@
 // GNU General Public License along with permitted additional restrictions
 // with this program. If not, see https://github.com/electronicarts/CnC_Remastered_Collection
 using MobiusEditor.Model;
-using MobiusEditor.Utility;
 using System.Collections.Generic;
-using System.ComponentModel;
 using System.Linq;
 using System.Reflection;
 
@@ -52,7 +50,7 @@ namespace MobiusEditor.RedAlert
         public static readonly BuildingType Mission = new BuildingType(26, "miss", "TEXT_STRUCTURE_RA_MISS", 0, 0, true, 3, 2, null, "Greece", BuildingTypeFlag.Bib);
         public static readonly BuildingType ShipYard = new BuildingType(27, "syrd", "TEXT_STRUCTURE_RA_SYRD", 0, 30, true, 3, 3, null, "Greece");
         public static readonly BuildingType SubPen = new BuildingType(28, "spen", "TEXT_STRUCTURE_RA_SPEN", 0, 30, true, 3, 3, null, "USSR");
-        public static readonly BuildingType MissileSilo = new BuildingType(29, "mslo", "TEXT_STRUCTURE_RA_MSLO", 0, 100, true, 2, 1, null, "Greece");
+        public static readonly BuildingType MissileSilo = new BuildingType(29, "mslo", "TEXT_STRUCTURE_RA_MSLO", 0, 100, true, 2, 1, null, "USSR");
         public static readonly BuildingType ForwardCom = new BuildingType(30, "fcom", "TEXT_STRUCTURE_RA_FCOM", 0, 200, true, 2, 2, "00 11", "USSR", BuildingTypeFlag.Bib);
         public static readonly BuildingType Tesla = new BuildingType(31, "tsla", "TEXT_STRUCTURE_RA_TSLA", 0, 150, false, 1, 2, "0 1", "USSR");
         // Fake buildings
@@ -61,13 +59,13 @@ namespace MobiusEditor.RedAlert
         public static readonly BuildingType FakeShipYard = new BuildingType(34, "syrf", "TEXT_STRUCTURE_RA_SYRF", 0, 2, true, 3, 3, null, "Greece", "syrd", BuildingTypeFlag.Fake);
         public static readonly BuildingType FakeSubPen = new BuildingType(35, "spef", "TEXT_STRUCTURE_RA_SPEF", 0, 2, true, 3, 3, null, "USSR", "spen", BuildingTypeFlag.Fake);
         public static readonly BuildingType FakeCommand = new BuildingType(36, "domf", "TEXT_STRUCTURE_RA_DOMF", 0, 2, true, 2, 2, null, "Greece", "dome", BuildingTypeFlag.Bib | BuildingTypeFlag.Fake);
-        // Added "walls-as-buildings"
-        public static readonly BuildingType Sandbag = new BuildingType(37, "sbag", "TEXT_STRUCTURE_RA_SBAG", 0, 0, false, 1, 1, null, "Greece", BuildingTypeFlag.Wall | BuildingTypeFlag.NoRemap);
-        public static readonly BuildingType Cyclone = new BuildingType(38, "cycl", "TEXT_STRUCTURE_RA_CYCL", 0, 0, false, 1, 1, null, "Greece", BuildingTypeFlag.Wall | BuildingTypeFlag.NoRemap);
-        public static readonly BuildingType Brick = new BuildingType(39, "brik", "TEXT_STRUCTURE_RA_BRIK", 0, 0, false, 1, 1, null, "Greece", BuildingTypeFlag.Wall | BuildingTypeFlag.NoRemap);
-        public static readonly BuildingType Barbwire = new BuildingType(40, "barb", "TEXT_STRUCTURE_RA_BARB", 0, 0, false, 1, 1, null, "Greece", BuildingTypeFlag.Wall | BuildingTypeFlag.NoRemap);
-        public static readonly BuildingType Wood = new BuildingType(41, "wood", "TEXT_STRUCTURE_RA_WOOD", 0, 0, false, 1, 1, null, "Greece", BuildingTypeFlag.Wall | BuildingTypeFlag.NoRemap);
-        public static readonly BuildingType Fence = new BuildingType(42, "fenc", "TEXT_STRUCTURE_RA_FENC", 0, 0, false, 1, 1, null, "Greece", BuildingTypeFlag.Wall | BuildingTypeFlag.NoRemap);
+        // Placing walls as buildings apparently crashes in RA, so, let's disable that...
+        // public static readonly BuildingType Sandbag = new BuildingType(37, "sbag", "TEXT_STRUCTURE_RA_SBAG", 0, 0, false, 1, 1, null, "Greece", BuildingTypeFlag.Wall | BuildingTypeFlag.NoRemap);
+        // public static readonly BuildingType Cyclone = new BuildingType(38, "cycl", "TEXT_STRUCTURE_RA_CYCL", 0, 0, false, 1, 1, null, "Greece", BuildingTypeFlag.Wall | BuildingTypeFlag.NoRemap);
+        // public static readonly BuildingType Brick = new BuildingType(39, "brik", "TEXT_STRUCTURE_RA_BRIK", 0, 0, false, 1, 1, null, "Greece", BuildingTypeFlag.Wall | BuildingTypeFlag.NoRemap);
+        // public static readonly BuildingType Barbwire = new BuildingType(40, "barb", "TEXT_STRUCTURE_RA_BARB", 0, 0, false, 1, 1, null, "Greece", BuildingTypeFlag.Wall | BuildingTypeFlag.NoRemap);
+        // public static readonly BuildingType Wood = new BuildingType(41, "wood", "TEXT_STRUCTURE_RA_WOOD", 0, 0, false, 1, 1, null, "Greece", BuildingTypeFlag.Wall | BuildingTypeFlag.NoRemap);
+        // public static readonly BuildingType Fence = new BuildingType(42, "fenc", "TEXT_STRUCTURE_RA_FENC", 0, 0, false, 1, 1, null, "Greece", BuildingTypeFlag.Wall | BuildingTypeFlag.NoRemap);
         // Mines
         public static readonly BuildingType AVMine = new BuildingType(43, "minv", "TEXT_STRUCTURE_RA_MINV", 0, 0, false, 1, 1, null, "Greece", BuildingTypeFlag.SingleFrame);
         public static readonly BuildingType APMine = new BuildingType(44, "minp", "TEXT_STRUCTURE_RA_MINP", 0, 0, false, 1, 1, null, "Greece", BuildingTypeFlag.SingleFrame);
@@ -116,9 +114,9 @@ namespace MobiusEditor.RedAlert
 
         public static readonly BuildingType Barrel = new BuildingType(82, "barl", "TEXT_STRUCTURE_RA_BARL", 0, 0, false, 1, 1, null, "Neutral", BuildingTypeFlag.NoRemap);
         public static readonly BuildingType Barrel3 = new BuildingType(83, "brl3", "TEXT_STRUCTURE_RA_BRL3", 0, 0, false, 1, 1, null, "Neutral", BuildingTypeFlag.NoRemap);
-        public static readonly BuildingType Queen = new BuildingType(84, "quee", "TEXT_STRUCTURE_RA_QUEE", 0, 0, false, 2, 1, null, "USSR");
-        public static readonly BuildingType Larva1 = new BuildingType(85, "lar1", "TEXT_STRUCTURE_RA_LAR1", 0, 0, false, 1, 1, null, "USSR", BuildingTypeFlag.NoRemap);
-        public static readonly BuildingType Larva2 = new BuildingType(86, "lar2", "TEXT_STRUCTURE_RA_LAR2", 0, 0, false, 1, 1, null, "USSR", BuildingTypeFlag.NoRemap);
+        public static readonly BuildingType Queen = new BuildingType(84, "quee", "TEXT_STRUCTURE_RA_QUEE", 0, 0, false, 2, 1, null, "USSR", BuildingTypeFlag.NoRules);
+        public static readonly BuildingType Larva1 = new BuildingType(85, "lar1", "TEXT_STRUCTURE_RA_LAR1", 0, 0, false, 1, 1, null, "USSR", BuildingTypeFlag.NoRemap | BuildingTypeFlag.NoRules);
+        public static readonly BuildingType Larva2 = new BuildingType(86, "lar2", "TEXT_STRUCTURE_RA_LAR2", 0, 0, false, 1, 1, null, "USSR", BuildingTypeFlag.NoRemap | BuildingTypeFlag.NoRules);
 
         private static readonly BuildingType[] Types;
 

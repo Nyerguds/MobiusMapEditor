@@ -89,7 +89,7 @@ namespace MobiusEditor.Controls
             this.txtRules.ScrollBars = System.Windows.Forms.ScrollBars.Vertical;
             this.txtRules.Size = new System.Drawing.Size(396, 114);
             this.txtRules.TabIndex = 2;
-            this.txtRules.Leave += new System.EventHandler(this.txtRules_Leave);
+            this.txtRules.Leave += new System.EventHandler(this.TxtRules_Leave);
             // 
             // lblDosContent
             // 

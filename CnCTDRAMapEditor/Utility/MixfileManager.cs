@@ -14,6 +14,7 @@
 using System;
 using System.Collections;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.IO;
 using System.Linq;
 using System.Text.RegularExpressions;
@@ -24,6 +25,8 @@ namespace MobiusEditor.Utility
 {
     public class MixfileManager : IArchiveManager
     {
+
+        [DebuggerDisplay("{Name}")]
         private class MixInfo
         {
             public string Name { get; set; }
@@ -153,7 +156,7 @@ namespace MobiusEditor.Utility
         /// <param name="canUseNewFormat">Allow RA's newer mix file format.</param>
         /// <returns>The amount of found archives.</returns>
         /// <exception cref="ObjectDisposedException">The MixFileManager is disposed.</exception>
-        public int LoadArchives(GameType gameType, string archiveMask, bool canUseNewFormat)
+        public int LoadArchives(GameType gameType, string archiveMask, bool canUseNewFormat, params string[] excludeFiles)
         {
             if (disposedValue)
             {
@@ -168,6 +171,7 @@ namespace MobiusEditor.Utility
             List<string> foundFiles = new List<string>();
             Dictionary<string, string> foundPaths = new Dictionary<string, string>();
             Regex filter = GeneralUtils.FileMaskToRegex(archiveMask);
+            HashSet<string> excludedFiles = excludeFiles.Where(f => filter.IsMatch(f)).ToHashSet(StringComparer.OrdinalIgnoreCase);
             List<MixInfo> archivesForGame;
             if (!gameArchives.TryGetValue(gameType, out archivesForGame))
             {
@@ -177,7 +181,7 @@ namespace MobiusEditor.Utility
             // Not using hash map since order and iteration will be important.
             foreach (MixInfo file in archivesForGame)
             {
-                if (filter.IsMatch(file.Name) && !foundPaths.ContainsKey(file.Name))
+                if (filter.IsMatch(file.Name) && !foundPaths.ContainsKey(file.Name) && !excludedFiles.Contains(file.Name))
                 {
                     foundFiles.Add(file.Name);
                     // Previously loaded files are higher in priority. Mark as inaccessible so
@@ -421,6 +425,7 @@ namespace MobiusEditor.Utility
                             info.Name = mixName;
                             // Create as embedded mix file
                             mixFile = new MixFile(container, info, mixToAdd.CanUseNewFormat);
+                            break;
                         }
                     }
                 }

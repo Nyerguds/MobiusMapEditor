@@ -28,7 +28,7 @@ namespace MobiusEditor.Controls
             AddDataBindings();
         }
 
-        private void btnDefaults_Click(Object sender, EventArgs e)
+        private void BtnDefaults_Click(object sender, EventArgs e)
         {
             if (DialogResult.Yes == MessageBox.Show("This will reset all crate values to their game defaults. Are you sure you want to continue?", "Warning", MessageBoxButtons.YesNo, MessageBoxIcon.Warning, MessageBoxDefaultButton.Button1))
             {
@@ -47,25 +47,25 @@ namespace MobiusEditor.Controls
 
         private void AddDataBindings()
         {
-            nudAddStrength.DataBindings.Add("IntValue", cratesSettings, "AddStrength");
-            nudAddWeapon.DataBindings.Add("IntValue", cratesSettings, "AddWeapon");
-            nudAddSpeed.DataBindings.Add("IntValue", cratesSettings, "AddSpeed");
-            nudRapidReload.DataBindings.Add("IntValue", cratesSettings, "RapidReload");
-            nudAddRange.DataBindings.Add("IntValue", cratesSettings, "AddRange");
-            nudHeal.DataBindings.Add("IntValue", cratesSettings, "Heal");
-            nudBomb.DataBindings.Add("IntValue", cratesSettings, "Bomb");
-            nudStealth.DataBindings.Add("IntValue", cratesSettings, "Stealth");
-            nudTeleport.DataBindings.Add("IntValue", cratesSettings, "Teleport");
-            nudKill.DataBindings.Add("IntValue", cratesSettings, "Kill");
-            nudUncloakAll.DataBindings.Add("IntValue", cratesSettings, "UncloakAll");
-            nudReshroud.DataBindings.Add("IntValue", cratesSettings, "Reshroud");
-            nudUnshroud.DataBindings.Add("IntValue", cratesSettings, "Unshroud");
-            nudRadar.DataBindings.Add("IntValue", cratesSettings, "Radar");
-            nudArmageddon.DataBindings.Add("IntValue", cratesSettings, "Armageddon");
-            nudSuper.DataBindings.Add("IntValue", cratesSettings, "Super");
-            nudDensity.DataBindings.Add("IntValue", cratesSettings, "Density");
-            nudIonFactor.DataBindings.Add("IntValue", cratesSettings, "IonFactor");
-            nudCrateTimer.DataBindings.Add("IntValue", cratesSettings, "CrateTimer");
+            nudAddStrength.DataBindings.Add("IntValue", cratesSettings, "AddStrength", false, DataSourceUpdateMode.OnPropertyChanged);
+            nudAddWeapon.DataBindings.Add("IntValue", cratesSettings, "AddWeapon", false, DataSourceUpdateMode.OnPropertyChanged);
+            nudAddSpeed.DataBindings.Add("IntValue", cratesSettings, "AddSpeed", false, DataSourceUpdateMode.OnPropertyChanged);
+            nudRapidReload.DataBindings.Add("IntValue", cratesSettings, "RapidReload", false, DataSourceUpdateMode.OnPropertyChanged);
+            nudAddRange.DataBindings.Add("IntValue", cratesSettings, "AddRange", false, DataSourceUpdateMode.OnPropertyChanged);
+            nudHeal.DataBindings.Add("IntValue", cratesSettings, "Heal", false, DataSourceUpdateMode.OnPropertyChanged);
+            nudBomb.DataBindings.Add("IntValue", cratesSettings, "Bomb", false, DataSourceUpdateMode.OnPropertyChanged);
+            nudStealth.DataBindings.Add("IntValue", cratesSettings, "Stealth", false, DataSourceUpdateMode.OnPropertyChanged);
+            nudTeleport.DataBindings.Add("IntValue", cratesSettings, "Teleport", false, DataSourceUpdateMode.OnPropertyChanged);
+            nudKill.DataBindings.Add("IntValue", cratesSettings, "Kill", false, DataSourceUpdateMode.OnPropertyChanged);
+            nudUncloakAll.DataBindings.Add("IntValue", cratesSettings, "UncloakAll", false, DataSourceUpdateMode.OnPropertyChanged);
+            nudReshroud.DataBindings.Add("IntValue", cratesSettings, "Reshroud", false, DataSourceUpdateMode.OnPropertyChanged);
+            nudUnshroud.DataBindings.Add("IntValue", cratesSettings, "Unshroud", false, DataSourceUpdateMode.OnPropertyChanged);
+            nudRadar.DataBindings.Add("IntValue", cratesSettings, "Radar", false, DataSourceUpdateMode.OnPropertyChanged);
+            nudArmageddon.DataBindings.Add("IntValue", cratesSettings, "Armageddon", false, DataSourceUpdateMode.OnPropertyChanged);
+            nudSuper.DataBindings.Add("IntValue", cratesSettings, "Super", false, DataSourceUpdateMode.OnPropertyChanged);
+            nudDensity.DataBindings.Add("IntValue", cratesSettings, "Density", false, DataSourceUpdateMode.OnPropertyChanged);
+            nudIonFactor.DataBindings.Add("IntValue", cratesSettings, "IonFactor", false, DataSourceUpdateMode.OnPropertyChanged);
+            nudCrateTimer.DataBindings.Add("IntValue", cratesSettings, "CrateTimer", false, DataSourceUpdateMode.OnPropertyChanged);
         }
 
         private void RemoveDataBindings()

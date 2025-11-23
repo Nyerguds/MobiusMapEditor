@@ -41,8 +41,8 @@ namespace MobiusEditor
 {
     public partial class MainForm : Form, IFeedBackHandler, IHasStatusLabel
     {
-
         const string MAP_UNTITLED = "Untitled";
+        const string MIXCACHEFILE = "mixcache.ini";
         private readonly Dictionary<string, Bitmap> theaterIcons = new Dictionary<string, Bitmap>();
         private readonly MixFileNameGenerator romfis = null;
         FormWindowState lastWindowState = FormWindowState.Normal;
@@ -101,8 +101,9 @@ namespace MobiusEditor
         private readonly ViewToolStripButton[] viewToolStripButtons;
 
         private IGamePlugin plugin;
-        private FileType loadedFileType;
-        private string filename;
+        private FileType loadedFileType = FileType.None;
+        private string actualLoadedFileName;
+        private string loadedMapDisplayFileName;
         private bool shouldCheckUpdate;
         private bool startedUpdate;
         // Not sure if this lock works; multiple functions can somehow run simultaneously on the same UI update thread?
@@ -131,7 +132,7 @@ namespace MobiusEditor
 
         public MainForm(string fileToOpen, MixFileNameGenerator romfis)
         {
-            this.filename = fileToOpen;
+            this.loadedMapDisplayFileName = fileToOpen;
             this.romfis = romfis;
             InitializeComponent();
             mapPanel.SmoothScale = Globals.MapSmoothScale;
@@ -146,8 +147,8 @@ namespace MobiusEditor
             this.toolsOptionsSafeDraggingMenuItem.Checked = Globals.TileDragProtect;
             this.toolsOptionsRandomizeDragPlaceMenuItem.Checked = Globals.TileDragRandomize;
             this.toolsOptionsPlacementGridMenuItem.Checked = Globals.ShowPlacementGrid;
-            this.toolsOptionsOutlineAllCratesMenuItem.Checked = Globals.OutlineAllCrates;
             this.toolsOptionsCratesOnTopMenuItem.Checked = Globals.CratesOnTop;
+            this.viewExtraIndicatorsCrateOutlinesMenuItem.Checked = Globals.OutlineAllCrates;
 
             // Obey the settings.
             this.mapPanel.SmoothScale = Globals.MapSmoothScale;
@@ -170,7 +171,12 @@ namespace MobiusEditor
                 cellTriggersToolStripButton,
                 selectToolStripButton,
             };
-            mru = new MRU("Software\\Petroglyph\\CnCRemasteredEditor", "MRUMix", "MRU", 10, fileRecentFilesMenuItem);
+            mru = new MRU("Software\\Nyerguds\\MobiusMapEditor\\MRU",
+                new string[] {
+                    "Software\\Petroglyph\\CnCRemasteredEditor\\MRUMix",
+                    "Software\\Petroglyph\\CnCRemasteredEditor\\MRU" 
+                },
+                10, fileRecentFilesMenuItem);
             mru.FileSelected += Mru_FileSelected;
             foreach (ToolStripButton toolStripButton in mainToolStrip.Items)
             {
@@ -178,8 +184,8 @@ namespace MobiusEditor
             }
 #if !DEVELOPER
             fileExportMenuItem.Enabled = false;
-            fileExportMenuItem.Visible = false;
-            developerToolStripMenuItem.Visible = false;
+            fileExportMenuItem.Available = false;
+            developerToolStripMenuItem.Available = false;
 #endif
             url.Tracked += UndoRedo_Tracked;
             url.Undone += UndoRedo_Updated;
@@ -195,18 +201,18 @@ namespace MobiusEditor
 
         private void LoadMixTree()
         {
-            const string mixCacheFile = "mixcache.ini";
             string settingsFolder = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData), Program.ApplicationCompany, Program.AssemblyName);
-            string cachedMixInfoFile = Path.Combine(settingsFolder, mixCacheFile);
+            string cachedMixInfoFile = Path.Combine(settingsFolder, MIXCACHEFILE);
             bool hasCache = File.Exists(cachedMixInfoFile);
 
             FileOpenFromMixMenuItem.Enabled = true;
-            string estim = hasCache ? string.Empty : " (30-60s)";
+            string estim = hasCache ? String.Empty : " (30-60s)";
             ToolStripMenuItem loading = new ToolStripMenuItem("[Scanning mix files, please wait." + estim + "]");
             loading.Enabled = false;
             FileOpenFromMixMenuItem.DropDownItems.Add(loading);
-            mixLoadMultiThreader.ExecuteThreaded(() => FindMissionMixFiles(this.romfis, cachedMixInfoFile), (mix) => BuildMixTrees(mix, loading), true,
-                null, String.Empty);
+            mixLoadMultiThreader.ExecuteThreaded(
+                () => MixScanCache.FindMissionMixFiles(this.romfis, cachedMixInfoFile, CheckAbort),
+                (mix) => BuildMixTrees(mix, loading, CheckAbort), true, null, String.Empty);
         }
 
         private void SetAbort()
@@ -219,7 +225,7 @@ namespace MobiusEditor
 
         private bool CheckAbort()
         {
-            Boolean abort = false;
+            bool abort = false;
             lock (abortLockObj)
             {
                 abort = windowCloseRequested;
@@ -227,89 +233,10 @@ namespace MobiusEditor
             return abort;
         }
 
-        private Dictionary<GameType, List<string>>[] FindMissionMixFiles(MixFileNameGenerator romfis, string cachedMixInfoFile)
-        {
-            INI cachedMixIni = new INI();
-            INI newMixIni = new INI();
-            if (File.Exists(cachedMixInfoFile))
-            {
-                try
-                {
-                    using (TextReader reader = new StreamReader(cachedMixInfoFile, new UTF8Encoding(false)))
-                    {
-                        cachedMixIni.Parse(reader);
-                    }
-                }
-                catch { /* ignore */ }
-            }
-            HashSet<string> classicBaseFolders = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
-            HashSet<string> remasterBaseFolders = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
-            Dictionary<GameType, List<string>> classicMixFiles = new Dictionary<GameType, List<string>>();
-            Dictionary<GameType, List<string>> remasterMixFiles = new Dictionary<GameType, List<string>>();
-            GameInfo[] games = GameTypeFactory.GetGameInfos();
-            String remasterPath = StartupLoader.GetRemasterRunPath(Program.SteamGameId, false);
-            if (remasterPath != null)
-            {
-                remasterPath = Path.Combine(remasterPath, Globals.MegafilePath);
-            }
-            foreach (GameInfo gameInfo in games)
-            {
-                if (CheckAbort())
-                {
-                    return null;
-                }
-                string classicRoot = gameInfo.ClassicFolder;
-                if (!classicBaseFolders.Contains(classicRoot))
-                {
-                    classicBaseFolders.Add(classicRoot);
-                    classicRoot = Path.Combine(Program.ApplicationPath, classicRoot);
-                    if (Directory.Exists(classicRoot))
-                    {
-                        string[] allMixFiles = Directory.GetFiles(classicRoot, "*.mix", SearchOption.TopDirectoryOnly);
-                        List<string> validMixFiles = GetMixFilesWithMissions(gameInfo, allMixFiles, romfis, cachedMixIni, newMixIni, "Classic_");
-                        if (validMixFiles.Count > 0)
-                        {
-                            classicMixFiles.Add(gameInfo.GameType, validMixFiles);
-                        }
-                    }
-                }
-                if (remasterPath == null)
-                {
-                    continue;
-                }
-                string remasterRoot = gameInfo.ClassicFolderRemaster;
-                if (!remasterBaseFolders.Contains(remasterRoot))
-                {
-                    remasterBaseFolders.Add(remasterRoot);
-                    remasterRoot = Path.Combine(remasterPath, remasterRoot);
-                    if (Directory.Exists(remasterRoot))
-                    {
-                        string[] allMixFiles = Directory.GetFiles(remasterRoot, "*.mix", SearchOption.AllDirectories);
-                        List<string> validMixFiles = GetMixFilesWithMissions(gameInfo, allMixFiles, romfis, cachedMixIni, newMixIni, "Remaster_");
-                        if (validMixFiles.Count > 0)
-                        {
-                            remasterMixFiles.Add(gameInfo.GameType, validMixFiles);
-                        }
-                    }
-                }
-            }
-            if (CheckAbort())
-            {
-                return null;
-            }
-            string cachedIni = newMixIni.ToString("\r\n");
-            String cachedMixInfoPath = Path.GetDirectoryName(cachedMixInfoFile);
-            if (!Directory.Exists(cachedMixInfoPath))
-            {
-                Directory.CreateDirectory(cachedMixInfoPath);
-            }
-            File.WriteAllText(cachedMixInfoFile, cachedIni);
-            return new[] { classicMixFiles, remasterMixFiles };
-        }
 
-        private void BuildMixTrees(Dictionary<GameType, List<string>>[] mixFiles, ToolStripMenuItem loadingLabel)
+        private void BuildMixTrees(Dictionary<GameType, List<string>>[] mixFiles, ToolStripMenuItem loadingLabel, Func<bool> checkAbort)
         {
-            if (CheckAbort())
+            if (checkAbort())
             {
                 return;
             }
@@ -324,8 +251,7 @@ namespace MobiusEditor
                 loadingLabel.Text = "No mix files found.";
                 return;
             }
-            GameInfo[] games = GameTypeFactory.GetGameInfos();
-            String remasterPath = StartupLoader.GetRemasterRunPath(Program.SteamGameId, false);
+            string remasterPath = Program.RemasterRunPath;
             if (remasterPath != null)
             {
                 remasterPath = Path.Combine(remasterPath, Globals.MegafilePath);
@@ -341,8 +267,7 @@ namespace MobiusEditor
             {
                 return;
             }
-            GameInfo[] games = GameTypeFactory.GetGameInfos();
-            ToolStripMenuItem mixMenu = itemToRecycle == null ? new ToolStripMenuItem() : itemToRecycle;
+            ToolStripMenuItem mixMenu = itemToRecycle ?? new ToolStripMenuItem();
             mixMenu.Text = label;
             mixMenu.Enabled = true;
             if (itemToRecycle == null)
@@ -353,15 +278,29 @@ namespace MobiusEditor
             {
                 itemToRecycle = null;
             }
+            GameInfo[] games = GameTypeFactory.GetGameInfos();
+            // Check if the editor is configured to support exactly one game.
+            bool singleGame = games.Where(g => g != null).Count() == 1;
             foreach (GameInfo gameInfo in games)
             {
-                string folderRoot = Path.GetFullPath(Path.Combine(baseFolder, forClassic ? gameInfo.ClassicFolder : gameInfo.ClassicFolderRemaster));
+                if (gameInfo == null)
+                {
+                    continue;
+                }
+                // path.combine is smart enough to ignore the base folder if the second argument is rooted.
+                // Need to trim this so an end-backslash in the configured path doesn't foul things up.
+                string folderRoot = Path.GetFullPath(Path.Combine(baseFolder, forClassic ? gameInfo.ClassicFolder : gameInfo.ClassicFolderRemaster))
+                    .TrimEnd(Path.DirectorySeparatorChar);
                 if (!mixFiles.TryGetValue(gameInfo.GameType, out List<string> mixFilesToAdd))
                 {
                     continue;
                 }
-                ToolStripMenuItem gameMenuClassic = new ToolStripMenuItem(gameInfo.Name);
-                mixMenu.DropDownItems.Add(gameMenuClassic);
+                // If only a single game is enabled, do not add a sub-menu with the game name.
+                ToolStripMenuItem gameMenu = singleGame ? mixMenu : new ToolStripMenuItem(gameInfo.Name);
+                if (!singleGame)
+                {
+                    mixMenu.DropDownItems.Add(gameMenu);
+                }
                 foreach (string mixFile in mixFilesToAdd)
                 {
                     string showName = Path.GetFullPath(mixFile).Substring(folderRoot.Length + 1);
@@ -370,157 +309,10 @@ namespace MobiusEditor
                     fileItem.Text = fileText.Replace("&", "&&");
                     fileItem.Tag = mixFile;
                     fileItem.Click += OpenMixFileItem_Click;
-                    fileItem.Visible = true;
-                    gameMenuClassic.DropDownItems.Add(fileItem);
+                    fileItem.Available = true;
+                    gameMenu.DropDownItems.Add(fileItem);
                 }
             }
-        }
-
-        private List<string> GetMixFilesWithMissions(GameInfo gameInfo, string[] allMixFiles, MixFileNameGenerator romfis, INI cachedMixIni, INI newMixIni, string iniPrefix)
-        {
-            string iniSectionName = iniPrefix + gameInfo.IniName;
-            INISection curGameIniSection = cachedMixIni[iniSectionName] ?? null;
-            INISection newGameIniSection = new INISection(iniSectionName);
-            List<string> validMixFiles = new List<string>();
-            foreach (string mixFile in allMixFiles)
-            {
-                if (CheckAbort())
-                {
-                    return validMixFiles;
-                }
-                string fullMixPath = Path.GetFullPath(mixFile);
-                bool mixHandledFromIni = CheckMixPathInIni(fullMixPath, validMixFiles, curGameIniSection, newGameIniSection);
-                if (mixHandledFromIni || !MixFile.CheckValidMix(fullMixPath, gameInfo.CanUseNewMixFormat))
-                {
-                    continue;
-                }
-                using (MixFile mix = new MixFile(fullMixPath, gameInfo.CanUseNewMixFormat))
-                {
-                    romfis.IdentifyMixFile(mix, gameInfo.IniName);
-                    List<MixEntry> entries = MixContentAnalysis.AnalyseFiles(mix, true, null);
-                    int hasMissions = 0;
-                    if (entries.Any(e => e.Type == MixContentType.MapTd || e.Type == MixContentType.MapRa || e.Type == MixContentType.MapSole))
-                    {
-                        validMixFiles.Add(fullMixPath);
-                        hasMissions = 1;
-                    }
-                    // Format: c:\path\mixfile.mix,submix=lastMod,filesize,hasMissions
-                    long timeStamp = File.GetLastWriteTime(fullMixPath).Ticks;
-                    FileInfo mixInfo = new FileInfo(fullMixPath);
-                    string fullMixPathIni = Uri.EscapeDataString("\"" + mixInfo.FullName + "\"");
-                    newGameIniSection[fullMixPathIni] = timeStamp.ToString() + "," + mixInfo.Length.ToString() + "," + hasMissions.ToString();
-                    foreach (MixEntry entry in entries.Where(entr => entr.Type == MixContentType.Mix))
-                    {
-                        string subName = MixPath.GetMixEntryName(entry);
-                        string subMixPath = fullMixPath + ";" + subName;
-                        string subMixPathIni = Uri.EscapeDataString("\"" + subMixPath + "\"");
-                        hasMissions = 0;
-                        using (MixFile subMix = new MixFile(mix, entry))
-                        {
-                            romfis.IdentifyMixFile(subMix, gameInfo.IniName);
-                            List<MixEntry> subEntries = MixContentAnalysis.AnalyseFiles(subMix, true, null);
-                            if (subEntries.Any(e => e.Type == MixContentType.MapTd || e.Type == MixContentType.MapRa || e.Type == MixContentType.MapSole))
-                            {
-                                validMixFiles.Add(subMixPath);
-                                hasMissions = 1;
-                            }
-                            newGameIniSection[subMixPathIni] = timeStamp.ToString() + "," + mixInfo.Length.ToString() + "," + hasMissions.ToString();
-                        }
-                    }
-                }
-            }
-            // Replace old info with new info.
-            newMixIni.Sections.Add(newGameIniSection);
-            return validMixFiles;
-        }
-
-        private bool CheckMixPathInIni(string fullMixPath, List<string> validMixFiles, INISection curGameIniSection, INISection newGameIniSection)
-        {
-            if (curGameIniSection == null)
-            {
-                return false;
-            }
-            Dictionary<string, string> allKeys = curGameIniSection.Keys.ToDictionary();
-            List<string> mixPaths = allKeys.Keys.ToList();
-            for (int i = 0; i < mixPaths.Count; i++)
-            {
-                string path = mixPaths[i];
-                if (path.Length > 0 && path[0] == '%')
-                {
-                    mixPaths[i] = Uri.UnescapeDataString(path).Trim('\"');
-                }
-            }
-            string fullMixPathIni = Uri.EscapeDataString("\"" + fullMixPath + "\"");
-            string mainMixInfo = curGameIniSection.Keys.TryGetValue(fullMixPathIni);
-            if (mainMixInfo == null)
-            {
-                mainMixInfo = curGameIniSection.Keys.TryGetValue(fullMixPath);
-            }
-            if (mainMixInfo == null)
-            {
-                return false;
-            }
-            // Format: c:\path\mixfile.mix,submix=lastMod,filesize,hasMissions
-            string[] mainMixData = mainMixInfo.Split(',');
-            if (mainMixData.Length < 3)
-            {
-                return false;
-            }
-            long timeStamp;
-            long size;
-            int hasMissions;
-            if (!long.TryParse(mainMixData[0], out timeStamp) || !long.TryParse(mainMixData[1], out size) || !int.TryParse(mainMixData[2], out hasMissions))
-            {
-                return false;
-            }
-            FileInfo mixInfo = new FileInfo(fullMixPath);
-            if (!mixInfo.Exists)
-            {
-                return false;
-            }
-            long fileSize = mixInfo.Length;
-            long fileModTime = File.GetLastWriteTime(fullMixPath).Ticks;
-            if (mixInfo.Length != size || timeStamp != fileModTime)
-            {
-                return false;
-            }
-            if (hasMissions == 1)
-            {
-                validMixFiles.Add(fullMixPath);
-            }
-            newGameIniSection[fullMixPathIni] = mainMixInfo;
-            string subMixPathOld = fullMixPath + ",";
-            string subMixPathReplace = fullMixPath + ";";
-            foreach (string mixPath in mixPaths)
-            {
-                if (mixPath.StartsWith(subMixPathReplace) || mixPath.StartsWith(subMixPathOld))
-                {
-                    string mixPathIni = Uri.EscapeDataString("\"" + mixPath + "\"");
-                    string subMixInfo = curGameIniSection.Keys.TryGetValue(mixPathIni);
-                    if (subMixInfo == null)
-                    {
-                        subMixInfo = curGameIniSection.Keys.TryGetValue(mixPath);
-                    }
-                    string usableMixPath = subMixPathReplace + mixPath.Substring(subMixPathOld.Length);
-                    string[] subMixData = subMixInfo.Split(',');
-                    if (subMixData.Length < 3)
-                    {
-                        continue;
-                    }
-                    // Sub-mix info contains the hash and size of the parent, and whether the sub-mix contains missions.
-                    if (!long.TryParse(subMixData[0], out timeStamp) || !long.TryParse(subMixData[1], out size) || !int.TryParse(subMixData[2], out hasMissions)
-                        || timeStamp != fileModTime || size != fileSize)
-                    {
-                        continue;
-                    }
-                    newGameIniSection[mixPathIni] = subMixInfo;
-                    if (hasMissions == 1)
-                    {
-                        validMixFiles.Add(usableMixPath);
-                    }
-                }
-            }
-            return true;
         }
 
         private void OpenMixFileItem_Click(object sender, EventArgs e)
@@ -567,32 +359,44 @@ namespace MobiusEditor
         {
             string mainTitle = Program.ProgramVersionTitle;
             string updating = this.startedUpdate ? " [CHECKING FOR UPDATES]" : String.Empty;
+            string connectedToSteamText = String.Empty;
+            if (SteamworksUGC.IsInit)
+            {
+                string connectedGameId = SteamUtils.GetAppID().m_AppId.ToString();
+                string shortName = null;
+                GameInfo[] infos = GameTypeFactory.GetAvailableGameInfosOrdered();
+                GameInfo currentlySetGame = infos.FirstOrDefault(g => g.SteamId == connectedGameId);
+                shortName = currentlySetGame?.SteamGameNameShort;
+                shortName = String.IsNullOrEmpty(shortName) ? String.Empty : (" as " + shortName);
+                connectedToSteamText = String.Format(" [Connected to Steam{0}]", shortName);
+            }
             if (plugin == null)
             {
-                this.Text = mainTitle + updating;
+                this.Text = mainTitle + updating + connectedToSteamText;
                 return;
             }
             string mapName = plugin.Map.BasicSection.Name;
             GameInfo gi = plugin.GameInfo;
             bool mapNameEmpty = gi.MapNameIsEmpty(mapName);
-            bool fileNameEmpty = filename == null;
-            string mapFilename = "\""
-                + (fileNameEmpty ? MAP_UNTITLED + (loadedFileType == FileType.MIX ? gi.DefaultExtensionFromMix : gi.DefaultExtension) : Path.GetFileName(filename))
-                + "\"";
-            string mapShowName;
-            if (!mapNameEmpty && !fileNameEmpty)
+            string mapFileName;
+            if (loadedMapDisplayFileName != null)
             {
-                mapShowName = mapFilename + " - " + mapName;
-            }
-            else if (!mapNameEmpty)
-            {
-                mapShowName = mapName;
+                mapFileName = Path.GetFileName(loadedMapDisplayFileName);
             }
             else
             {
-                mapShowName = mapFilename;
+                FileType resave = loadedFileType == FileType.MIX ? gi.DefaultSaveTypeFromMix : gi.DefaultSaveType;
+                FileTypeInfo fti = gi.SupportedFileTypes.FirstOrDefault(st => st.FileType == resave);
+                bool isSolo = plugin.Map.BasicSection.SoloMission;
+                string extension = fti == null ? "ini" : (isSolo ? fti.SaveExtensionSingle[0] : fti.SaveExtensionMulti[0]);
+                mapFileName = MAP_UNTITLED + "." + extension;
             }
-            this.Text = String.Format("{0}{1} [{2}] - {3}{4}", mainTitle, updating, gi.Name, mapShowName, plugin != null && plugin.Dirty ? " *" : String.Empty);
+            string mapShowName = "\"" + mapFileName + "\"";
+            if (!mapNameEmpty)
+            {
+                mapShowName += " - " + mapName;
+            }
+            this.Text = String.Format("{0}{1} [{2}] - {3}{4}{5}", mainTitle, updating, gi.Name, mapShowName, plugin != null && plugin.Dirty ? " *" : String.Empty, connectedToSteamText);
         }
 
         private void SteamUpdateTimer_Tick(object sender, EventArgs e)
@@ -742,7 +546,7 @@ namespace MobiusEditor
             {
                 return;
             }
-            mapPanel.IncreaseZoomStep();
+            mapPanel.IncreaseZoomStep(false);
         }
 
         private void ZoomOut()
@@ -751,7 +555,7 @@ namespace MobiusEditor
             {
                 return;
             }
-            mapPanel.DecreaseZoomStep();
+            mapPanel.DecreaseZoomStep(false);
         }
 
         private void ZoomReset()
@@ -864,15 +668,73 @@ namespace MobiusEditor
         {
             // Always remove the label when showing an Open File dialog.
             SimpleMultiThreading.RemoveBusyLabel(this);
-            List<string> filters = new List<string>
+            GameInfo[] gameTypeInfo = GameTypeFactory.GetGameInfos();
+            List<string> gameFilters = new List<string>();
+            HashSet<string> extensionsCheck = new HashSet<string>();
+            List<string> extensions = new List<string>();
+            foreach (GameInfo gameInfo in gameTypeInfo)
             {
-                "All supported types (*.ini;*.bin;*.mix;*.mpr;*.pgm)|*.ini;*.bin;*.mpr;*.mix;*.pgm",
-                TiberianDawn.Constants.FileFilter,
-                RedAlert.Constants.FileFilter,
+                if (gameInfo == null)
+                {
+                    continue;
+                }
+                string filter = gameInfo.Name + " files";
+                HashSet<string> gameExtMap = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
+                List<string> gameExts = new List<string>();
+                foreach (FileTypeInfo fti in gameInfo.SupportedFileTypes)
+                {
+#if !DEVELOPER
+                    if (fti.InternalUse)
+                    {
+                        continue;
+                    }
+#endif
+                    if (fti.HideFromList || (fti.ExpandedType && gameInfo.GameType == GameType.TiberianDawn && !Globals.EnableTdRpmFormat)) 
+                    {
+                        continue;
+                    }
+                    foreach (string ext in fti.SaveExtensionSingle)
+                    {
+                        string extFilter = "*." + (ext.StartsWith(".") ? ext.Substring(1) : ext);
+                        if (!gameExtMap.Contains(extFilter))
+                        {
+                            gameExtMap.Add(extFilter);
+                            gameExts.Add(extFilter);
+                        }
+                    }
+                    foreach (string ext in fti.SaveExtensionMulti)
+                    {
+                        string extFilter = "*." + (ext.StartsWith(".") ? ext.Substring(1) : ext);
+                        if (!gameExtMap.Contains(extFilter))
+                        {
+                            gameExtMap.Add(extFilter);
+                            gameExts.Add(extFilter);
+                        }
+                    }
+                }
+                string filterExts = String.Join(";", gameExts.ToArray());
+                filter += " (" + filterExts + ")|" + filterExts;
+                gameFilters.Add(filter);
+                foreach (string ext in gameExts)
+                {
+                    if (extensionsCheck.Contains(ext))
+                    {
+                        continue;
+                    }
+                    extensions.Add(ext);
+                    extensionsCheck.Add(ext);
+                }
+            }
+            extensions.AddRange(new string[] { "*.mix", "*.pgm" });
+            List<string> filters = new List<string>();
+            filters.Add(String.Format("All supported types ({0})|{0}", String.Join(";", extensions)));
+            filters.AddRange(gameFilters);
+            filters.AddRange(new string[]
+            {
                 "PGM files (*.pgm)|*.pgm",
                 "MIX archives (*.mix)|*.mix",
                 "All files (*.*)|*.*"
-            };
+            });
             string selectedFileName = null;
             ClearActiveTool();
             using (OpenFileDialog ofd = new OpenFileDialog())
@@ -884,7 +746,7 @@ namespace MobiusEditor
                 string lastFolder = mru.Files.Select(f => MRU.GetBaseFileInfo(f).DirectoryName).Where(d => Directory.Exists(d)).FirstOrDefault();
                 if (plugin != null)
                 {
-                    string openFolder = Path.GetDirectoryName(filename);
+                    string openFolder = Path.GetDirectoryName(loadedMapDisplayFileName);
                     string defFolder = plugin.GameInfo.DefaultSaveDirectory;
                     string constFolder = Directory.Exists(defFolder) ? defFolder : Environment.GetFolderPath(Environment.SpecialFolder.Personal);
                     ofd.InitialDirectory = openFolder ?? lastFolder ?? (classicLogic ? Program.ApplicationPath : constFolder);
@@ -925,6 +787,8 @@ namespace MobiusEditor
             {
                 return selectedFile;
             }
+            // Check if this is a mix file to open inside another mix file, without actual map path at the end.
+            // This is used by the "Open from mix" menu.
             string[] internalMixPath = null;
             if (selectedFile.Contains(';'))
             {
@@ -983,20 +847,25 @@ namespace MobiusEditor
                 afterSaveDone?.Invoke();
                 return;
             }
-            if (String.IsNullOrEmpty(filename) || MixPath.IsMixPath(filename) || !Directory.Exists(Path.GetDirectoryName(filename)) || loadedFileType == FileType.MIX)
+            if (String.IsNullOrEmpty(loadedMapDisplayFileName) || (actualLoadedFileName != null && MixPath.IsMixPath(actualLoadedFileName))
+                || !Directory.Exists(Path.GetDirectoryName(loadedMapDisplayFileName)) || loadedFileType == FileType.MIX
+#if !DEVELOPER
+                || loadedFileType == FileType.PGM
+#endif
+                )
             {
                 SaveAsAction(afterSaveDone, skipValidation);
                 return;
             }
-            if (!this.DoValidate())
+            if (!skipValidation && !this.DoValidate(loadedFileType, true))
             {
                 if (continueOnError)
                 {
-                    afterSaveDone();
+                    afterSaveDone?.Invoke();
                 }
                 return;
             }
-            var fileInfo = new FileInfo(filename);
+            FileInfo fileInfo = new FileInfo(loadedMapDisplayFileName);
             SaveChosenFile(fileInfo.FullName, loadedFileType, dontResavePreview, afterSaveDone);
         }
 
@@ -1012,41 +881,167 @@ namespace MobiusEditor
                 afterSaveDone?.Invoke();
                 return;
             }
-            if (!skipValidation && !this.DoValidate())
+            if (!skipValidation && !this.DoValidate(FileType.None, false))
             {
                 return;
             }
             ClearActiveTool();
             string savePath = null;
+            GameInfo gi = plugin.GameInfo;
+            bool classicLogic = Globals.UseClassicFiles && Globals.ClassicNoRemasterLogic;
+            bool forSingle = plugin.Map.BasicSection.SoloMission;
+            string lastFolder = mru.Files.Select(f => MRU.GetBaseFileInfo(f).DirectoryName).Where(d => Directory.Exists(d)).FirstOrDefault();
+            string openFolder = Path.GetDirectoryName(loadedMapDisplayFileName);
+            string defFolder = gi.DefaultSaveDirectory;
+            string constFolder = Directory.Exists(defFolder) ? defFolder : Environment.GetFolderPath(Environment.SpecialFolder.Personal);
+            List<string> filters = new List<string>();
+            List<FileType> filterTypes = new List<FileType>();
+            int selected = -1;
+            int selectedExtIndex = -1;
+            int selectedFallbackMain = -1;
+            int selectedFallbackMainExtIndex = -1;
+            int selectedFallbackSec = -1;
+            int selectedFallbackSecExtIndex = -1;
+            string fileName = Path.GetFileName(loadedMapDisplayFileName);
+            string curExt = Path.GetExtension(fileName);
+            FileType saveType = loadedFileType;
+            bool correctSaveExt = false;
+            if (saveType == FileType.None)
+            {
+                saveType = gi.DefaultSaveType;
+                correctSaveExt = true;
+            }
+            else if (saveType == FileType.MIX)
+            {
+                saveType = gi.DefaultSaveTypeFromMix;
+                correctSaveExt = true;
+            }
+#if !DEVELOPER
+            else if (saveType == FileType.PGM)
+            {
+                saveType = gi.DefaultSaveTypeFromPgm;
+                correctSaveExt = true;
+            }
+#endif
+            if (correctSaveExt)
+            {
+                FileTypeInfo fti = gi.SupportedFileTypes.FirstOrDefault(st => st.FileType == saveType);
+                bool isSolo = plugin.Map.BasicSection.SoloMission;
+                if (fti == null) {
+                    fti = gi.SupportedFileTypes.FirstOrDefault(st => (isSolo ? st.SaveExtsSingleTypes : st.SaveExtsMultiTypes).Contains(saveType));
+                }
+                curExt = fti == null ? "ini" : (isSolo ? fti.SaveExtensionSingle[0] : fti.SaveExtensionMulti[0]);
+            }
+            List<string[]> allExtensions = new List<string[]>();
+            if (curExt.StartsWith("."))
+            {
+                curExt = curExt.Substring(1);
+            }
+            Dictionary<FileType, FileTypeInfo> selectTypes = new Dictionary<FileType, FileTypeInfo>();
+            foreach (FileTypeInfo fti in gi.SupportedFileTypes)
+            {
+#if !DEVELOPER
+                if (fti.InternalUse)
+                {
+                    continue;
+                }
+#endif
+                if (fti.HideFromList || selectTypes.ContainsKey(fti.FileType) 
+                    || (fti.ExpandedType && gi.GameType == GameType.TiberianDawn && !Globals.EnableTdRpmFormat))
+                {
+                    continue;
+                }
+                selectTypes.Add(fti.FileType, fti);
+                string saveFilter = fti.GetSaveFilters(forSingle, filterTypes, out string[] curExtensions, out FileType[] curTypes);
+                int typeIndex = curTypes.ToList().FindIndex(ft => ft == saveType);
+                // int extIndex = curExtensions.ToList().FindIndex(e => e.Equals(curExt, StringComparison.OrdinalIgnoreCase));
+                if (fti.FileType == saveType && selected == -1)
+                {
+                    selected = filters.Count;
+                    selectedExtIndex = typeIndex;
+                }
+                if (fti.FileType != saveType && selectedFallbackMain == -1 && typeIndex == 0)
+                {
+                    selectedFallbackMain = filters.Count;
+                    selectedFallbackMainExtIndex = typeIndex;
+                }
+                if (fti.FileType != saveType && selectedFallbackSec == -1 && typeIndex > 0)
+                {
+                    selectedFallbackSec = filters.Count;
+                    selectedFallbackSecExtIndex = typeIndex;
+                }
+                filters.Add(saveFilter);
+                allExtensions.Add(curExtensions);
+            }
+            if (selected == -1)
+            {
+                selected = selectedFallbackMain;
+                selectedExtIndex = selectedFallbackMainExtIndex;
+            }
+            if (selected == -1)
+            {
+                selected = selectedFallbackSec;
+                selectedExtIndex = selectedFallbackSecExtIndex;
+            }
+            if (selected == -1)
+            {
+                selected = 0;
+                selectedExtIndex = 0;
+            }
+            if (selectedExtIndex == -1)
+            {
+                selectedExtIndex = 0;
+            }            
             using (SaveFileDialog sfd = new SaveFileDialog())
             {
-                GameInfo gi = plugin.GameInfo;
+                string[] validExtensions = allExtensions[selected];
+                string finalExt = validExtensions[selectedExtIndex];
                 sfd.AutoUpgradeEnabled = false;
-                sfd.RestoreDirectory = false;
-                bool classicLogic = Globals.UseClassicFiles && Globals.ClassicNoRemasterLogic;
-                string lastFolder = mru.Files.Select(f => MRU.GetBaseFileInfo(f).DirectoryName).Where(d => Directory.Exists(d)).FirstOrDefault();
-                string openFolder = Path.GetDirectoryName(filename);
-                string defFolder = gi.DefaultSaveDirectory;
-                string constFolder = Directory.Exists(defFolder) ? defFolder : Environment.GetFolderPath(Environment.SpecialFolder.Personal);
-                var filters = new List<string>();
-                filters.Add(gi.SaveFilter);
-                filters.Add("All files (*.*)|*.*");
+                sfd.RestoreDirectory = true;
                 sfd.InitialDirectory = openFolder ?? lastFolder ?? (classicLogic ? Program.ApplicationPath : constFolder);
                 sfd.Filter = String.Join("|", filters);
-                if (!String.IsNullOrEmpty(filename))
+                sfd.FilterIndex = selected + 1;
+                sfd.AddExtension = true;
+                sfd.DefaultExt = finalExt;
+                if (!String.IsNullOrEmpty(loadedMapDisplayFileName))
                 {
-                    sfd.FileName = Path.GetFileName(filename);
+                    // Do not change extension; if it's nonstandard, just leave it.
+                    string fileNameFinal = Path.GetFileName(loadedMapDisplayFileName);
+                    sfd.FileName = fileNameFinal;
                 }
                 else
                 {
                     string name = gi.MapNameIsEmpty(plugin.Map.BasicSection.Name)
                         ? MAP_UNTITLED
-                        : String.Join("_", plugin.Map.BasicSection.Name.Split(Path.GetInvalidFileNameChars()));
-                    sfd.FileName = name + (loadedFileType == FileType.MIX ? gi.DefaultExtensionFromMix : gi.DefaultExtension);
+                        : String.Join("_", plugin.Map.BasicSection.Name.Split(Path.GetInvalidFileNameChars()));                    
+                    sfd.FileName = name + "." + finalExt;
                 }
                 if (sfd.ShowDialog(this) == DialogResult.OK)
                 {
                     savePath = sfd.FileName;
+                    saveType = filterTypes[sfd.FilterIndex - 1];
+                    // Ensure that the selected extension reflects the correct type
+                    if (selectTypes.TryGetValue(saveType, out FileTypeInfo selectType))
+                    {
+                        string ext = Path.GetExtension(savePath);
+                        if (ext.StartsWith("."))
+                        {
+                            ext = ext.Substring(1);
+                        }
+                        List<string> exts = new List<string>(forSingle ? selectType.SaveExtensionSingle : selectType.SaveExtensionMulti);
+                        int index = exts.FindIndex(e => ext.Equals(e, StringComparison.OrdinalIgnoreCase));
+                        FileType[] ftypes = forSingle ? selectType.SaveExtsSingleTypes : selectType.SaveExtsMultiTypes;
+                        if (index != -1)
+                        {
+                            saveType = ftypes[index];
+                        }
+                        else
+                        {
+                            // Not found: assume that if e.g. a ".map" file was opened and identified as BIN, then if they resave as ".map" it's still meant to be the BIN.
+                            // If the loaded type does not exist in the current chosen list though, all bets are off; revert to default type.
+                            saveType = ftypes.Contains(loadedFileType) ? loadedFileType : ftypes[0];
+                        }
+                    }
                 }
             }
             if (savePath == null)
@@ -1059,17 +1054,28 @@ namespace MobiusEditor
                 {
                     RefreshActiveTool(true);
                 }
+                return;
             }
-            else
+            // Specific validation for save type.
+            if (!this.DoValidate(saveType, false))
             {
-                var fileInfo = new FileInfo(savePath);
-                SaveChosenFile(fileInfo.FullName, FileType.INI, false, afterSaveDone);
+                if (afterSaveDone != null)
+                {
+                    afterSaveDone.Invoke();
+                }
+                else
+                {
+                    RefreshActiveTool(true);
+                }
+                return;
             }
+            FileInfo fileInfo = new FileInfo(savePath);
+            SaveChosenFile(fileInfo.FullName, saveType, false, afterSaveDone);
         }
 
-        private bool DoValidate()
+        private bool DoValidate(FileType fileType, bool forResave)
         {
-            string errors = plugin.Validate(true);
+            string errors = plugin.Validate(fileType, forResave, true);
             if (!String.IsNullOrEmpty(errors))
             {
                 string message = errors + "\n\nContinue map save?";
@@ -1079,7 +1085,7 @@ namespace MobiusEditor
                     return false;
                 }
             }
-            errors = plugin.Validate(false);
+            errors = plugin.Validate(fileType, forResave, false);
             if (errors != null)
             {
                 SimpleMultiThreading.ShowMessageBoxThreadSafe(this, errors, "Validation Error", MessageBoxButtons.OK, MessageBoxIcon.Warning);
@@ -1095,7 +1101,7 @@ namespace MobiusEditor
             {
                 return;
             }
-            String errors = plugin.Validate();
+            string errors = plugin.Validate();
             if (errors != null)
             {
                 MessageBox.Show(errors, "Validation Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
@@ -1113,6 +1119,8 @@ namespace MobiusEditor
                     savePath = sfd.FileName;
                 }
             }
+            // No clue why it finds it necessary to change this. Set it back so all the Steam logic keeps working.
+            Environment.CurrentDirectory = Globals.WorkingDirectory;
             if (savePath != null)
             {
                 plugin.Save(savePath, FileType.MEG);
@@ -1167,6 +1175,7 @@ namespace MobiusEditor
             }
             bool wasSolo = plugin.Map.BasicSection.SoloMission;
             bool wasExpanded = plugin.Map.BasicSection.ExpansionEnabled;
+            string oldBase = plugin.Map.BasicSection.BasePlayer;
             PropertyTracker<BasicSection> basicSettings = new PropertyTracker<BasicSection>(plugin.Map.BasicSection);
             PropertyTracker<BriefingSection> briefingSettings = new PropertyTracker<BriefingSection>(plugin.Map.BriefingSection);
             PropertyTracker<SoleSurvivor.CratesSection> cratesSettings = null;
@@ -1183,6 +1192,7 @@ namespace MobiusEditor
             bool multiStatusChanged = false;
             bool iniTextChanged = false;
             bool footPrintsChanged = false;
+            HashSet<Point> refreshPoints = null;
             ClearActiveTool();
             using (MapSettingsDialog msd = new MapSettingsDialog(plugin, basicSettings, briefingSettings, cratesSettings, houseSettingsTrackers, extraIniText))
             {
@@ -1225,7 +1235,7 @@ namespace MobiusEditor
                     // TODO: give warning on the multiplay rules changes.
                     if (amStatusChanged || multiStatusChanged || iniTextChanged)
                     {
-                        IEnumerable<string> errors = plugin.SetExtraIniText(normalised, out footPrintsChanged);
+                        IEnumerable<string> errors = plugin.SetExtraIniText(normalised, out footPrintsChanged, out refreshPoints);
                         if (errors != null && errors.Count() > 0)
                         {
                             using (ErrorMessageBox emb = new ErrorMessageBox())
@@ -1240,11 +1250,33 @@ namespace MobiusEditor
                         // Maybe make more advanced logic to check if any bibs changed, and don't clear if not needed?
                         hasChanges = true;
                     }
-                    plugin.Dirty = hasChanges;
+                    if (!String.Equals(oldBase, plugin.Map.BasicSection.BasePlayer))
+                    {
+                        IEnumerable<Point> basePoints = plugin.Map.Buildings
+                            .OfType<Building>()
+                            .Where(lo => !lo.Occupier.IsPrebuilt)
+                            .SelectMany(lo => OccupierSet.GetOccupyPoints(lo.Location, lo.Occupier)).Distinct();
+                        if (basePoints.Count() > 0)
+                        {
+                            if (refreshPoints == null)
+                            {
+                                refreshPoints = new HashSet<Point>();
+                            }
+                            refreshPoints.UnionWith(basePoints);
+                        }
+                    }
+                    if (hasChanges)
+                    {
+                        plugin.Dirty = true;
+                    }
                 }
             }
+            // Might need updating is solo mission status changed.
+            SetMenuItemsVisible();
             // Only do full repaint if changes happened that might need a repaint (bibs, removed units, flags).
-            RefreshActiveTool(!footPrintsChanged && !expansionWiped && !multiStatusChanged);
+            bool softRefresh = !footPrintsChanged && !expansionWiped && !multiStatusChanged;
+            RefreshActiveTool(softRefresh);
+            plugin.Map.NotifyRulesChanges(refreshPoints == null || !softRefresh ? new HashSet<Point>() : refreshPoints);
             if (footPrintsChanged || amStatusChanged)
             {
                 // If Aftermath units were disabled, we can't guarantee none of them are still in
@@ -1262,61 +1294,7 @@ namespace MobiusEditor
                 return;
             }
             ClearActiveTool();
-            using (TeamTypesDialog ttd = new TeamTypesDialog(plugin))
-            {
-                ttd.StartPosition = FormStartPosition.CenterParent;
-                if (ttd.ShowDialog(this) == DialogResult.OK)
-                {
-                    List<TeamType> oldTeamTypes = plugin.Map.TeamTypes.ToList();
-                    // Clone of old triggers
-                    List<Trigger> oldTriggers = plugin.Map.Triggers.Select(tr => tr.Clone()).ToList();
-                    plugin.Map.TeamTypes.Clear();
-                    plugin.Map.ApplyTeamTypeRenames(ttd.RenameActions);
-                    // Triggers in their new state after the teamtype item renames.
-                    List<Trigger> newTriggers = plugin.Map.Triggers.Select(tr => tr.Clone()).ToList();
-                    plugin.Map.TeamTypes.AddRange(ttd.TeamTypes.OrderBy(t => t.Name, new ExplorerComparer()).Select(t => t.Clone()));
-                    List<TeamType> newTeamTypes = plugin.Map.TeamTypes.ToList();
-                    bool origDirtyState = plugin.Dirty;
-                    void undoAction(UndoRedoEventArgs ev)
-                    {
-                        ClearActiveTool();
-                        DialogResult dr = MessageBox.Show(this, "This will undo all teamtype editing actions you performed. Are you sure you want to continue?",
-                            "Warning", MessageBoxButtons.YesNo, MessageBoxIcon.Warning);
-                        if (dr == DialogResult.No)
-                        {
-                            ev.Cancelled = true;
-                        }
-                        else if (ev.Plugin != null)
-                        {
-                            ev.Map.Triggers = oldTriggers;
-                            ev.Map.TeamTypes.Clear();
-                            ev.Map.TeamTypes.AddRange(oldTeamTypes);
-                            ev.Plugin.Dirty = origDirtyState;
-                        }
-                        RefreshActiveTool(true);
-                    }
-                    void redoAction(UndoRedoEventArgs ev)
-                    {
-                        ClearActiveTool();
-                        DialogResult dr = MessageBox.Show(this, "This will redo all teamtype editing actions you undid. Are you sure you want to continue?",
-                            "Warning", MessageBoxButtons.YesNo, MessageBoxIcon.Warning);
-                        if (dr == DialogResult.No)
-                        {
-                            ev.Cancelled = true;
-                        }
-                        else if (ev.Plugin != null)
-                        {
-                            ev.Map.TeamTypes.Clear();
-                            ev.Map.TeamTypes.AddRange(newTeamTypes);
-                            ev.Map.Triggers = newTriggers;
-                            ev.Plugin.Dirty = true;
-                        }
-                        RefreshActiveTool(true);
-                    }
-                    url.Track(undoAction, redoAction, ToolType.None);
-                    plugin.Dirty = true;
-                }
-            }
+            TeamTypesDialog.ShowTeamTypesEditor(this, plugin, url, null);
             RefreshActiveTool(true);
         }
 
@@ -1327,7 +1305,7 @@ namespace MobiusEditor
                 return;
             }
             ClearActiveTool();
-            using (TriggersDialog td = new TriggersDialog(plugin))
+            using (TriggersDialog td = new TriggersDialog(plugin, null))
             {
                 td.StartPosition = FormStartPosition.CenterParent;
                 if (td.ShowDialog(this) == DialogResult.OK)
@@ -1335,7 +1313,7 @@ namespace MobiusEditor
                     List<Trigger> newTriggers = td.Triggers.OrderBy(t => t.Name, new ExplorerComparer()).ToList();
                     if (Trigger.CheckForChanges(plugin.Map.Triggers.ToList(), newTriggers))
                     {
-                        bool origDirtyState = plugin.Dirty;
+                        bool origEmptyState = plugin.Empty;
                         Dictionary<object, string> undoList;
                         Dictionary<object, string> redoList;
                         Dictionary<CellTrigger, int> cellTriggerLocations;
@@ -1381,7 +1359,8 @@ namespace MobiusEditor
                             if (ev.Plugin != null)
                             {
                                 ev.Map.Triggers = oldTriggers;
-                                ev.Plugin.Dirty = origDirtyState;
+                                ev.Plugin.Empty = origEmptyState;
+                                ev.Plugin.Dirty = !ev.NewStateIsClean;
                             }
                             // Repaint map labels
                             ev.MapPanel?.Invalidate();
@@ -1420,7 +1399,9 @@ namespace MobiusEditor
                             if (ev.Plugin != null)
                             {
                                 ev.Map.Triggers = newTriggers;
-                                ev.Plugin.Dirty = true;
+                                // Redo can never restore the "empty" state, but CAN be the point at which a save was done.
+                                ev.Plugin.Empty = false;
+                                ev.Plugin.Dirty = !ev.NewStateIsClean;
                             }
                             // Repaint map labels
                             ev.MapPanel?.Invalidate();
@@ -1428,8 +1409,6 @@ namespace MobiusEditor
                         }
                         // These changes can affect a whole lot of tools.
                         url.Track(undoAction, redoAction, ToolType.Terrain | ToolType.Infantry | ToolType.Unit | ToolType.Building | ToolType.CellTrigger);
-                        // No longer a full refresh, since celltriggers function is no longer disabled when no triggers are found.
-                        mapPanel.Invalidate();
                     }
                 }
             }
@@ -1482,15 +1461,6 @@ namespace MobiusEditor
             }
         }
 
-        private void toolsOptionsOutlineAllCratesMenuItem_Click(object sender, EventArgs e)
-        {
-            if (sender is ToolStripMenuItem tsmi)
-            {
-                Globals.OutlineAllCrates = tsmi.Checked;
-            }
-            mapPanel.Invalidate();
-        }
-
         private void ToolsStatsGameObjectsMenuItem_Click(object sender, EventArgs e)
         {
             if (plugin == null)
@@ -1500,7 +1470,7 @@ namespace MobiusEditor
             ClearActiveTool();
             using (ErrorMessageBox emb = new ErrorMessageBox())
             {
-                emb.Title = "Map objects";
+                emb.Title = "Map Objects";
                 emb.Message = "Map objects overview:";
                 emb.Errors = plugin.AssessMapItems();
                 emb.StartPosition = FormStartPosition.CenterParent;
@@ -1518,7 +1488,7 @@ namespace MobiusEditor
             ClearActiveTool();
             using (ErrorMessageBox emb = new ErrorMessageBox())
             {
-                emb.Title = "Power usage";
+                emb.Title = "Power Balance";
                 emb.Message = "Power balance per House:";
                 emb.Errors = plugin.Map.AssessPower(plugin.GetHousesWithProduction());
                 emb.StartPosition = FormStartPosition.CenterParent;
@@ -1536,7 +1506,7 @@ namespace MobiusEditor
             ClearActiveTool();
             using (ErrorMessageBox emb = new ErrorMessageBox())
             {
-                emb.Title = "Silo storage";
+                emb.Title = "Silo Storage";
                 emb.Message = "Available silo storage per House:";
                 emb.Errors = plugin.Map.AssessStorage(plugin.GetHousesWithProduction());
                 emb.StartPosition = FormStartPosition.CenterParent;
@@ -1564,7 +1534,7 @@ namespace MobiusEditor
             }
             ClearActiveTool();
             string lastFolder = mru.Files.Select(f => MRU.GetBaseFileInfo(f).DirectoryName).Where(d => Directory.Exists(d)).FirstOrDefault();
-            using (ImageExportDialog imex = new ImageExportDialog(plugin, activeLayers, filename, lastFolder))
+            using (ImageExportDialog imex = new ImageExportDialog(plugin, activeLayers, loadedMapDisplayFileName, lastFolder))
             {
                 imex.StartPosition = FormStartPosition.CenterParent;
                 imex.ShowDialog(this);
@@ -1600,7 +1570,7 @@ namespace MobiusEditor
         {
             if (MRU.CheckIfExist(name))
             {
-                OpenFileAsk(name, false);
+                OpenFileAsk(name, true);
             }
             else
             {
@@ -1640,7 +1610,7 @@ namespace MobiusEditor
 
         private void NewFile(bool withImage, string imagePath)
         {
-            GameType gameType = GameType.None;
+            GameInfo gameInfo = null;
             string theater = null;
             bool isMegaMap = false;
             bool isSinglePlay = false;
@@ -1652,12 +1622,11 @@ namespace MobiusEditor
                     RefreshActiveTool(true);
                     return;
                 }
-                gameType = nmd.GameType;
+                gameInfo = nmd.GameInfo;
                 isMegaMap = nmd.MegaMap;
                 isSinglePlay = nmd.SinglePlayer;
                 theater = nmd.Theater;
             }
-            GameInfo gType = GameTypeFactory.GetGameInfo(gameType);
             if (withImage && imagePath == null)
             {
                 using (OpenFileDialog ofd = new OpenFileDialog())
@@ -1672,7 +1641,7 @@ namespace MobiusEditor
                     }
                     imagePath = ofd.FileName;
                 }
-                Size size = isMegaMap ? gType.MapSizeMega : gType.MapSize;
+                Size size = isMegaMap ? gameInfo.MapSizeMega : gameInfo.MapSize;
                 Size imageSize;
                 try
                 {
@@ -1689,24 +1658,24 @@ namespace MobiusEditor
                 // Warn when size doesn't match map size.
                 if (imageSize.Width > size.Width || imageSize.Height > size.Height)
                 {
-                    string mapStr = ((isMegaMap && !gType.MegamapIsOptional) || (!isMegaMap && !gType.MegamapIsDefault)) ? "{0} map"
+                    string mapStr = ((isMegaMap && !gameInfo.MegamapIsOptional) || (!isMegaMap && !gameInfo.MegamapIsDefault)) ? "{0} map"
                         : (isMegaMap ? "{0} megamap" : "small {0} map");
                     const string messageTemplate = "The image you have chosen is {0}larger than the map size. " +
                         "Note that every pixel on the image represents one cell on the map, so for a {2}, the expected image size is {3}×{4}.\n\n" +
                         "This function is meant to allow map makers to plan out the layout of their map in an image editor, " +
                         "with more tools available in terms of symmetry, copy-pasting, drawing straight lines, drawing curves, etc" +
-                        "{1}" + 
-                        ".\n\n" +
+                        "{1}.\n\n" +
+                        "For more information, consult the MANUAL.MD file on the GitHub page.\n\n" +
                         "Are you sure you want to continue?";
-                    object[] parms = { String.Empty, String.Empty, String.Format(mapStr, gType.Name), size.Width, size.Height };
+                    object[] parms = { String.Empty, String.Empty, String.Format(mapStr, gameInfo.Name), size.Width, size.Height };
                     // If either total size is larger than double, or one of the sizes is larger than 3x that dimension, they're Probably Doing It Wrong; give extra info.
-                    if ((imageSize.Width > size.Width * 2 && imageSize.Height > size.Height * 2) || imageSize.Width > size.Width * 3 || imageSize.Height > size.Height * 2)
+                    if ((imageSize.Width > size.Width * 2 && imageSize.Height > size.Height * 2) || imageSize.Width > size.Width * 3 || imageSize.Height > size.Height * 3)
                     {
                         parms[0] = "much ";
                         parms[1] = ", but it can't magically convert an image into a map looking like the image";
                     }
-                    string messageSize = string.Format(messageTemplate, parms);
-                    DialogResult dr = MessageBox.Show(this, messageSize, "Warning", MessageBoxButtons.YesNo, MessageBoxIcon.Error);
+                    string messageSize = String.Format(messageTemplate, parms);
+                    DialogResult dr = MessageBox.Show(this, messageSize, "Warning", MessageBoxButtons.YesNo, MessageBoxIcon.Warning);
                     if (dr != DialogResult.Yes)
                     {
                         return;
@@ -1718,7 +1687,7 @@ namespace MobiusEditor
             if (withImage)
                 loading += " from image";
             loadMultiThreader.ExecuteThreaded(
-                () => NewFile(gameType, imagePath, theater, isMegaMap, isSinglePlay, this),
+                () => NewFile(gameInfo, imagePath, theater, isMegaMap, isSinglePlay, this),
                 PostLoad, true,
                 (e, l) => LoadUnloadUi(e, l, loadMultiThreader),
                 loading);
@@ -1745,21 +1714,40 @@ namespace MobiusEditor
             string loadName = fileName;
             string feedbackName = fileName;
             bool nameIsId = false;
-            if (!isMix)
+            try
             {
-                FileInfo fileInfo = new FileInfo(fileName);
-                loadName = fileInfo.FullName;
-                feedbackName = fileInfo.FullName;
+                if (!isMix)
+                {
+                    FileInfo fileInfo = new FileInfo(fileName);
+                    loadName = fileInfo.FullName;
+                    feedbackName = fileInfo.FullName;
+                }
+                else
+                {
+                    MixPath.GetComponentsViewable(fileName, out string[] mixParts, out _);
+                    // To ensure this is stored in case creating "FileInfo" crashes.
+                    loadName = mixParts[0];
+                    FileInfo fileInfo = new FileInfo(loadName);
+                    loadName = fileInfo.FullName;
+                    feedbackName = MixPath.GetFileNameReadable(fileName, false, out nameIsId);
+                }
+                if (!File.Exists(loadName))
+                {
+                    MessageBox.Show("File not found \"" + loadName + "\"");
+                    return;
+                }
             }
-            else
+            catch(IOException)
             {
-                MixPath.GetComponentsViewable(fileName, out string[] mixParts, out _);
-                FileInfo fileInfo = new FileInfo(mixParts[0]);
-                loadName = fileInfo.FullName;
-                feedbackName = MixPath.GetFileNameReadable(fileName, false, out nameIsId);
+                MessageBox.Show("Cannot access file \"" + loadName + "\"");
+                return;
             }
-            if (!IdentifyMap(fileName, out FileType fileType, out GameType gameType, out bool isMegaMap, out string theater) && !isMix)
+            /// Main logic to detect the map type
+            MapLoadInfo info = IdentifyMap(fileName);
+            // Handle failure
+            if ((info == null || info.GameType == GameType.None) && !isMix)
             {
+                // If not a map, see if it is maybe an image.
                 string extension = Path.GetExtension(loadName).TrimStart('.');
                 // No point in supporting jpeg here; the mapping needs distinct colours without fades.
                 if ("PNG".Equals(extension, StringComparison.OrdinalIgnoreCase)
@@ -1800,78 +1788,89 @@ namespace MobiusEditor
                             List<MixEntry> entries = romfis.IdentifySingleFile(affectedId);
                             if (entries.Count == 1)
                             {
-                                message += string.Format(" (File id identified as \"{0}\")", entries[0].Name);
+                                message += String.Format(" (File id identified as \"{0}\")", entries[0].Name);
                             }
                             else if (entries.Count > 1)
                             {
-                                message += string.Format(" (Possible name matches: {0})", String.Join(", ", entries.Select(entr => "\"" + entr.Name + "\"").ToArray()));
+                                message += String.Format(" (Possible name matches: {0})", String.Join(", ", entries.Select(entr => "\"" + entr.Name + "\"").ToArray()));
                             }
                         }
                     }
                 }
-                MessageBox.Show(this, String.Format("Error loading {0}: ", feedbackName) + message, "Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
+                MessageBox.Show(this, String.Format("Error loading {0}:\n\n", feedbackName) + message, Program.ProgramName, MessageBoxButtons.OK, MessageBoxIcon.Error);
                 RefreshActiveTool(true);
                 return;
             }
-            GameInfo gType = GameTypeFactory.GetGameInfo(gameType);
-            TheaterType[] theaters = gType != null ? gType.AllTheaters : null;
-            TheaterType theaterObj = theaters == null ? null : theaters.Where(th => th.Name.Equals(theater, StringComparison.OrdinalIgnoreCase)).FirstOrDefault();
+            GameInfo[] gameInfos = GameTypeFactory.GetGameInfos();
+            GameInfo[] allgameInfos = GameTypeFactory.GetGameInfos(true);
+            GameInfo gameInfo = gameInfos[(int)info.GameType];
+            GameInfo gameInfoActual = allgameInfos[(int)info.GameType];
+            if (gameInfo == null)
+            {
+                string name = gameInfoActual?.Name ?? info.GameType.ToString();
+                string message = "This instance of the editor is not configured to support " + name + " maps.";
+                MessageBox.Show(this, String.Format("Error loading {0}:\n\n", feedbackName) + message, Program.ProgramName, MessageBoxButtons.OK, MessageBoxIcon.Error);
+                RefreshActiveTool(true);
+                return;
+            }
+            TheaterType theaterObj = gameInfo.AllTheaters?.Where(th => th.Name.Equals(info.Theater, StringComparison.OrdinalIgnoreCase)).FirstOrDefault();
             if (theaterObj == null)
             {
-                MessageBox.Show(this, String.Format("Unknown {0} theater \"{1}\"", gType.Name, theater), "Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
+                MessageBox.Show(this, String.Format("Unknown {0} theater \"{1}\"", gameInfo.Name, info.Theater), Program.ProgramName, MessageBoxButtons.OK, MessageBoxIcon.Error);
                 RefreshActiveTool(true);
                 return;
             }
             if (!theaterObj.IsAvailable())
             {
                 string graphicsMode = Globals.UseClassicFiles ? "Classic" : "Remastered";
-                string message = String.Format("Error loading {0}: No assets found for {1} theater \"{2}\" in {3} graphics mode.",
-                    feedbackName, gType.Name, theaterObj.Name, graphicsMode);
+                string message = String.Format("Error loading {0}:\n\nNo assets found for {1} theater \"{2}\" in {3} graphics mode.",
+                    feedbackName, gameInfo.Name, theaterObj.Name, graphicsMode);
                 if (Globals.UseClassicFiles)
                 {
                     message += String.Format("\n\nYou may need to adjust the \"{0}\" setting to point to a game folder containing {1}, or add {1} to the configured folder.",
-                        gType.ClassicFolderSetting, theaterObj.ClassicTileset + ".mix");
+                        gameInfo.ClassicFolderSetting, theaterObj.ClassicTileset + ".mix");
                 }
                 else
                 {
                     message += "\n\nYou may need to switch to Classic graphics mode by enabling the \"UseClassicFiles\" setting to use this theater.";
                 }
-                MessageBox.Show(this, message, "Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
+                MessageBox.Show(this, message, Program.ProgramName, MessageBoxButtons.OK, MessageBoxIcon.Error);
                 RefreshActiveTool(true);
                 return;
             }
             loadMultiThreader.ExecuteThreaded(
-                () => LoadFile(fileName, fileType, gType, theater, isMegaMap),
+                () => LoadFile(fileName, info, gameInfo),
                 PostLoad, true,
                 (e, l) => LoadUnloadUi(e, l, loadMultiThreader),
                 "Loading map");
         }
 
-        private void SaveChosenFile(string saveFilename, FileType inputNameType, bool dontResavePreview, Action afterSaveDone)
+        private void SaveChosenFile(string saveFilename, FileType saveType, bool dontResavePreview, Action afterSaveDone)
         {
             // This part assumes validation is already done.
-            FileType fileType = FileType.None;
-            switch (Path.GetExtension(saveFilename).ToLower())
+            GameInfo gi = plugin.GameInfo;
+            bool allowInternalUse = false;
+            if (saveType == FileType.None)
             {
-                case ".ini":
-                case ".mpr":
-                    fileType = FileType.INI;
-                    break;
-                case ".bin":
-                    fileType = FileType.BIN;
-                    break;
+                saveType = gi.DefaultSaveType;
             }
-            if (fileType == FileType.None)
+            else if (saveType == FileType.MIX)
             {
-                if (inputNameType != FileType.None)
-                {
-                    fileType = inputNameType;
-                }
-                else
-                {
-                    // Just default to ini
-                    fileType = FileType.INI;
-                }
+                saveType = gi.DefaultSaveTypeFromMix;
+            }
+#if !DEVELOPER
+            else if (saveType == FileType.PGM)
+            {
+                saveType = gi.DefaultSaveTypeFromPgm;
+            }
+#else
+            allowInternalUse = true;
+#endif
+            if (gi.SupportedFileTypes.FirstOrDefault(sf => (!sf.InternalUse || allowInternalUse)
+                && (!sf.ExpandedType || (gi.GameType == GameType.TiberianDawn && Globals.EnableTdRpmFormat))
+                && sf.FileType == saveType) == null)
+            {
+                saveType = gi.DefaultSaveType;
             }
             if (plugin.GameInfo.MapNameIsEmpty(plugin.Map.BasicSection.Name))
             {
@@ -1885,155 +1884,192 @@ namespace MobiusEditor
             ToolType current = ActiveToolType;
             // Different multithreader, so save prompt can start a map load.
             saveMultiThreader.ExecuteThreaded(
-                () => SaveFile(plugin, saveFilename, fileType, dontResavePreview),
-                (si) => PostSave(si, afterSaveDone), true,
+                () => SaveFile(plugin, saveFilename, saveType, dontResavePreview),
+                (si) => PostSave(si, saveType, afterSaveDone), true,
                 (bl, str) => EnableDisableUi(bl, str, current, saveMultiThreader),
                 "Saving map");
         }
 
-        private bool IdentifyMap(string loadFilename, out FileType fileType, out GameType gameType, out bool isMegaMap, out string theater)
+        /// <summary>
+        /// The heart of the "open map" logic. This detects which game the map is for, and what type of map it is.
+        /// </summary>
+        /// <param name="loadFilename">Filename to load</param>
+        /// <returns>MapLoadInfo object containing all relevant info</returns>
+        private MapLoadInfo IdentifyMap(string loadFilename)
         {
-            fileType = FileType.None;
-            gameType = GameType.None;
-            theater = null;
-            isMegaMap = false;
+            FileType fileType = FileType.None;
+            GameType gameType = GameType.None;
+            string theater = null;
+            bool isMegaMap = false;
+            GameInfo[] gameInfos = GameTypeFactory.GetGameInfos(true);
             string fullFilename = loadFilename;
             bool isMixFile = MixPath.IsMixPath(loadFilename);
+            byte[] iniBytes = null;
+            INI iniContents = null;
+            string iniPath = null;
+            byte[] binBytes = null;
+            string binPath = null;
             if (isMixFile)
             {
                 fileType = FileType.MIX;
                 MixPath.GetComponents(fullFilename, out string[] mixParts, out string[] filenameParts);
-                loadFilename = mixParts[0];
-            }
-            try
-            {
-                if (!File.Exists(loadFilename))
+                try { if (!File.Exists(mixParts[0])) return null; }
+                catch { return null; }
+                iniBytes = MixPath.ReadFile(fullFilename, FileType.INI, out _);
+                iniContents = INITools.GetIniContents(iniBytes);
+                if (iniContents == null || !GameInfo.IsCnCIni(iniContents))
                 {
-                    return false;
+                    return null;
+                }
+                iniPath = filenameParts[0];
+                if (filenameParts.Length > 1)
+                {
+                    binBytes = MixPath.ReadFile(fullFilename, FileType.BIN, out _);
+                    binPath = filenameParts[1];
                 }
             }
-            catch
+            else
             {
-                return false;
-            }
-            if (fileType != FileType.MIX)
-            {
-                switch (Path.GetExtension(loadFilename).ToLower())
-                {
-                    case ".ini":
-                    case ".mpr":
-                        fileType = FileType.INI;
-                        break;
-                    case ".bin":
-                        fileType = FileType.BIN;
-                        break;
-                    case ".pgm":
-                        fileType = FileType.PGM;
-                        break;
-                    case ".meg":
-                        fileType = FileType.MEG;
-                        break;
-                }
-            }
-            INI iniContents = null;
-            bool iniWasFetched = false;
-            if (fileType == FileType.None)
-            {
-                long filesize = 0;
+                try { if (!File.Exists(loadFilename)) return null; }
+                catch { return null; }
                 try
                 {
-                    filesize = new FileInfo(loadFilename).Length;
-                    iniWasFetched = true;
-                    iniContents = GeneralUtils.GetIniContents(loadFilename, FileType.INI);
-                    if (iniContents != null)
+                    bool canBeMegaFile = false;
+                    using (FileStream fs = new FileStream(loadFilename, FileMode.Open))
+                    using (BinaryReader magicNumberReader = new BinaryReader(fs))
                     {
-                        fileType = FileType.INI;
-                    }
-                }
-                catch
-                {
-                    iniContents = null;
-                }
-                if (iniContents == null)
-                {
-                    // Check if it's a classic 64x64 map.
-                    Size tdMax = TiberianDawn.Constants.MaxSize;
-                    if (filesize == tdMax.Width * tdMax.Height * 2)
-                    {
-                        fileType = FileType.BIN;
-                    }
-                    else
-                    {
-                        return false;
-                    }
-                }
-            }
-            if (!iniWasFetched)
-            {
-                iniContents = GeneralUtils.GetIniContents(fullFilename, fileType);
-            }
-            if (iniContents == null || !INITools.CheckForIniInfo(iniContents, "Map") || !INITools.CheckForIniInfo(iniContents, "Basic"))
-            {
-                return false;
-            }
-            theater = (iniContents["Map"].TryGetValue("Theater") ?? String.Empty).ToLower();
-            switch (fileType)
-            {
-                case FileType.INI:
-                case FileType.MIX:
-                    {
-                        gameType = RedAlert.GamePluginRA.CheckForRAMap(iniContents) ? GameType.RedAlert : GameType.TiberianDawn;
-                        break;
-                    }
-                case FileType.BIN:
-                    {
-                        gameType = File.Exists(Path.ChangeExtension(loadFilename, ".ini")) ? GameType.TiberianDawn : GameType.None;
-                        break;
-                    }
-                case FileType.PGM:
-                    {
-                        try
+                        // Technically not a requirement of the format apparently, but all pgm files written by the editor have this.
+                        uint magicNumber = fs.Length < 4 ? 0 : magicNumberReader.ReadUInt32();
+                        if ((magicNumber == 0xFFFFFFFF) || (magicNumber == 0x8FFFFFFF))
                         {
-                            using (var megafile = new Megafile(loadFilename))
+                            canBeMegaFile = true;
+                        }
+                    }
+                    if (canBeMegaFile)
+                    {
+                        using (Megafile megafile = new Megafile(loadFilename))
+                        {
+                            string iniFileName = megafile.Where(p => Path.GetExtension(p).ToLower() == ".ini").FirstOrDefault();
+                            string mprFileName = megafile.Where(p => Path.GetExtension(p).ToLower() == ".mpr").FirstOrDefault();
+                            string binFileName = megafile.Where(p => Path.GetExtension(p).ToLower() == ".bin").FirstOrDefault();
+                            if (iniFileName != null || mprFileName != null)
                             {
-                                if (megafile.Any(f => Path.GetExtension(f).ToLower() == ".mpr"))
+                                using (Stream binStream = megafile.OpenFile(iniFileName ?? mprFileName))
                                 {
-                                    gameType = GameType.RedAlert;
+                                    iniBytes = binStream.ReadAllBytes();
                                 }
-                                else
+                                iniContents = INITools.GetIniContents(iniBytes);
+                                iniPath = iniFileName ?? mprFileName;
+                            }
+                            if (binFileName != null)
+                            {
+                                binPath = binFileName;
+                                using (Stream binStream = megafile.OpenFile(binFileName))
                                 {
-                                    gameType = GameType.TiberianDawn;
+                                    binBytes = binStream.ReadAllBytes();
                                 }
                             }
                         }
-                        catch (FileNotFoundException)
-                        {
-                            return false;
-                        }
-                        break;
+                        fileType = FileType.PGM;
                     }
+                }
+                catch (Exception) { /* Confirmed not PGM. Ignore for the rest. */ }
             }
-            if (gameType == GameType.TiberianDawn)
+            // If neither mix nor pgm, find data on disk.
+            bool openedFileIsBin = false;
+            bool acceptbin = false;
+            if (fileType == FileType.None)
             {
-                isMegaMap = TiberianDawn.GamePluginTD.CheckForMegamap(iniContents);
-                if (SoleSurvivor.GamePluginSS.CheckForSSmap(iniContents))
+                iniBytes = File.ReadAllBytes(loadFilename);
+                iniPath = loadFilename;
+                iniContents = INITools.GetIniContents(iniBytes);
+                if (iniContents == null || !GameInfo.IsCnCIni(iniContents))
                 {
-                    gameType = GameType.SoleSurvivor;
+                    // Only possibilities are that it is either an illegal file, or a .bin file. So check for an accompanying .ini
+                    iniPath = Path.ChangeExtension(loadFilename, ".ini");
+                    if (".ini".Equals(Path.GetExtension(loadFilename), StringComparison.OrdinalIgnoreCase) || !File.Exists(iniPath))
+                    {
+                        // Failure; this is already the file with the ini extension, or there is no ini to load found.
+                        return null;
+                    }
+                    binBytes = iniBytes;
+                    binPath = loadFilename;
+                    string ext = Path.GetExtension(loadFilename);
+                    acceptbin = ".bin".Equals(ext) || (".map".Equals(ext) && !File.Exists(Path.ChangeExtension(loadFilename, ".bin")));
+                    iniBytes = File.ReadAllBytes(iniPath);
+                    iniContents = INITools.GetIniContents(iniBytes);
+                    openedFileIsBin = true;
+                }
+                else
+                {
+                    string tryBinPath = Path.ChangeExtension(loadFilename, ".bin");
+                    // Read accompanying .bin file
+                    if (File.Exists(tryBinPath))
+                    {
+                        binPath = tryBinPath;
+                        binBytes = File.ReadAllBytes(binPath);
+                        INI binIniContents = INITools.GetIniContents(binBytes);
+                        if (binIniContents != null && GameInfo.IsCnCIni(binIniContents))
+                        {
+                            // Not a .bin
+                            binPath = null;
+                            binBytes = null;
+                        }
+                    }
+                    if (binPath == null)
+                    {
+                        // Read accompanying .map file
+                        tryBinPath = Path.ChangeExtension(loadFilename, ".map");
+                        if (File.Exists(tryBinPath))
+                        {
+                            binPath = tryBinPath;
+                            binBytes = File.ReadAllBytes(binPath);
+                            INI binIniContents = INITools.GetIniContents(binBytes);
+                            if (binIniContents != null && GameInfo.IsCnCIni(binIniContents))
+                            {
+                                // Not a .bin
+                                binPath = null;
+                                binBytes = null;
+                            }
+                        }
+                    }
                 }
             }
-            else if (gameType == GameType.RedAlert)
+            if (!GameInfo.IsCnCIni(iniContents))
             {
-                // Not actually used for RA at the moment.
-                isMegaMap = true;
+                return null;
             }
-            return gameType != GameType.None;
+            // After this we should have the ini and bin set correctly, and the file is guaranteed to be a C&C map. Identify the type.
+            foreach (GameInfo gi in gameInfos)
+            {
+                GameType gt = gi.GameType;
+                FileType ft = gi.IdentifyMap(iniContents, binBytes, openedFileIsBin, acceptbin, out isMegaMap, out theater);
+                if (ft == FileType.None)
+                {
+                    continue;
+                }
+                gameType = gi.GameType;
+                if (fileType == FileType.None)
+                {
+                    // Only set this if it's not Mix or PGM.
+                    fileType = ft;
+                }
+                break;
+            }
+            // Can still happen if the logic to read an ini alongside a .bin concludes the supposed ".bin" isn't a c&C map at all.
+            if (gameType == GameType.None)
+            {
+                return null;
+            }
+            return new MapLoadInfo(loadFilename, iniPath, iniBytes, binPath, binBytes, openedFileIsBin, theater, isMegaMap, gameType, fileType);
         }
 
         /// <summary>
         /// WARNING: this function is meant for map load, meaning it unloads the current plugin in addition to disabling all controls!
         /// </summary>
-        /// <param name="enableUI"></param>
-        /// <param name="label"></param>
+        /// <param name="enableUI">true if the action to perform is enabling the UI.</param>
+        /// <param name="label">Label to display while loading.</param>
+        /// <param name="currentMultiThreader">Multithreader to work on.</param>
         private void LoadUnloadUi(bool enableUI, string label, SimpleMultiThreading currentMultiThreader)
         {
             fileNewMenuItem.Enabled = enableUI;
@@ -2118,7 +2154,7 @@ namespace MobiusEditor
         /// <param name="isSinglePlay">Is singleplayer scenario</param>
         /// <param name="showTarget">The form to use as target for showing messages / dialogs on.</param>
         /// <returns></returns>
-        private static MapLoadInfo NewFile(GameType gameType, string imagePath, string theater, bool isTdMegaMap, bool isSinglePlay, MainForm showTarget)
+        private static MapLoadInfo NewFile(GameInfo gameInfo, string imagePath, string theater, bool isTdMegaMap, bool isSinglePlay, MainForm showTarget)
         {
             int imageWidth = 0;
             int imageHeight = 0;
@@ -2149,8 +2185,7 @@ namespace MobiusEditor
             bool mapLoaded = false;
             try
             {
-                GameInfo gType = GameTypeFactory.GetGameInfo(gameType);
-                plugin = LoadNewPlugin(gType, theater, isTdMegaMap);
+                plugin = LoadNewPlugin(gameInfo, theater, isTdMegaMap);
                 // This initialises the theater
                 plugin.New(theater);
                 mapLoaded = true;
@@ -2206,8 +2241,8 @@ namespace MobiusEditor
                 TheaterType theater = plugin.Map.Theater;
                 TemplateType tt = plugin.Map.TemplateTypes.Where(t => t.ExistsInTheater
                     //&& (!Globals.FilterTheaterObjects || t.Theaters == null || t.Theaters.Length == 0 || t.Theaters.Contains(plugin.Map.Theater.Name))
-                    && t.Flag.HasFlag(TemplateTypeFlag.DefaultFill)
-                    && !t.Flag.HasFlag(TemplateTypeFlag.IsGrouped))
+                    && t.Flags.HasFlag(TemplateTypeFlag.DefaultFill)
+                    && !t.Flags.HasFlag(TemplateTypeFlag.IsGrouped))
                 .OrderBy(t => t.Name, expl).FirstOrDefault();
                 if (tt != null)
                 {
@@ -2229,51 +2264,60 @@ namespace MobiusEditor
         /// The separate-threaded part for loading a map.
         /// </summary>
         /// <param name="loadFilename">File to load.</param>
-        /// <param name="fileType">Type of the loaded file (detected in advance).</param>
+        /// <param name="loadInfo">Info on the loaded map (detected in advance).</param>
         /// <param name="gameInfo">Game type info (detected in advance)</param>
-        /// <param name="isMegaMap">True if this is a megamap.</param>
         /// <returns></returns>
-        private static MapLoadInfo LoadFile(string loadFilename, FileType fileType, GameInfo gameInfo, string theater, bool isMegaMap)
+        private static MapLoadInfo LoadFile(string loadFilename, MapLoadInfo loadInfo, GameInfo gameInfo)
         {
             IGamePlugin plugin = null;
+            string[] errors;
             bool mapLoaded = false;
+            FileType ft = loadInfo.FileType;
             try
             {
-                plugin = LoadNewPlugin(gameInfo, theater, isMegaMap);
-                string[] errors = plugin.Load(loadFilename, fileType).ToArray();
+                plugin = LoadNewPlugin(gameInfo, loadInfo.Theater, loadInfo.IsMegaMap);
+                errors = plugin.Load(loadFilename, loadInfo.IniName, loadInfo.IniContent, loadInfo.BinName, loadInfo.BinContent, ref ft).ToArray();
                 mapLoaded = true;
-                return new MapLoadInfo(loadFilename, fileType, plugin, errors, true);
             }
             catch (Exception ex)
             {
                 List<string> errorMessage = new List<string>();
                 if (ex is ArgumentException argex)
                 {
-                    errorMessage.Add(GeneralUtils.RecoverArgExceptionMessage(argex, false));
+                    string argMsg = GeneralUtils.RecoverArgExceptionMessage(argex, false);
+                    if (!String.IsNullOrEmpty(argMsg))
+                    {
+                        errorMessage.Add(argMsg);
+                    }
                 }
-                else
+                if (errorMessage.Count == 0)
                 {
                     errorMessage.Add(ex.Message);
                 }
 #if DEBUG
                 errorMessage.Add(ex.StackTrace);
 #endif
-                return new MapLoadInfo(loadFilename, fileType, plugin, errorMessage.ToArray(), mapLoaded);
+                errors = errorMessage.ToArray();
             }
+            loadInfo.FileType = ft;
+            loadInfo.Plugin = plugin;
+            loadInfo.Errors = errors;
+            loadInfo.MapLoaded = mapLoaded;
+            return loadInfo;
         }
 
-        private static (string FileName, bool SavedOk, string error) SaveFile(IGamePlugin plugin, string saveFilename, FileType fileType, bool dontResavePreview)
+        private static (string SaveFileName, long SavedLength, string Error) SaveFile(IGamePlugin plugin, string saveFilename, FileType fileType, bool dontResavePreview)
         {
             try
             {
-                plugin.Save(saveFilename, fileType, null, dontResavePreview);
-                return (saveFilename, true, null);
+                long length = plugin.Save(saveFilename, fileType, null, dontResavePreview, false);
+                return (saveFilename, length, null);
             }
             catch (Exception ex)
             {
                 string errorMessage = "Error saving map: " + ex.Message;
                 errorMessage += "\n\n" + ex.StackTrace;
-                return (saveFilename, false, errorMessage);
+                return (saveFilename, 0, errorMessage);
             }
         }
 
@@ -2284,20 +2328,42 @@ namespace MobiusEditor
                 // Absolute abort
                 SimpleMultiThreading.RemoveBusyLabel(this);
                 RefreshActiveTool(false);
-                if (this.shouldCheckUpdate)
+                if (shouldCheckUpdate)
                 {
                     CheckForUpdates(true);
                 }
                 return;
             }
             bool isMix = MixPath.IsMixPath(loadInfo.FileName);
-            IGamePlugin oldPlugin = this.plugin;
-            string[] errors = loadInfo.Errors ?? new string[0];
             string feedbackPath = loadInfo.FileName;
-            string feedbackNameShort;
             bool regenerateSaveName = false;
+            string[] errors = loadInfo.Errors ?? new string[0];
+            if (isMix)
+            {
+                feedbackPath = MixPath.GetFileNameReadable(loadInfo.FileName, false, out regenerateSaveName);
+            }
+            // Plugin set to null indicates a fatal processing error where no map was loaded at all.
+            if (loadInfo.Plugin == null || (loadInfo.Plugin != null && !loadInfo.MapLoaded))
+            {
+                // Attempted to load file, loading went OK, but map was not loaded.
+                if (loadInfo.FileName != null && loadInfo.Plugin != null && !loadInfo.MapLoaded)
+                {
+                    mru.Remove(loadInfo.FileName);
+                }
+                // In case of actual error, remove label.
+                SimpleMultiThreading.RemoveBusyLabel(this);
+                MessageBox.Show(this, String.Format("Error loading {0}:\n\n{1}", feedbackPath ?? "new map", String.Join("\n", errors)), Program.ProgramName, MessageBoxButtons.OK, MessageBoxIcon.Error);
+                RefreshActiveTool(false);
+                if (this.shouldCheckUpdate)
+                {
+                    CheckForUpdates(true);
+                }
+                return;
+            }
+            IGamePlugin oldPlugin = this.plugin;
+            string feedbackNameShort;
             string resaveName = loadInfo.FileName;
-            FileType resaveType = loadInfo.FileType;
+            GameInfo gi = loadInfo.Plugin.GameInfo;
             if (isMix)
             {
                 feedbackPath = MixPath.GetFileNameReadable(loadInfo.FileName, false, out regenerateSaveName);
@@ -2313,7 +2379,9 @@ namespace MobiusEditor
                 }
                 string resavePath = Path.GetDirectoryName(mixName);
                 if (String.IsNullOrEmpty(loadedName))
+                {
                     regenerateSaveName = true;
+                }
                 // If the name gets regenerated from map name, add a dummy name for now so it can extract the path at least.
                 resaveName = Path.Combine(resavePath, regenerateSaveName ? MAP_UNTITLED + ".ini" : loadedName);
             }
@@ -2321,80 +2389,59 @@ namespace MobiusEditor
             {
                 feedbackNameShort = Path.GetFileName(feedbackPath);
             }
-            // Plugin set to null indicates a fatal processing error where no map was loaded at all.
-            if (loadInfo.Plugin == null || (loadInfo.Plugin != null && !loadInfo.MapLoaded))
+            if (isMix && regenerateSaveName)
             {
-                // Attempted to load file, loading went OK, but map was not loaded.
-                if (loadInfo.FileName != null && loadInfo.Plugin != null && !loadInfo.MapLoaded)
+                string mapName = loadInfo.Plugin.Map.BasicSection.Name;
+                mapName = gi.MapNameIsEmpty(mapName) ? MAP_UNTITLED : String.Join("_", mapName.Split(Path.GetInvalidFileNameChars()));
+                FileTypeInfo fti = gi.SupportedFileTypes.FirstOrDefault(st => st.FileType == gi.DefaultSaveTypeFromMix);
+                bool isSolo = loadInfo.Plugin.Map.BasicSection.SoloMission;
+                string extension = fti == null ? "ini" : (isSolo ? fti.SaveExtensionSingle[0] : fti.SaveExtensionMulti[0]);
+                resaveName = Path.Combine(Path.GetDirectoryName(resaveName), mapName + "." + extension);
+            }
+            this.plugin = loadInfo.Plugin;
+            plugin.FeedBackHandler = this;
+            LoadIcons(plugin);
+            if (errors.Length > 0)
+            {
+                using (ErrorMessageBox emb = new ErrorMessageBox())
                 {
-                    mru.Remove(loadInfo.FileName);
+                    emb.Title = "Error Report - " + feedbackNameShort;
+                    emb.Errors = errors;
+                    emb.StartPosition = FormStartPosition.CenterParent;
+                    emb.ShowDialog(this);
                 }
-                // In case of actual error, remove label.
-                SimpleMultiThreading.RemoveBusyLabel(this);
-                MessageBox.Show(this, String.Format("Error loading {0}: {1}", feedbackPath ?? "new map", String.Join("\n", errors)), "Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
-                RefreshActiveTool(false);
+            }
+            mapPanel.MapImage = plugin.MapImage;
+            loadedMapDisplayFileName = resaveName;
+            actualLoadedFileName = loadInfo.FileName;
+            loadedFileType = loadInfo.FileType;
+            if (Globals.ZoomToBoundsOnLoad)
+            {
+                lock (jumpToBounds_lock)
+                {
+                    this.jumpToBounds = true;
+                }
             }
             else
             {
-                if (isMix && regenerateSaveName)
+                ZoomReset();
+            }
+            url.Clear();
+            CleanupTools(oldPlugin?.GameInfo?.GameType ?? GameType.None);
+            RefreshUI(oldSelectedTool);
+            oldSelectedTool = ToolType.None;
+            //RefreshActiveTool(); // done by UI refresh
+            SetTitle();
+            if (loadInfo.FileName != null)
+            {
+                string saveName = loadInfo.FileName;
+                if (isMix)
                 {
-                    GameInfo gi = loadInfo.Plugin.GameInfo;
-                    string mapName = loadInfo.Plugin.Map.BasicSection.Name;
-                    mapName = gi.MapNameIsEmpty(mapName) ? MAP_UNTITLED : String.Join("_", mapName.Split(Path.GetInvalidFileNameChars()));
-                    resaveName = Path.Combine(Path.GetDirectoryName(resaveName), mapName + gi.DefaultExtensionFromMix);
+                    MixPath.GetComponents(loadInfo.FileName, out string[] mixParts, out string[] filenameParts);
+                    mixParts[0] = new FileInfo(mixParts[0]).FullName;
+                    saveName = MixPath.BuildMixPath(mixParts, filenameParts);
                 }
-                this.plugin = loadInfo.Plugin;
-                plugin.FeedBackHandler = this;
-                LoadIcons(plugin);
-                if (errors.Length > 0)
-                {
-                    using (ErrorMessageBox emb = new ErrorMessageBox())
-                    {
-                        emb.Title = "Error Report - " + feedbackNameShort;
-                        emb.Errors = errors;
-                        emb.StartPosition = FormStartPosition.CenterParent;
-                        emb.ShowDialog(this);
-                    }
-                }
-#if !DEVELOPER
-                // Don't allow re-save as PGM; act as if this is a new map.
-                if (loadInfo.FileType == FileType.PGM || loadInfo.FileType == FileType.MEG)
-                {
-                    resaveType = FileType.INI;
-                    resaveName = null;
-                }
-#endif
-                mapPanel.MapImage = plugin.MapImage;
-                filename = resaveName;
-                loadedFileType = resaveType;
-                if (Globals.ZoomToBoundsOnLoad)
-                {
-                    lock (jumpToBounds_lock)
-                    {
-                        this.jumpToBounds = true;
-                    }
-                }
-                else
-                {
-                    ZoomReset();
-                }
-                url.Clear();
-                CleanupTools(oldPlugin?.GameInfo?.GameType ?? GameType.None);
-                RefreshUI(oldSelectedTool);
-                oldSelectedTool = ToolType.None;
-                //RefreshActiveTool(); // done by UI refresh
-                SetTitle();
-                if (loadInfo.FileName != null)
-                {
-                    string saveName = loadInfo.FileName;
-                    if (isMix)
-                    {
-                        MixPath.GetComponents(loadInfo.FileName, out string[] mixParts, out string[] filenameParts);
-                        mixParts[0] = new FileInfo(mixParts[0]).FullName;
-                        saveName = MixPath.BuildMixPath(mixParts, filenameParts);
-                    }
-                    mru.Add(saveName);
-                }
+                mru.Add(saveName);
             }
             if (this.shouldCheckUpdate)
             {
@@ -2402,32 +2449,34 @@ namespace MobiusEditor
             }
         }
 
-        private void PostSave((string FileName, bool SavedOk, string Error) saveInfo, Action afterSaveDone)
+        private void PostSave((string SaveFileName, long SavedLength, string Error) saveInfo, FileType fileType, Action afterSaveDone)
         {
-            var fileInfo = new FileInfo(saveInfo.FileName);
-            if (saveInfo.SavedOk)
+            var fileInfo = new FileInfo(saveInfo.SaveFileName);
+            if (saveInfo.SavedLength == 0)
             {
-                if (fileInfo.Exists && fileInfo.Length > Globals.MaxMapSize)
-                {
-                    MessageBox.Show(this, String.Format("Map file exceeds the maximum size of {0} bytes.", Globals.MaxMapSize), "Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
-                }
-                plugin.Dirty = false;
-                filename = fileInfo.FullName;
-                SetTitle();
-                mru.Add(fileInfo.FullName);
-                if (afterSaveDone != null)
-                {
-                    afterSaveDone.Invoke();
-                }
-                else
-                {
-                    RefreshActiveTool(true);
-                }
+                MessageBox.Show(this, String.Format("Error saving {0}: {1}", saveInfo.SaveFileName, saveInfo.Error, Program.ProgramName, MessageBoxButtons.OK, MessageBoxIcon.Error));
+                //mru.Remove(fileInfo);
+                RefreshActiveTool(true);
+                return;
+            }
+            long maxDataSize = plugin.GameInfo.MaxDataSize;
+            if (saveInfo.SavedLength > maxDataSize)
+            {
+                MessageBox.Show(this, String.Format("Map file exceeds the maximum size of {0} bytes.", maxDataSize), Program.ProgramName, MessageBoxButtons.OK, MessageBoxIcon.Error);
+            }
+            plugin.Dirty = false;
+            url.IndicateSave();
+            actualLoadedFileName = fileInfo.FullName;
+            loadedFileType = fileType;
+            loadedMapDisplayFileName = fileInfo.FullName;
+            SetTitle();
+            mru.Add(fileInfo.FullName);
+            if (afterSaveDone != null)
+            {
+                afterSaveDone.Invoke();
             }
             else
             {
-                MessageBox.Show(this, String.Format("Error saving {0}: {1}", saveInfo.FileName, saveInfo.Error, "Error", MessageBoxButtons.OK, MessageBoxIcon.Error));
-                //mru.Remove(fileInfo);
                 RefreshActiveTool(true);
             }
         }
@@ -2464,15 +2513,12 @@ namespace MobiusEditor
                 mapPanel.MapImage = null;
                 mapPanel.Invalidate();
                 // Dispose plugin
-                if (pl != null)
-                {
-                    pl.Dispose();
-                }
+                pl?.Dispose();
                 // Unload graphics
                 Globals.TheTilesetManager.Reset(GameType.None, null);
                 Globals.TheShapeCacheManager.Reset();
                 // Clean up loaded file status
-                filename = null;
+                loadedMapDisplayFileName = null;
                 loadedFileType = FileType.None;
                 SetTitle();
             }
@@ -2548,16 +2594,24 @@ namespace MobiusEditor
 #endif
             viewLayersToolStripMenuItem.Enabled = enable;
             viewIndicatorsToolStripMenuItem.Enabled = enable;
+            SetMenuItemsVisible();
+        }
 
+        private void SetMenuItemsVisible()
+        {
+            bool hasPlugin = plugin != null;
             // Special rules per game. These should be kept identical to those in ImageExportDialog.SetLayers
-            viewIndicatorsBuildingFakeLabelsMenuItem.Visible = !hasPlugin || plugin.GameInfo.SupportsMapLayer(MapLayerFlag.BuildingFakes);
-            viewExtraIndicatorsEffectAreaRadiusMenuItem.Visible = !hasPlugin || plugin.GameInfo.SupportsMapLayer(MapLayerFlag.EffectRadius);
-            viewLayersBuildingsMenuItem.Visible = !hasPlugin || plugin.GameInfo.SupportsMapLayer(MapLayerFlag.Buildings);
-            viewLayersUnitsMenuItem.Visible = !hasPlugin || plugin.GameInfo.SupportsMapLayer(MapLayerFlag.Units);
-            viewLayersInfantryMenuItem.Visible = !hasPlugin || plugin.GameInfo.SupportsMapLayer(MapLayerFlag.Infantry);
-            viewIndicatorsBuildingRebuildLabelsMenuItem.Visible = !hasPlugin || plugin.GameInfo.SupportsMapLayer(MapLayerFlag.BuildingRebuild);
-            viewIndicatorsFootballAreaMenuItem.Visible = !hasPlugin || plugin.GameInfo.SupportsMapLayer(MapLayerFlag.FootballArea);
-            viewIndicatorsOutlinesMenuItem.Visible = !hasPlugin || plugin.GameInfo.SupportsMapLayer(MapLayerFlag.OverlapOutlines);
+            viewIndicatorsBuildingFakeLabelsMenuItem.Available = !hasPlugin || plugin.GameInfo.SupportsMapLayer(MapLayerFlag.BuildingFakes);
+            viewExtraIndicatorsEffectAreaRadiusMenuItem.Available = !hasPlugin || plugin.GameInfo.SupportsMapLayer(MapLayerFlag.EffectRadius);
+            viewLayersBuildingsMenuItem.Available = !hasPlugin || plugin.GameInfo.SupportsMapLayer(MapLayerFlag.Buildings);
+            viewLayersUnitsMenuItem.Available = !hasPlugin || plugin.GameInfo.SupportsMapLayer(MapLayerFlag.Units);
+            viewLayersInfantryMenuItem.Available = !hasPlugin || plugin.GameInfo.SupportsMapLayer(MapLayerFlag.Infantry);
+            viewIndicatorsBuildingRebuildLabelsMenuItem.Available = !hasPlugin || plugin.GameInfo.SupportsMapLayer(MapLayerFlag.BuildingRebuild);
+            viewLayersFootballAreaMenuItem.Available = !hasPlugin || plugin.GameInfo.SupportsMapLayer(MapLayerFlag.FootballArea);
+            viewIndicatorsOutlinesMenuItem.Available = !hasPlugin || plugin.GameInfo.SupportsMapLayer(MapLayerFlag.OverlapOutlines);
+            viewExtraIndicatorsHomeAreaBox.Available = !hasPlugin || plugin.Map.BasicSection.SoloMission;
+            // Options that aren't visible are automatically unchecked.
+            UpdateVisibleLayers();
         }
 
         private void CleanupTools(GameType gameType)
@@ -2821,8 +2875,7 @@ namespace MobiusEditor
 
         private void ActiveToolForm_Shown(object sender, EventArgs e)
         {
-            Form tool = sender as Form;
-            if (tool != null)
+            if (sender is Form tool)
             {
                 ClampForm(tool);
             }
@@ -2832,36 +2885,39 @@ namespace MobiusEditor
         {
             MapLayerFlag layers = MapLayerFlag.All;
             // Map objects
-            RemoveLayerIfUnchecked(ref layers, viewLayersTerrainMenuItem.Checked, MapLayerFlag.Terrain);
-            RemoveLayerIfUnchecked(ref layers, viewLayersInfantryMenuItem.Checked, MapLayerFlag.Infantry);
-            RemoveLayerIfUnchecked(ref layers, viewLayersUnitsMenuItem.Checked, MapLayerFlag.Units);
-            RemoveLayerIfUnchecked(ref layers, viewLayersBuildingsMenuItem.Checked, MapLayerFlag.Buildings);
-            RemoveLayerIfUnchecked(ref layers, viewLayersOverlayMenuItem.Checked, MapLayerFlag.OverlayAll);
-            RemoveLayerIfUnchecked(ref layers, viewLayersSmudgeMenuItem.Checked, MapLayerFlag.Smudge);
-            RemoveLayerIfUnchecked(ref layers, viewLayersWaypointsMenuItem.Checked, MapLayerFlag.Waypoints);
+            RemoveLayerIfUnchecked(ref layers, viewLayersTerrainMenuItem, MapLayerFlag.Terrain);
+            RemoveLayerIfUnchecked(ref layers, viewLayersInfantryMenuItem, MapLayerFlag.Infantry);
+            RemoveLayerIfUnchecked(ref layers, viewLayersUnitsMenuItem, MapLayerFlag.Units);
+            RemoveLayerIfUnchecked(ref layers, viewLayersBuildingsMenuItem, MapLayerFlag.Buildings);
+            RemoveLayerIfUnchecked(ref layers, viewLayersOverlayMenuItem, MapLayerFlag.OverlayAll);
+            RemoveLayerIfUnchecked(ref layers, viewLayersSmudgeMenuItem, MapLayerFlag.Smudge);
+            RemoveLayerIfUnchecked(ref layers, viewLayersWaypointsMenuItem, MapLayerFlag.Waypoints);
+            RemoveLayerIfUnchecked(ref layers, viewLayersFootballAreaMenuItem, MapLayerFlag.FootballArea);
             // Indicators
-            RemoveLayerIfUnchecked(ref layers, viewIndicatorsMapBoundariesMenuItem.Checked, MapLayerFlag.Boundaries);
-            RemoveLayerIfUnchecked(ref layers, viewIndicatorsWaypointsMenuItem.Checked, MapLayerFlag.WaypointsIndic);
-            RemoveLayerIfUnchecked(ref layers, viewIndicatorsFootballAreaMenuItem.Checked, MapLayerFlag.FootballArea);
-            RemoveLayerIfUnchecked(ref layers, viewIndicatorsCellTriggersMenuItem.Checked, MapLayerFlag.CellTriggers);
-            RemoveLayerIfUnchecked(ref layers, viewIndicatorsObjectTriggersMenuItem.Checked, MapLayerFlag.TechnoTriggers);
-            RemoveLayerIfUnchecked(ref layers, viewIndicatorsBuildingRebuildLabelsMenuItem.Checked, MapLayerFlag.BuildingRebuild);
-            RemoveLayerIfUnchecked(ref layers, viewIndicatorsBuildingFakeLabelsMenuItem.Checked, MapLayerFlag.BuildingFakes);
-            RemoveLayerIfUnchecked(ref layers, viewIndicatorsOutlinesMenuItem.Checked, MapLayerFlag.OverlapOutlines);
+            RemoveLayerIfUnchecked(ref layers, viewIndicatorsMapBoundariesMenuItem, MapLayerFlag.Boundaries);
+            RemoveLayerIfUnchecked(ref layers, viewIndicatorsWaypointsMenuItem, MapLayerFlag.WaypointsIndic);
+            RemoveLayerIfUnchecked(ref layers, viewIndicatorsCellTriggersMenuItem, MapLayerFlag.CellTriggers);
+            RemoveLayerIfUnchecked(ref layers, viewIndicatorsObjectTriggersMenuItem, MapLayerFlag.TechnoTriggers);
+            RemoveLayerIfUnchecked(ref layers, viewIndicatorsBuildingRebuildLabelsMenuItem, MapLayerFlag.BuildingRebuild);
+            RemoveLayerIfUnchecked(ref layers, viewIndicatorsBuildingFakeLabelsMenuItem, MapLayerFlag.BuildingFakes);
+            RemoveLayerIfUnchecked(ref layers, viewIndicatorsOutlinesMenuItem, MapLayerFlag.OverlapOutlines);
             // Extra indicators
-            RemoveLayerIfUnchecked(ref layers, viewExtraIndicatorsMapSymmetryMenuItem.Checked, MapLayerFlag.MapSymmetry);
-            RemoveLayerIfUnchecked(ref layers, viewExtraIndicatorsMapGridMenuItem.Checked, MapLayerFlag.MapGrid);
-            RemoveLayerIfUnchecked(ref layers, viewExtraIndicatorsLandTypesMenuItem.Checked, MapLayerFlag.LandTypes);
-            RemoveLayerIfUnchecked(ref layers, viewExtraIndicatorsPlacedObjectsMenuItem.Checked, MapLayerFlag.TechnoOccupancy);
-            RemoveLayerIfUnchecked(ref layers, viewExtraIndicatorsWaypointRevealRadiusMenuItem.Checked, MapLayerFlag.WaypointRadius);
-            RemoveLayerIfUnchecked(ref layers, viewExtraIndicatorsEffectAreaRadiusMenuItem.Checked, MapLayerFlag.EffectRadius);
+            RemoveLayerIfUnchecked(ref layers, viewExtraIndicatorsMapSymmetryMenuItem, MapLayerFlag.MapSymmetry);
+            RemoveLayerIfUnchecked(ref layers, viewExtraIndicatorsMapGridMenuItem, MapLayerFlag.MapGrid);
+            RemoveLayerIfUnchecked(ref layers, viewExtraIndicatorsLandTypesMenuItem, MapLayerFlag.LandTypes);
+            RemoveLayerIfUnchecked(ref layers, viewExtraIndicatorsPlacedObjectsMenuItem, MapLayerFlag.TechnoOccupancy);
+            RemoveLayerIfUnchecked(ref layers, viewExtraIndicatorsWaypointRevealRadiusMenuItem, MapLayerFlag.WaypointRadius);
+            RemoveLayerIfUnchecked(ref layers, viewExtraIndicatorsCrateOutlinesMenuItem, MapLayerFlag.CrateOutlines);
+            RemoveLayerIfUnchecked(ref layers, viewExtraIndicatorsEffectAreaRadiusMenuItem, MapLayerFlag.EffectRadius);
+            RemoveLayerIfUnchecked(ref layers, viewExtraIndicatorsHomeAreaBox, MapLayerFlag.HomeAreaBox);
             // this will only have an effect if a tool is active.
             ActiveLayers = layers;
             return layers;
         }
 
-        private void RemoveLayerIfUnchecked(ref MapLayerFlag layers, bool isChecked, MapLayerFlag layerToRemove)
+        private void RemoveLayerIfUnchecked(ref MapLayerFlag layers, ToolStripMenuItem toCheck, MapLayerFlag layerToRemove)
         {
+            bool isChecked = toCheck != null && toCheck.Available && toCheck.Checked;
             if (!isChecked)
             {
                 layers &= ~layerToRemove;
@@ -2885,7 +2941,7 @@ namespace MobiusEditor
             if (e.Data.GetDataPresent(DataFormats.FileDrop))
             {
                 string[] files = (string[])e.Data.GetData(DataFormats.FileDrop);
-                if (files.Length == 1)
+                if (files != null && files.Length == 1)
                     e.Effect = DragDropEffects.Copy;
             }
         }
@@ -2895,7 +2951,7 @@ namespace MobiusEditor
             string[] files = (string[])e.Data.GetData(DataFormats.FileDrop);
             if (files.Length != 1)
                 return;
-            String filename = files[0];
+            string filename = files[0];
             // Opened in a separate thread and then Invoked on this form, to clear the blocking of the drag source.
             openMultiThreader.ExecuteThreaded(() => filename, (str) => OpenFileAsk(str, true), true,
                 null, String.Empty);
@@ -2960,12 +3016,12 @@ namespace MobiusEditor
                 viewLayersOverlayMenuItem.Checked = enabled;
                 viewLayersSmudgeMenuItem.Checked = enabled;
                 viewLayersWaypointsMenuItem.Checked = enabled;
+                viewLayersFootballAreaMenuItem.Checked = enabled;
             }
             else
             {
                 viewIndicatorsMapBoundariesMenuItem.Checked = enabled;
                 viewIndicatorsWaypointsMenuItem.Checked = enabled;
-                viewIndicatorsFootballAreaMenuItem.Checked = enabled;
                 viewIndicatorsCellTriggersMenuItem.Checked = enabled;
                 viewIndicatorsObjectTriggersMenuItem.Checked = enabled;
                 viewIndicatorsBuildingRebuildLabelsMenuItem.Checked = enabled;
@@ -2998,29 +3054,6 @@ namespace MobiusEditor
 #endif
         }
 
-        private void DeveloperGenerateMapPreviewDirectoryMenuItem_Click(object sender, EventArgs e)
-        {
-#if DEVELOPER
-            FolderBrowserDialog fbd = new FolderBrowserDialog
-            {
-                ShowNewFolderButton = false
-            };
-            if (fbd.ShowDialog() != DialogResult.OK)
-            {
-                return;
-            }
-            var extensions = new string[] { ".ini", ".mpr" };
-            foreach (var file in Directory.EnumerateFiles(fbd.SelectedPath).Where(file => extensions.Contains(Path.GetExtension(file).ToLower())))
-            {
-                bool valid = GetPluginOptions(file, out FileType fileType, out GameType gameType, out bool isTdMegaMap);
-                IGamePlugin plugin = LoadNewPlugin(gameType, isTdMegaMap, null, true);
-                plugin.Load(file, fileType);
-                plugin.Map.GenerateMapPreview(gameType, true).Save(Path.ChangeExtension(file, ".tga"));
-                plugin.Dispose();
-            }
-#endif
-        }
-
         private void DeveloperDebugShowOverlapCellsMenuItem_CheckedChanged(object sender, EventArgs e)
         {
 #if DEVELOPER
@@ -3034,77 +3067,142 @@ namespace MobiusEditor
             {
                 return;
             }
-            if (SteamworksUGC.IsSteamBuild && !SteamworksUGC.IsInit && Properties.Settings.Default.LazyInitSteam)
+            if (plugin.GameInfo.SteamId == null)
             {
-                SteamworksUGC.Init();
-            }
-            if (!SteamworksUGC.IsInit)
-            {
-                MessageBox.Show(this, "Steam interface is not initialized. To enable Workshop publishing, log into Steam and restart the editor.", "Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
+                MessageBox.Show(this, "Error: " + plugin.GameInfo.Name + " maps cannot be published to the Steam Workshop.",
+                    Program.ProgramName, MessageBoxButtons.OK, MessageBoxIcon.Error);
                 return;
             }
-            if (plugin.GameInfo.WorkshopTypeId == null)
+            bool lazyInit = Properties.Settings.Default.LazyInitSteam;
+            string currentFolderId = SteamAssist.TryGetSteamId(Environment.CurrentDirectory);
+            // No path has been initialised; the folder is set to the editor program folder.
+            bool noInit = Path.GetFullPath(Environment.CurrentDirectory).Equals(Path.GetFullPath(Program.ApplicationPath));
+            GameInfo gi = plugin.GameInfo;
+            if (gi == null)
             {
-                MessageBox.Show(this, plugin.GameInfo.Name + " maps cannot be published to the Steam Workshop; they are not usable by the C&C Remastered Collection.", "Error",
-                    MessageBoxButtons.OK, MessageBoxIcon.Error);
+                string message = null;
+                if (noInit)
+                {
+                    message = "Error: No Steam game path has been initialised.";
+                }
+                else
+                {
+                    message = "Error: The editor's currently set base folder is not set to a game that supports Steam.";
+                }
+                MessageBox.Show(this, message, Program.ProgramName, MessageBoxButtons.OK, MessageBoxIcon.Error);
                 return;
             }
-            if (MixPath.IsMixPath(filename))
+            if (currentFolderId != null && currentFolderId != gi.SteamId)
             {
-                MessageBox.Show(this, "Maps opened from .mix archives need to be resaved to disk before they can be published to the Steam Workshop.", "Error",
-                    MessageBoxButtons.OK, MessageBoxIcon.Error);
+                // Should never happen...
+                string message = "Error: The working folder is set to a game containing Steam ID " + currentFolderId + ", which is not known to the editor.";
+                MessageBox.Show(this,message, Program.ProgramName, MessageBoxButtons.OK, MessageBoxIcon.Error);
+                return;
+            }
+            if (loadedFileType == FileType.MIX || loadedFileType == FileType.PGM)
+            {
+                MessageBox.Show(this, "Error: The map was loaded from an archive. It must be saved to disk before it can be published.", Program.ProgramName, MessageBoxButtons.OK, MessageBoxIcon.Error);
+                return;
+            }
+            if (plugin.Dirty || plugin.Empty || loadedMapDisplayFileName == null || !File.Exists(loadedMapDisplayFileName))
+            {
+                MessageBox.Show(this, "Error: The map must be saved to disk before it can be published.", Program.ProgramName, MessageBoxButtons.OK, MessageBoxIcon.Error);
+                return;
+            }
+            if ((plugin.Map.BasicSection.Name ?? String.Empty).Trim().Length < 8)
+            {
+                MessageBox.Show(this, "Error: The map must have a name of at least 8 characters before it can be published.",
+                    Program.ProgramName, MessageBoxButtons.OK, MessageBoxIcon.Error);
+                return;
+            }
+            if (plugin.Map.BasicSection.SoloMission && (plugin.Map.BriefingSection.Briefing ?? String.Empty).Trim().Length < 8)
+            {
+                MessageBox.Show(this, "Error: The mission must have a briefing of at least 8 characters before it can be published.",
+                    Program.ProgramName, MessageBoxButtons.OK, MessageBoxIcon.Error);
+                return;
+            }
+            long maxDataSize = gi.MaxDataSize;
+            if (new FileInfo(loadedMapDisplayFileName).Length > maxDataSize)
+            {
+                MessageBox.Show(this, String.Format("Error: Map file exceeds the maximum size of {0} bytes.", maxDataSize),
+                    Program.ProgramName, MessageBoxButtons.OK, MessageBoxIcon.Error);
                 return;
             }
             if (plugin.Map.Theater.IsModTheater)
             {
                 if (!plugin.Map.BasicSection.SoloMission)
                 {
-                    MessageBox.Show(this, "Multiplayer maps with nonstandard theaters cannot be published to the Steam Workshop;" +
-                        " they are not usable by the C&C Remastered Collection without modding, and may cause issues on the official servers.", "Error",
-                        MessageBoxButtons.OK, MessageBoxIcon.Error);
+                    MessageBox.Show(this, "Error: Multiplayer maps with nonstandard theaters cannot be published to the Steam Workshop;" +
+                        " they are not usable by the C&C Remastered Collection without modding, and may cause issues on the official servers.",
+                        Program.ProgramName, MessageBoxButtons.OK, MessageBoxIcon.Error);
                     return;
                 }
                 // If the mission is already published on Steam, don't bother asking this and just continue.
                 if (plugin.Map.SteamSection.PublishedFileId == 0
-                        && DialogResult.Yes != MessageBox.Show("This map uses a nonstandard theater that is not usable by the C&C Remastered Collection without modding!" +
-                        " Are you sure you want to publish a mission that will be incompatible with the standard unmodded game?", "Warning",
-                        MessageBoxButtons.YesNo, MessageBoxIcon.Warning, MessageBoxDefaultButton.Button2))
+                        && DialogResult.Yes != MessageBox.Show("Warning: This map uses a nonstandard theater that is not usable by the game without modding!" +
+                        " Are you sure you want to publish a map that will be incompatible with the standard unmodded game?",
+                        Program.ProgramName, MessageBoxButtons.YesNo, MessageBoxIcon.Warning, MessageBoxDefaultButton.Button2))
                 {
                     return;
                 }
             }
-            if (plugin.IsMegaMap && !plugin.GameInfo.MegamapIsOfficial)
+            if (plugin.IsMegaMap && !gi.MegamapIsOfficial)
             {
                 if (!plugin.Map.BasicSection.SoloMission)
                 {
-                    MessageBox.Show(this, plugin.GameInfo.Name + " multiplayer megamaps cannot be published to the Steam Workshop;" +
-                        " they are not usable by the C&C Remastered Collection without modding, and may cause issues on the official servers.", "Error",
-                        MessageBoxButtons.OK, MessageBoxIcon.Error);
+                    MessageBox.Show(this, "Error: " + gi.Name + " multiplayer megamaps cannot be published to the Steam Workshop;" +
+                        " they are not usable by the C&C Remastered Collection without modding, and may cause issues on the official servers.",
+                        Program.ProgramName, MessageBoxButtons.OK, MessageBoxIcon.Error);
                     return;
                 }
                 // If the mission is already published on Steam, don't bother asking this and just continue.
                 if (plugin.Map.SteamSection.PublishedFileId == 0
-                        && DialogResult.Yes != MessageBox.Show("Megamaps are not supported by " + plugin.GameInfo.Name + " Remastered without modding!" +
-                        " Are you sure you want to publish a mission that will be incompatible with the standard unmodded game?", "Warning",
-                        MessageBoxButtons.YesNo, MessageBoxIcon.Warning, MessageBoxDefaultButton.Button2))
+                        && DialogResult.Yes != MessageBox.Show("Warning: Megamaps are not supported by " + gi.Name
+                        + " without modding!\n\n"
+                        + " Are you sure you want to publish a map that will be incompatible with the standard unmodded game?",
+                        Program.ProgramName, MessageBoxButtons.YesNo, MessageBoxIcon.Warning, MessageBoxDefaultButton.Button2))
                 {
                     return;
                 }
+            }
+            bool steamEnabled = false;
+            if (!SteamworksUGC.IsInit && lazyInit)
+            {
+                try
+                {
+                    Environment.CurrentDirectory = Program.RemasterRunPath;
+                    steamEnabled = SteamworksUGC.Init();
+                }
+                catch (DllNotFoundException ex)
+                {
+                    MessageBox.Show(this, "Error: " + ex.Message, Program.ProgramName, MessageBoxButtons.OK, MessageBoxIcon.Error);
+                    return;
+                }
+                SetTitle();
+            }
+            if (steamEnabled & Properties.Settings.Default.ShowInviteWarning)
+            {
+                using (var inviteMessageBox = new InviteMessageBox())
+                {
+                    // Ensures the dialog does not get lost by showing its icon in the taskbar.
+                    inviteMessageBox.ShowInTaskbar = true;
+                    inviteMessageBox.StartPosition = FormStartPosition.CenterScreen;
+                    inviteMessageBox.ShowDialog();
+                    Properties.Settings.Default.ShowInviteWarning = !inviteMessageBox.DontShowAgain;
+                    Properties.Settings.Default.Save();
+                }
+            }
+            if (!SteamworksUGC.IsInit)
+            {
+                MessageBox.Show(this, "Error: Steam interface is not initialized. To enable Workshop publishing, log in to Steam and try again.",
+                    Program.ProgramName, MessageBoxButtons.OK, MessageBoxIcon.Error);
+                return;
             }
             PromptSaveMap(ShowPublishDialog, false);
         }
 
         private void ShowPublishDialog()
         {
-            if (plugin.Dirty)
-            {
-                MessageBox.Show(this, "Map must be saved before publishing.", "Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
-                return;
-            }
-            if (new FileInfo(filename).Length > Globals.MaxMapSize)
-            {
-                return;
-            }
             ClearActiveTool();
             // Check if we need to save.
             ulong oldId = plugin.Map.SteamSection.PublishedFileId;
@@ -3112,6 +3210,7 @@ namespace MobiusEditor
             string oldDescription = plugin.Map.SteamSection.Description;
             string oldPreview = plugin.Map.SteamSection.PreviewFile;
             string oldVisibility = plugin.Map.SteamSection.Visibility;
+            string oldTags = plugin.Map.SteamSection.Tags;
             // Open publish dialog
             bool wasPublished;
             using (var sd = new SteamDialog(plugin))
@@ -3124,7 +3223,8 @@ namespace MobiusEditor
                 || oldName != plugin.Map.SteamSection.Title
                 || oldDescription != plugin.Map.SteamSection.Description
                 || oldPreview != plugin.Map.SteamSection.PreviewFile
-                || oldVisibility != plugin.Map.SteamSection.Visibility))
+                || oldVisibility != plugin.Map.SteamSection.Visibility
+                || oldTags != plugin.Map.SteamSection.Tags))
             {
                 // This takes care of saving the Steam info into the map.
                 // This specific overload only saves the map, without resaving the preview.
@@ -3132,6 +3232,12 @@ namespace MobiusEditor
             }
             else
             {
+                plugin.Map.SteamSection.PublishedFileId = oldId;
+                plugin.Map.SteamSection.Title = oldName;
+                plugin.Map.SteamSection.Description = oldDescription;
+                plugin.Map.SteamSection.PreviewFile = oldPreview;
+                plugin.Map.SteamSection.Visibility = oldVisibility;
+                plugin.Map.SteamSection.Tags = oldTags;
                 RefreshActiveTool(true);
             }
         }
@@ -3152,6 +3258,11 @@ namespace MobiusEditor
             Process.Start(Program.GithubUrl);
         }
 
+        private void InfoManualMenuItem_Click(object sender, EventArgs e)
+        {
+            Process.Start(Program.GithubManualUrl);
+        }
+
         private void InfoCheckForUpdatesMenuItem_Click(object sender, EventArgs e)
         {
             CheckForUpdates(false);
@@ -3159,9 +3270,9 @@ namespace MobiusEditor
 
         private async void CheckForUpdates(bool onlyShowWhenNew)
         {
-            this.shouldCheckUpdate = false;
+            shouldCheckUpdate = false;
             string title = Program.ProgramVersionTitle;
-            if (this.startedUpdate)
+            if (startedUpdate)
             {
                 if (!onlyShowWhenNew)
                 {
@@ -3169,8 +3280,8 @@ namespace MobiusEditor
                 }
                 return;
             }
-            this.startedUpdate = true;
-            this.SetTitle();
+            startedUpdate = true;
+            SetTitle();
             bool newFound = false;
             string tag = null;
             const string checkError = "An error occurred when checking the version:";
@@ -3241,10 +3352,10 @@ namespace MobiusEditor
                 string versionMinStr = match.Groups[4].Value;
                 string versionBldStr = match.Groups[6].Value;
                 string versionRevStr = match.Groups[8].Value;
-                int versionMaj = String.IsNullOrEmpty(versionMajStr) ? 0 : int.Parse(versionMajStr);
-                int versionMin = String.IsNullOrEmpty(versionMinStr) ? 0 : int.Parse(versionMinStr);
-                int versionBld = String.IsNullOrEmpty(versionBldStr) ? 0 : int.Parse(versionBldStr);
-                int versionRev = String.IsNullOrEmpty(versionRevStr) ? 0 : int.Parse(versionRevStr);
+                int versionMaj = String.IsNullOrEmpty(versionMajStr) ? 0 : Int32.Parse(versionMajStr);
+                int versionMin = String.IsNullOrEmpty(versionMinStr) ? 0 : Int32.Parse(versionMinStr);
+                int versionBld = String.IsNullOrEmpty(versionBldStr) ? 0 : Int32.Parse(versionBldStr);
+                int versionRev = String.IsNullOrEmpty(versionRevStr) ? 0 : Int32.Parse(versionRevStr);
                 System.Version serverVer = new System.Version(versionMaj, versionMin, versionBld, versionRev);
                 System.Version.TryParse(Properties.Settings.Default.LastCheckVersion, out System.Version lastChecked);
                 bool isDifferent = serverVer != lastChecked;
@@ -3273,8 +3384,8 @@ namespace MobiusEditor
             }
             finally
             {
-                this.startedUpdate = false;
-                this.SetTitle();
+                startedUpdate = false;
+                SetTitle();
                 if (returnMessage != null && (!onlyShowWhenNew || newFound))
                 {
                     ClearActiveTool();
@@ -3308,13 +3419,16 @@ namespace MobiusEditor
             RefreshUI();
             UpdateUndoRedo();
             LoadMixTree();
-            if (filename != null)
+            if (loadedMapDisplayFileName != null)
             {
-                this.shouldCheckUpdate = Globals.CheckUpdatesOnStartup;
-                OpenFile(filename, true);
+                string fileToOpen = loadedMapDisplayFileName;
+                loadedMapDisplayFileName = null;
+                shouldCheckUpdate = Globals.CheckUpdatesOnStartup;
+                OpenFile(fileToOpen, true);
             }
             else if (Globals.CheckUpdatesOnStartup)
             {
+                shouldCheckUpdate = false;
                 CheckForUpdates(true);
             }
         }
@@ -3385,33 +3499,16 @@ namespace MobiusEditor
         /// <returns>false if the action was aborted.</returns>
         private bool PromptSaveMap(Action nextAction, bool onlyAfterSave)
         {
-#if !DEVELOPER
-            if (loadedFileType == FileType.PGM || loadedFileType == FileType.MEG)
-            {
-                return true;
-            }
-#endif
             if (plugin?.Dirty ?? false)
             {
                 ClearActiveTool();
-                var message = String.IsNullOrEmpty(filename) ? "Save new map?" : String.Format("Save map '{0}'?", filename);
+                var message = String.IsNullOrEmpty(loadedMapDisplayFileName) ? "Save new map?" : String.Format("Save map '{0}'?", loadedMapDisplayFileName);
                 var result = MessageBox.Show(this, message, "Save", MessageBoxButtons.YesNoCancel, MessageBoxIcon.Question);
                 switch (result)
                 {
                     case DialogResult.Yes:
                         {
-                            if (!this.DoValidate())
-                            {
-                                return false;
-                            }
-                            if (String.IsNullOrEmpty(filename))
-                            {
-                                SaveAsAction(nextAction, true);
-                            }
-                            else
-                            {
-                                SaveAction(false, nextAction, true, false);
-                            }
+                            SaveAction(false, nextAction, false, false);
                             if (nextAction == null)
                             {
                                 RefreshActiveTool(true);
@@ -3446,29 +3543,35 @@ namespace MobiusEditor
         {
             TheaterType theater = plugin.Map.Theater;
             string th = theater.Name;
-            TemplateType template = plugin.Map.TemplateTypes.Where(tt => tt.ExistsInTheater && !tt.Flag.HasFlag(TemplateTypeFlag.Clear)
+            TemplateType template = plugin.Map.TemplateTypes.Where(tt => tt.ExistsInTheater && !tt.Flags.HasFlag(TemplateTypeFlag.Clear)
                 && tt.IconWidth == 1 && tt.IconHeight == 1).OrderBy(tt => tt.Name).FirstOrDefault();
             Tile templateTile = null;
             if (template != null)
             {
                 Globals.TheTilesetManager.GetTileData(template.Name, template.GetIconIndex(template.GetFirstValidIcon()), out templateTile);
             }
-            SmudgeType smudge = plugin.Map.SmudgeTypes.Where(sm => !sm.IsAutoBib && sm.Size.Width == 1 && sm.Size.Height == 1 && sm.Thumbnail != null
+            List<SmudgeType> smudges = plugin.Map.SmudgeTypes.Where(sm => sm.Size.Width == 1 && sm.Size.Height == 1 && sm.Thumbnail != null
                 && (!Globals.FilterTheaterObjects || sm.ExistsInTheater))
-                .OrderBy(sm => sm.Icons).ThenBy(sm => sm.ID).FirstOrDefault();
-            OverlayType overlay = plugin.Map.OverlayTypes.Where(ov => (ov.Flag & plugin.GameInfo.OverlayIconType) != OverlayTypeFlag.None && ov.Thumbnail != null
+                .OrderBy(sm => sm.Icons).ThenBy(sm => sm.ID).ToList();
+            SmudgeType smudge = smudges.FirstOrDefault(sm => sm.ExistsInTheater) ?? smudges.FirstOrDefault();
+            List<OverlayType> overlays = plugin.Map.OverlayTypes.Where(ov => (ov.Flags & plugin.GameInfo.OverlayIconType) != OverlayTypeFlag.None && ov.Thumbnail != null
                 && (!Globals.FilterTheaterObjects || ov.ExistsInTheater))
-                .OrderBy(ov => ov.ID).FirstOrDefault();
-            TerrainType terrain = plugin.Map.TerrainTypes.Where(tr => tr.Thumbnail != null && !Globals.FilterTheaterObjects || tr.ExistsInTheater)
-                .OrderBy(tr => tr.ID).FirstOrDefault();
-            InfantryType infantry = plugin.Map.InfantryTypes.FirstOrDefault();
+                .OrderBy(ov => ov.ID).ToList();
+            OverlayType overlay = overlays.FirstOrDefault(ov => ov.ExistsInTheater) ?? overlays.FirstOrDefault();
+            List<TerrainType> terrains = plugin.Map.TerrainTypes.Where(tr => tr.Thumbnail != null && !Globals.FilterTheaterObjects || tr.ExistsInTheater)
+                .OrderBy(tr => tr.ID).ToList();
+            TerrainType terrain = terrains.FirstOrDefault(tr => tr.ExistsInTheater) ?? terrains.FirstOrDefault(tr => tr.GraphicsFound) ?? terrains.FirstOrDefault();
+            InfantryType infantry = plugin.Map.InfantryTypes.FirstOrDefault(tr => tr.GraphicsFound) ?? plugin.Map.InfantryTypes.FirstOrDefault();
             UnitType unit = plugin.Map.UnitTypes.FirstOrDefault();
-            BuildingType building = plugin.Map.BuildingTypes.Where(bl => bl.Size.Width == 2 && bl.Size.Height == 2
-                                        && (!Globals.FilterTheaterObjects || !bl.IsTheaterDependent || bl.ExistsInTheater)).OrderBy(bl => bl.ID).FirstOrDefault();
-            OverlayType resource = plugin.Map.OverlayTypes.Where(ov => ov.Flag.HasFlag(OverlayTypeFlag.TiberiumOrGold)
-                                        && (!Globals.FilterTheaterObjects || ov.ExistsInTheater)).OrderBy(ov => ov.ID).FirstOrDefault();
-            OverlayType wall = plugin.Map.OverlayTypes.Where(ov => ov.Flag.HasFlag(OverlayTypeFlag.Wall)
-                                        && (!Globals.FilterTheaterObjects || ov.ExistsInTheater)).OrderBy(ov => ov.ID).FirstOrDefault();
+            List<BuildingType> buildings = plugin.Map.BuildingTypes.Where(bl => bl.Size.Width == 2 && bl.Size.Height == 2
+                                        && (!Globals.FilterTheaterObjects || !bl.IsTheaterDependent || bl.ExistsInTheater)).OrderBy(bl => bl.ID).ToList();
+            BuildingType building = buildings.FirstOrDefault(bl => !bl.IsTheaterDependent || bl.ExistsInTheater) ?? buildings.FirstOrDefault(bl => bl.GraphicsFound) ?? buildings.FirstOrDefault();
+            List<OverlayType> resources = plugin.Map.OverlayTypes.Where(ov => ov.Flags.HasFlag(OverlayTypeFlag.TiberiumOrGold)
+                                        && (!Globals.FilterTheaterObjects || ov.ExistsInTheater)).OrderBy(ov => ov.ID).ToList();
+            OverlayType resource = resources.FirstOrDefault(ov => ov.ExistsInTheater) ?? resources.FirstOrDefault();
+            List<OverlayType> walls = plugin.Map.OverlayTypes.Where(ov => ov.Flags.HasFlag(OverlayTypeFlag.Wall)
+                                        && (!Globals.FilterTheaterObjects || ov.ExistsInTheater)).OrderBy(ov => ov.ID).ToList();
+            OverlayType wall = walls.FirstOrDefault(ov => ov.ExistsInTheater) ?? walls.FirstOrDefault();
             LoadNewIcon(mapToolStripButton, templateTile?.Image, plugin, 0);
             LoadNewIcon(smudgeToolStripButton, smudge?.Thumbnail, plugin, 1);
             //LoadNewIcon(overlayToolStripButton, overlayTile?.Image, plugin, 2);

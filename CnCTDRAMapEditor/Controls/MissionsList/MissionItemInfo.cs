@@ -13,22 +13,20 @@
 //   0. You just DO WHAT THE FUCK YOU WANT TO.
 using MobiusEditor.Controls.ControlsList;
 using MobiusEditor.Model;
-using MobiusEditor.Utility;
-using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Windows.Forms;
 
 namespace MobiusEditor.Controls
 {
-    internal class MissionItemInfo : CustomControlInfo<MissionItemControl, TeamTypeMission>
+    internal class MissionItemInfo : CustomControlInfo<MissionItemControl, TeamTypeMission, char, int>
     {
-        TeamMission[] missions;
-        ListItem<int>[] waypoints;
-        int mapSize;
-        ToolTip tooltip;
+        readonly TeamMission[] missions;
+        readonly ListItem<int>[] waypoints;
+        readonly int mapSize;
+        readonly ToolTip tooltip;
 
-        public MissionItemInfo(String name, IEnumerable<TeamTypeMission> properties, IEnumerable<TeamMission> missions, IEnumerable<ListItem<int>> waypoints, int mapSize, ToolTip tooltip)
+        public MissionItemInfo(string name, IEnumerable<TeamTypeMission> properties, IEnumerable<TeamMission> missions, IEnumerable<ListItem<int>> waypoints, int mapSize, ToolTip tooltip)
         {
             Name = name;
             Properties = properties.ToArray();
@@ -38,19 +36,24 @@ namespace MobiusEditor.Controls
             this.tooltip = tooltip;
         }
 
+        public override MissionItemControl MakeControl(TeamTypeMission property, IListedControlController<TeamTypeMission, char, int> controller, int index)
+        {
+            return new MissionItemControl(property, controller, missions, waypoints, mapSize, tooltip, index);
+        }
+
+        public override void UpdateControl(TeamTypeMission property, IListedControlController<TeamTypeMission, char, int> controller, MissionItemControl control, int index)
+        {
+            control.SetInfo(property, controller, missions, waypoints, mapSize, tooltip, index);
+        }
+
         public override MissionItemControl GetControlByProperty(TeamTypeMission property, IEnumerable<MissionItemControl> controls)
         {
             return controls.FirstOrDefault(ctrl => ReferenceEquals(ctrl.Info, property));
         }
 
-        public override MissionItemControl MakeControl(TeamTypeMission property, ListedControlController<TeamTypeMission> controller)
+        public override void HideControlTooltips(MissionItemControl control)
         {
-            return new MissionItemControl(property, controller, missions, waypoints, mapSize, tooltip);
-        }
-
-        public override void UpdateControl(TeamTypeMission property, ListedControlController<TeamTypeMission> controller, MissionItemControl control)
-        {
-            control.SetInfo(property, controller, missions, waypoints, mapSize, tooltip);
+            control.HideAllToolTips();
         }
     }
 }

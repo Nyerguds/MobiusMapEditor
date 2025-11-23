@@ -13,9 +13,7 @@
 // GNU General Public License along with permitted additional restrictions
 // with this program. If not, see https://github.com/electronicarts/CnC_Remastered_Collection
 using System;
-using System.Collections.Generic;
 using System.Diagnostics;
-using System.Linq;
 
 namespace MobiusEditor.Model
 {
@@ -24,12 +22,14 @@ namespace MobiusEditor.Model
     {
         /// <summary>No flags set.</summary>
         None          /**/ = 0,
+        /// <summary>This is the Neutral side house. This information can be used to get a default House for certain neutral objects.</summary>
+        Civilian      /**/ = 1 << 1,
         /// <summary>This is a House for special purposes that doesn't actually exist as playable side in the game, meaning it should not be included in normal lists.</summary>
-        Special       /**/ = 1 << 1,
+        Special       /**/ = 1 << 2,
         /// <summary>This House type can be used in the House alliances lists.</summary>
-        ForAlliances  /**/ = 1 << 2,
+        ForAlliances  /**/ = 1 << 3,
         /// <summary>This is a special empty House, used if the plugin does not assign any House to unbuilt structures. This will typically be marked as Special too.</summary>
-        BaseHouse    /**/ = 1 << 3,
+        BaseHouse     /**/ = 1 << 4,
     }
 
     [DebuggerDisplay("{Name}")]
@@ -38,44 +38,40 @@ namespace MobiusEditor.Model
         public int ID { get; private set; }
         public string Name { get; private set; }
         public string DisplayName { get { return nameId == null ? Name : Globals.TheGameTextManager[this.nameId]; } }
+        /// <summary>This is the Neutral side house. This information can be used to get a default House for certain neutral objects.</summary>
+        public bool IsCivilian => Flags.HasFlag(HouseTypeFlag.Civilian);
+        /// <summary>This is a House for special purposes that doesn't actually exist as playable side in the game, meaning it should not be included in normal lists.</summary>
+        public bool IsSpecial => Flags.HasFlag(HouseTypeFlag.Special);
+        /// <summary>This House type can be used in the House alliances lists.</summary>
+        public bool IsForAlliances => Flags.HasFlag(HouseTypeFlag.ForAlliances);
+        /// <summary>This is a special empty House, used if the plugin does not assign any House to unbuilt structures. This will typically be marked as Special too.</summary>
+        public bool IsBaseHouse => Flags.HasFlag(HouseTypeFlag.BaseHouse);
+        public HouseTypeFlag Flags { get; private set; }
         public string UnitTeamColor { get; private set; }
         public string BuildingTeamColor { get; private set; }
-        public WaypointFlag MultiplayIdentifier { get; private set; }
-        public HouseTypeFlag Flags { get; private set; }
-        public IDictionary<string, string> OverrideTeamColors { get; private set; }
+        public string OutlineColor { get; private set; }
         private string nameId;
 
-        public HouseType(int id, string name, string nameId, WaypointFlag multiplayIdentifier, HouseTypeFlag flags, string unitTeamColor, string buildingTeamColor, params (string type, string teamColor)[] overrideTeamColors)
+        public HouseType(int id, string name, string nameId, HouseTypeFlag flags, string unitTeamColor, string buildingTeamColor, string outlineColor)
         {
-            this.ID = id;
-            this.Name = name;
+            ID = id;
+            Name = name;
             this.nameId = nameId;
-            this.MultiplayIdentifier = multiplayIdentifier;
-            this.Flags = flags;
+            Flags = flags;
             // Alliances not supported for house IDs larger than 32.
             if (id >= 32) Flags &= ~HouseTypeFlag.ForAlliances;
-            this.UnitTeamColor = unitTeamColor;
-            this.BuildingTeamColor = buildingTeamColor;
-            this.OverrideTeamColors = overrideTeamColors.ToDictionary(x => x.type, x => x.teamColor);
-        }
-
-        public HouseType(int id, string name, string nameId, HouseTypeFlag flags, string unitTeamColor, string buildingTeamColor, params (string type, string teamColor)[] overrideTeamColors)
-            : this(id, name, nameId, WaypointFlag.None, flags, unitTeamColor, buildingTeamColor, overrideTeamColors)
-        {
+            UnitTeamColor = unitTeamColor;
+            BuildingTeamColor = buildingTeamColor ?? UnitTeamColor;
+            OutlineColor = outlineColor ?? BuildingTeamColor;
         }
 
         public HouseType(int id, string name, string nameId, HouseTypeFlag flags, string teamColor)
-            : this(id, name, nameId, WaypointFlag.None, flags, teamColor, teamColor)
-        {
-        }
-
-        public HouseType(int id, string name, WaypointFlag multiplayIdentifier, HouseTypeFlag flags, string teamColor)
-            : this(id, name, null, multiplayIdentifier, flags, teamColor, teamColor)
+            : this(id, name, nameId, flags, teamColor, teamColor, teamColor)
         {
         }
 
         public HouseType(int id, string name, HouseTypeFlag flags, string teamColor)
-            : this(id, name, null, WaypointFlag.None, flags, teamColor, teamColor)
+            : this(id, name, null, flags, teamColor, teamColor, teamColor)
         {
         }
 

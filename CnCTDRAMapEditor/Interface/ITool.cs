@@ -33,7 +33,7 @@ namespace MobiusEditor.Interface
         /// <summary>Allows getting/setting the current layers to paint.</summary>
         MapLayerFlag Layers { get; set; }
         /// <summary>Allows extracting/setting the state of the current selection and mock object in the Tool.</summary>
-        Object CurrentObject { get; set; }
+        object CurrentObject { get; set; }
         /// <summary>Allows the Tool to force the main window to refresh its mouse cell info without a real mouse move event occurring.</summary>
         event EventHandler RequestMouseInfoRefresh;
 

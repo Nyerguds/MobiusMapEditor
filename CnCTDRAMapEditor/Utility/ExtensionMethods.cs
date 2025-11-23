@@ -63,6 +63,11 @@ namespace MobiusEditor.Utility
             return value < minValue || value > maxValue ? errorValue : value;
         }
 
+        public static byte Restrict(this byte value, byte minValue, byte maxValue)
+        {
+            return Math.Max(minValue, Math.Min(value, maxValue));
+        }
+
         public static int Restrict(this int value, int minValue, int maxValue)
         {
             return Math.Max(minValue, Math.Min(value, maxValue));
@@ -158,6 +163,21 @@ namespace MobiusEditor.Utility
             return new Point(rectangle.X, rectangle.Y);
         }
 
+        public static Point BottomLeft(this Rectangle rectangle)
+        {
+            return new Point(rectangle.X, rectangle.Y + rectangle.Height);
+        }
+
+        public static Point TopRight(this Rectangle rectangle)
+        {
+            return new Point(rectangle.X + rectangle.Width, rectangle.Y);
+        }
+
+        public static Point BottomRight(this Rectangle rectangle)
+        {
+            return new Point(rectangle.X + rectangle.Width, rectangle.Y + rectangle.Height);
+        }
+
         /// <summary>Returns a new point that is offset compared to the origin point.</summary>
         /// <remarks>Unlike <see cref="Point.Offset(int, int)"/>, this does not change the original point, but returns a new one.</remarks>
         /// <param name="origin">Origin point</param>
@@ -171,11 +191,22 @@ namespace MobiusEditor.Utility
             return p;
         }
 
-        public static Size GetDimensions(this bool[,] mask)
+        /// <summary>
+        /// Returns the dimensions of the two-dimensional array, as Size. The first dimension is seen as the Y-value.
+        /// </summary>
+        /// <typeparam name="T">Type of the array.</typeparam>
+        /// <param name="twoDimArr">The two-dimensional array to evaluate.</param>
+        /// <returns>the dimensions of the two-dimensional array, as Size, with the first dimension as Y-value.</returns>
+        public static Size GetDimensions<T>(this T[,] twoDimArr)
         {
-            return mask == null ? Size.Empty : new Size(mask.GetLength(1), mask.GetLength(0));
+            return twoDimArr == null ? Size.Empty : new Size(twoDimArr.GetLength(1), twoDimArr.GetLength(0));
         }
 
+        /// <summary>
+        /// Enumerates all the points inside a rectangle.
+        /// </summary>
+        /// <param name="rectangle">Rectangle to turn into points.</param>
+        /// <returns>The points inside the fiven rectangle.</returns>
         public static IEnumerable<Point> Points(this Rectangle rectangle)
         {
             for (var y = rectangle.Top; y < rectangle.Bottom; ++y)
@@ -189,7 +220,7 @@ namespace MobiusEditor.Utility
 
         /// <summary>
         /// Returns the points contained in a specified border of a given rectangle. The border is only considered to be inside the rectangle area.
-        /// If the thickness it exceeds Y/2 or X/2, the entire contents of the rectangle will be returned.
+        /// If the thickness exceeds Y/2 or X/2, the entire contents of the rectangle will be returned.
         /// </summary>
         /// <param name="rectangle">Rectangle</param>
         /// <param name="thickness">Thickness of the border inside the rectangle.</param>
@@ -236,6 +267,57 @@ namespace MobiusEditor.Utility
                     yield return new Point(x, y);
                 }
             }
+        }
+
+        /// <summary>
+        /// Adjusts the given Rectangle to a different scale, including the origin point. For maximum precision, the <paramref name="multiplier"/>
+        /// is applied before the <paramref name="divisor"/>. If any of the arguments are null, they are considered to be (1, 1).
+        /// </summary>
+        /// <param name="rectangle">Rectangle to scale</param>
+        /// <param name="multiplier">Value with which to multiply all coordinates.</param>
+        /// <param name="divisor">Value by which to divide all coordinates.</param>
+        /// <returns>The rectangle, adjusted to the new scale.</returns>
+        public static Rectangle AdjustToScale(this Rectangle rectangle, Size? multiplier, Size? divisor = null)
+        {
+            int mulWidth = multiplier.HasValue ? multiplier.Value.Width : 1;
+            int mulHeight = multiplier.HasValue ? multiplier.Value.Height : 1;
+            int divWidth = divisor.HasValue ? divisor.Value.Width : 1;
+            int divHeight = divisor.HasValue ? divisor.Value.Height : 1;
+            return new Rectangle(
+                    rectangle.X * mulWidth / divWidth,
+                    rectangle.Y * mulHeight / divHeight,
+                    rectangle.Width * mulWidth / divWidth,
+                    rectangle.Height * mulHeight / divHeight);
+        }
+
+        /// <summary>
+        /// Adjusts the given Size to a different scale. For maximum precision, the <paramref name="multiplier"/>
+        /// is applied before the <paramref name="divisor"/>. If any of the arguments are null, they are considered to be (1, 1).
+        /// </summary>
+        /// <param name="size">Size to scale</param>
+        /// <param name="multiplier">Value with which to multiply all coordinates.</param>
+        /// <param name="divisor">Value by which to divide all coordinates.</param>
+        /// <returns>The rectangle, adjusted to the new scale.</returns>
+        public static Size AdjustToScale(this Size size, Size? multiplier, Size? divisor = null)
+        {
+            int mulWidth = multiplier.HasValue ? multiplier.Value.Width : 1;
+            int mulHeight = multiplier.HasValue ? multiplier.Value.Height : 1;
+            int divWidth = divisor.HasValue ? divisor.Value.Width : 1;
+            int divHeight = divisor.HasValue ? divisor.Value.Height : 1;
+            return new Size(size.Width * mulWidth / divWidth, size.Height * mulHeight / divHeight);
+        }
+
+        /// <summary>
+        /// Adjusts the given Point to a different scale. For maximum precision, the <paramref name="multiplier"/>
+        /// is applied before the <paramref name="divisor"/>. If any of the arguments are null, they are considered to be (1, 1).
+        /// </summary>
+        /// <param name="point">Point to scale</param>
+        /// <param name="multiplier">Value with which to multiply all coordinates.</param>
+        /// <param name="divisor">Value by which to divide all coordinates.</param>
+        /// <returns>The rectangle, adjusted to the new scale.</returns>
+        public static Point AdjustToScale(this Point point, Size? multiplier, Size? divisor = null)
+        {
+            return new Point(AdjustToScale(new Size(point), multiplier, divisor));
         }
 
         public static IEnumerable<T> Yield<T>(this T item)
@@ -396,7 +478,7 @@ namespace MobiusEditor.Utility
             if ((bitmap.PixelFormat & PixelFormat.Indexed) == PixelFormat.Indexed)
             {
                 ColorPalette pal = bitmap.Palette;
-                for (int i = 0; i < pal.Entries.Length; i++)
+                for (int i = 0; i < pal.Entries.Length; ++i)
                 {
                     pal.Entries[i] = Color.FromArgb(255, pal.Entries[i]);
                 }
@@ -408,13 +490,13 @@ namespace MobiusEditor.Utility
                 return;
             }
             BitmapData sourceData = bitmap.LockBits(rect, ImageLockMode.ReadWrite, PixelFormat.Format32bppArgb);
-            Int32 actualDataWidth = rect.Width * 4;
-            Int32 h = bitmap.Height;
-            Int32 origStride = sourceData.Stride;
-            Byte[] imageData = new Byte[actualDataWidth];
-            Int64 sourcePos = sourceData.Scan0.ToInt64();
+            int actualDataWidth = rect.Width * 4;
+            int h = bitmap.Height;
+            int origStride = sourceData.Stride;
+            byte[] imageData = new byte[actualDataWidth];
+            long sourcePos = sourceData.Scan0.ToInt64();
             // Copy line by line, skipping by stride but copying actual data width
-            for (Int32 y = 0; y < h; ++y)
+            for (int y = 0; y < h; ++y)
             {
                 Marshal.Copy(new IntPtr(sourcePos), imageData, 0, actualDataWidth);
                 for (int i = 3; i < actualDataWidth; i += 4)
@@ -436,15 +518,15 @@ namespace MobiusEditor.Utility
             targetImage.SetResolution(bitmap.HorizontalResolution, bitmap.VerticalResolution);
             BitmapData sourceData = bitmap.LockBits(rect, ImageLockMode.ReadOnly, PixelFormat.Format32bppArgb);
             BitmapData targetData = targetImage.LockBits(rect, ImageLockMode.WriteOnly, PixelFormat.Format32bppArgb);
-            Int32 actualDataWidth = ((Image.GetPixelFormatSize(PixelFormat.Format32bppArgb) * rect.Width) + 7) / 8;
-            Int32 h = bitmap.Height;
-            Int32 origStride = sourceData.Stride;
-            Int32 targetStride = targetData.Stride;
-            Byte[] imageData = new Byte[actualDataWidth];
-            Int64 sourcePos = sourceData.Scan0.ToInt64();
-            Int64 destPos = targetData.Scan0.ToInt64();
+            int actualDataWidth = ((Image.GetPixelFormatSize(PixelFormat.Format32bppArgb) * rect.Width) + 7) / 8;
+            int h = bitmap.Height;
+            int origStride = sourceData.Stride;
+            int targetStride = targetData.Stride;
+            byte[] imageData = new byte[actualDataWidth];
+            long sourcePos = sourceData.Scan0.ToInt64();
+            long destPos = targetData.Scan0.ToInt64();
             // Copy line by line, skipping by stride but copying actual data width
-            for (Int32 y = 0; y < h; ++y)
+            for (int y = 0; y < h; ++y)
             {
                 Marshal.Copy(new IntPtr(sourcePos), imageData, 0, actualDataWidth);
                 for (int i = 3; i < actualDataWidth; i += 4)

@@ -26,7 +26,8 @@ namespace MobiusEditor.Controls
     {
         public TeamTypeMission Info { get; set; }
         private bool m_Loading;
-        private ListedControlController<TeamTypeMission> m_Controller;
+        private IListedControlController<TeamTypeMission, char, int> m_Controller;
+        private TeamMission[] missionsArr;
         private TeamMission defaultMission;
         private TeamMissionArgType currentType = TeamMissionArgType.None;
         private ListItem<int>[] waypoints;
@@ -34,41 +35,68 @@ namespace MobiusEditor.Controls
         private ToolTip tooltip;
 
         public MissionItemControl()
-            :this(null, null, null, null, 0, null)
+            :this(null, null, null, null, 0, null, -1)
         {
         }
 
-        public MissionItemControl(TeamTypeMission info, ListedControlController<TeamTypeMission> controller, IEnumerable<TeamMission> missions, IEnumerable<ListItem<int>> waypoints, int mapSize, ToolTip tooltip)
+        public MissionItemControl(TeamTypeMission info, IListedControlController<TeamTypeMission, char, int> controller,
+            IEnumerable<TeamMission> missions, IEnumerable<ListItem<int>> waypoints, int mapSize, ToolTip tooltip, int index)
         {
             InitializeComponent();
-            SetInfo(info, controller, missions, waypoints, mapSize, tooltip);
+            SetInfo(info, controller, missions, waypoints, mapSize, tooltip, index);
         }
 
-        public void SetInfo(TeamTypeMission info, ListedControlController<TeamTypeMission> controller, IEnumerable<TeamMission> missions, IEnumerable<ListItem<int>> waypoints, int mapSize, ToolTip tooltip)
+        public void SetInfo(TeamTypeMission info, IListedControlController<TeamTypeMission, char, int> controller,
+            IEnumerable<TeamMission> missions, IEnumerable<ListItem<int>> waypoints, int mapSize, ToolTip tooltip, int index)
         {
+            TeamTypeMission old = Info;
+            bool doFullUpdate = false;
             try
             {
-                this.m_Loading = true;
-                this.Info = null;
-                this.m_Controller = controller;
-                TeamMission[] missionsArr = missions.ToArray();
-                this.defaultMission = missionsArr.FirstOrDefault();
-                this.cmbMission.DisplayMember = null;
-                this.cmbMission.DataSource = null;
-                this.cmbMission.Items.Clear();
-                this.cmbMission.DataSource = missionsArr;
-                this.cmbMission.DisplayMember = "Mission";
-                this.waypoints = waypoints.ToArray();
-                this.mapSize = mapSize;
+                m_Loading = true;
+                doFullUpdate = info != null && old != null && (info.Mission != old.Mission || info.Argument != old.Argument);
+                Info = null;
+                m_Controller = controller;
+                lblIndex.Text = index == -1 ? String.Empty : index.ToString();
+                TeamMission[] tmpMissArr = missions.ToArray();
+                if (doFullUpdate || !ArrayUtils.ArraysAreEqual(missionsArr, tmpMissArr))
+                {
+                    doFullUpdate = true;
+                    missionsArr = tmpMissArr;
+                    defaultMission = missionsArr.FirstOrDefault();
+                    cmbMission.DisplayMember = null;
+                    cmbMission.DataSource = missionsArr;
+                    cmbMission.DisplayMember = "Mission";
+                }
+                ListItem<int>[] tmpWpArr = waypoints.ToArray();
+                if (doFullUpdate || !ArrayUtils.ArraysAreEqual(this.waypoints, tmpWpArr))
+                {
+                    doFullUpdate = true;
+                    this.waypoints = waypoints.ToArray();
+                }
+                if (doFullUpdate || this.mapSize != mapSize)
+                {
+                    doFullUpdate = true;
+                    this.mapSize = mapSize;
+                }
                 this.tooltip = tooltip;
             }
             finally
             {
-                this.m_Loading = false;
+                m_Loading = false;
             }
             if (info != null)
             {
-                UpdateInfo(info);
+                if (doFullUpdate)
+                {
+                    UpdateInfo(info); 
+                }
+                else
+                {
+                    Info = info;
+                }
+                // When resetting an item, always clear all tooltips.
+                HideAllToolTips();
             }
         }
 
@@ -76,26 +104,38 @@ namespace MobiusEditor.Controls
         {
             try
             {
-                this.m_Loading = true;
-                this.Info = info;
+                m_Loading = true;
+                Info = info;
                 TeamMission mission = info != null ? info.Mission : defaultMission;
                 int value = info != null ? info.Argument : 0;
-                this.cmbMission.Text = mission.Mission;
+                cmbMission.Text = mission.Mission;
                 int newVal = UpdateValueControl(mission, value);
-                if (this.Info != null)
+                if (Info != null)
                 {
                     Info.Argument = newVal;
                 }
             }
             finally
             {
-                this.m_Loading = false;
+                m_Loading = false;
             }
         }
 
         public void FocusValue()
         {
-            this.cmbMission.Select();
+            cmbMission.Select();
+        }
+
+        public void FocusButton()
+        {
+            btnOptions.Select();
+        }
+
+        public void HideAllToolTips()
+        {
+            Control_MouseLeave(cmbMission, new EventArgs());
+            Control_MouseLeave(numValue, new EventArgs());
+            Control_MouseLeave(cmbValue, new EventArgs());
         }
 
         private int UpdateValueControl(TeamMission mission, int value)
@@ -103,142 +143,205 @@ namespace MobiusEditor.Controls
             if (tooltip != null)
             {
                 tooltip.SetToolTip(cmbMission, mission.Tooltip);
-                tooltip.SetToolTip(this.numValue, null);
-                tooltip.SetToolTip(this.cmbValue, null);
+                tooltip.SetToolTip(numValue, null);
+                tooltip.SetToolTip(cmbValue, null);
             }
             int newValue = value;
             switch (mission.ArgType)
             {
                 case TeamMissionArgType.None:
                 default:
-                    this.numValue.Visible = false;
-                    this.cmbValue.Visible = false;
+                    numValue.Visible = false;
+                    cmbValue.Visible = false;
                     newValue = 0;
                     break;
                 case TeamMissionArgType.Number:
-                    newValue = SetUpNumValue(0, Int32.MaxValue, 1, value, this.tooltip, "Number");
+                    newValue = SetUpNumValue(0, Int32.MaxValue, 1, value, tooltip, "Number");
                     break;
                 case TeamMissionArgType.Time:
-                    newValue = SetUpNumValue(0, Int32.MaxValue, 10, value, this.tooltip, "Time in 1/10th min");
+                    newValue = SetUpNumValue(0, Int32.MaxValue, 10, value, tooltip, "Time in 1/10th min");
                     break;
                 case TeamMissionArgType.Waypoint:
                     newValue = SetUpCmbValue(waypoints, value, tooltip, "Waypoint");
                     break;
                 case TeamMissionArgType.OptionsList:
-                    ListItem<int>[] items = mission.DropdownOptions.Select(ddo => new ListItem<int>(ddo.Value, ddo.Label)).ToArray();
+                    ListItem<int>[] items = mission.DropdownOptions.Select(ddo => ListItem.Create(ddo.Value, ddo.Label)).ToArray();
                     newValue = SetUpCmbValue(items, value, tooltip, null);
                     break;
                 case TeamMissionArgType.MapCell:
-                    newValue = SetUpNumValue(0, mapSize - 1, 1, value, this.tooltip, "Map cell");
+                    newValue = SetUpNumValue(0, mapSize - 1, 1, value, tooltip, "Map cell");
                     break;
                 case TeamMissionArgType.MissionNumber:
-                    newValue = SetUpNumValue(0, Int32.MaxValue, 1, value, this.tooltip, "0-based index in this orders list");
+                    newValue = SetUpNumValue(0, Int32.MaxValue, 1, value, tooltip, "0-based index in this orders list");
                     break;
                 case TeamMissionArgType.GlobalNumber:
-                    newValue = SetUpNumValue(0, 29, 1, value, this.tooltip, "Global to set");
+                    newValue = SetUpNumValue(0, 29, 1, value, tooltip, "Global to set");
                     break;
                 case TeamMissionArgType.Tarcom:
-                    newValue = SetUpNumValue(0, Int32.MaxValue, 1, value, this.tooltip, "Tarcom");
+                    newValue = SetUpNumValue(0, Int32.MaxValue, 1, value, tooltip, "Tarcom");
                     break;
             }
             currentType = mission.ArgType;
             return newValue;
         }
 
-        private int SetUpNumValue(int min, int max, int mouseWheelIncrement, int curValue, ToolTip tooltip, String tooltipText)
+        private int SetUpNumValue(int min, int max, int mouseWheelIncrement, int curValue, ToolTip tooltip, string tooltipText)
         {
-            this.cmbValue.Visible = false;
-            this.numValue.Visible = true;
-            this.numValue.Value = this.numValue.Minimum;
-            this.numValue.Minimum = min;
-            this.numValue.Maximum = max;
-            this.numValue.MouseWheelIncrement = mouseWheelIncrement;
+            cmbValue.Visible = false;
+            numValue.Visible = true;
+            numValue.Value = numValue.Minimum;
+            numValue.Minimum = min;
+            numValue.Maximum = max;
+            numValue.MouseWheelIncrement = mouseWheelIncrement;
             int constrainedVal = (int)numValue.Constrain(curValue);
-            this.numValue.Value = constrainedVal;
+            numValue.Value = constrainedVal;
             if (tooltip != null)
             {
-                tooltip.SetToolTip(this.numValue, tooltipText);
-                tooltip.SetToolTip(this.cmbValue, null);
+                tooltip.SetToolTip(numValue, tooltipText);
+                tooltip.SetToolTip(cmbValue, null);
             }
             return constrainedVal;
         }
 
-        private int SetUpCmbValue(ListItem<int>[] items, int value, ToolTip tooltip, String tooltipText)
+        private int SetUpCmbValue(ListItem<int>[] items, int value, ToolTip tooltip, string tooltipText)
         {
-            this.numValue.Visible = false;
-            this.cmbValue.Visible = true;
-            this.cmbValue.DataSource = items;
+            numValue.Visible = false;
+            cmbValue.Visible = true;
+            cmbValue.DataSource = items;
             int selectIndex = ListItem.GetIndexInList(value, items);
             if (selectIndex == -1 && items.Length > 0)
             {
                 selectIndex = 0;
             }
-            this.cmbValue.SelectedIndex = selectIndex;
+            cmbValue.SelectedIndex = selectIndex;
             if (tooltip != null)
             {
-                tooltip.SetToolTip(this.cmbValue, tooltipText);
-                tooltip.SetToolTip(this.numValue, null);
+                tooltip.SetToolTip(cmbValue, tooltipText);
+                tooltip.SetToolTip(numValue, null);
             }
             return selectIndex;
         }
 
-        private void CmbMission_SelectedIndexChanged(Object sender, EventArgs e)
+        private void CmbMission_SelectedIndexChanged(object sender, EventArgs e)
         {
-            if (this.m_Loading || this.Info == null)
+            if (m_Loading || Info == null)
             {
                 return;
             }
-            TeamMission mission = this.cmbMission.SelectedItem as TeamMission;
-            if (mission != null)
+            if (cmbMission.SelectedItem is TeamMission mission)
             {
-                this.Info.Mission = mission;
+                Info.Mission = mission;
                 int value = -1;
                 if (mission.ArgType == currentType && (currentType == TeamMissionArgType.Time || currentType == TeamMissionArgType.Waypoint))
                 {
-                    value = this.Info.Argument;
+                    value = Info.Argument;
                 }
                 int newVal = UpdateValueControl(mission, value);
-                this.Info.Argument = newVal;
+                Info.Argument = newVal;
             }
         }
 
-        private void NumValue_ValueChanged(Object sender, EventArgs e)
+        private void NumValue_ValueChanged(object sender, EventArgs e)
         {
-            if (this.m_Loading || this.Info == null || !this.numValue.Visible)
+            if (m_Loading || Info == null || !numValue.Visible)
             {
                 return;
             }
-            this.Info.Argument = (int)this.numValue.Value;
-            if (this.m_Controller != null)
-                this.m_Controller.UpdateControlInfo(this.Info);
+            Info.Argument = (int)numValue.Value;
+            m_Controller?.UpdateControlInfo(Info, 'E');
         }
 
-        private void CmbValue_SelectedIndexChanged(Object sender, EventArgs e)
+        private void CmbValue_SelectedIndexChanged(object sender, EventArgs e)
         {
-            if (this.m_Loading || this.Info == null || !this.cmbValue.Visible)
+            if (m_Loading || Info == null || !cmbValue.Visible)
             {
                 return;
             }
-            ListItem<int> item = this.cmbValue.SelectedItem as ListItem<int>;
-            if (item == null)
+            if (!(cmbValue.SelectedItem is ListItem<int> item))
             {
                 return;
             }
-            this.Info.Argument = (Byte)item.Value;
-            if (this.m_Controller != null)
-                this.m_Controller.UpdateControlInfo(this.Info);
+            Info.Argument = (byte)item.Value;
+            // E = Edit (has no real effect)
+            m_Controller?.UpdateControlInfo(Info, 'E');
         }
 
-        private void BtnRemove_Click(Object sender, EventArgs e)
+        private void BtnOptions_Click(object sender, EventArgs e)
         {
-            if (this.m_Loading || this.Info == null)
+            Control src = sender as Control;
+            if (m_Loading || Info == null || src == null)
             {
                 return;
             }
-            // Setting type to null is the signal to delete.
-            this.Info.Mission = null;
-            if (this.m_Controller != null)
-                this.m_Controller.UpdateControlInfo(this.Info);
+            if (m_Controller != null)
+            {
+                // Hide irrelevant options.
+                // I = request Index of current item.
+                int index = m_Controller.UpdateControlInfo(Info, 'I');
+                tsmiMoveUp.Visible = index > 0;
+                // L = request Length of whole list.
+                int length = m_Controller.UpdateControlInfo(Info, 'L');
+                tsmiMoveDown.Visible = index < length - 1;
+                // M = request Maximum length allowed in list.
+                int max = m_Controller.UpdateControlInfo(Info, 'M');
+                Boolean maxNotReached = length < max;
+                tsmiDuplicate.Visible = maxNotReached;
+                tsmiInsert.Visible = maxNotReached;
+            }
+            else
+            {
+                tsmiMoveUp.Visible = true;
+                tsmiMoveDown.Visible = true;
+                tsmiDuplicate.Visible = true;
+                tsmiInsert.Visible = true;
+            }
+            cmsOptions.Show(src, 0, src.Height);
+        }
+
+        private void TsmiDelete_Click(object sender, EventArgs e)
+        {
+            if (m_Loading || Info == null) return;
+            // R = Remove current item.
+            m_Controller?.UpdateControlInfo(Info, 'R');
+        }
+
+        private void TsmiMoveUp_Click(object sender, EventArgs e)
+        {
+            if (m_Loading || Info == null) return;
+            // U = move current item Up.
+            m_Controller?.UpdateControlInfo(Info, 'U');
+        }
+
+        private void TsmiMoveDown_Click(object sender, EventArgs e)
+        {
+            if (m_Loading || Info == null) return;
+            // D = move current item Down.
+            m_Controller?.UpdateControlInfo(Info, 'D');
+        }
+
+        private void TsmiDuplicate_Click(object sender, EventArgs e)
+        {
+            if (m_Loading || Info == null) return;
+            // C = Clone current item.
+            m_Controller?.UpdateControlInfo(Info, 'C');
+        }
+
+        private void TsmiInsert_Click(object sender, EventArgs e)
+        {
+            if (m_Loading || Info == null) return;
+            // A = Add new item on current item's spot, pushing the current item down.
+            m_Controller?.UpdateControlInfo(Info, 'A');
+        }
+
+        private void Control_MouseLeave(object sender, EventArgs e)
+        {
+            // Not sure why the toolitops sometimes linger when moving the mouse
+            // onto the equivalent control of another item, but this fixes it.
+            if (tooltip == null || !(sender is Control ctrl)) return;
+            if (tooltip.GetToolTip(ctrl) != null)
+            {
+                tooltip.Hide(ctrl);
+            }
         }
     }
 }

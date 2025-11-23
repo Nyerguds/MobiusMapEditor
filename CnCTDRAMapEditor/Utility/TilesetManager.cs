@@ -60,7 +60,7 @@ namespace MobiusEditor.Utility
 
         private void LoadXmlfiles()
         {
-            HashSet<String> allowedTileSets = this.theater == null ? null : theater.Tilesets.ToHashSet();
+            HashSet<string> allowedTileSets = this.theater == null ? null : theater.Tilesets.ToHashSet();
             this.textureManager.Reset();
             foreach (var item in tilesets)
             {

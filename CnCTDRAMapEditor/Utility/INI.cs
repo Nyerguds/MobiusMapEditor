@@ -308,7 +308,7 @@ namespace MobiusEditor.Utility
             foreach (KeyValuePair<string, string> item in Keys)
             {
                 string comment = withComment ? Keys.GetComment(item.Key) : null;
-                lines.Add(string.Format("{0}={1}{2}", item.Key, item.Value, comment ?? String.Empty));
+                lines.Add(String.Format("{0}={1}{2}", item.Key, item.Value, comment ?? String.Empty));
             }
             return string.Join(Environment.NewLine, lines);
         }
@@ -528,7 +528,7 @@ namespace MobiusEditor.Utility
             {
                 List<string> lines = new List<string>
                 {
-                    string.Format("[{0}]", item.Name)
+                    String.Format("[{0}]", item.Name)
                 };
                 if (!item.Empty)
                 {
@@ -628,7 +628,7 @@ namespace MobiusEditor.Utility
             StringBuilder sb = new StringBuilder();
             foreach (KeyValuePair<string, INIDiffType> item in keyDiff)
             {
-                sb.AppendLine(string.Format("{0} {1}", INIHelpers.DiffPrefix(item.Value), item.Key));
+                sb.AppendLine(String.Format("{0} {1}", INIHelpers.DiffPrefix(item.Value), item.Key));
             }
             return sb.ToString();
         }
@@ -693,7 +693,7 @@ namespace MobiusEditor.Utility
             StringBuilder sb = new StringBuilder();
             foreach (KeyValuePair<string, INISectionDiff> item in sectionDiffs)
             {
-                sb.AppendLine(string.Format("{0} {1}", INIHelpers.DiffPrefix(item.Value.Type), item.Key));
+                sb.AppendLine(String.Format("{0} {1}", INIHelpers.DiffPrefix(item.Value.Type), item.Key));
                 using (StringReader reader = new StringReader(item.Value.ToString()))
                 {
                     while (true)
@@ -704,7 +704,7 @@ namespace MobiusEditor.Utility
                             break;
                         }
 
-                        sb.AppendLine(string.Format("\t{0}", line));
+                        sb.AppendLine(String.Format("\t{0}", line));
                     }
                 }
             }
@@ -789,7 +789,7 @@ namespace MobiusEditor.Utility
                 {
                     continue;
                 }
-                Object value = property.GetValue(data);
+                object value = property.GetValue(data);
                 if (property.PropertyType.IsValueType || (value != null))
                 {
                     TypeConverter converter = propertyDescriptors.Find(property.Name, false)?.Converter ?? TypeDescriptor.GetConverter(property.PropertyType);

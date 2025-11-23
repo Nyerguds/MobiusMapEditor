@@ -12,11 +12,17 @@
 //
 //   0. You just DO WHAT THE FUCK YOU WANT TO.
 using MobiusEditor.Model;
+using System;
 
 namespace MobiusEditor.Interface
 {
     public interface IGameTextManager
     {
+        /// <summary>
+        /// Action to execute after a reset to adjust the read strings file to missing strings.
+        /// </summary>
+        Action<IGameTextManager, GameType> AddMissing { get; set; }
+
         /// <summary>
         /// Gets or overrides the value for the given key in the strings file.
         /// </summary>

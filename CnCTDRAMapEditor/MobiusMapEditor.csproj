@@ -1,0 +1,807 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<Project xmlns="http://schemas.microsoft.com/developer/msbuild/2003" ToolsVersion="15.0">
+  <Import Condition="Exists('$(MSBuildExtensionsPath)\$(MSBuildToolsVersion)\Microsoft.Common.props')" Project="$(MSBuildExtensionsPath)\$(MSBuildToolsVersion)\Microsoft.Common.props" />
+  <PropertyGroup>
+    <Configuration Condition=" '$(Configuration)' == '' ">Debug</Configuration>
+    <Platform Condition=" '$(Platform)' == '' ">AnyCPU</Platform>
+    <ProjectGuid>{397CEF00-8930-4EC8-B15F-F7CF7193FB22}</ProjectGuid>
+    <OutputType>WinExe</OutputType>
+    <RootNamespace>MobiusEditor</RootNamespace>
+    <AssemblyName Condition="'$(Configuration)'=='Debug'">MobiusMapEditorD</AssemblyName>
+    <AssemblyName Condition="'$(Configuration)'=='Release'">MobiusMapEditor</AssemblyName>
+    <AssemblyName Condition="'$(Configuration)'=='Gold'">MobiusMapEditor</AssemblyName>
+    <TargetFrameworkVersion>v4.7.2</TargetFrameworkVersion>
+    <FileAlignment>512</FileAlignment>
+    <AutoGenerateBindingRedirects>true</AutoGenerateBindingRedirects>
+    <Deterministic>false</Deterministic>
+    <TargetFrameworkProfile />
+    <IsWebBootstrapper>false</IsWebBootstrapper>
+    <PublishUrl>publish\</PublishUrl>
+    <Install>true</Install>
+    <InstallFrom>Disk</InstallFrom>
+    <UpdateEnabled>false</UpdateEnabled>
+    <UpdateMode>Foreground</UpdateMode>
+    <UpdateInterval>7</UpdateInterval>
+    <UpdateIntervalUnits>Days</UpdateIntervalUnits>
+    <UpdatePeriodically>false</UpdatePeriodically>
+    <UpdateRequired>false</UpdateRequired>
+    <MapFileExtensions>true</MapFileExtensions>
+    <ApplicationRevision>0</ApplicationRevision>
+    <ApplicationVersion>1.0.0.%2a</ApplicationVersion>
+    <UseApplicationTrust>false</UseApplicationTrust>
+    <BootstrapperEnabled>true</BootstrapperEnabled>
+  </PropertyGroup>
+  <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Debug|AnyCPU' ">
+    <PlatformTarget>x64</PlatformTarget>
+    <DebugSymbols>true</DebugSymbols>
+    <DebugType>full</DebugType>
+    <Optimize>false</Optimize>
+    <OutputPath>bin\Debug\</OutputPath>
+    <DefineConstants>TRACE;DEBUG;STEAMWORKS_WIN;STEAMWORKS_X64</DefineConstants>
+    <ErrorReport>prompt</ErrorReport>
+    <WarningLevel>4</WarningLevel>
+    <LangVersion>7.3</LangVersion>
+    <Prefer32Bit>false</Prefer32Bit>
+  </PropertyGroup>
+  <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Release|AnyCPU' ">
+    <PlatformTarget>x64</PlatformTarget>
+    <DebugType>pdbonly</DebugType>
+    <Optimize>true</Optimize>
+    <OutputPath>bin\Release\</OutputPath>
+    <DefineConstants>TRACE;STEAMWORKS_WIN;STEAMWORKS_X64</DefineConstants>
+    <ErrorReport>prompt</ErrorReport>
+    <WarningLevel>4</WarningLevel>
+    <LangVersion>7.3</LangVersion>
+    <Prefer32Bit>false</Prefer32Bit>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)' == 'Gold|AnyCPU'">
+    <OutputPath>bin\Gold\</OutputPath>
+    <DefineConstants>TRACE;STEAMWORKS_WIN;STEAMWORKS_X64</DefineConstants>
+    <Optimize>true</Optimize>
+    <DebugType>pdbonly</DebugType>
+    <PlatformTarget>x64</PlatformTarget>
+    <LangVersion>7.3</LangVersion>
+    <ErrorReport>prompt</ErrorReport>
+    <CodeAnalysisRuleSet>MinimumRecommendedRules.ruleset</CodeAnalysisRuleSet>
+    <Prefer32Bit>false</Prefer32Bit>
+  </PropertyGroup>
+  <PropertyGroup>
+    <ApplicationIcon>Resources\GameIcon00.ico</ApplicationIcon>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)' == 'Debug|x64'">
+    <DebugSymbols>true</DebugSymbols>
+    <OutputPath>bin\x64\Debug\</OutputPath>
+    <DefineConstants>TRACE;DEBUG;STEAMWORKS_WIN;STEAMWORKS_X64</DefineConstants>
+    <DebugType>full</DebugType>
+    <PlatformTarget>x64</PlatformTarget>
+    <LangVersion>7.3</LangVersion>
+    <ErrorReport>prompt</ErrorReport>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)' == 'Release|x64'">
+    <OutputPath>bin\x64\Release\</OutputPath>
+    <DefineConstants>TRACE;STEAMWORKS_WIN;STEAMWORKS_X64</DefineConstants>
+    <Optimize>true</Optimize>
+    <DebugType>pdbonly</DebugType>
+    <PlatformTarget>x64</PlatformTarget>
+    <LangVersion>7.3</LangVersion>
+    <ErrorReport>prompt</ErrorReport>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)' == 'Gold|x64'">
+    <OutputPath>bin\x64\Gold\</OutputPath>
+    <DefineConstants>TRACE;STEAMWORKS_WIN;STEAMWORKS_X64</DefineConstants>
+    <Optimize>true</Optimize>
+    <DebugType>pdbonly</DebugType>
+    <PlatformTarget>x64</PlatformTarget>
+    <LangVersion>7.3</LangVersion>
+    <ErrorReport>prompt</ErrorReport>
+    <CodeAnalysisRuleSet>MinimumRecommendedRules.ruleset</CodeAnalysisRuleSet>
+  </PropertyGroup>
+  <ItemGroup>
+    <Reference Include="Steamworks.NET">
+      <HintPath>Resources\Steamworks.NET.dll</HintPath>
+    </Reference>
+    <Reference Include="System" />
+    <Reference Include="System.Configuration" />
+    <Reference Include="System.Core" />
+    <Reference Include="System.IO.Compression" />
+    <Reference Include="System.IO.Compression.FileSystem" />
+    <Reference Include="System.Net.Http" />
+    <Reference Include="System.Numerics" />
+    <Reference Include="System.Xml.Linq" />
+    <Reference Include="System.Data.DataSetExtensions" />
+    <Reference Include="Microsoft.CSharp" />
+    <Reference Include="System.Data" />
+    <Reference Include="System.Deployment" />
+    <Reference Include="System.Drawing" />
+    <Reference Include="System.Windows.Forms" />
+    <Reference Include="System.Xml" />
+  </ItemGroup>
+  <ItemGroup>
+    <Compile Include="Controls\CrateSettings.cs">
+      <SubType>UserControl</SubType>
+    </Compile>
+    <Compile Include="Controls\CrateSettings.Designer.cs">
+      <DependentUpon>CrateSettings.cs</DependentUpon>
+    </Compile>
+    <Compile Include="Controls\BasicSettings.cs">
+      <SubType>UserControl</SubType>
+    </Compile>
+    <Compile Include="Controls\BasicSettings.Designer.cs">
+      <DependentUpon>BasicSettings.cs</DependentUpon>
+    </Compile>
+    <Compile Include="Controls\BriefingSettings.cs">
+      <SubType>UserControl</SubType>
+    </Compile>
+    <Compile Include="Controls\BriefingSettings.Designer.cs">
+      <DependentUpon>BriefingSettings.cs</DependentUpon>
+    </Compile>
+    <Compile Include="Controls\ComboBoxSmartWidth.cs">
+      <SubType>Component</SubType>
+    </Compile>
+    <Compile Include="Controls\ControlsList\ControlsList.cs">
+      <SubType>UserControl</SubType>
+    </Compile>
+    <Compile Include="Controls\ControlsList\ControlsList.designer.cs">
+      <DependentUpon>ControlsList.cs</DependentUpon>
+    </Compile>
+    <Compile Include="Controls\ControlsList\CustomControlInfo.cs" />
+    <Compile Include="Controls\ControlsList\IListedControlController.cs" />
+    <Compile Include="Controls\EnhNumericUpDown.cs">
+      <SubType>Component</SubType>
+    </Compile>
+    <Compile Include="Controls\ImageTooltip.cs">
+      <SubType>Component</SubType>
+    </Compile>
+    <Compile Include="Controls\ImageTooltip.Designer.cs">
+      <DependentUpon>ImageTooltip.cs</DependentUpon>
+    </Compile>
+    <Compile Include="Controls\MapPanel.cs">
+      <SubType>Component</SubType>
+    </Compile>
+    <Compile Include="Controls\MapPanel.Designer.cs">
+      <DependentUpon>MapPanel.cs</DependentUpon>
+    </Compile>
+    <Compile Include="Controls\MenuButton.cs">
+      <SubType>Component</SubType>
+    </Compile>
+    <Compile Include="Controls\MenuButton.Designer.cs">
+      <DependentUpon>MenuButton.cs</DependentUpon>
+    </Compile>
+    <Compile Include="Controls\MissionsList\MissionItemInfo.cs" />
+    <Compile Include="Controls\MissionsList\MissionItemsList.cs">
+      <SubType>UserControl</SubType>
+    </Compile>
+    <Compile Include="Controls\MissionsList\MissionItemControl.cs">
+      <SubType>UserControl</SubType>
+    </Compile>
+    <Compile Include="Controls\MissionsList\MissionItemControl.Designer.cs">
+      <DependentUpon>MissionItemControl.cs</DependentUpon>
+    </Compile>
+    <Compile Include="Controls\PixelBox.cs">
+      <SubType>Component</SubType>
+    </Compile>
+    <Compile Include="Controls\PropertiesComboBox.cs">
+      <SubType>Component</SubType>
+    </Compile>
+    <Compile Include="Controls\PropertiesComboBox.Designer.cs">
+      <DependentUpon>PropertiesComboBox.cs</DependentUpon>
+    </Compile>
+    <Compile Include="Controls\RulesSettings.cs">
+      <SubType>UserControl</SubType>
+    </Compile>
+    <Compile Include="Controls\RulesSettings.Designer.cs">
+      <DependentUpon>RulesSettings.cs</DependentUpon>
+    </Compile>
+    <Compile Include="Controls\ScenarioSettings.cs">
+      <SubType>UserControl</SubType>
+    </Compile>
+    <Compile Include="Controls\ScenarioSettings.Designer.cs">
+      <DependentUpon>ScenarioSettings.cs</DependentUpon>
+    </Compile>
+    <Compile Include="Controls\SmudgeProperties.cs">
+      <SubType>UserControl</SubType>
+    </Compile>
+    <Compile Include="Controls\SmudgeProperties.Designer.cs">
+      <DependentUpon>SmudgeProperties.cs</DependentUpon>
+    </Compile>
+    <Compile Include="Controls\TeamsList\TeamItemControl.cs">
+      <SubType>UserControl</SubType>
+    </Compile>
+    <Compile Include="Controls\TeamsList\TeamItemControl.Designer.cs">
+      <DependentUpon>TeamItemControl.cs</DependentUpon>
+    </Compile>
+    <Compile Include="Controls\TeamsList\TeamItemInfo.cs" />
+    <Compile Include="Controls\TeamsList\TeamItemsList.cs">
+      <SubType>UserControl</SubType>
+    </Compile>
+    <Compile Include="Controls\TerrainProperties.cs">
+      <SubType>UserControl</SubType>
+    </Compile>
+    <Compile Include="Controls\TerrainProperties.Designer.cs">
+      <DependentUpon>TerrainProperties.cs</DependentUpon>
+    </Compile>
+    <Compile Include="Controls\ObjectProperties.cs">
+      <SubType>UserControl</SubType>
+    </Compile>
+    <Compile Include="Controls\ObjectProperties.Designer.cs">
+      <DependentUpon>ObjectProperties.cs</DependentUpon>
+    </Compile>
+    <Compile Include="Controls\PlayerSettings.cs">
+      <SubType>UserControl</SubType>
+    </Compile>
+    <Compile Include="Controls\PlayerSettings.Designer.cs">
+      <DependentUpon>PlayerSettings.cs</DependentUpon>
+    </Compile>
+    <Compile Include="Controls\TypeListBox.cs">
+      <SubType>Component</SubType>
+    </Compile>
+    <Compile Include="Controls\ViewToolStripButton.cs">
+      <SubType>Component</SubType>
+    </Compile>
+    <Compile Include="Dialogs\ErrorMessageBox.cs">
+      <SubType>Form</SubType>
+    </Compile>
+    <Compile Include="Dialogs\ErrorMessageBox.Designer.cs">
+      <DependentUpon>ErrorMessageBox.cs</DependentUpon>
+    </Compile>
+    <Compile Include="Dialogs\ImageExportDialog.cs">
+      <SubType>Form</SubType>
+    </Compile>
+    <Compile Include="Dialogs\ImageExportDialog.Designer.cs">
+      <DependentUpon>ImageExportDialog.cs</DependentUpon>
+    </Compile>
+    <Compile Include="Dialogs\ImageExportedDialog.cs">
+      <SubType>Form</SubType>
+    </Compile>
+    <Compile Include="Dialogs\ImageExportedDialog.Designer.cs">
+      <DependentUpon>ImageExportedDialog.cs</DependentUpon>
+    </Compile>
+    <Compile Include="Dialogs\ImagetExportSetSizeDialog.cs">
+      <SubType>Form</SubType>
+    </Compile>
+    <Compile Include="Dialogs\ImagetExportSetSizeDialog.Designer.cs">
+      <DependentUpon>ImagetExportSetSizeDialog.cs</DependentUpon>
+    </Compile>
+    <Compile Include="Dialogs\InviteMessageBox.cs">
+      <SubType>Form</SubType>
+    </Compile>
+    <Compile Include="Dialogs\InviteMessageBox.Designer.cs">
+      <DependentUpon>InviteMessageBox.cs</DependentUpon>
+    </Compile>
+    <Compile Include="Dialogs\MapSettingsDialog.cs">
+      <SubType>Form</SubType>
+    </Compile>
+    <Compile Include="Dialogs\MapSettingsDialog.Designer.cs">
+      <DependentUpon>MapSettingsDialog.cs</DependentUpon>
+    </Compile>
+    <Compile Include="Dialogs\NewFromImageDialog.cs">
+      <SubType>Form</SubType>
+    </Compile>
+    <Compile Include="Dialogs\NewFromImageDialog.Designer.cs">
+      <DependentUpon>NewFromImageDialog.cs</DependentUpon>
+    </Compile>
+    <Compile Include="Dialogs\NewMapDialog.cs">
+      <SubType>Form</SubType>
+    </Compile>
+    <Compile Include="Dialogs\NewMapDialog.Designer.cs">
+      <DependentUpon>NewMapDialog.cs</DependentUpon>
+    </Compile>
+    <Compile Include="Dialogs\OpenFromMixDialog.cs">
+      <SubType>Form</SubType>
+    </Compile>
+    <Compile Include="Dialogs\OpenFromMixDialog.Designer.cs">
+      <DependentUpon>OpenFromMixDialog.cs</DependentUpon>
+    </Compile>
+    <Compile Include="Dialogs\SteamDialog.cs">
+      <SubType>Form</SubType>
+    </Compile>
+    <Compile Include="Dialogs\SteamDialog.Designer.cs">
+      <DependentUpon>SteamDialog.cs</DependentUpon>
+    </Compile>
+    <Compile Include="Dialogs\ThankYouDialog.cs">
+      <SubType>Form</SubType>
+    </Compile>
+    <Compile Include="Dialogs\ThankYouDialog.Designer.cs">
+      <DependentUpon>ThankYouDialog.cs</DependentUpon>
+    </Compile>
+    <Compile Include="Dialogs\TriggerFilterDialog.cs">
+      <SubType>Form</SubType>
+    </Compile>
+    <Compile Include="Dialogs\TriggerFilterDialog.Designer.cs">
+      <DependentUpon>TriggerFilterDialog.cs</DependentUpon>
+    </Compile>
+    <Compile Include="Dialogs\TriggersDialog.cs">
+      <SubType>Form</SubType>
+    </Compile>
+    <Compile Include="Dialogs\TriggersDialog.Designer.cs">
+      <DependentUpon>TriggersDialog.cs</DependentUpon>
+    </Compile>
+    <Compile Include="Dialogs\TeamTypesDialog.cs">
+      <SubType>Form</SubType>
+    </Compile>
+    <Compile Include="Dialogs\TeamTypesDialog.Designer.cs">
+      <DependentUpon>TeamTypesDialog.cs</DependentUpon>
+    </Compile>
+    <Compile Include="Event\RenderEventArgs.cs" />
+    <Compile Include="Event\UndoRedoEventArgs.cs" />
+    <Compile Include="GameInstallationPathForm.cs">
+      <SubType>Form</SubType>
+    </Compile>
+    <Compile Include="GameInstallationPathForm.Designer.cs">
+      <DependentUpon>GameInstallationPathForm.cs</DependentUpon>
+    </Compile>
+    <Compile Include="Globals.cs" />
+    <Compile Include="Model\BuildingSection.cs" />
+    <Compile Include="Model\GameInfo.cs" />
+    <Compile Include="Model\GameTypeFactory.cs" />
+    <Compile Include="Interface\IBrowsableType.cs" />
+    <Compile Include="Interface\ICellOccupier.cs" />
+    <Compile Include="Interface\ICellOverlapper.cs" />
+    <Compile Include="Interface\IFeedBackHandler.cs" />
+    <Compile Include="Interface\IArchiveManager.cs" />
+    <Compile Include="Interface\IGamePlugin.cs" />
+    <Compile Include="Interface\IGameTextManager.cs" />
+    <Compile Include="Interface\INamedType.cs" />
+    <Compile Include="Interface\ITeamColor.cs" />
+    <Compile Include="Interface\ITechno.cs" />
+    <Compile Include="Interface\ITechnoType.cs" />
+    <Compile Include="Interface\ITilesetManager.cs" />
+    <Compile Include="Interface\ITool.cs" />
+    <Compile Include="Interface\IWidget.cs" />
+    <Compile Include="Interface\ToolType.cs" />
+    <Compile Include="Interface\ITeamColorManager.cs" />
+    <Compile Include="MainForm.cs">
+      <SubType>Form</SubType>
+    </Compile>
+    <Compile Include="MainForm.Designer.cs">
+      <DependentUpon>MainForm.cs</DependentUpon>
+    </Compile>
+    <Compile Include="Model\BasicSection.cs" />
+    <Compile Include="Model\BriefingSection.cs" />
+    <Compile Include="Model\Building.cs" />
+    <Compile Include="Model\CellGrid.cs" />
+    <Compile Include="Model\CellMetrics.cs" />
+    <Compile Include="Model\CellTrigger.cs" />
+    <Compile Include="Model\DirectionType.cs" />
+    <Compile Include="Model\DirectionTypes.cs" />
+    <Compile Include="Model\House.cs" />
+    <Compile Include="Model\HouseType.cs" />
+    <Compile Include="Model\BuildingType.cs" />
+    <Compile Include="Model\Infantry.cs" />
+    <Compile Include="Model\Map.cs" />
+    <Compile Include="Model\MapLoadInfo.cs" />
+    <Compile Include="Model\MapSection.cs" />
+    <Compile Include="Model\NotifiableIniSection.cs" />
+    <Compile Include="Model\OccupierSet.cs" />
+    <Compile Include="Model\OverlapperSet.cs" />
+    <Compile Include="Model\Overlay.cs" />
+    <Compile Include="Model\OverlayType.cs" />
+    <Compile Include="Model\FileTypeInfo.cs" />
+    <Compile Include="Model\Smudge.cs" />
+    <Compile Include="Model\SmudgeType.cs" />
+    <Compile Include="Model\SteamSection.cs" />
+    <Compile Include="Model\TeamType.cs" />
+    <Compile Include="Model\Template.cs" />
+    <Compile Include="Model\TemplateType.cs" />
+    <Compile Include="Model\Terrain.cs" />
+    <Compile Include="Model\TerrainType.cs" />
+    <Compile Include="Model\TheaterType.cs" />
+    <Compile Include="Model\Trigger.cs" />
+    <Compile Include="Model\InfantryType.cs" />
+    <Compile Include="Model\TriggerFilter.cs" />
+    <Compile Include="Model\ListItem.cs" />
+    <Compile Include="Model\Unit.cs" />
+    <Compile Include="Model\UnitType.cs" />
+    <Compile Include="Model\Waypoint.cs" />
+    <Compile Include="Program.cs" />
+    <Compile Include="Properties\AssemblyInfo.cs" />
+    <Compile Include="Properties\Resources.Designer.cs">
+      <AutoGen>True</AutoGen>
+      <DesignTime>True</DesignTime>
+      <DependentUpon>Resources.resx</DependentUpon>
+    </Compile>
+    <Compile Include="Properties\Settings.Designer.cs">
+      <AutoGen>True</AutoGen>
+      <DesignTimeSharedInput>True</DesignTimeSharedInput>
+      <DependentUpon>Settings.settings</DependentUpon>
+    </Compile>
+    <Compile Include="RedAlert\ActionDataTypes.cs" />
+    <Compile Include="RedAlert\ActionTypes.cs" />
+    <Compile Include="RedAlert\BasicSection.cs" />
+    <Compile Include="RedAlert\BuildingTypes.cs" />
+    <Compile Include="RedAlert\Constants.cs" />
+    <Compile Include="RedAlert\EventTypes.cs" />
+    <Compile Include="RedAlert\GamePluginRA.cs" />
+    <Compile Include="RedAlert\GameInfoRedAlert.cs" />
+    <Compile Include="RedAlert\House.cs" />
+    <Compile Include="RedAlert\HouseTypes.cs" />
+    <Compile Include="RedAlert\InfantryClassicRemap.cs" />
+    <Compile Include="RedAlert\InfantryTypes.cs" />
+    <Compile Include="RedAlert\LandIniSection.cs" />
+    <Compile Include="RedAlert\MissionTypes.cs" />
+    <Compile Include="RedAlert\OverlayTypes.cs" />
+    <Compile Include="RedAlert\SmudgeTypes.cs" />
+    <Compile Include="RedAlert\TeamMissionTypes.cs" />
+    <Compile Include="RedAlert\TemplateTypes.cs" />
+    <Compile Include="RedAlert\TerrainTypes.cs" />
+    <Compile Include="RedAlert\TheaterTypes.cs" />
+    <Compile Include="RedAlert\UnitTypes.cs" />
+    <Compile Include="Render\MapRenderer.cs" />
+    <Compile Include="SoleSurvivor\GamePluginSS.cs" />
+    <Compile Include="SoleSurvivor\GameInfoSole.cs" />
+    <Compile Include="SoleSurvivor\OverlayTypes.cs" />
+    <Compile Include="SoleSurvivor\TheaterTypes.cs" />
+    <Compile Include="TiberianDawn\ActionTypes.cs" />
+    <Compile Include="SoleSurvivor\CratesSection.cs" />
+    <Compile Include="TiberianDawn\BasicSection.cs" />
+    <Compile Include="TiberianDawn\Constants.cs" />
+    <Compile Include="TiberianDawn\EventTypes.cs" />
+    <Compile Include="TiberianDawn\GamePluginTD.cs" />
+    <Compile Include="TiberianDawn\GameInfoTibDawn.cs" />
+    <Compile Include="TiberianDawn\House.cs" />
+    <Compile Include="SoleSurvivor\HouseTypes.cs" />
+    <Compile Include="TiberianDawn\HouseTypes.cs" />
+    <Compile Include="TiberianDawn\BuildingTypes.cs" />
+    <Compile Include="TiberianDawn\N64MapConverter.cs" />
+    <Compile Include="TiberianDawn\MissionTypes.cs" />
+    <Compile Include="TiberianDawn\OverlayTypes.cs" />
+    <Compile Include="TiberianDawn\SmudgeTypes.cs" />
+    <Compile Include="TiberianDawn\TeamMissionTypes.cs" />
+    <Compile Include="TiberianDawn\TemplateTypes.cs" />
+    <Compile Include="TiberianDawn\TerrainTypes.cs" />
+    <Compile Include="TiberianDawn\TheaterTypes.cs" />
+    <Compile Include="TiberianDawn\InfantryTypes.cs" />
+    <Compile Include="TiberianDawn\UnitTypes.cs" />
+    <Compile Include="Tools\BuildingTool.cs" />
+    <Compile Include="Tools\Dialogs\BuildingToolDialog.cs">
+      <SubType>Form</SubType>
+    </Compile>
+    <Compile Include="Tools\Dialogs\InfantryToolDialog.cs">
+      <SubType>Form</SubType>
+    </Compile>
+    <Compile Include="Tools\Dialogs\IToolDialog.cs" />
+    <Compile Include="Tools\Dialogs\OverlayToolDialog.cs">
+      <SubType>Form</SubType>
+    </Compile>
+    <Compile Include="Tools\Dialogs\ResourcesToolDialog.cs">
+      <SubType>Form</SubType>
+    </Compile>
+    <Compile Include="Tools\Dialogs\ResourcesToolDialog.Designer.cs">
+      <DependentUpon>ResourcesToolDialog.cs</DependentUpon>
+    </Compile>
+    <Compile Include="Tools\Dialogs\ObjectToolDialog.cs">
+      <SubType>Form</SubType>
+    </Compile>
+    <Compile Include="Tools\Dialogs\ObjectToolDialog.Designer.cs">
+      <DependentUpon>ObjectToolDialog.cs</DependentUpon>
+    </Compile>
+    <Compile Include="Tools\Dialogs\GenericToolDialog.cs">
+      <SubType>Form</SubType>
+    </Compile>
+    <Compile Include="Tools\Dialogs\GenericToolDialog.Designer.cs">
+      <DependentUpon>GenericToolDialog.cs</DependentUpon>
+    </Compile>
+    <Compile Include="Tools\Dialogs\SmudgeToolDialog.cs">
+      <SubType>Form</SubType>
+    </Compile>
+    <Compile Include="Tools\Dialogs\SmudgeToolDialog.Designer.cs">
+      <DependentUpon>SmudgeToolDialog.cs</DependentUpon>
+    </Compile>
+    <Compile Include="Tools\Dialogs\TerrainToolDialog.cs">
+      <SubType>Form</SubType>
+    </Compile>
+    <Compile Include="Tools\Dialogs\TerrainToolDialog.Designer.cs">
+      <DependentUpon>TerrainToolDialog.cs</DependentUpon>
+    </Compile>
+    <Compile Include="Tools\Dialogs\TemplateToolDialog.cs">
+      <SubType>Form</SubType>
+    </Compile>
+    <Compile Include="Tools\Dialogs\TemplateToolDialog.Designer.cs">
+      <DependentUpon>TemplateToolDialog.cs</DependentUpon>
+    </Compile>
+    <Compile Include="Tools\Dialogs\CellTriggersToolDialog.cs">
+      <SubType>Form</SubType>
+    </Compile>
+    <Compile Include="Tools\Dialogs\CellTriggersToolDialog.Designer.cs">
+      <DependentUpon>CellTriggersToolDialog.cs</DependentUpon>
+    </Compile>
+    <Compile Include="Tools\Dialogs\ToolDialog.cs">
+      <SubType>Form</SubType>
+    </Compile>
+    <Compile Include="Tools\Dialogs\UnitToolDialog.cs">
+      <SubType>Form</SubType>
+    </Compile>
+    <Compile Include="Tools\Dialogs\WallsToolDialog.cs">
+      <SubType>Form</SubType>
+    </Compile>
+    <Compile Include="Tools\Dialogs\WaypointsToolDialog.cs">
+      <SubType>Form</SubType>
+    </Compile>
+    <Compile Include="Tools\Dialogs\WaypointsToolDialog.Designer.cs">
+      <DependentUpon>WaypointsToolDialog.cs</DependentUpon>
+    </Compile>
+    <Compile Include="Utility\ArrayUtils.cs" />
+    <Compile Include="Utility\BlobDetection.cs" />
+    <Compile Include="Tools\InfantryTool.cs" />
+    <Compile Include="Tools\OverlaysTool.cs" />
+    <Compile Include="Tools\ResourcesTool.cs" />
+    <Compile Include="Tools\SmudgeTool.cs" />
+    <Compile Include="Tools\TemplateTool.cs" />
+    <Compile Include="Tools\TerrainTool.cs" />
+    <Compile Include="Tools\UnitTool.cs" />
+    <Compile Include="Tools\ViewTool.cs" />
+    <Compile Include="Tools\WallsTool.cs" />
+    <Compile Include="Tools\CellTriggersTool.cs" />
+    <Compile Include="Tools\WaypointsTool.cs" />
+    <Compile Include="Utility\BooleanStringStyle.cs" />
+    <Compile Include="Utility\ClassicSpriteLoader.cs" />
+    <Compile Include="Utility\EnhFormatString.cs" />
+    <Compile Include="Utility\ExtensionMethods.cs" />
+    <Compile Include="Utility\LineUtils.cs" />
+    <Compile Include="Utility\ListViewColumnSorter.cs" />
+    <Compile Include="Utility\MixScanCache.cs" />
+    <Compile Include="Utility\MixFileNameGenerator.cs" />
+    <Compile Include="Utility\GameTextManager.cs" />
+    <Compile Include="Utility\GameTextManagerClassic.cs" />
+    <Compile Include="Utility\GeneralUtils.cs" />
+    <Compile Include="Utility\GenericBooleanTypeConverter.cs" />
+    <Compile Include="Utility\Hashing\BitFunctions.cs" />
+    <Compile Include="Utility\Hashing\CRC.cs" />
+    <Compile Include="Utility\Hashing\HashCrc32.cs" />
+    <Compile Include="Utility\Hashing\HashMethod.cs" />
+    <Compile Include="Utility\Hashing\HashObfuscate.cs" />
+    <Compile Include="Utility\Hashing\HashObscure.cs" />
+    <Compile Include="Utility\Hashing\HashRol.cs" />
+    <Compile Include="Utility\Hashing\HashRor.cs" />
+    <Compile Include="Utility\Hashing\ParallelCRC.cs" />
+    <Compile Include="Utility\ImageUtils.cs" />
+    <Compile Include="Utility\INI.cs" />
+    <Compile Include="Utility\INITools.cs" />
+    <Compile Include="Utility\Keyboard.cs" />
+    <Compile Include="Utility\Megafile.cs" />
+    <Compile Include="Utility\MegafileBuilder.cs" />
+    <Compile Include="Utility\MegafileManager.cs" />
+    <Compile Include="Utility\MixContentAnalysis.cs" />
+    <Compile Include="Utility\MixFile.cs" />
+    <Compile Include="Utility\MixFileCrypto.cs" />
+    <Compile Include="Utility\MixfileManager.cs" />
+    <Compile Include="Utility\MixPath.cs" />
+    <Compile Include="Utility\MRU.cs" />
+    <Compile Include="Utility\PngHandler.cs" />
+    <Compile Include="Utility\PropertyTracker.cs" />
+    <Compile Include="Event\MapRefreshEventArgs.cs" />
+    <Compile Include="Utility\ShapeCacheManager.cs" />
+    <Compile Include="Utility\SimpleMultiThreading.cs" />
+    <Compile Include="Utility\StartupLoader.cs" />
+    <Compile Include="Utility\SteamAssist.cs" />
+    <Compile Include="Utility\SteamworksUGC.cs" />
+    <Compile Include="Utility\TeamColor.cs" />
+    <Compile Include="Utility\TeamColorManager.cs" />
+    <Compile Include="Utility\TeamRemap.cs" />
+    <Compile Include="Utility\TeamRemapManager.cs" />
+    <Compile Include="Utility\TextureManager.cs" />
+    <Compile Include="Utility\TGASharpLib.cs" />
+    <Compile Include="Utility\Tile.cs" />
+    <Compile Include="Utility\Tileset.cs" />
+    <Compile Include="Utility\TilesetManagerClassic.cs" />
+    <Compile Include="Utility\TilesetManager.cs" />
+    <Compile Include="Utility\ToolTipFixer.cs" />
+    <Compile Include="Utility\UndoRedoList.cs" />
+    <Compile Include="Utility\WWCompression.cs" />
+    <Compile Include="Widgets\NavigationWidget.cs" />
+    <EmbeddedResource Include="Controls\CrateSettings.resx">
+      <DependentUpon>CrateSettings.cs</DependentUpon>
+      <SubType>Designer</SubType>
+    </EmbeddedResource>
+    <EmbeddedResource Include="Controls\BasicSettings.resx">
+      <DependentUpon>BasicSettings.cs</DependentUpon>
+    </EmbeddedResource>
+    <EmbeddedResource Include="Controls\BriefingSettings.resx">
+      <DependentUpon>BriefingSettings.cs</DependentUpon>
+    </EmbeddedResource>
+    <EmbeddedResource Include="Controls\ControlsList\ControlsList.resx">
+      <DependentUpon>ControlsList.cs</DependentUpon>
+    </EmbeddedResource>
+    <EmbeddedResource Include="Controls\MapPanel.resx">
+      <DependentUpon>MapPanel.cs</DependentUpon>
+      <SubType>Designer</SubType>
+    </EmbeddedResource>
+    <EmbeddedResource Include="Controls\MissionsList\MissionItemControl.resx">
+      <DependentUpon>MissionItemControl.cs</DependentUpon>
+    </EmbeddedResource>
+    <EmbeddedResource Include="Controls\RulesSettings.resx">
+      <DependentUpon>RulesSettings.cs</DependentUpon>
+    </EmbeddedResource>
+    <EmbeddedResource Include="Controls\ScenarioSettings.resx">
+      <DependentUpon>ScenarioSettings.cs</DependentUpon>
+    </EmbeddedResource>
+    <EmbeddedResource Include="Controls\SmudgeProperties.resx">
+      <DependentUpon>SmudgeProperties.cs</DependentUpon>
+      <SubType>Designer</SubType>
+    </EmbeddedResource>
+    <EmbeddedResource Include="Controls\TeamsList\TeamItemControl.resx">
+      <DependentUpon>TeamItemControl.cs</DependentUpon>
+    </EmbeddedResource>
+    <EmbeddedResource Include="Controls\TerrainProperties.resx">
+      <DependentUpon>TerrainProperties.cs</DependentUpon>
+    </EmbeddedResource>
+    <EmbeddedResource Include="Controls\ObjectProperties.resx">
+      <DependentUpon>ObjectProperties.cs</DependentUpon>
+    </EmbeddedResource>
+    <EmbeddedResource Include="Controls\PlayerSettings.resx">
+      <DependentUpon>PlayerSettings.cs</DependentUpon>
+    </EmbeddedResource>
+    <EmbeddedResource Include="Dialogs\ErrorMessageBox.resx">
+      <DependentUpon>ErrorMessageBox.cs</DependentUpon>
+    </EmbeddedResource>
+    <EmbeddedResource Include="Dialogs\ImageExportDialog.resx">
+      <DependentUpon>ImageExportDialog.cs</DependentUpon>
+    </EmbeddedResource>
+    <EmbeddedResource Include="Dialogs\ImageExportedDialog.resx">
+      <DependentUpon>ImageExportedDialog.cs</DependentUpon>
+    </EmbeddedResource>
+    <EmbeddedResource Include="Dialogs\ImagetExportSetSizeDialog.resx">
+      <DependentUpon>ImagetExportSetSizeDialog.cs</DependentUpon>
+    </EmbeddedResource>
+    <EmbeddedResource Include="Dialogs\InviteMessageBox.resx">
+      <DependentUpon>InviteMessageBox.cs</DependentUpon>
+    </EmbeddedResource>
+    <EmbeddedResource Include="Dialogs\MapSettingsDialog.resx">
+      <DependentUpon>MapSettingsDialog.cs</DependentUpon>
+    </EmbeddedResource>
+    <EmbeddedResource Include="Dialogs\NewFromImageDialog.resx">
+      <DependentUpon>NewFromImageDialog.cs</DependentUpon>
+    </EmbeddedResource>
+    <EmbeddedResource Include="Dialogs\NewMapDialog.resx">
+      <DependentUpon>NewMapDialog.cs</DependentUpon>
+    </EmbeddedResource>
+    <EmbeddedResource Include="Dialogs\OpenFromMixDialog.resx">
+      <DependentUpon>OpenFromMixDialog.cs</DependentUpon>
+    </EmbeddedResource>
+    <EmbeddedResource Include="Dialogs\SteamDialog.resx">
+      <DependentUpon>SteamDialog.cs</DependentUpon>
+      <SubType>Designer</SubType>
+    </EmbeddedResource>
+    <EmbeddedResource Include="Dialogs\ThankYouDialog.resx">
+      <DependentUpon>ThankYouDialog.cs</DependentUpon>
+    </EmbeddedResource>
+    <EmbeddedResource Include="Dialogs\TriggerFilterDialog.resx">
+      <DependentUpon>TriggerFilterDialog.cs</DependentUpon>
+    </EmbeddedResource>
+    <EmbeddedResource Include="Dialogs\TriggersDialog.resx">
+      <DependentUpon>TriggersDialog.cs</DependentUpon>
+    </EmbeddedResource>
+    <EmbeddedResource Include="Dialogs\TeamTypesDialog.resx">
+      <DependentUpon>TeamTypesDialog.cs</DependentUpon>
+    </EmbeddedResource>
+    <EmbeddedResource Include="GameInstallationPathForm.resx">
+      <DependentUpon>GameInstallationPathForm.cs</DependentUpon>
+    </EmbeddedResource>
+    <EmbeddedResource Include="MainForm.resx">
+      <DependentUpon>MainForm.cs</DependentUpon>
+      <SubType>Designer</SubType>
+    </EmbeddedResource>
+    <EmbeddedResource Include="Properties\Resources.resx">
+      <Generator>ResXFileCodeGenerator</Generator>
+      <SubType>Designer</SubType>
+      <LastGenOutput>Resources.Designer.cs</LastGenOutput>
+    </EmbeddedResource>
+    <EmbeddedResource Include="Tools\Dialogs\ResourcesToolDialog.resx">
+      <DependentUpon>ResourcesToolDialog.cs</DependentUpon>
+    </EmbeddedResource>
+    <EmbeddedResource Include="Tools\Dialogs\ObjectToolDialog.resx">
+      <DependentUpon>ObjectToolDialog.cs</DependentUpon>
+      <SubType>Designer</SubType>
+    </EmbeddedResource>
+    <EmbeddedResource Include="Tools\Dialogs\GenericToolDialog.resx">
+      <DependentUpon>GenericToolDialog.cs</DependentUpon>
+    </EmbeddedResource>
+    <EmbeddedResource Include="Tools\Dialogs\SmudgeToolDialog.resx">
+      <DependentUpon>SmudgeToolDialog.cs</DependentUpon>
+    </EmbeddedResource>
+    <EmbeddedResource Include="Tools\Dialogs\TerrainToolDialog.resx">
+      <DependentUpon>TerrainToolDialog.cs</DependentUpon>
+    </EmbeddedResource>
+    <EmbeddedResource Include="Tools\Dialogs\TemplateToolDialog.resx">
+      <DependentUpon>TemplateToolDialog.cs</DependentUpon>
+    </EmbeddedResource>
+    <EmbeddedResource Include="Tools\Dialogs\CellTriggersToolDialog.resx">
+      <DependentUpon>CellTriggersToolDialog.cs</DependentUpon>
+    </EmbeddedResource>
+    <EmbeddedResource Include="Tools\Dialogs\WaypointsToolDialog.resx">
+      <DependentUpon>WaypointsToolDialog.cs</DependentUpon>
+    </EmbeddedResource>
+    <None Include=".editorconfig" />
+    <None Include="5pntthin.fnt">
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+    </None>
+    <None Include="6ptdos.fnt">
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+    </None>
+    <None Include="Properties\Settings.settings">
+      <Generator>SettingsSingleFileGenerator</Generator>
+      <LastGenOutput>Settings.Designer.cs</LastGenOutput>
+    </None>
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="App.config" />
+  </ItemGroup>
+  <ItemGroup>
+    <EmbeddedResource Include="Resources\GameIcon00.ico" />
+  </ItemGroup>
+  <ItemGroup>
+    <Content Include="Resources\ra-head.png" />
+    <Content Include="Resources\Steamworks.NET.dll" />
+    <Content Include="Resources\steam_api64.dll">
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+    </Content>
+    <Content Include="Resources\td-head.png" />
+    <None Include="Data\mixcontent.ini">
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+    </None>
+    <None Include="Data\mixcontent_ra1.ini">
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+    </None>
+    <None Include="Data\mixcontent_sole.ini">
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+    </None>
+    <None Include="Data\mixcontent_td.ini">
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+    </None>
+    <None Include="Data\n64_th_desert.nms" />
+    <None Include="Data\n64_th_temperate.nms" />
+    <None Include="Resources\UI_CustomMissionPreviewDefault.png" />
+    <Content Include="License.txt">
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+    </Content>
+    <Content Include="Licenses\Rampastring.txt">
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+    </Content>
+    <Content Include="Licenses\Newtonsoft.Json.txt">
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+    </Content>
+    <Content Include="Licenses\Pfim.txt">
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+    </Content>
+    <Content Include="Licenses\Steamworks.NET.txt">
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+    </Content>
+    <Content Include="Licenses\TGASharpLib.txt">
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+    </Content>
+    <None Include="Resources\Mthanks1.wav" />
+    <Content Include="Resources\Mmg1.wav" />
+    <Content Include="Resources\Mobius.png" />
+    <None Include="Resources\Mtiber1.wav" />
+  </ItemGroup>
+  <ItemGroup>
+    <PackageReference Include="Newtonsoft.Json">
+      <Version>13.0.1</Version>
+    </PackageReference>
+    <PackageReference Include="Pfim">
+      <Version>0.10.1</Version>
+    </PackageReference>
+  </ItemGroup>
+  <ItemGroup>
+    <BootstrapperPackage Include=".NETFramework,Version=v4.6.2">
+      <Visible>False</Visible>
+      <ProductName>Microsoft .NET Framework 4.6.2 %28x86 and x64%29</ProductName>
+      <Install>true</Install>
+    </BootstrapperPackage>
+    <BootstrapperPackage Include="Microsoft.Net.Framework.3.5.SP1">
+      <Visible>False</Visible>
+      <ProductName>.NET Framework 3.5 SP1</ProductName>
+      <Install>false</Install>
+    </BootstrapperPackage>
+  </ItemGroup>
+  <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
+  <PropertyGroup>
+    <PostBuildEvent>if not exist bin md bin
+move *.dll bin\
+move resources\*.dll bin\
+rd /s /q resources</PostBuildEvent>
+  </PropertyGroup>
+  <PropertyGroup>
+    <PreBuildEvent>rd /s /q bin</PreBuildEvent>
+  </PropertyGroup>
+</Project>

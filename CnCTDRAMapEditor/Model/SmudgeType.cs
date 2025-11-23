@@ -27,11 +27,11 @@ namespace MobiusEditor.Model
     public enum SmudgeTypeFlag
     {
         None = 0,
-        /// <summary>4-wide bib indicator. Only used for the bibs automatically added under buildings.</summary>
+        /// <summary>This smudge type can be used as 4-wide bib automatically added under a building.</summary>
         Bib1 = 1 << 0,
-        /// <summary>3-wide bib indicator. Only used for the bibs automatically added under buildings.</summary>
+        /// <summary>This smudge type can be used as 3-wide bib automatically added under a building.</summary>
         Bib2 = 1 << 1,
-        /// <summary>2-wide bib indicator. Only used for the bibs automatically added under buildings.</summary>
+        /// <summary>This smudge type can be used as 2-wide bib automatically added under a building.</summary>
         Bib3 = 1 << 2,
     }
 
@@ -44,21 +44,20 @@ namespace MobiusEditor.Model
         public bool ExistsInTheater { get; private set; }
         public Size Size { get; set; }
         public int Icons { get; set; }
-        public SmudgeTypeFlag Flag { get; private set; }
-        public bool IsAutoBib => (this.Flag & (SmudgeTypeFlag.Bib1 | SmudgeTypeFlag.Bib2 | SmudgeTypeFlag.Bib3)) != SmudgeTypeFlag.None;
+        public SmudgeTypeFlag Flags { get; private set; }
         public bool IsMultiCell => this.Icons == 1 && (this.Size.Width > 0 || this.Size.Height > 0);
         public Bitmap Thumbnail { get; set; }
         private string nameId;
 
 
-        public SmudgeType(int id, string name, string textId, Size size, int icons, SmudgeTypeFlag flag)
+        public SmudgeType(int id, string name, string textId, Size size, int icons, SmudgeTypeFlag flags)
         {
             this.ID = id;
             this.Name = name;
             this.nameId = textId;
             this.Size = size;
             this.Icons = icons;
-            this.Flag = flag;
+            this.Flags = flags;
         }
 
         public SmudgeType(int id, string name, string textId)
@@ -71,8 +70,8 @@ namespace MobiusEditor.Model
         {
         }
 
-        public SmudgeType(int id, string name, string textId, Size size, SmudgeTypeFlag flag)
-            : this(id, name, textId, size, 1, flag)
+        public SmudgeType(int id, string name, string textId, Size size, SmudgeTypeFlag flags)
+            : this(id, name, textId, size, 1, flags)
         {
         }
 
@@ -85,7 +84,7 @@ namespace MobiusEditor.Model
         {
             if (obj is SmudgeType sm)
             {
-                return ReferenceEquals(this, sm) || (this.ID == sm.ID && this.Name == sm.Name && this.Flag == sm.Flag && this.Size == sm.Size && this.Icons == sm.Icons);
+                return ReferenceEquals(this, sm) || (this.ID == sm.ID && this.Name == sm.Name && this.Flags == sm.Flags && this.Size == sm.Size && this.Icons == sm.Icons);
             }
             else if (obj is sbyte sb)
             {
@@ -138,9 +137,9 @@ namespace MobiusEditor.Model
             {
                 bool isSmooth = Globals.PreviewSmoothScale;
                 MapRenderer.SetRenderSettings(g, isSmooth);
-                for (int y = 0; y < this.Size.Height; y++)
+                for (int y = 0; y < this.Size.Height; ++y)
                 {
-                    for (int x = 0; x < this.Size.Width; x++)
+                    for (int x = 0; x < this.Size.Width; ++x)
                     {
                         Smudge mockSmudge = new Smudge(this) { Icon = icon++ };
                         MapRenderer.RenderSmudge(new Point(x, y), Globals.PreviewTileSize, Globals.PreviewTileScale, mockSmudge, isSmooth, cm).Item2(g);
@@ -160,15 +159,16 @@ namespace MobiusEditor.Model
             switch (width)
             {
                 case 2:
-                    return SmudgeTypes.Where(t => t.Flag == SmudgeTypeFlag.Bib3).FirstOrDefault();
+                    return SmudgeTypes.Where(t => t.Flags == SmudgeTypeFlag.Bib3).FirstOrDefault();
                 case 3:
-                    return SmudgeTypes.Where(t => t.Flag == SmudgeTypeFlag.Bib2).FirstOrDefault();
+                    return SmudgeTypes.Where(t => t.Flags == SmudgeTypeFlag.Bib2).FirstOrDefault();
                 case 4:
-                    return SmudgeTypes.Where(t => t.Flag == SmudgeTypeFlag.Bib1).FirstOrDefault();
+                    return SmudgeTypes.Where(t => t.Flags == SmudgeTypeFlag.Bib1).FirstOrDefault();
                 default:
                     return null;
             }
         }
+
         public void Reset()
         {
             this.ExistsInTheater = false;

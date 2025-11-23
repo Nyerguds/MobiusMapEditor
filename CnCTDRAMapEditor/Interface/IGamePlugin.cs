@@ -16,18 +16,19 @@ using MobiusEditor.Model;
 using System;
 using System.Collections.Generic;
 using System.Drawing;
-using System.Linq;
 
 namespace MobiusEditor.Interface
 {
     public enum FileType
     {
-        None,
-        INI,
-        BIN,
-        MEG,
-        PGM,
-        MIX
+        None = 0, // Type detection failed.
+        INI, // ini+bin file.
+        BIN, // bin+ini file.
+        I64, // N64 ini+map file.
+        B64, // N64 map+ini file.
+        MPR, // ini file with embedded map.
+        PGM, // Petroglyph map archive in meg format. Contents will be autodetected when opened.
+        MIX  // Map selected from inside a mix file; should contain the ini and possibly bin parts behind a '?'.
     }
 
     public interface IGamePlugin : IDisposable
@@ -46,8 +47,11 @@ namespace MobiusEditor.Interface
         IFeedBackHandler FeedBackHandler { get; set; }
         /// <summary>True if the currently loaded map was modified.</summary>
         bool Dirty { get; set; }
+        /// <summary>True if the currently loaded map is a pristine empty map.</summary>
+        bool Empty { get; set; }
 
         /// <summary>Initialises this plugin after it has been created, and all resource managers have been reset.</summary>
+        /// <returns>A list of errors that occurred during the initialisation.</returns>
         IEnumerable<string> Initialize();
 
         /// <summary>Get any unmanaged sections from the mission file so they can be edited by the user.</summary>
@@ -61,8 +65,9 @@ namespace MobiusEditor.Interface
         /// </summary>
         /// <param name="extraIniText">The extra ini text to store</param>
         /// <param name="footPrintsChanged">Returns true if any building footprints were changed as a result of the given ini rule tweaks</param>
+        /// <param name="refreshPoints">Returns the points that need to be refreshed on the map as a result of the given ini rule tweaks.</param>
         /// <returns>Any errors that occurred while parsing <paramref name="extraIniText"/>, or null if nothing went wrong.</returns>
-        IEnumerable<string> SetExtraIniText(String extraIniText, out bool footPrintsChanged);
+        IEnumerable<string> SetExtraIniText(string extraIniText, out bool footPrintsChanged, out HashSet<Point> refreshPoints);
 
         /// <summary>Test if setting extra ini text will result in footprint changes.</summary>
         /// <param name="extraIniText">The extra ini text to evaluate</param>
@@ -70,36 +75,47 @@ namespace MobiusEditor.Interface
         /// <param name="expansionEnabled">True if expansion is enabled, which can affect how rules are interpreted.</param>
         /// <param name="footPrintsChanged">Returns true if any building footprints were changed as a result of the given ini rule tweaks</param>
         /// <returns>Any errors that occurred while parsing <paramref name="extraIniText"/>, or null if nothing went wrong.</returns>
-        IEnumerable<string> TestSetExtraIniText(String extraIniText, bool isSolo, bool expansionEnabled, out bool footPrintsChanged);
+        IEnumerable<string> TestSetExtraIniText(string extraIniText, bool isSolo, bool expansionEnabled, out bool footPrintsChanged);
 
         /// <summary>Create a new map in the chosen theater.</summary>
         /// <param name="theater">The name of the theater to use.</param>
         void New(string theater);
 
         /// <summary>Load a map.</summary>
-        /// <param name="path">Path of the map to load.</param>
-        /// <param name="fileType">File type of the actual file in the path, so accompanying files can be loaded correctly.</param>
+        /// <param name="loadPath">Full load path. This can be a .mix file or pgm archive.</param>
+        /// <param name="iniPath">Name of the .ini file.</param>
+        /// <param name="iniContent">Content of the .ini file</param>
+        /// <param name="binPath">Name of the .bin file.</param>
+        /// <param name="binContent">Content of the .bin file</param>
+        /// <param name="fileType">File type that was identified for this.</param>
         /// <returns>Any issues encountered when loading the map.</returns>
-        IEnumerable<string> Load(string path, FileType fileType);
+        IEnumerable<string> Load(string loadPath, string iniPath, byte[] iniContent, string binPath, byte[] binContent, ref FileType fileType);
 
         /// <summary>Save the current map to the given path, with the given file type.</summary>
         /// <param name="path">Path of the map to save.</param>
         /// <param name="fileType">File type of the actual file in the path, so accompanying files can be saved correctly.</param>
-        /// <returns>true if the saving succeeded.</returns>
-        bool Save(string path, FileType fileType);
+        /// <returns>The length of the ini data that was saved, or 0 if the saving didn't succeed.</returns>
+        long Save(string path, FileType fileType);
 
         /// <summary>Save the current map to the given path, with the given file type.</summary>
         /// <param name="path">Path of the map to save.</param>
         /// <param name="fileType">File type of the actual file in the path, so accompanying files can be saved correctly.</param>
         /// <param name="customPreview">Custom preview given to the map.</param>
         /// <param name="dontResavePreview">True to not resave the preview on disc when doing the save operation.</param>
-        /// <returns>true if the saving succeeded.</returns>
-        bool Save(string path, FileType fileType, Bitmap customPreview, bool dontResavePreview);
+        /// <param name="forSteam">True if this is a Steam workshop save</param>
+        /// <returns>The length of the ini data that was saved, or 0 if the saving didn't succeed.</returns>
+        long Save(string path, FileType fileType, Bitmap customPreview, bool dontResavePreview, bool forSteam);
 
         /// <summary>Validate the map to see if there are any blocking errors preventing it from saving.</summary>
+        /// <param name="saveType">Save type that this validating is for. If "None", the save type is not yet known, and no type-specific checks should be done.</param>
+        /// <param name="forResave">
+        ///     If true, the checks for savetype "None" should be included despite a specific save type being specified.
+        ///     This is meant for a resave of an already-saved map, meaning no Save As dialog was shown, and all checks should
+        ///     be done, both for save type "none" and the given save type.
+        /// </param>
         /// <param name="forWarnings">true if this is not the actual map validation, but a check that should return any warnings to show that the user can still choose to ignore.</param>
-        /// <returns>Null if the validation succeeded, else a string containing the problems that occurred..</returns>
-        string Validate(Boolean forWarnings);
+        /// <returns>Null if the validation succeeded, else a string containing the problems that occurred.</returns>
+        string Validate(FileType saveType, bool forResave, bool forWarnings);
 
         /// <summary>Generates an overview of how many items are on the map and how many are allowed, and does a trigger analysis.</summary>
         /// <returns>The generated map items overview.</returns>
@@ -134,6 +150,18 @@ namespace MobiusEditor.Interface
         /// <param name="includeTriggerName">True to include the trigger name in the info.</param>
         /// <returns>The summarisation of the trigger</returns>
         string TriggerSummary(Trigger trigger, bool withLineBreaks, bool includeTriggerName);
+
+        /// <summary>Returns a popup description for the selected trigger event type.</summary>
+        /// <param name="currentTriggers">Curently edited list of triggers.</param>
+        /// <param name="eventName">Event the popup info is for.</param>
+        /// <returns>Information about the selected event.</returns>
+        string TriggerEventInfo(List<Trigger> currentTriggers, string eventName);
+
+        /// <summary>Returns a popup description for the selected trigger action type.</summary>
+        /// <param name="currentTriggers">Curently edited list of triggers.</param>
+        /// <param name="actionName">Action the popup info is for.</param>
+        /// <returns>Information about the selected event.</returns>
+        string TriggerActionInfo(List<Trigger> currentTriggers, string actionName);
 
         /// <summary>Re-initialises the flag colors for this game.</summary>
         /// <returns>The team colors</returns>

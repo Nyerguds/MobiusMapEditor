@@ -46,7 +46,7 @@ namespace MobiusEditor.Tools
 
         public override bool IsBusy { get { return undoOverlays.Count > 0; } }
 
-        public override Object CurrentObject
+        public override object CurrentObject
         {
             get { return selectedWallType; }
             set
@@ -65,7 +65,7 @@ namespace MobiusEditor.Tools
 
         private bool placementMode;
 
-        protected override Boolean InPlacementMode
+        protected override bool InPlacementMode
         {
             get { return placementMode; }
         }
@@ -131,9 +131,10 @@ namespace MobiusEditor.Tools
         private void MapPanel_MouseLeave(object sender, EventArgs e)
         {
             ExitPlacementMode();
+            MapPanel_MouseUp(sender, new MouseEventArgs(MouseButtons.None, 0, 0, 0, 0));
         }
 
-        private void MapPanel_MouseWheel(Object sender, MouseEventArgs e)
+        private void MapPanel_MouseWheel(object sender, MouseEventArgs e)
         {
             if (e.Delta == 0 || (Control.ModifierKeys & Keys.Control) == Keys.None)
             {
@@ -259,40 +260,43 @@ namespace MobiusEditor.Tools
 
         private void CommitChange()
         {
-            bool origDirtyState = plugin.Dirty;
+            bool origEmptyState = plugin.Empty;
             plugin.Dirty = true;
             var undoOverlays2 = new Dictionary<int, Overlay>(undoOverlays);
-            void undoAction(UndoRedoEventArgs e)
+            void undoAction(UndoRedoEventArgs ev)
             {
                 foreach (var kv in undoOverlays2)
                 {
-                    e.Map.Overlay[kv.Key] = kv.Value;
+                    ev.Map.Overlay[kv.Key] = kv.Value;
                 }
-                e.MapPanel.Invalidate(e.Map, undoOverlays2.Keys.Select(k =>
+                ev.MapPanel.Invalidate(ev.Map, undoOverlays2.Keys.Select(k =>
                 {
-                    e.Map.Metrics.GetLocation(k, out Point location);
+                    ev.Map.Metrics.GetLocation(k, out Point location);
                     return Rectangle.Inflate(new Rectangle(location, new Size(1, 1)), 1, 1);
                 }));
-                if (e.Plugin != null)
+                if (ev.Plugin != null)
                 {
-                    e.Plugin.Dirty = origDirtyState;
+                    ev.Plugin.Empty = origEmptyState;
+                    ev.Plugin.Dirty = !ev.NewStateIsClean;
                 }
             }
             var redoOverlays2 = new Dictionary<int, Overlay>(redoOverlays);
-            void redoAction(UndoRedoEventArgs e)
+            void redoAction(UndoRedoEventArgs ev)
             {
                 foreach (var kv in redoOverlays2)
                 {
-                    e.Map.Overlay[kv.Key] = kv.Value;
+                    ev.Map.Overlay[kv.Key] = kv.Value;
                 }
-                e.MapPanel.Invalidate(e.Map, redoOverlays2.Keys.Select(k =>
+                ev.MapPanel.Invalidate(ev.Map, redoOverlays2.Keys.Select(k =>
                 {
-                    e.Map.Metrics.GetLocation(k, out Point location);
+                    ev.Map.Metrics.GetLocation(k, out Point location);
                     return Rectangle.Inflate(new Rectangle(location, new Size(1, 1)), 1, 1);
                 }));
-                if (e.Plugin != null)
+                if (ev.Plugin != null)
                 {
-                    e.Plugin.Dirty = true;
+                    // Redo can never restore the "empty" state, but CAN be the point at which a save was done.
+                    ev.Plugin.Empty = false;
+                    ev.Plugin.Dirty = !ev.NewStateIsClean;
                 }
             }
             undoOverlays.Clear();
@@ -459,6 +463,7 @@ namespace MobiusEditor.Tools
             this.mapPanel.MouseMove += MapPanel_MouseMove;
             this.mapPanel.MouseLeave += MapPanel_MouseLeave;
             this.mapPanel.MouseWheel += MapPanel_MouseWheel;
+            this.mapPanel.LostFocus += MapPanel_MouseLeave;
             this.mapPanel.SuspendMouseZoomKeys = Keys.Control;
             (this.mapPanel as Control).KeyDown += WallTool_KeyDown;
             (this.mapPanel as Control).KeyUp += WallTool_KeyUp;
@@ -484,6 +489,7 @@ namespace MobiusEditor.Tools
             this.mapPanel.MouseMove -= MapPanel_MouseMove;
             this.mapPanel.MouseLeave -= MapPanel_MouseLeave;
             this.mapPanel.MouseWheel -= MapPanel_MouseWheel;
+            this.mapPanel.LostFocus -= MapPanel_MouseLeave;
             this.mapPanel.SuspendMouseZoomKeys = Keys.None;
             (this.mapPanel as Control).KeyDown -= WallTool_KeyDown;
             (this.mapPanel as Control).KeyUp -= WallTool_KeyUp;

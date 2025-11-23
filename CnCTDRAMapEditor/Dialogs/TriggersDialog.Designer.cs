@@ -12,7 +12,6 @@
 // distributed with this program. You should have received a copy of the
 // GNU General Public License along with permitted additional restrictions
 // with this program. If not, see https://github.com/electronicarts/CnC_Remastered_Collection
-using MobiusEditor.Controls;
 
 namespace MobiusEditor.Dialogs
 {
@@ -329,6 +328,9 @@ namespace MobiusEditor.Dialogs
             this.action2ComboBox.Size = new System.Drawing.Size(141, 21);
             this.action2ComboBox.TabIndex = 19;
             this.action2ComboBox.SelectedIndexChanged += new System.EventHandler(this.Action2ComboBox_SelectedIndexChanged);
+            this.action2ComboBox.MouseEnter += new System.EventHandler(this.Action2ComboBox_MouseEnter);
+            this.action2ComboBox.MouseLeave += new System.EventHandler(this.ToolTipComboBox_MouseLeave);
+            this.action2ComboBox.MouseMove += new System.Windows.Forms.MouseEventHandler(this.Action2ComboBox_MouseMove);
             // 
             // persistenceLabel
             // 
@@ -353,7 +355,6 @@ namespace MobiusEditor.Dialogs
             this.persistenceComboBox.Name = "persistenceComboBox";
             this.persistenceComboBox.Size = new System.Drawing.Size(240, 21);
             this.persistenceComboBox.TabIndex = 4;
-            this.persistenceComboBox.ValueMember = "Value";
             // 
             // typeComboBox
             // 
@@ -367,7 +368,6 @@ namespace MobiusEditor.Dialogs
             this.typeComboBox.Name = "typeComboBox";
             this.typeComboBox.Size = new System.Drawing.Size(240, 21);
             this.typeComboBox.TabIndex = 7;
-            this.typeComboBox.ValueMember = "Value";
             this.typeComboBox.SelectedValueChanged += new System.EventHandler(this.TypeComboBox_SelectedValueChanged);
             // 
             // event1ComboBox
@@ -381,6 +381,9 @@ namespace MobiusEditor.Dialogs
             this.event1ComboBox.Size = new System.Drawing.Size(141, 21);
             this.event1ComboBox.TabIndex = 10;
             this.event1ComboBox.SelectedIndexChanged += new System.EventHandler(this.Event1ComboBox_SelectedIndexChanged);
+            this.event1ComboBox.MouseEnter += new System.EventHandler(this.Event1ComboBox_MouseEnter);
+            this.event1ComboBox.MouseLeave += new System.EventHandler(this.ToolTipComboBox_MouseLeave);
+            this.event1ComboBox.MouseMove += new System.Windows.Forms.MouseEventHandler(this.Event1ComboBox_MouseMove);
             // 
             // event2ComboBox
             // 
@@ -393,6 +396,9 @@ namespace MobiusEditor.Dialogs
             this.event2ComboBox.Size = new System.Drawing.Size(141, 21);
             this.event2ComboBox.TabIndex = 13;
             this.event2ComboBox.SelectedIndexChanged += new System.EventHandler(this.Event2ComboBox_SelectedIndexChanged);
+            this.event2ComboBox.MouseEnter += new System.EventHandler(this.Event2ComboBox_MouseEnter);
+            this.event2ComboBox.MouseLeave += new System.EventHandler(this.ToolTipComboBox_MouseLeave);
+            this.event2ComboBox.MouseMove += new System.Windows.Forms.MouseEventHandler(this.Event2ComboBox_MouseMove);
             // 
             // teamLabel
             // 
@@ -463,6 +469,10 @@ namespace MobiusEditor.Dialogs
             this.event1ValueComboBox.Name = "event1ValueComboBox";
             this.event1ValueComboBox.Size = new System.Drawing.Size(166, 21);
             this.event1ValueComboBox.TabIndex = 1;
+            this.event1ValueComboBox.SelectedIndexChanged += new System.EventHandler(this.Event1ValueComboBox_SelectedIndexChanged);
+            this.event1ValueComboBox.MouseEnter += new System.EventHandler(this.Event1ValueComboBox_MouseEnter);
+            this.event1ValueComboBox.MouseLeave += new System.EventHandler(this.ToolTipComboBox_MouseLeave);
+            this.event1ValueComboBox.MouseMove += new System.Windows.Forms.MouseEventHandler(this.Event1ValueComboBox_MouseMove);
             // 
             // event2Flp
             // 
@@ -505,6 +515,10 @@ namespace MobiusEditor.Dialogs
             this.event2ValueComboBox.Name = "event2ValueComboBox";
             this.event2ValueComboBox.Size = new System.Drawing.Size(166, 21);
             this.event2ValueComboBox.TabIndex = 1;
+            this.event2ValueComboBox.SelectedIndexChanged += new System.EventHandler(this.Event2ValueComboBox_SelectedIndexChanged);
+            this.event2ValueComboBox.MouseEnter += new System.EventHandler(this.Event2ValueComboBox_MouseEnter);
+            this.event2ValueComboBox.MouseLeave += new System.EventHandler(this.ToolTipComboBox_MouseLeave);
+            this.event2ValueComboBox.MouseMove += new System.Windows.Forms.MouseEventHandler(this.Event2ValueComboBox_MouseMove);
             // 
             // action1Flp
             // 
@@ -617,9 +631,9 @@ namespace MobiusEditor.Dialogs
             this.triggersListView.UseCompatibleStateImageBehavior = false;
             this.triggersListView.View = System.Windows.Forms.View.Details;
             this.triggersListView.AfterLabelEdit += new System.Windows.Forms.LabelEditEventHandler(this.triggersListView_AfterLabelEdit);
-            this.triggersListView.SelectedIndexChanged += new System.EventHandler(this.triggersListView_SelectedIndexChanged);
-            this.triggersListView.KeyDown += new System.Windows.Forms.KeyEventHandler(this.triggersListView_KeyDown);
-            this.triggersListView.MouseDown += new System.Windows.Forms.MouseEventHandler(this.triggersListView_MouseDown);
+            this.triggersListView.SelectedIndexChanged += new System.EventHandler(this.TriggersListView_SelectedIndexChanged);
+            this.triggersListView.KeyDown += new System.Windows.Forms.KeyEventHandler(this.TriggersListView_KeyDown);
+            this.triggersListView.MouseDown += new System.Windows.Forms.MouseEventHandler(this.TriggersListView_MouseDown);
             // 
             // nameColumnHeader
             // 
@@ -705,33 +719,33 @@ namespace MobiusEditor.Dialogs
             this.tsmiCloneTrigger,
             this.tsmiRemoveTrigger});
             this.triggersContextMenuStrip.Name = "teamTypesContextMenuStrip";
-            this.triggersContextMenuStrip.Size = new System.Drawing.Size(191, 92);
+            this.triggersContextMenuStrip.Size = new System.Drawing.Size(192, 92);
             // 
             // tsmiAddTrigger
             // 
             this.tsmiAddTrigger.Name = "tsmiAddTrigger";
-            this.tsmiAddTrigger.Size = new System.Drawing.Size(190, 22);
+            this.tsmiAddTrigger.Size = new System.Drawing.Size(191, 22);
             this.tsmiAddTrigger.Text = "&Add Trigger (Ctrl+A)";
             this.tsmiAddTrigger.Click += new System.EventHandler(this.TsmiAddTrigger_Click);
             // 
             // tsmiRenameTrigger
             // 
             this.tsmiRenameTrigger.Name = "tsmiRenameTrigger";
-            this.tsmiRenameTrigger.Size = new System.Drawing.Size(190, 22);
+            this.tsmiRenameTrigger.Size = new System.Drawing.Size(191, 22);
             this.tsmiRenameTrigger.Text = "Re&name Trigger (F2)";
             this.tsmiRenameTrigger.Click += new System.EventHandler(this.TsmiRenameTrigger_Click);
             // 
             // tsmiCloneTrigger
             // 
             this.tsmiCloneTrigger.Name = "tsmiCloneTrigger";
-            this.tsmiCloneTrigger.Size = new System.Drawing.Size(190, 22);
+            this.tsmiCloneTrigger.Size = new System.Drawing.Size(191, 22);
             this.tsmiCloneTrigger.Text = "&Clone Trigger (Ctrl+C)";
             this.tsmiCloneTrigger.Click += new System.EventHandler(this.TsmiCloneTrigger_Click);
             // 
             // tsmiRemoveTrigger
             // 
             this.tsmiRemoveTrigger.Name = "tsmiRemoveTrigger";
-            this.tsmiRemoveTrigger.Size = new System.Drawing.Size(190, 22);
+            this.tsmiRemoveTrigger.Size = new System.Drawing.Size(191, 22);
             this.tsmiRemoveTrigger.Text = "&Remove Trigger (Del)";
             this.tsmiRemoveTrigger.Click += new System.EventHandler(this.TsmiRemoveTrigger_Click);
             // 
@@ -760,6 +774,7 @@ namespace MobiusEditor.Dialogs
             this.StartPosition = System.Windows.Forms.FormStartPosition.CenterParent;
             this.Text = "Triggers";
             this.FormClosing += new System.Windows.Forms.FormClosingEventHandler(this.TriggersDialog_FormClosing);
+            this.Shown += new System.EventHandler(this.TriggersDialog_Shown);
             this.KeyDown += new System.Windows.Forms.KeyEventHandler(this.TriggersDialog_KeyDown);
             this.tableLayoutPanel1.ResumeLayout(false);
             this.tableLayoutPanel1.PerformLayout();

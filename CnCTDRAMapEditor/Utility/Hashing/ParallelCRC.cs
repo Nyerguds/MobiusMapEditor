@@ -45,14 +45,14 @@ namespace LarchenkoCRC32
             {
                 Table = new uint[256 * CRC_NUM_TABLES];
                 int i;
-                for (i = 0; i < 256; i++)
+                for (i = 0; i < 256; ++i)
                 {
                     uint r = (uint)i;
-                    for (int j = 0; j < 8; j++)
+                    for (int j = 0; j < 8; ++j)
                         r = (r >> 1) ^ (kCrcPoly & ~((r & 1) - 1));
                     Table[i] = r;
                 }
-                for (; i < 256 * CRC_NUM_TABLES; i++)
+                for (; i < 256 * CRC_NUM_TABLES; ++i)
                 {
                     uint r = Table[i - 256];
                     Table[i] = Table[r & 0xFF] ^ (r >> 8);
@@ -149,11 +149,11 @@ namespace LarchenkoCRC32
                     crc = table[(byte)crc + 0x700]
                         ^ table[(byte)(crc >>= 8) + 0x600]
                         ^ table[(byte)(crc >>= 8) + 0x500]
-                        ^ table[/*(Byte)*/(crc >> 8) + 0x400]
+                        ^ table[/*(byte)*/(crc >> 8) + 0x400]
                         ^ table[(byte)(high) + 0x300]
                         ^ table[(byte)(high >>= 8) + 0x200]
                         ^ table[(byte)(high >>= 8) + 0x100]
-                        ^ table[/*(Byte)*/(high >> 8) + 0x000];
+                        ^ table[/*(byte)*/(high >> 8) + 0x000];
                 }
             }
 
@@ -225,7 +225,7 @@ namespace LarchenkoCRC32
             uint len2 = (uint)length2;
 
             // apply len2 zeros to crc1 (first square will put the operator for one
-            // zero Byte, eight zero bits, in even)
+            // zero byte, eight zero bits, in even)
             do
             {
                 // apply zeros operator for this bit of len2
@@ -256,7 +256,10 @@ namespace LarchenkoCRC32
 
             // put operator for one zero bit in odd
             odd[0] = kCrcPoly;  // the CRC-32 polynomial
-            for (int i = 1; i < 32; i++) odd[i] = 1U << (i - 1);
+            for (int i = 1; i < 32; ++i)
+            {
+                odd[i] = 1U << (i - 1);
+            }
 
             // put operator for two zero bits in even
             gf2_matrix_square(even, odd);
@@ -287,8 +290,10 @@ namespace LarchenkoCRC32
         /// <param name="mat">will not be modified</param>
         private static void gf2_matrix_square(uint[] square, uint[] mat)
         {
-            for (int i = 0; i < 32; i++)
+            for (int i = 0; i < 32; ++i)
+            {
                 square[i] = gf2_matrix_times(mat, mat[i]);
+            }
         }
 
         private static uint[] CopyArray(uint[] a)

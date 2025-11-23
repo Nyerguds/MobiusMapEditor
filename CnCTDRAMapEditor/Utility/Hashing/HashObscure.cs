@@ -21,30 +21,30 @@ namespace MobiusEditor.Utility.Hashing
     /// </summary>
     public class HashObscure : HashMethod
     {
-        public override String DisplayName { get { return "Poor Man's (SETUP.MIX)"; } }
-        public override String SimpleName { get { return "Obscure"; } }
+        public override string DisplayName { get { return "Poor Man's (SETUP.MIX)"; } }
+        public override string SimpleName { get { return "Obscure"; } }
 
-        public override UInt32 GetNameIdCorrectCase(String name)
+        public override uint GetNameIdCorrectCase(string name)
         {
             return GetNameIdCorrectCase(Encoding.ASCII.GetBytes(name));
         }
 
-        public override UInt32 GetNameIdCorrectCase(Byte[] data)
+        public override uint GetNameIdCorrectCase(byte[] data)
         {
             if (data.Length < 7)
             {
-                Byte[] values2 = new Byte[7];
+                byte[] values2 = new byte[7];
                 Array.Copy(data, values2, data.Length);
                 data = values2;
             }
-            Byte v8 = data[0]; // [sp+1Ch] [bp-104h]@1
-            Byte v9 = data[1]; // [sp+1Dh] [bp-103h]@3
-            Byte v10 = data[3]; // [sp+1Fh] [bp-101h]@3
-            Byte v11 = data[4]; // [sp+20h] [bp-100h]@3
-            Byte v12 = data[5]; // [sp+21h] [bp-FFh]@3
-            Byte v13 = data[6]; // [sp+22h] [bp-FEh]@3
-            Int64 v3 = v13 + 0xA * (v12 + 0xA * (v11 + 0xA * (v10 + 0xA * (v9 + 0xA * v8)))) - 0x516150;
-            return (UInt32)v3;
+            byte v8 = data[0]; // [sp+1Ch] [bp-104h]@1
+            byte v9 = data[1]; // [sp+1Dh] [bp-103h]@3
+            byte v10 = data[3]; // [sp+1Fh] [bp-101h]@3
+            byte v11 = data[4]; // [sp+20h] [bp-100h]@3
+            byte v12 = data[5]; // [sp+21h] [bp-FFh]@3
+            byte v13 = data[6]; // [sp+22h] [bp-FEh]@3
+            long v3 = v13 + 0xA * (v12 + 0xA * (v11 + 0xA * (v10 + 0xA * (v9 + 0xA * v8)))) - 0x516150;
+            return (uint)v3;
         }
     }
 }

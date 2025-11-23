@@ -46,7 +46,7 @@ namespace MobiusEditor.Tools
         private Map previewMap;
         protected override Map RenderMap => previewMap;
 
-        public override Object CurrentObject
+        public override object CurrentObject
         {
             get { return selectedOverlayType; }
             set
@@ -65,7 +65,7 @@ namespace MobiusEditor.Tools
 
         private bool placementMode;
 
-        protected override Boolean InPlacementMode
+        protected override bool InPlacementMode
         {
             get { return placementMode; }
         }
@@ -101,6 +101,16 @@ namespace MobiusEditor.Tools
             this.overlayTypeMapPanel.MaxZoom = 1;
             this.overlayTypeMapPanel.SmoothScale = Globals.PreviewSmoothScale;
             SelectedOverlayType = this.overlayTypeListBox.Types.First() as OverlayType;
+        }
+
+        private void MapPanel_MouseWheel(object sender, MouseEventArgs e)
+        {
+            if (e.Delta == 0 || (Control.ModifierKeys & Keys.Control) == Keys.None)
+            {
+                return;
+            }
+            KeyEventArgs keyArgs = new KeyEventArgs(e.Delta > 0 ? Keys.PageUp : Keys.PageDown);
+            CheckSelectShortcuts(keyArgs);
         }
 
         private void OverlayTypeListBox_SelectedIndexChanged(object sender, EventArgs e)
@@ -158,16 +168,7 @@ namespace MobiusEditor.Tools
         private void MapPanel_MouseLeave(object sender, EventArgs e)
         {
             ExitPlacementMode();
-        }
-
-        private void MapPanel_MouseWheel(Object sender, MouseEventArgs e)
-        {
-            if (e.Delta == 0 || (Control.ModifierKeys & Keys.Control) == Keys.None)
-            {
-                return;
-            }
-            KeyEventArgs keyArgs = new KeyEventArgs(e.Delta > 0 ? Keys.PageUp : Keys.PageDown);
-            CheckSelectShortcuts(keyArgs);
+            MapPanel_MouseUp(sender, new MouseEventArgs(MouseButtons.None, 0, 0, 0, 0));
         }
 
         private void MapPanel_MouseMove(object sender, MouseEventArgs e)
@@ -259,42 +260,46 @@ namespace MobiusEditor.Tools
                 }
             }
         }
+
         private void CommitChange()
         {
-            bool origDirtyState = plugin.Dirty;
+            bool origEmptyState = plugin.Empty;
             plugin.Dirty = true;
-            Dictionary<Int32, Overlay> undoOverlays2 = new Dictionary<int, Overlay>(undoOverlays);
-            void undoAction(UndoRedoEventArgs e)
+            Dictionary<int, Overlay> undoOverlays2 = new Dictionary<int, Overlay>(undoOverlays);
+            void undoAction(UndoRedoEventArgs ev)
             {
-                foreach (KeyValuePair<Int32, Overlay> kv in undoOverlays2)
+                foreach (KeyValuePair<int, Overlay> kv in undoOverlays2)
                 {
-                    e.Map.Overlay[kv.Key] = kv.Value;
+                    ev.Map.Overlay[kv.Key] = kv.Value;
                 }
-                e.MapPanel.Invalidate(e.Map, undoOverlays2.Keys.Select(k =>
+                ev.MapPanel.Invalidate(ev.Map, undoOverlays2.Keys.Select(k =>
                 {
-                    e.Map.Metrics.GetLocation(k, out Point location);
+                    ev.Map.Metrics.GetLocation(k, out Point location);
                     return Rectangle.Inflate(new Rectangle(location, new Size(1, 1)), 1, 1);
                 }));
-                if (e.Plugin != null)
+                if (ev.Plugin != null)
                 {
-                    e.Plugin.Dirty = origDirtyState;
+                    ev.Plugin.Empty = origEmptyState;
+                    ev.Plugin.Dirty = !ev.NewStateIsClean;
                 }
             }
-            Dictionary<Int32, Overlay> redoOverlays2 = new Dictionary<int, Overlay>(redoOverlays);
-            void redoAction(UndoRedoEventArgs e)
+            Dictionary<int, Overlay> redoOverlays2 = new Dictionary<int, Overlay>(redoOverlays);
+            void redoAction(UndoRedoEventArgs ev)
             {
-                foreach (KeyValuePair<Int32, Overlay> kv in redoOverlays2)
+                foreach (KeyValuePair<int, Overlay> kv in redoOverlays2)
                 {
-                    e.Map.Overlay[kv.Key] = kv.Value;
+                    ev.Map.Overlay[kv.Key] = kv.Value;
                 }
-                e.MapPanel.Invalidate(e.Map, redoOverlays2.Keys.Select(k =>
+                ev.MapPanel.Invalidate(ev.Map, redoOverlays2.Keys.Select(k =>
                 {
-                    e.Map.Metrics.GetLocation(k, out Point location);
+                    ev.Map.Metrics.GetLocation(k, out Point location);
                     return Rectangle.Inflate(new Rectangle(location, new Size(1, 1)), 1, 1);
                 }));
-                if (e.Plugin != null)
+                if (ev.Plugin != null)
                 {
-                    e.Plugin.Dirty = true;
+                    // Redo can never restore the "empty" state, but CAN be the point at which a save was done.
+                    ev.Plugin.Empty = false;
+                    ev.Plugin.Dirty = !ev.NewStateIsClean;
                 }
             }
             undoOverlays.Clear();
@@ -373,6 +378,16 @@ namespace MobiusEditor.Tools
             {
                 SelectedOverlayType = overlay.Type;
             }
+            Building building = map.Buildings[location] as Building;
+            if (building != null)
+            {
+                string bType = building.Type.Name;
+                OverlayType ovlType = map.OverlayTypes.FirstOrDefault(ov => String.Equals(ov.Name, bType, StringComparison.OrdinalIgnoreCase));
+                if (ovlType != null)
+                {
+                    SelectedOverlayType = ovlType;
+                }
+            }
         }
 
         protected override void RefreshPreviewPanel()
@@ -388,13 +403,13 @@ namespace MobiusEditor.Tools
                     Type = overlayType,
                     Icon = 0
                 };
-                (Rectangle, Action<Graphics>) render = MapRenderer.RenderOverlay(plugin.GameInfo, new Point(0,0), null, Globals.PreviewTileSize, Globals.PreviewTileScale, mockOverlay, false);
-                if (!render.Item1.IsEmpty)
+                RenderInfo render = MapRenderer.RenderOverlay(plugin.GameInfo, new Point(0,0), null, Globals.PreviewTileSize, Globals.PreviewTileScale, mockOverlay, false);
+                if (render.RenderAction != null)
                 {
                     using (Graphics g = Graphics.FromImage(overlayPreview))
                     {
                         MapRenderer.SetRenderSettings(g, Globals.PreviewSmoothScale);
-                        render.Item2(g);
+                        render.RenderAction(g);
                     }
                 }
                 else
@@ -491,18 +506,19 @@ namespace MobiusEditor.Tools
         public override void Activate()
         {
             base.Activate();
-            this.Deactivate(true);
-            this.mapPanel.MouseDown += MapPanel_MouseDown;
-            this.mapPanel.MouseUp += MapPanel_MouseUp;
-            this.mapPanel.MouseMove += MapPanel_MouseMove;
-            this.mapPanel.MouseLeave += MapPanel_MouseLeave;
-            this.mapPanel.MouseWheel += MapPanel_MouseWheel;
-            this.mapPanel.SuspendMouseZoomKeys = Keys.Control;
-            (this.mapPanel as Control).KeyDown += OverlaysTool_KeyDown;
-            (this.mapPanel as Control).KeyUp += OverlaysTool_KeyUp;
-            this.navigationWidget.BoundsMouseCellChanged += MouseoverWidget_MouseCellChanged;
-            this.UpdateStatus();
-            this.RefreshPreviewPanel();
+            Deactivate(true);
+            mapPanel.MouseDown += MapPanel_MouseDown;
+            mapPanel.MouseUp += MapPanel_MouseUp;
+            mapPanel.MouseMove += MapPanel_MouseMove;
+            mapPanel.MouseLeave += MapPanel_MouseLeave;
+            mapPanel.MouseWheel += MapPanel_MouseWheel;
+            mapPanel.LostFocus += MapPanel_MouseLeave;
+            mapPanel.SuspendMouseZoomKeys = Keys.Control;
+            (mapPanel as Control).KeyDown += OverlaysTool_KeyDown;
+            (mapPanel as Control).KeyUp += OverlaysTool_KeyUp;
+            navigationWidget.BoundsMouseCellChanged += MouseoverWidget_MouseCellChanged;
+            UpdateStatus();
+            RefreshPreviewPanel();
         }
 
         public override void Deactivate()
@@ -517,15 +533,16 @@ namespace MobiusEditor.Tools
                 this.ExitPlacementMode();
                 base.Deactivate();
             }
-            this.mapPanel.MouseDown -= MapPanel_MouseDown;
-            this.mapPanel.MouseUp -= MapPanel_MouseUp;
-            this.mapPanel.MouseMove -= MapPanel_MouseMove;
-            this.mapPanel.MouseLeave -= MapPanel_MouseLeave;
-            this.mapPanel.MouseWheel -= MapPanel_MouseWheel;
-            this.mapPanel.SuspendMouseZoomKeys = Keys.None;
-            (this.mapPanel as Control).KeyDown -= OverlaysTool_KeyDown;
-            (this.mapPanel as Control).KeyUp -= OverlaysTool_KeyUp;
-            this.navigationWidget.BoundsMouseCellChanged -= MouseoverWidget_MouseCellChanged;
+            mapPanel.MouseDown -= MapPanel_MouseDown;
+            mapPanel.MouseUp -= MapPanel_MouseUp;
+            mapPanel.MouseMove -= MapPanel_MouseMove;
+            mapPanel.MouseLeave -= MapPanel_MouseLeave;
+            mapPanel.MouseWheel -= MapPanel_MouseWheel;
+            mapPanel.LostFocus -= MapPanel_MouseLeave;
+            mapPanel.SuspendMouseZoomKeys = Keys.None;
+            (mapPanel as Control).KeyDown -= OverlaysTool_KeyDown;
+            (mapPanel as Control).KeyUp -= OverlaysTool_KeyUp;
+            navigationWidget.BoundsMouseCellChanged -= MouseoverWidget_MouseCellChanged;
         }
 
         #region IDisposable Support

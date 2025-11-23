@@ -245,7 +245,6 @@ namespace MobiusEditor.Dialogs
             this.cmbPersistenceType.Name = "cmbPersistenceType";
             this.cmbPersistenceType.Size = new System.Drawing.Size(155, 21);
             this.cmbPersistenceType.TabIndex = 3;
-            this.cmbPersistenceType.ValueMember = "Value";
             // 
             // cmbEventControl
             // 
@@ -259,7 +258,6 @@ namespace MobiusEditor.Dialogs
             this.cmbEventControl.Name = "cmbEventControl";
             this.cmbEventControl.Size = new System.Drawing.Size(155, 21);
             this.cmbEventControl.TabIndex = 5;
-            this.cmbEventControl.ValueMember = "Value";
             // 
             // chkHouse
             // 
@@ -281,7 +279,7 @@ namespace MobiusEditor.Dialogs
             this.chkPersistenceType.Name = "chkPersistenceType";
             this.chkPersistenceType.Size = new System.Drawing.Size(100, 19);
             this.chkPersistenceType.TabIndex = 2;
-            this.chkPersistenceType.Text = "Persistence";
+            this.chkPersistenceType.Text = "Executes";
             this.chkPersistenceType.UseVisualStyleBackColor = true;
             this.chkPersistenceType.CheckedChanged += new System.EventHandler(this.ChkPersistenceType_CheckedChanged);
             // 

@@ -380,7 +380,7 @@ namespace MobiusEditor.Dialogs
             this.tableLayoutPanel2.ColumnCount = 3;
             this.tableLayoutPanel2.ColumnStyles.Add(new System.Windows.Forms.ColumnStyle(System.Windows.Forms.SizeType.Percent, 45F));
             this.tableLayoutPanel2.ColumnStyles.Add(new System.Windows.Forms.ColumnStyle(System.Windows.Forms.SizeType.Percent, 55F));
-            this.tableLayoutPanel2.ColumnStyles.Add(new System.Windows.Forms.ColumnStyle(System.Windows.Forms.SizeType.Absolute, 30F));
+            this.tableLayoutPanel2.ColumnStyles.Add(new System.Windows.Forms.ColumnStyle(System.Windows.Forms.SizeType.Absolute, 33F));
             this.tableLayoutPanel2.Controls.Add(this.lblHouse, 0, 0);
             this.tableLayoutPanel2.Controls.Add(this.cmbHouse, 1, 0);
             this.tableLayoutPanel2.Controls.Add(this.chbRoundabout, 1, 1);
@@ -433,7 +433,7 @@ namespace MobiusEditor.Dialogs
             this.lblHouse.Location = new System.Drawing.Point(2, 0);
             this.lblHouse.Margin = new System.Windows.Forms.Padding(2, 0, 2, 0);
             this.lblHouse.Name = "lblHouse";
-            this.lblHouse.Size = new System.Drawing.Size(73, 25);
+            this.lblHouse.Size = new System.Drawing.Size(72, 25);
             this.lblHouse.TabIndex = 0;
             this.lblHouse.Text = "House";
             this.lblHouse.TextAlign = System.Drawing.ContentAlignment.MiddleLeft;
@@ -446,22 +446,21 @@ namespace MobiusEditor.Dialogs
             this.cmbHouse.Dock = System.Windows.Forms.DockStyle.Fill;
             this.cmbHouse.DropDownStyle = System.Windows.Forms.ComboBoxStyle.DropDownList;
             this.cmbHouse.FormattingEnabled = true;
-            this.cmbHouse.Location = new System.Drawing.Point(79, 2);
+            this.cmbHouse.Location = new System.Drawing.Point(78, 2);
             this.cmbHouse.Margin = new System.Windows.Forms.Padding(2);
             this.cmbHouse.Name = "cmbHouse";
-            this.cmbHouse.Size = new System.Drawing.Size(121, 21);
+            this.cmbHouse.Size = new System.Drawing.Size(122, 21);
             this.cmbHouse.TabIndex = 10;
-            this.cmbHouse.ValueMember = "Value";
             this.cmbHouse.SelectedValueChanged += new System.EventHandler(this.cmbHouse_SelectedValueChanged);
             // 
             // chbRoundabout
             // 
             this.chbRoundabout.AutoSize = true;
             this.chbRoundabout.Dock = System.Windows.Forms.DockStyle.Fill;
-            this.chbRoundabout.Location = new System.Drawing.Point(79, 27);
+            this.chbRoundabout.Location = new System.Drawing.Point(78, 27);
             this.chbRoundabout.Margin = new System.Windows.Forms.Padding(2);
             this.chbRoundabout.Name = "chbRoundabout";
-            this.chbRoundabout.Size = new System.Drawing.Size(90, 17);
+            this.chbRoundabout.Size = new System.Drawing.Size(88, 17);
             this.chbRoundabout.TabIndex = 11;
             this.chbRoundabout.Text = "Roundabout";
             this.toolTip1.SetToolTip(this.chbRoundabout, "Avoid high-threat areas.");
@@ -472,10 +471,10 @@ namespace MobiusEditor.Dialogs
             this.chbLearning.AutoSize = true;
             this.chbLearning.Dock = System.Windows.Forms.DockStyle.Fill;
             this.chbLearning.Font = new System.Drawing.Font("Microsoft Sans Serif", 8.25F, System.Drawing.FontStyle.Strikeout, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
-            this.chbLearning.Location = new System.Drawing.Point(79, 48);
+            this.chbLearning.Location = new System.Drawing.Point(78, 48);
             this.chbLearning.Margin = new System.Windows.Forms.Padding(2);
             this.chbLearning.Name = "chbLearning";
-            this.chbLearning.Size = new System.Drawing.Size(90, 17);
+            this.chbLearning.Size = new System.Drawing.Size(88, 17);
             this.chbLearning.TabIndex = 12;
             this.chbLearning.Text = "Learning";
             this.toolTip1.SetToolTip(this.chbLearning, "The team learns from mistakes.\r\n(Has no effect)");
@@ -485,10 +484,10 @@ namespace MobiusEditor.Dialogs
             // 
             this.chbSuicide.AutoSize = true;
             this.chbSuicide.Dock = System.Windows.Forms.DockStyle.Fill;
-            this.chbSuicide.Location = new System.Drawing.Point(79, 69);
+            this.chbSuicide.Location = new System.Drawing.Point(78, 69);
             this.chbSuicide.Margin = new System.Windows.Forms.Padding(2);
             this.chbSuicide.Name = "chbSuicide";
-            this.chbSuicide.Size = new System.Drawing.Size(90, 17);
+            this.chbSuicide.Size = new System.Drawing.Size(88, 17);
             this.chbSuicide.TabIndex = 13;
             this.chbSuicide.Text = "Suicide";
             this.toolTip1.SetToolTip(this.chbSuicide, "The team won\'t stop until it achieves its mission or it\'s dead.");
@@ -498,10 +497,10 @@ namespace MobiusEditor.Dialogs
             // 
             this.chbAutocreate.AutoSize = true;
             this.chbAutocreate.Dock = System.Windows.Forms.DockStyle.Fill;
-            this.chbAutocreate.Location = new System.Drawing.Point(79, 90);
+            this.chbAutocreate.Location = new System.Drawing.Point(78, 90);
             this.chbAutocreate.Margin = new System.Windows.Forms.Padding(2);
             this.chbAutocreate.Name = "chbAutocreate";
-            this.chbAutocreate.Size = new System.Drawing.Size(90, 17);
+            this.chbAutocreate.Size = new System.Drawing.Size(88, 17);
             this.chbAutocreate.TabIndex = 14;
             this.chbAutocreate.Text = "Auto-create";
             this.toolTip1.SetToolTip(this.chbAutocreate, "Make this part of the pool of teams to be produced\r\nwhen enabling Autocreate for " +
@@ -514,10 +513,10 @@ namespace MobiusEditor.Dialogs
             this.chbMercenary.AutoSize = true;
             this.chbMercenary.Dock = System.Windows.Forms.DockStyle.Fill;
             this.chbMercenary.Font = new System.Drawing.Font("Microsoft Sans Serif", 8.25F, System.Drawing.FontStyle.Strikeout, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
-            this.chbMercenary.Location = new System.Drawing.Point(79, 111);
+            this.chbMercenary.Location = new System.Drawing.Point(78, 111);
             this.chbMercenary.Margin = new System.Windows.Forms.Padding(2);
             this.chbMercenary.Name = "chbMercenary";
-            this.chbMercenary.Size = new System.Drawing.Size(90, 17);
+            this.chbMercenary.Size = new System.Drawing.Size(88, 17);
             this.chbMercenary.TabIndex = 15;
             this.chbMercenary.Text = "Mercenary";
             this.toolTip1.SetToolTip(this.chbMercenary, "Will change sides if they start to lose.\r\n(Has no effect)");
@@ -527,10 +526,10 @@ namespace MobiusEditor.Dialogs
             // 
             this.chbReinforcable.AutoSize = true;
             this.chbReinforcable.Dock = System.Windows.Forms.DockStyle.Fill;
-            this.chbReinforcable.Location = new System.Drawing.Point(79, 132);
+            this.chbReinforcable.Location = new System.Drawing.Point(78, 132);
             this.chbReinforcable.Margin = new System.Windows.Forms.Padding(2);
             this.chbReinforcable.Name = "chbReinforcable";
-            this.chbReinforcable.Size = new System.Drawing.Size(90, 17);
+            this.chbReinforcable.Size = new System.Drawing.Size(88, 17);
             this.chbReinforcable.TabIndex = 16;
             this.chbReinforcable.Text = "Reinforcable";
             this.toolTip1.SetToolTip(this.chbReinforcable, "Allow recruitment of new members if some die.\r\nIf false, acts similar to Suicide," +
@@ -541,10 +540,10 @@ namespace MobiusEditor.Dialogs
             // 
             this.chbPrebuilt.AutoSize = true;
             this.chbPrebuilt.Dock = System.Windows.Forms.DockStyle.Fill;
-            this.chbPrebuilt.Location = new System.Drawing.Point(79, 153);
+            this.chbPrebuilt.Location = new System.Drawing.Point(78, 153);
             this.chbPrebuilt.Margin = new System.Windows.Forms.Padding(2);
             this.chbPrebuilt.Name = "chbPrebuilt";
-            this.chbPrebuilt.Size = new System.Drawing.Size(90, 17);
+            this.chbPrebuilt.Size = new System.Drawing.Size(88, 17);
             this.chbPrebuilt.TabIndex = 17;
             this.chbPrebuilt.Text = "Prebuilt";
             this.toolTip1.SetToolTip(this.chbPrebuilt, "Computer should build members to fill a team of this type\r\nregardless of whether " +
@@ -558,7 +557,7 @@ namespace MobiusEditor.Dialogs
             this.lblInitNum.Location = new System.Drawing.Point(2, 196);
             this.lblInitNum.Margin = new System.Windows.Forms.Padding(2, 0, 2, 0);
             this.lblInitNum.Name = "lblInitNum";
-            this.lblInitNum.Size = new System.Drawing.Size(73, 24);
+            this.lblInitNum.Size = new System.Drawing.Size(72, 24);
             this.lblInitNum.TabIndex = 9;
             this.lblInitNum.Text = "Init Num";
             this.lblInitNum.TextAlign = System.Drawing.ContentAlignment.MiddleLeft;
@@ -571,7 +570,7 @@ namespace MobiusEditor.Dialogs
             this.lblMaxAllowed.Location = new System.Drawing.Point(2, 220);
             this.lblMaxAllowed.Margin = new System.Windows.Forms.Padding(2, 0, 2, 0);
             this.lblMaxAllowed.Name = "lblMaxAllowed";
-            this.lblMaxAllowed.Size = new System.Drawing.Size(73, 24);
+            this.lblMaxAllowed.Size = new System.Drawing.Size(72, 24);
             this.lblMaxAllowed.TabIndex = 10;
             this.lblMaxAllowed.Text = "Max Allowed";
             this.lblMaxAllowed.TextAlign = System.Drawing.ContentAlignment.MiddleLeft;
@@ -585,7 +584,7 @@ namespace MobiusEditor.Dialogs
             this.lblFear.Location = new System.Drawing.Point(2, 244);
             this.lblFear.Margin = new System.Windows.Forms.Padding(2, 0, 2, 0);
             this.lblFear.Name = "lblFear";
-            this.lblFear.Size = new System.Drawing.Size(73, 24);
+            this.lblFear.Size = new System.Drawing.Size(72, 24);
             this.lblFear.TabIndex = 11;
             this.lblFear.Text = "Fear";
             this.lblFear.TextAlign = System.Drawing.ContentAlignment.MiddleLeft;
@@ -595,7 +594,7 @@ namespace MobiusEditor.Dialogs
             // 
             this.tableLayoutPanel2.SetColumnSpan(this.nudInitNum, 2);
             this.nudInitNum.Dock = System.Windows.Forms.DockStyle.Fill;
-            this.nudInitNum.Location = new System.Drawing.Point(79, 198);
+            this.nudInitNum.Location = new System.Drawing.Point(78, 198);
             this.nudInitNum.Margin = new System.Windows.Forms.Padding(2);
             this.nudInitNum.Maximum = new decimal(new int[] {
             255,
@@ -603,7 +602,7 @@ namespace MobiusEditor.Dialogs
             0,
             0});
             this.nudInitNum.Name = "nudInitNum";
-            this.nudInitNum.Size = new System.Drawing.Size(121, 20);
+            this.nudInitNum.Size = new System.Drawing.Size(122, 20);
             this.nudInitNum.TabIndex = 19;
             this.nudInitNum.Validating += new System.ComponentModel.CancelEventHandler(this.nudInitNum_Validating);
             // 
@@ -611,7 +610,7 @@ namespace MobiusEditor.Dialogs
             // 
             this.tableLayoutPanel2.SetColumnSpan(this.maxAllowedNud, 2);
             this.maxAllowedNud.Dock = System.Windows.Forms.DockStyle.Fill;
-            this.maxAllowedNud.Location = new System.Drawing.Point(79, 222);
+            this.maxAllowedNud.Location = new System.Drawing.Point(78, 222);
             this.maxAllowedNud.Margin = new System.Windows.Forms.Padding(2);
             this.maxAllowedNud.Maximum = new decimal(new int[] {
             255,
@@ -619,7 +618,7 @@ namespace MobiusEditor.Dialogs
             0,
             0});
             this.maxAllowedNud.Name = "maxAllowedNud";
-            this.maxAllowedNud.Size = new System.Drawing.Size(121, 20);
+            this.maxAllowedNud.Size = new System.Drawing.Size(122, 20);
             this.maxAllowedNud.TabIndex = 20;
             this.maxAllowedNud.ValueUpDown += new System.EventHandler<MobiusEditor.Controls.UpDownEventArgs>(this.maxAllowedNud_ValueUpDown);
             this.maxAllowedNud.ValueEntered += new System.EventHandler<MobiusEditor.Controls.ValueEnteredEventArgs>(this.maxAllowedNud_ValueEntered);
@@ -629,7 +628,7 @@ namespace MobiusEditor.Dialogs
             // 
             this.tableLayoutPanel2.SetColumnSpan(this.nudFear, 2);
             this.nudFear.Dock = System.Windows.Forms.DockStyle.Fill;
-            this.nudFear.Location = new System.Drawing.Point(79, 246);
+            this.nudFear.Location = new System.Drawing.Point(78, 246);
             this.nudFear.Margin = new System.Windows.Forms.Padding(2);
             this.nudFear.Maximum = new decimal(new int[] {
             255,
@@ -637,7 +636,7 @@ namespace MobiusEditor.Dialogs
             0,
             0});
             this.nudFear.Name = "nudFear";
-            this.nudFear.Size = new System.Drawing.Size(121, 20);
+            this.nudFear.Size = new System.Drawing.Size(122, 20);
             this.nudFear.TabIndex = 21;
             // 
             // lblWaypoint
@@ -647,10 +646,11 @@ namespace MobiusEditor.Dialogs
             this.lblWaypoint.Location = new System.Drawing.Point(2, 268);
             this.lblWaypoint.Margin = new System.Windows.Forms.Padding(2, 0, 2, 0);
             this.lblWaypoint.Name = "lblWaypoint";
-            this.lblWaypoint.Size = new System.Drawing.Size(73, 25);
+            this.lblWaypoint.Size = new System.Drawing.Size(72, 25);
             this.lblWaypoint.TabIndex = 15;
             this.lblWaypoint.Text = "Waypoint";
             this.lblWaypoint.TextAlign = System.Drawing.ContentAlignment.MiddleLeft;
+            this.toolTip1.SetToolTip(this.lblWaypoint, "Waypoint at which the units of this team are spawned on the map.");
             // 
             // lblTrigger
             // 
@@ -659,10 +659,12 @@ namespace MobiusEditor.Dialogs
             this.lblTrigger.Location = new System.Drawing.Point(2, 293);
             this.lblTrigger.Margin = new System.Windows.Forms.Padding(2, 0, 2, 0);
             this.lblTrigger.Name = "lblTrigger";
-            this.lblTrigger.Size = new System.Drawing.Size(73, 27);
+            this.lblTrigger.Size = new System.Drawing.Size(72, 27);
             this.lblTrigger.TabIndex = 16;
             this.lblTrigger.Text = "Trigger";
             this.lblTrigger.TextAlign = System.Drawing.ContentAlignment.MiddleLeft;
+            this.toolTip1.SetToolTip(this.lblTrigger, "Trigger attached to the members of this team if they\r\nare spawned onto the map (r" +
+        "ather than recruited)");
             // 
             // cmbWaypoint
             // 
@@ -670,10 +672,10 @@ namespace MobiusEditor.Dialogs
             this.cmbWaypoint.Dock = System.Windows.Forms.DockStyle.Fill;
             this.cmbWaypoint.DropDownStyle = System.Windows.Forms.ComboBoxStyle.DropDownList;
             this.cmbWaypoint.FormattingEnabled = true;
-            this.cmbWaypoint.Location = new System.Drawing.Point(79, 270);
+            this.cmbWaypoint.Location = new System.Drawing.Point(78, 270);
             this.cmbWaypoint.Margin = new System.Windows.Forms.Padding(2);
             this.cmbWaypoint.Name = "cmbWaypoint";
-            this.cmbWaypoint.Size = new System.Drawing.Size(121, 21);
+            this.cmbWaypoint.Size = new System.Drawing.Size(122, 21);
             this.cmbWaypoint.TabIndex = 22;
             // 
             // cmbTrigger
@@ -681,15 +683,15 @@ namespace MobiusEditor.Dialogs
             this.cmbTrigger.Dock = System.Windows.Forms.DockStyle.Fill;
             this.cmbTrigger.DropDownStyle = System.Windows.Forms.ComboBoxStyle.DropDownList;
             this.cmbTrigger.FormattingEnabled = true;
-            this.cmbTrigger.Location = new System.Drawing.Point(79, 295);
+            this.cmbTrigger.Location = new System.Drawing.Point(78, 295);
             this.cmbTrigger.Margin = new System.Windows.Forms.Padding(2);
             this.cmbTrigger.Name = "cmbTrigger";
-            this.cmbTrigger.Size = new System.Drawing.Size(90, 21);
+            this.cmbTrigger.Size = new System.Drawing.Size(88, 21);
             this.cmbTrigger.TabIndex = 23;
-            this.cmbTrigger.SelectedIndexChanged += CmbTrigger_SelectedIndexChanged;
             this.cmbTrigger.MouseEnter += new System.EventHandler(this.CmbTrigger_MouseEnter);
             this.cmbTrigger.MouseLeave += new System.EventHandler(this.HideToolTip);
-            this.cmbTrigger.MouseMove += new System.Windows.Forms.MouseEventHandler(CmbTrigger_MouseMove);
+            this.cmbTrigger.MouseMove += new System.Windows.Forms.MouseEventHandler(this.CmbTrigger_MouseMove);
+            this.cmbTrigger.SelectedIndexChanged += new System.EventHandler(this.CmbTrigger_SelectedIndexChanged);
             // 
             // lblPriority
             // 
@@ -697,7 +699,7 @@ namespace MobiusEditor.Dialogs
             this.lblPriority.Location = new System.Drawing.Point(2, 172);
             this.lblPriority.Margin = new System.Windows.Forms.Padding(2, 0, 2, 0);
             this.lblPriority.Name = "lblPriority";
-            this.lblPriority.Size = new System.Drawing.Size(73, 24);
+            this.lblPriority.Size = new System.Drawing.Size(72, 24);
             this.lblPriority.TabIndex = 19;
             this.lblPriority.Text = "Priority";
             this.lblPriority.TextAlign = System.Drawing.ContentAlignment.MiddleLeft;
@@ -708,7 +710,7 @@ namespace MobiusEditor.Dialogs
             // 
             this.tableLayoutPanel2.SetColumnSpan(this.nudRecruitPriority, 2);
             this.nudRecruitPriority.Dock = System.Windows.Forms.DockStyle.Fill;
-            this.nudRecruitPriority.Location = new System.Drawing.Point(79, 174);
+            this.nudRecruitPriority.Location = new System.Drawing.Point(78, 174);
             this.nudRecruitPriority.Margin = new System.Windows.Forms.Padding(2);
             this.nudRecruitPriority.Maximum = new decimal(new int[] {
             2147483647,
@@ -721,20 +723,20 @@ namespace MobiusEditor.Dialogs
             0,
             -2147483648});
             this.nudRecruitPriority.Name = "nudRecruitPriority";
-            this.nudRecruitPriority.Size = new System.Drawing.Size(121, 20);
+            this.nudRecruitPriority.Size = new System.Drawing.Size(122, 20);
             this.nudRecruitPriority.TabIndex = 18;
             // 
             // lblTriggerInfo
             // 
             this.lblTriggerInfo.Dock = System.Windows.Forms.DockStyle.Fill;
-            this.lblTriggerInfo.Location = new System.Drawing.Point(171, 293);
+            this.lblTriggerInfo.Location = new System.Drawing.Point(168, 293);
             this.lblTriggerInfo.Margin = new System.Windows.Forms.Padding(0);
             this.lblTriggerInfo.Name = "lblTriggerInfo";
-            this.lblTriggerInfo.Size = new System.Drawing.Size(31, 27);
+            this.lblTriggerInfo.Size = new System.Drawing.Size(34, 27);
             this.lblTriggerInfo.TabIndex = 24;
             this.lblTriggerInfo.MouseEnter += new System.EventHandler(this.LblTriggerInfo_MouseEnter);
             this.lblTriggerInfo.MouseLeave += new System.EventHandler(this.HideToolTip);
-            this.lblTriggerInfo.MouseMove += new System.Windows.Forms.MouseEventHandler(LblTriggerInfo_MouseMove);
+            this.lblTriggerInfo.MouseMove += new System.Windows.Forms.MouseEventHandler(this.LblTriggerInfo_MouseMove);
             // 
             // teamTypesListView
             // 
@@ -781,33 +783,33 @@ namespace MobiusEditor.Dialogs
             this.tsmiCloneTeamType,
             this.tsmiRemoveTeamType});
             this.teamTypesContextMenuStrip.Name = "teamTypesContextMenuStrip";
-            this.teamTypesContextMenuStrip.Size = new System.Drawing.Size(210, 92);
+            this.teamTypesContextMenuStrip.Size = new System.Drawing.Size(212, 92);
             // 
             // tsmiAddTeamType
             // 
             this.tsmiAddTeamType.Name = "tsmiAddTeamType";
-            this.tsmiAddTeamType.Size = new System.Drawing.Size(209, 22);
+            this.tsmiAddTeamType.Size = new System.Drawing.Size(211, 22);
             this.tsmiAddTeamType.Text = "&Add Team Type (Ctrl+A)";
             this.tsmiAddTeamType.Click += new System.EventHandler(this.TsmiAddTeamType_Click);
             // 
             // tsmiRenameTeamType
             // 
             this.tsmiRenameTeamType.Name = "tsmiRenameTeamType";
-            this.tsmiRenameTeamType.Size = new System.Drawing.Size(209, 22);
+            this.tsmiRenameTeamType.Size = new System.Drawing.Size(211, 22);
             this.tsmiRenameTeamType.Text = "Re&name Team Type (F2)";
             this.tsmiRenameTeamType.Click += new System.EventHandler(this.TsmiRenameTeamType_Click);
             // 
             // tsmiCloneTeamType
             // 
             this.tsmiCloneTeamType.Name = "tsmiCloneTeamType";
-            this.tsmiCloneTeamType.Size = new System.Drawing.Size(209, 22);
+            this.tsmiCloneTeamType.Size = new System.Drawing.Size(211, 22);
             this.tsmiCloneTeamType.Text = "Clone Team Type (Ctrl+C)";
             this.tsmiCloneTeamType.Click += new System.EventHandler(this.TsmiCloneTeamType_Click);
             // 
             // tsmiRemoveTeamType
             // 
             this.tsmiRemoveTeamType.Name = "tsmiRemoveTeamType";
-            this.tsmiRemoveTeamType.Size = new System.Drawing.Size(209, 22);
+            this.tsmiRemoveTeamType.Size = new System.Drawing.Size(211, 22);
             this.tsmiRemoveTeamType.Text = "&Remove Team Type (Del)";
             this.tsmiRemoveTeamType.Click += new System.EventHandler(this.TsmiRemoveTeamType_Click);
             // 

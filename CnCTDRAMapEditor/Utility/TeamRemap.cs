@@ -122,10 +122,10 @@ namespace MobiusEditor.Utility
             int boundsBottom = Math.Min(height, bounds.Bottom);
             int boundsWidth = Math.Min(Math.Max(0, width - bounds.Left), bounds.Width);
             int linePtr = bounds.Top * stride;
-            for (int y = bounds.Top; y < boundsBottom; y++)
+            for (int y = bounds.Top; y < boundsBottom; ++y)
             {
                 int ptr = linePtr + bounds.Left;
-                for (int x = 0; x < boundsWidth; x++)
+                for (int x = 0; x < boundsWidth; ++x)
                 {
                     bytes[ptr] = remapTable[bytes[ptr]];
                     ptr++;

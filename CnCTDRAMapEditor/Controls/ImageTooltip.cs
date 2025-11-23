@@ -46,7 +46,7 @@ namespace MobiusEditor.Controls
             MethodInfo setTool = typeof(ToolTip).GetMethod("SetTool", BindingFlags.Instance | BindingFlags.NonPublic);
             if (setTool != null)
             {
-                setTool.Invoke(this, new object[] { win, text, (Int32)type, position });
+                setTool.Invoke(this, new object[] { win, text, (int)type, position });
             }
         }
 

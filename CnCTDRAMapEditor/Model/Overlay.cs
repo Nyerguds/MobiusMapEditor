@@ -29,9 +29,14 @@ namespace MobiusEditor.Model
 
         public bool[,] OccupyMask => Type.OccupyMask;
         public bool[,] BaseOccupyMask => Type.OccupyMask;
-        public bool[,][] OpaqueMask => Type.OpaqueMask;
         public Rectangle OverlapBounds => Type.OverlapBounds;
+        public bool[,][] OverlapMask => Type.OverlapMask;
+        public Point OverlapMaskOffset => Type.OverlapMaskOffset;
+        public bool[,][] ContentMask => Type.ContentMask;
+        public Point ContentMaskOffset => Type.ContentMaskOffset;
         public int ZOrder => Type.ZOrder;
+        /// <summary>This flag is set after the paint operation to indicate whether this object is overlapped.</summary>
+        public bool IsOverlapped { get; set; }
 
         public bool IsPreview { get; set; }
 

@@ -20,8 +20,6 @@ namespace MobiusEditor.RedAlert
     {
         public static readonly Size MaxSize = new Size(128, 128);
 
-        public const string FileFilter = "Red Alert files (*.mpr;*.ini)|*.mpr;*.ini";
-
         public const int MaxBriefLengthClassic = 1022;
         public const int BriefLineCutoffClassic = 74;
 
@@ -31,6 +29,9 @@ namespace MobiusEditor.RedAlert
         public const int DefaultGapRadius = 10;
         public const int DefaultJamRadius = 15;
         public const string EmptyMapName = "<none>";
+
+        public const int MaxTriggerNameLength = 4;
+        public const int MaxTeamNameLength = 8;
 
         public const int MaxAircraft  /**/ = 100;
         public const int MaxVessels   /**/ = 100;
