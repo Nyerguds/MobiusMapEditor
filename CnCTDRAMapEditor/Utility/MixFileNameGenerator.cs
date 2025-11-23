@@ -63,6 +63,15 @@ namespace MobiusEditor.Utility
         /// </summary>
         public List<string> Games => games.ToList();
 
+        public bool SupportsMixNesting(string game)
+        {
+            if (gameInfo == null || !gameInfo.TryGetValue(game, out GameDefinition gd))
+            {
+                return false;
+            }
+            return gd.HasMixNesting;
+        }
+
         private List<string> errors = new List<string>();
         public List<string> ProcessErrors => errors.ToList();
 

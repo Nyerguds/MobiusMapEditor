@@ -26,6 +26,7 @@ namespace MobiusEditor.Dialogs
 {
     public partial class TriggersDialog : Form
     {
+        private string initialTrigger;
         private const long defaultData = -1;
         private readonly IGamePlugin plugin;
         private readonly GameInfo gameInfo;
@@ -60,8 +61,9 @@ namespace MobiusEditor.Dialogs
 
         private Trigger SelectedTrigger => SelectedItem?.Tag as Trigger;
 
-        public TriggersDialog(IGamePlugin plugin)
+        public TriggersDialog(IGamePlugin plugin, string selectTrigger)
         {
+            initialTrigger = selectTrigger;
             this.plugin = plugin;
             gameInfo = plugin.GameInfo;
             gameType = gameInfo.GameType;
@@ -252,14 +254,6 @@ namespace MobiusEditor.Dialogs
             }
         }
 
-        private void TriggersDialog_KeyDown(object sender, KeyEventArgs e)
-        {
-            if (e.KeyData == (Keys.A | Keys.Control))
-            {
-                AddTrigger();
-            }
-        }
-
         private void Event1Nud_ValueChanged(object sender, EventArgs e)
         {
             Trigger trig = SelectedTrigger;
@@ -398,6 +392,34 @@ namespace MobiusEditor.Dialogs
             }
             renActions.RemoveAll(ren => Trigger.IsEmpty(ren.Name1));
             return renActions;
+        }
+
+        private void TriggersDialog_KeyDown(object sender, KeyEventArgs e)
+        {
+            if (e.KeyData == (Keys.A | Keys.Control))
+            {
+                AddTrigger();
+            }
+        }
+
+        private void TriggersDialog_Shown(object sender, EventArgs e)
+        {
+            int index = -1;
+            foreach (ListViewItem lvi in triggersListView.Items)
+            {
+                index++;
+                if (!(lvi.Tag is Trigger trigger))
+                {
+                    continue;
+                }
+                if (initialTrigger == null || initialTrigger.Equals(trigger.Name, StringComparison.OrdinalIgnoreCase))
+                {
+                    triggersListView.SelectedIndices.Clear();
+                    lvi.Selected = true;
+                    triggersListView.EnsureVisible(index);
+                    break;
+                }
+            }
         }
 
         private void TsmiAddTrigger_Click(object sender, EventArgs e)

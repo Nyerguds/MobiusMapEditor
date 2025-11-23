@@ -752,3 +752,6 @@ Unreleased
 * Fixed bug where centering on a waypoint didn't work when zoomed in to a state where only one scrollbar was shown.
 * Vastly optimised the Teamtypes window's "Teams" and "Orders" lists, removing the lag that occurred whenever the lists were loaded or changed.
 * Added more options in the Teamtypes "Orders" list; the old "x" button now pops up a menu with insert, clone, move and remove options.
+* The Teamtypes and Trigger windows now automatically select the first item when opening.
+* Added indices on the Teamtypes "Orders" list, so "jump to index" orders can be filled in more easily.
+* Classic mode can now fall back on the Remaster's classic files if no included classic files were found.

@@ -70,7 +70,7 @@ namespace MobiusEditor.TiberianDawn
         public override string ClassicFolder => Properties.Settings.Default.ClassicPathTD;
         public override string ClassicFolderRemaster => "CNCDATA\\TIBERIAN_DAWN";
         public override string ClassicFolderRemasterData => ClassicFolderRemaster + "\\CD1";
-        public override string ClassicFolderDefault => "Classic\\TD\\";
+        public override string ClassicFolderDefault => "Classic\\TD";
         public override string ClassicFolderSetting => "ClassicPathTD";
         public override string ClassicStringsFile => "conquer.eng";
         public override Size MapSize => Constants.MaxSize;

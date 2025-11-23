@@ -47,7 +47,7 @@ namespace MobiusEditor.SoleSurvivor
         public override FileType DefaultSaveTypeFromPgm => FileType.None;
         public override string[] RemasterMegFiles => new string[] { "CONFIG.MEG", "TEXTURES_COMMON_SRGB.MEG", "TEXTURES_SRGB.MEG", "TEXTURES_TD_SRGB.MEG" };
         public override string ClassicFolder => Properties.Settings.Default.ClassicPathSS;
-        public override string ClassicFolderDefault => "Classic\\TD\\";
+        public override string ClassicFolderDefault => "Classic\\TD";
         public override string ClassicFolderSetting => "ClassicPathSS";
         public override string ClassicStringsFile => "conquer.eng";
         public override TheaterType[] AllTheaters => TheaterTypes.GetAllTypes().ToArray();

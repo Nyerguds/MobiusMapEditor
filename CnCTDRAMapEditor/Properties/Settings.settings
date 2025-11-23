@@ -65,6 +65,9 @@
     <Setting Name="DefaultCratesOnTop" Type="System.Boolean" Scope="Application">
       <Value Profile="(Default)">False</Value>
     </Setting>
+    <Setting Name="DefaultOutlineAllCrates" Type="System.Boolean" Scope="Application">
+      <Value Profile="(Default)">False</Value>
+    </Setting>
     <Setting Name="DefaultExportScale" Type="System.Double" Scope="Application">
       <Value Profile="(Default)">-0.5</Value>
     </Setting>
@@ -73,9 +76,6 @@
     </Setting>
     <Setting Name="DefaultExportMultiInBounds" Type="System.Boolean" Scope="Application">
       <Value Profile="(Default)">True</Value>
-    </Setting>
-    <Setting Name="DefaultOutlineAllCrates" Type="System.Boolean" Scope="Application">
-      <Value Profile="(Default)">False</Value>
     </Setting>
     <Setting Name="ZoomToBoundsOnLoad" Type="System.Boolean" Scope="Application">
       <Value Profile="(Default)">True</Value>
@@ -212,7 +212,7 @@
     <Setting Name="NoOwnedObjectsInSole" Type="System.Boolean" Scope="Application">
       <Value Profile="(Default)">True</Value>
     </Setting>
-    <Setting Name="EnableTd106Scripting" Type="System.Boolean" Scope="Application">
+    <Setting Name="ExpandTdScripting" Type="System.Boolean" Scope="Application">
       <Value Profile="(Default)">False</Value>
     </Setting>
     <Setting Name="EnableTd106LineBreaks" Type="System.Boolean" Scope="Application">

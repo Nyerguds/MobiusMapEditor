@@ -342,7 +342,7 @@ namespace MobiusEditor.TiberianDawn
                 INITools.ClearDataFrom(extraTextIni, house.Type.Name, (House)house);
             }
             extraSections = extraTextIni.Sections.Count == 0 ? null : extraTextIni.Sections;
-            if (!Globals.EnableTd106Scripting)
+            if (!Globals.ExpandTdScripting)
             {
                 // Perhaps support the v1.06 bibs-disabling option in the future? Would need an entire bib-changing logic like RA has though.
             }
@@ -681,7 +681,8 @@ namespace MobiusEditor.TiberianDawn
                 }
                 else
                 {
-                    errors.Add(String.Format("No ." + (fileType == FileType.I64 ? "map" : "bin") + " file found for file '{0}'. Using empty map.", Path.GetFileName(loadPath)));
+                    string ext = fileType == FileType.I64 ? "map" : "bin";
+                    errors.Add(String.Format("No .{0} file found for file '{1}'. Using empty map.", ext, Path.GetFileName(loadPath)));
                     Map.Templates.Clear();
                     fileType = FileType.INI;
                 }
@@ -784,7 +785,7 @@ namespace MobiusEditor.TiberianDawn
                 }
                 else
                 {
-                    errors.Add(String.Format("'{0}' does not have the correct size for a " + this.GameInfo.Name + " .bin file.", filename));
+                    errors.Add(String.Format("'{0}' does not have the correct size for a {1} .bin file.", filename, GameInfo.Name));
                     modified = true;
                 }
             }
@@ -798,7 +799,7 @@ namespace MobiusEditor.TiberianDawn
             const int binLen = 0x2000;
             if (mapLen != binLen)
             {
-                errors.Add(String.Format("'{0}' does not have the correct size for a N64 " + this.GameInfo.Name + " .map file.", filename));
+                errors.Add(String.Format("'{0}' does not have the correct size for a N64 {1} .map file.", filename, GameInfo.Name));
                 modified = true;
                 return null;
             }
@@ -1247,7 +1248,7 @@ namespace MobiusEditor.TiberianDawn
                     if (teamType.House == null)
                     {
                         HouseType defHouse = Map.HouseTypes.First();
-                        errors.Add(String.Format("Teamtype '{0}' references unknown house '{1}'; clearing to '{2}'.", kvp.Key, houseStr, defHouse.Name));
+                        errors.Add(String.Format("Teamtype '{0}' references unknown house '{1}'; reverting to '{2}'.", kvp.Key, houseStr, defHouse.Name));
                         modified = true;
                         teamType.House = defHouse;
                     }
@@ -1390,6 +1391,8 @@ namespace MobiusEditor.TiberianDawn
             {
                 return triggers;
             }
+            int trigLoopMax = (int)Enum.GetValues(typeof(TriggerPersistentType)).Cast<TriggerPersistentType>().Max();
+            string trigLoopDef = Trigger.PersistenceNamesShort.ToList()[0];
             foreach (KeyValuePair<string, string> kvp in triggersSection)
             {
                 try
@@ -1447,7 +1450,7 @@ namespace MobiusEditor.TiberianDawn
                         house = Map.HouseTypes.FirstOrDefault(t => t.Name.Equals(house, StringComparison.OrdinalIgnoreCase))?.Name ?? Model.House.None;
                         if (Model.House.IsEmpty(house))
                         {
-                            errors.Add(String.Format("Trigger '{0}' references unknown House '{1}'; clearing to 'None'.", kvp.Key, tokens[4]));
+                            errors.Add(String.Format("Trigger '{0}' references unknown House '{1}'; reverting to 'None'.", kvp.Key, tokens[4]));
                             modified = true;
                         }
                     }
@@ -1468,9 +1471,17 @@ namespace MobiusEditor.TiberianDawn
                     }
                     trigger.Action1.Team = team;
                     trigger.PersistentType = TriggerPersistentType.Volatile;
-                    if (tokens.Length >= 6)
+                    if (tokens.Length > 5)
                     {
-                        trigger.PersistentType = (TriggerPersistentType)int.Parse(tokens[5]);
+                        int trigPersist;
+                        if (!Int32.TryParse(tokens[5], out trigPersist) || trigPersist < 0 || trigPersist > trigLoopMax)
+                        {
+                            errors.Add(String.Format("Trigger '{0}' has unknown loop type '{1}'; reverting to '{2}' ({3}).",
+                                kvp.Key, tokens[0], 0, trigLoopDef));
+                            trigPersist = 0;
+                            modified = true;
+                        }
+                        trigger.PersistentType = (TriggerPersistentType)trigPersist;
                     }
                     triggers.Add(trigger);
                 }
@@ -1664,7 +1675,7 @@ namespace MobiusEditor.TiberianDawn
                 int dirValue;
                 if (!Int32.TryParse(tokens[6], out dirValue))
                 {
-                    errors.Add(String.Format("Direction for infantry '{0}' on cell {1}, sub-position {2}, value '{3}', cannot be parsed; clearing to 0.",
+                    errors.Add(String.Format("Direction for infantry '{0}' on cell {1}, sub-position {2}, value '{3}', cannot be parsed; reverting to 0.",
                         infantryType.Name, cell, stoppingPos, tokens[6]));
                     modified = true;
                     dirValue = 0;
@@ -1715,7 +1726,7 @@ namespace MobiusEditor.TiberianDawn
                 if (inf.House == null)
                 {
                     HouseType defHouse = Map.HouseTypes.First();
-                    errors.Add(String.Format("Infantry '{0}' on cell {1}, sub-position {2} references unknown house '{3}'; clearing to '{4}'.",
+                    errors.Add(String.Format("Infantry '{0}' on cell {1}, sub-position {2} references unknown house '{3}'; reverting to '{4}'.",
                         inf.Type.Name, cell, stoppingPos, tokens[0], defHouse.Name));
                     modified = true;
                     inf.House = defHouse;
@@ -1793,7 +1804,7 @@ namespace MobiusEditor.TiberianDawn
                 int dirValue;
                 if (!Int32.TryParse(tokens[4], out dirValue))
                 {
-                    errors.Add(String.Format("Direction for unit '{0}' on cell {1}, value '{2}', cannot be parsed; clearing to 0.", unitType.Name, cell, tokens[4]));
+                    errors.Add(String.Format("Direction for unit '{0}' on cell {1}, value '{2}', cannot be parsed; reverting to 0.", unitType.Name, cell, tokens[4]));
                     modified = true;
                     dirValue = 0;
                 }
@@ -1815,7 +1826,7 @@ namespace MobiusEditor.TiberianDawn
                 if (newUnit.House == null)
                 {
                     HouseType defHouse = Map.HouseTypes.First();
-                    errors.Add(String.Format("Unit '{0}' on cell {1} references unknown house '{2}'; clearing to '{3}'.",
+                    errors.Add(String.Format("Unit '{0}' on cell {1} references unknown house '{2}'; reverting to '{3}'.",
                         newUnit.Type.Name, cell, tokens[0], defHouse.Name));
                     modified = true;
                     newUnit.House = defHouse;
@@ -1901,9 +1912,9 @@ namespace MobiusEditor.TiberianDawn
             {
                 bool isOne = amount == 1;
                 string disabledObj = skipSoleStuff ? "Owned objects in Sole Survivor" : "Aircraft";
+                string amountSkipped = String.Format(isOne ? entrySkipped : entriesSkipped, amount, "[Aircraft]");
                 string disabledObjExpl = String.Format(consultManual, skipSoleStuff ? settingNoOwnedObjSole : "DisableAirUnits");
-                errors.Add(String.Format("{0} are disabled. {0} {2}",
-                    String.Format(isOne ? entrySkipped : entriesSkipped, amount, "[Aircraft]"), disabledObjExpl));
+                errors.Add(String.Format("{0} are disabled. {1} {2}", disabledObj, amountSkipped, disabledObjExpl));
                 modified = true;
                 return;
             }
@@ -1955,7 +1966,7 @@ namespace MobiusEditor.TiberianDawn
                 int dirValue;
                 if (!Int32.TryParse(tokens[4], out dirValue))
                 {
-                    errors.Add(String.Format("Direction for aircraft '{0}' on cell {1}, value '{2}', cannot be parsed; clearing to 0.",
+                    errors.Add(String.Format("Direction for aircraft '{0}' on cell {1}, value '{2}', cannot be parsed; reverting to 0.",
                         aircraftType.Name, cell, tokens[4]));
                     modified = true;
                     dirValue = 0;
@@ -1978,7 +1989,7 @@ namespace MobiusEditor.TiberianDawn
                 if (newAir.House == null)
                 {
                     HouseType defHouse = Map.HouseTypes.First();
-                    errors.Add(String.Format("Aircraft '{0}' on cell {1} references unknown house '{2}'; clearing to '{3}'.",
+                    errors.Add(String.Format("Aircraft '{0}' on cell {1} references unknown house '{2}'; reverting to '{3}'.",
                         newAir.Type.Name, cell, tokens[0], defHouse.Name));
                     modified = true;
                     newAir.House = defHouse;
@@ -2107,7 +2118,7 @@ namespace MobiusEditor.TiberianDawn
                 int dirValue;
                 if (!Int32.TryParse(tokens[4], out dirValue))
                 {
-                    errors.Add(String.Format("Direction for structure '{0}' on cell {1}, value '{2}', cannot be parsed; clearing to 0.",
+                    errors.Add(String.Format("Direction for structure '{0}' on cell {1}, value '{2}', cannot be parsed; reverting to 0.",
                         buildingType.Name, cell, tokens[4]));
                     modified = true;
                     dirValue = 0;
@@ -2129,7 +2140,7 @@ namespace MobiusEditor.TiberianDawn
                 if (newBld.House == null)
                 {
                     HouseType defHouse = Map.HouseTypes.First();
-                    errors.Add(String.Format("Structure '{0}' on cell {1} references unknown house '{2}'; clearing to '{3}'.",
+                    errors.Add(String.Format("Structure '{0}' on cell {1} references unknown house '{2}'; reverting to '{3}'.",
                         buildingType.Name, cell, tokens[0], defHouse.Name));
                     modified = true;
                     newBld.House = defHouse;
@@ -4321,7 +4332,7 @@ namespace MobiusEditor.TiberianDawn
                 if (actionType == ActionTypes.ACTION_DESTROY_XXXX) delXExists = true;
                 if (actionType == ActionTypes.ACTION_DESTROY_YYYY) delYExists = true;
                 if (actionType == ActionTypes.ACTION_DESTROY_ZZZZ) delZExists = true;
-                if (!Globals.EnableTd106Scripting)
+                if (!Globals.ExpandTdScripting)
                 {
                     if (String.Equals(trigger.Name, "UUUU", StringComparison.OrdinalIgnoreCase)) uuuuExists = true;
                     if (String.Equals(trigger.Name, "VVVV", StringComparison.OrdinalIgnoreCase)) vvvvExists = true;
@@ -4354,9 +4365,9 @@ namespace MobiusEditor.TiberianDawn
                 bool isDestroyableX = "xxxx".Equals(trigName, StringComparison.OrdinalIgnoreCase);
                 bool isDestroyableY = "yyyy".Equals(trigName, StringComparison.OrdinalIgnoreCase);
                 bool isDestroyableZ = "zzzz".Equals(trigName, StringComparison.OrdinalIgnoreCase);
-                bool isDestroyableU = Globals.EnableTd106Scripting && "uuuu".Equals(trigName, StringComparison.OrdinalIgnoreCase);
-                bool isDestroyableV = Globals.EnableTd106Scripting && "vvvv".Equals(trigName, StringComparison.OrdinalIgnoreCase);
-                bool isDestroyableW = Globals.EnableTd106Scripting && "wwww".Equals(trigName, StringComparison.OrdinalIgnoreCase);
+                bool isDestroyableU = Globals.ExpandTdScripting && "uuuu".Equals(trigName, StringComparison.OrdinalIgnoreCase);
+                bool isDestroyableV = Globals.ExpandTdScripting && "vvvv".Equals(trigName, StringComparison.OrdinalIgnoreCase);
+                bool isDestroyableW = Globals.ExpandTdScripting && "wwww".Equals(trigName, StringComparison.OrdinalIgnoreCase);
                 bool isDestroyable = (isDestroyableX && delXExists) || (isDestroyableY && delYExists) || (isDestroyableZ && delZExists)
                      || (isDestroyableU && delUExists) || (isDestroyableV && delVExists) || (isDestroyableW && delWExists);
 
@@ -4481,7 +4492,7 @@ namespace MobiusEditor.TiberianDawn
                 {
                     curErrors.Add(prefix + "There is no trigger called 'ZZZZ' to destroy.");
                 }
-                if (Globals.EnableTd106Scripting)
+                if (Globals.ExpandTdScripting)
                 {
                     if (!fatalOnly && action1 == ActionTypes.ACTION_DESTROY_UUUU && !uuuuExists)
                     {

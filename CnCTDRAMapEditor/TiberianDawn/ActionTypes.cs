@@ -53,7 +53,7 @@ namespace MobiusEditor.TiberianDawn
                 (from field in typeof(ActionTypes).GetFields(BindingFlags.Static | BindingFlags.Public)
                  where field.IsLiteral && !field.IsInitOnly && typeof(string).IsAssignableFrom(field.FieldType)
                  select field.GetValue(null) as string).ToList();
-            if (!Globals.EnableTd106Scripting)
+            if (!Globals.ExpandTdScripting)
             {
                 types.Remove(ACTION_DESTROY_UUUU);
                 types.Remove(ACTION_DESTROY_VVVV);

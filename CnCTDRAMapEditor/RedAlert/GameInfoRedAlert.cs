@@ -58,7 +58,7 @@ namespace MobiusEditor.RedAlert
         public override string ClassicFolder => Properties.Settings.Default.ClassicPathRA;
         public override string ClassicFolderRemaster => "CNCDATA\\RED_ALERT";
         public override string ClassicFolderRemasterData => ClassicFolderRemaster + "\\AFTERMATH";
-        public override string ClassicFolderDefault => "Classic\\RA\\";
+        public override string ClassicFolderDefault => "Classic\\RA";
         public override string ClassicFolderSetting => "ClassicPathRA";
         public override string ClassicStringsFile => "conquer.eng";
         public override Size MapSize => Constants.MaxSize;

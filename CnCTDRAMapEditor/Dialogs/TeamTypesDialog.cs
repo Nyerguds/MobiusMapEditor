@@ -30,6 +30,7 @@ namespace MobiusEditor.Dialogs
 {
     public partial class TeamTypesDialog : Form, IListedControlController<TeamTypeClass, char, int>, IListedControlController<TeamTypeMission, char, int>
     {
+        private string initialTeam;
         private Bitmap infoImage;
         private Control tooltipShownOn;
         private string triggerInfoToolTip;
@@ -63,7 +64,6 @@ namespace MobiusEditor.Dialogs
         private readonly ITechnoType defaultTeam;
         private readonly TeamMission defaultMission;
         private readonly ToolTipFixer ttf;
-        private string initialTeam;
 
         public static void ShowTeamTypesEditor(IWin32Window owner, IGamePlugin plugin, UndoRedoList<UndoRedoEventArgs, ToolType> url, string teamtypeName)
         {
@@ -921,19 +921,15 @@ namespace MobiusEditor.Dialogs
         private void TeamTypesDialog_Shown(object sender, EventArgs e)
         {
             CalcListColSizes();
-            if (initialTeam == null)
-            {
-                return;
-            }
             int index = -1;
             foreach (ListViewItem lvi in teamTypesListView.Items)
             {
                 index++;
-                TeamType team = lvi.Tag as TeamType;
-                if (team == null) {
+                if (!(lvi.Tag is TeamType team))
+                {
                     continue;
                 }
-                if (initialTeam.Equals(team.Name, StringComparison.OrdinalIgnoreCase))
+                if (initialTeam == null || initialTeam.Equals(team.Name, StringComparison.OrdinalIgnoreCase))
                 {
                     teamTypesListView.SelectedIndices.Clear();
                     lvi.Selected = true;

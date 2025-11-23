@@ -539,6 +539,7 @@
     <Compile Include="Utility\ExtensionMethods.cs" />
     <Compile Include="Utility\LineUtils.cs" />
     <Compile Include="Utility\ListViewColumnSorter.cs" />
+    <Compile Include="Utility\MixScanCache.cs" />
     <Compile Include="Utility\MixFileNameGenerator.cs" />
     <Compile Include="Utility\GameTextManager.cs" />
     <Compile Include="Utility\GameTextManagerClassic.cs" />

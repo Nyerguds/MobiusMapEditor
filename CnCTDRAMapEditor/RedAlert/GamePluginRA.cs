@@ -1231,8 +1231,10 @@ namespace MobiusEditor.RedAlert
                         break;
                 }
             };
-            int maxTrigLoop = (int)Enum.GetValues(typeof(TriggerPersistentType)).Cast<TriggerPersistentType>().Max();
-            int maxTrigStyle = (int)Enum.GetValues(typeof(TriggerMultiStyleType)).Cast<TriggerMultiStyleType>().Max();
+            int trigLoopMax = (int)Enum.GetValues(typeof(TriggerPersistentType)).Cast<TriggerPersistentType>().Max();
+            string trigLoopDef = Trigger.PersistenceNamesShort.ToList()[0];
+            int trigMulMax = (int)Enum.GetValues(typeof(TriggerMultiStyleType)).Cast<TriggerMultiStyleType>().Max();
+            string trigMulDef = Trigger.MultiStyleNames.ToList()[0];
             foreach (KeyValuePair<string, string> kvp in triggersSection)
             {
                 try
@@ -1250,29 +1252,31 @@ namespace MobiusEditor.RedAlert
                     }
                     Trigger trigger = new Trigger { Name = kvp.Key };
                     int trigPersist;
-                    if (!Int32.TryParse(tokens[0], out trigPersist) || trigPersist < 0 || trigPersist > maxTrigLoop)
+                    if (!Int32.TryParse(tokens[0], out trigPersist) || trigPersist < 0 || trigPersist > trigLoopMax)
                     {
-                        errors.Add(String.Format("Trigger '{0}' has unknown loop type '{1}'; clearing to '{2}'.", kvp.Key, tokens[0], 0));
+                        errors.Add(String.Format("Trigger '{0}' has unknown loop type '{1}'; reverting to '{2}'.",
+                            kvp.Key, tokens[0], 0, trigLoopDef));
                         trigPersist = 0;
                         modified = true;
                     }
                     trigger.PersistentType = (TriggerPersistentType)trigPersist;
-                    int houseId = SByte.Parse(tokens[1]);
+                    bool parsedHouse = Int32.TryParse(tokens[1], out int houseId);
                     trigger.House = houseId == -1 ? House.None : Map.HouseTypes.Where(t => t.Equals(houseId)).FirstOrDefault()?.Name;
-                    if (trigger.House == null)
+                    if (trigger.House == null || !parsedHouse)
                     {
-                        errors.Add(String.Format("Trigger '{0}' has unknown house ID '{1}'; clearing to '{2}'.", kvp.Key, tokens[1], House.None));
+                        errors.Add(String.Format("Trigger '{0}' has unknown house ID '{1}'; reverting to '{2}'.", kvp.Key, tokens[1], House.None));
                         trigger.House = House.None;
                         modified = true;
                     }
-                    int trigStyle;
-                    if (!Int32.TryParse(tokens[2], out trigStyle) || trigStyle < 0 || trigStyle > maxTrigStyle)
+                    int trigMulStyle;
+                    if (!Int32.TryParse(tokens[2], out trigMulStyle) || trigMulStyle < 0 || trigMulStyle > trigMulMax)
                     {
-                        errors.Add(String.Format("Trigger '{0}' has unknown multi-trigger style '{1}'; clearing to '{2}'.", kvp.Key, tokens[2], 0));
-                        trigStyle = 0;
+                        errors.Add(String.Format("Trigger '{0}' has unknown multi-trigger style '{1}'; reverting to '{2}' ({3}).",
+                            kvp.Key, tokens[2], 0, trigMulDef));
+                        trigMulStyle = 0;
                         modified = true;
                     }
-                    trigger.EventControl = (TriggerMultiStyleType)trigStyle;
+                    trigger.EventControl = (TriggerMultiStyleType)trigMulStyle;
                     trigger.Event1.EventType = IndexToType(Map.EventTypes, tokens[4], false);
                     trigger.Event1.Team = tokens[5];
                     trigger.Event1.Data = Int64.Parse(tokens[6]);
@@ -1525,7 +1529,7 @@ namespace MobiusEditor.RedAlert
                         modified = true;
                     }
                 }
-                string obsError = "Use of obsolete version of 'Clear' terrain detected; clearing.";
+                string obsError = "Use of obsolete version of 'Clear' terrain detected; converting to modern type.";
                 if (!clearIsPassable && border != null && border.Count() > 0)
                 {
                     obsError += " Generating passable areas for possible scripted reinforcements.";
@@ -1795,7 +1799,8 @@ namespace MobiusEditor.RedAlert
             if (Globals.DisableAirUnits)
             {
                 bool isOne = amount == 1;
-                errors.Add(String.Format("Aircraft are disabled. {0} [Aircraft] {1} skipped. If you don't know why, please consult the manual's explanation of the \"DisableAirUnits\" setting.", amount, isOne ? "entry was" : "entries were"));
+                errors.Add(String.Format("Aircraft are disabled. {0} [Aircraft] {1} skipped. If you don't know why, please consult the manual's explanation of the \"DisableAirUnits\" setting.",
+                    amount, isOne ? "entry was" : "entries were"));
                 modified = true;
                 return;
             }

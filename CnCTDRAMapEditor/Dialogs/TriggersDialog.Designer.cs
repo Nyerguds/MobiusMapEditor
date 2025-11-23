@@ -774,6 +774,7 @@ namespace MobiusEditor.Dialogs
             this.StartPosition = System.Windows.Forms.FormStartPosition.CenterParent;
             this.Text = "Triggers";
             this.FormClosing += new System.Windows.Forms.FormClosingEventHandler(this.TriggersDialog_FormClosing);
+            this.Shown += new System.EventHandler(this.TriggersDialog_Shown);
             this.KeyDown += new System.Windows.Forms.KeyEventHandler(this.TriggersDialog_KeyDown);
             this.tableLayoutPanel1.ResumeLayout(false);
             this.tableLayoutPanel1.PerformLayout();

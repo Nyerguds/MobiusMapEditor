@@ -159,7 +159,7 @@ namespace MobiusEditor
             }
             else if (Globals.UseClassicFiles)
             {
-                loadOk = StartupLoader.LoadEditorClassic(ApplicationPath, modPaths, romfis);
+                loadOk = StartupLoader.LoadEditorClassic(ApplicationPath, RemasterRunPath, modPaths, romfis);
             }
             if (!loadOk)
             {

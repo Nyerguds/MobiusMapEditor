@@ -30,12 +30,12 @@ namespace MobiusEditor.Controls
             this.technos = technos.ToArray();
         }
 
-        public override TeamItemControl MakeControl(TeamTypeClass property, IListedControlController<TeamTypeClass, char, int> controller)
+        public override TeamItemControl MakeControl(TeamTypeClass property, IListedControlController<TeamTypeClass, char, int> controller, int index)
         {
             return new TeamItemControl(property, controller, technos);
         }
 
-        public override void UpdateControl(TeamTypeClass property, IListedControlController<TeamTypeClass, char, int> controller, TeamItemControl control)
+        public override void UpdateControl(TeamTypeClass property, IListedControlController<TeamTypeClass, char, int> controller, TeamItemControl control, int index)
         {
             control.SetInfo(property, controller, technos);
         }

@@ -1077,45 +1077,54 @@ namespace MobiusEditor.Tools
 
         public override void UpdateStatus()
         {
-            WaypointFlag flags = WaypointFlag.None;
-            Waypoint[] wps = map.Waypoints;
-            int wplen = map.Waypoints.Length;
-            // Collect all existing flags in the list.
-            for (int i = 0; i < wplen; ++i) {
-                flags |= wps[i].Flags;
-            }
-            List<string> specialKeys = new List<string>();
-            if (flags.HasFlag(WaypointFlag.Flare))
+            string special = String.Empty;
+            if (!routesMode)
             {
-                specialKeys.Add("F");
+                WaypointFlag flags = WaypointFlag.None;
+                Waypoint[] wps = map.Waypoints;
+                int wplen = map.Waypoints.Length;
+                // Collect all existing flags in the list.
+                for (int i = 0; i < wplen; ++i) {
+                    flags |= wps[i].Flags;
+                }
+                List<string> specialKeys = new List<string>();
+                if (flags.HasFlag(WaypointFlag.Flare))
+                {
+                    specialKeys.Add("F");
+                }
+                if (flags.HasFlag(WaypointFlag.Home))
+                {
+                    specialKeys.Add("H");
+                }
+                if (flags.HasFlag(WaypointFlag.Reinforce))
+                {
+                    specialKeys.Add("R");
+                }
+                if (flags.HasFlag(WaypointFlag.Special))
+                {
+                    specialKeys.Add("S");
+                }
+                special = String.Join("/", specialKeys);
             }
-            if (flags.HasFlag(WaypointFlag.Home))
-            {
-                specialKeys.Add("H");
-            }
-            if (flags.HasFlag(WaypointFlag.Reinforce))
-            {
-                specialKeys.Add("R");
-            }
-            if (flags.HasFlag(WaypointFlag.Special))
-            {
-                specialKeys.Add("S");
-            }
-            string special = String.Join("/", specialKeys);
             StringBuilder text = new StringBuilder();
             if (placementMode)
             {
-                text.Append("Left-Click to set cell waypoint, Right-Click to clear cell waypoint, M to change to ")
-                    .Append(routesMode ? "waypoints" : "routes").Append(" mode");
+                text.Append("Left-Click to set waypoint, ");
+                if (!routesMode || Globals.AllowDeleteRoutePoints)
+                {
+                    text.Append("Right-Click to clear waypoint, ");
+                }
+                text.Append("M to change to ").Append(routesMode ? "waypoints" : "routes").Append(" mode");
                 if (!routesMode)
                 {
                     text.Append(", ").Append(special).Append(" to select a special waypoint");
                 }
-                
             }
             else
             {
-                text.Append("Shift to enter placement mode, Left-Click or Right-Click to pick cell waypoint, Shift + M to change to ")
+                text.Append("Shift to enter placement mode, Left-Click or Right-Click to pick waypoint")
+                    .Append(routesMode ? " from route" : String.Empty)
+                    .Append(", Shift + M to change to ")
                     .Append(routesMode ? "waypoints" : "routes").Append(" mode");
                 if (!routesMode)
                 {

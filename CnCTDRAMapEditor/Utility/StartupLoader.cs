@@ -358,7 +358,7 @@ namespace MobiusEditor.Utility
             return DEFAULT_CULTURE;
         }
 
-        public static bool LoadEditorClassic(string applicationPath, Dictionary<GameType, string[]> modpaths, MixFileNameGenerator romfis)
+        public static bool LoadEditorClassic(string applicationPath, string remasterPath, Dictionary<GameType, string[]> modpaths, MixFileNameGenerator romfis)
         {
             // The system should scan all mix archives for known filenames of other mix archives so it can do recursive searches.
             // Mix files should be given in order or depth, so first give ones that are in the folder, then ones that may occur inside others.
@@ -373,20 +373,32 @@ namespace MobiusEditor.Utility
                 }
                 string path = gameInfo.ClassicFolder;
                 string pathFull = Path.GetFullPath(Path.Combine(applicationPath, gameInfo.ClassicFolder));
-                if (!Directory.Exists(pathFull))
+                bool found = Directory.Exists(pathFull);
+                // Setting is incorrect. Revert to default.
+                if (!found && !String.Equals(path, gameInfo.ClassicFolderDefault))
                 {
-                    // Revert to default.
                     path = gameInfo.ClassicFolderDefault;
                     pathFull = Path.GetFullPath(Path.Combine(applicationPath, path));
-                    if (!Directory.Exists(pathFull))
-                    {
-                        // As last-ditch effort, try to see if applicationPath is the remastered game folder.
-                        pathFull = Path.GetFullPath(Path.Combine(applicationPath, gameInfo.ClassicFolderRemasterData));
-                        if (Directory.Exists(pathFull))
-                        {
-                            path = gameInfo.ClassicFolderRemasterData;
-                        }
-                    }
+                    found = Directory.Exists(pathFull);
+                }
+                // Default not found. Try to use the remaster's classic files.
+                if (!found && remasterPath != null && Directory.Exists(remasterPath))
+                {
+                    string rPath = Path.Combine(remasterPath, "Data");
+                    path = Path.GetFullPath(Path.Combine(rPath, gameInfo.ClassicFolderRemasterData));
+                    pathFull = path;
+                    found = Directory.Exists(pathFull);
+                }
+                // Remaster data not found. As last-ditch effort, try to see if applicationPath is the remastered game folder.
+                if (!found)
+                {
+                    path = gameInfo.ClassicFolderRemasterData;
+                    pathFull = Path.GetFullPath(Path.Combine(applicationPath, path));
+                    found = Directory.Exists(pathFull);
+                }
+                if (!found)
+                {
+                    path = gameInfo.ClassicFolderDefault;
                 }
                 gameFolders.Add(gameInfo.GameType, path);
             }

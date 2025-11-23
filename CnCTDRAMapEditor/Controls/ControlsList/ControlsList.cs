@@ -90,11 +90,11 @@ namespace MobiusEditor.Controls.ControlsList
                         newControl.Visible = true;
                         newControl.Enabled = true;
                         finalHeight = newControl.Location.Y + newControl.Size.Height;
-                        cci.UpdateControl(props[i], ebc, newControl);
+                        cci.UpdateControl(props[i], ebc, newControl, i);
                     }
                     else
                     {
-                        newControl = cci.MakeControl(props[i], ebc);
+                        newControl = cci.MakeControl(props[i], ebc, i);
                         finalHeight = AddControl(newControl, false);
                     }
                 }

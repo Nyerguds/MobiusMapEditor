@@ -47,6 +47,7 @@ namespace MobiusEditor.Controls
             this.numValue = new MobiusEditor.Controls.EnhNumericUpDown();
             this.cmbValue = new MobiusEditor.Controls.ComboBoxSmartWidth();
             this.panel1 = new System.Windows.Forms.Panel();
+            this.lblIndex = new System.Windows.Forms.Label();
             this.cmbMission = new MobiusEditor.Controls.ComboBoxSmartWidth();
             this.panel3 = new System.Windows.Forms.Panel();
             this.btnOptions = new System.Windows.Forms.Button();
@@ -67,9 +68,9 @@ namespace MobiusEditor.Controls
             // tableLayoutPanel1
             // 
             this.tableLayoutPanel1.ColumnCount = 3;
-            this.tableLayoutPanel1.ColumnStyles.Add(new System.Windows.Forms.ColumnStyle(System.Windows.Forms.SizeType.Percent, 55F));
-            this.tableLayoutPanel1.ColumnStyles.Add(new System.Windows.Forms.ColumnStyle(System.Windows.Forms.SizeType.Percent, 45F));
-            this.tableLayoutPanel1.ColumnStyles.Add(new System.Windows.Forms.ColumnStyle(System.Windows.Forms.SizeType.Absolute, 27F));
+            this.tableLayoutPanel1.ColumnStyles.Add(new System.Windows.Forms.ColumnStyle(System.Windows.Forms.SizeType.Percent, 60F));
+            this.tableLayoutPanel1.ColumnStyles.Add(new System.Windows.Forms.ColumnStyle(System.Windows.Forms.SizeType.Percent, 40F));
+            this.tableLayoutPanel1.ColumnStyles.Add(new System.Windows.Forms.ColumnStyle(System.Windows.Forms.SizeType.Absolute, 30F));
             this.tableLayoutPanel1.Controls.Add(this.panel2, 1, 0);
             this.tableLayoutPanel1.Controls.Add(this.panel1, 0, 0);
             this.tableLayoutPanel1.Controls.Add(this.panel3, 2, 0);
@@ -87,10 +88,10 @@ namespace MobiusEditor.Controls
             this.panel2.Controls.Add(this.numValue);
             this.panel2.Controls.Add(this.cmbValue);
             this.panel2.Dock = System.Windows.Forms.DockStyle.Fill;
-            this.panel2.Location = new System.Drawing.Point(150, 0);
+            this.panel2.Location = new System.Drawing.Point(162, 0);
             this.panel2.Margin = new System.Windows.Forms.Padding(0);
             this.panel2.Name = "panel2";
-            this.panel2.Size = new System.Drawing.Size(123, 23);
+            this.panel2.Size = new System.Drawing.Size(108, 23);
             this.panel2.TabIndex = 2;
             // 
             // numValue
@@ -104,10 +105,9 @@ namespace MobiusEditor.Controls
             0,
             0});
             this.numValue.Name = "numValue";
-            this.numValue.Size = new System.Drawing.Size(121, 20);
+            this.numValue.Size = new System.Drawing.Size(107, 20);
             this.numValue.TabIndex = 2;
             this.numValue.ValueChanged += new System.EventHandler(this.NumValue_ValueChanged);
-            this.numValue.MouseLeave += Control_MouseLeave;
             // 
             // cmbValue
             // 
@@ -117,43 +117,52 @@ namespace MobiusEditor.Controls
             this.cmbValue.Location = new System.Drawing.Point(2, 1);
             this.cmbValue.Margin = new System.Windows.Forms.Padding(0);
             this.cmbValue.Name = "cmbValue";
-            this.cmbValue.Size = new System.Drawing.Size(120, 21);
+            this.cmbValue.Size = new System.Drawing.Size(106, 21);
             this.cmbValue.TabIndex = 3;
             this.cmbValue.Visible = false;
             this.cmbValue.SelectedIndexChanged += new System.EventHandler(this.CmbValue_SelectedIndexChanged);
-            this.cmbValue.MouseLeave += Control_MouseLeave;
             // 
             // panel1
             // 
+            this.panel1.Controls.Add(this.lblIndex);
             this.panel1.Controls.Add(this.cmbMission);
             this.panel1.Dock = System.Windows.Forms.DockStyle.Fill;
             this.panel1.Location = new System.Drawing.Point(0, 0);
             this.panel1.Margin = new System.Windows.Forms.Padding(0);
             this.panel1.Name = "panel1";
-            this.panel1.Size = new System.Drawing.Size(150, 23);
+            this.panel1.Size = new System.Drawing.Size(162, 23);
             this.panel1.TabIndex = 1;
+            // 
+            // lblIndex
+            // 
+            this.lblIndex.AutoSize = true;
+            this.lblIndex.Location = new System.Drawing.Point(0, 5);
+            this.lblIndex.Margin = new System.Windows.Forms.Padding(0, 5, 3, 0);
+            this.lblIndex.Name = "lblIndex";
+            this.lblIndex.Size = new System.Drawing.Size(19, 13);
+            this.lblIndex.TabIndex = 2;
+            this.lblIndex.Text = "99";
             // 
             // cmbMission
             // 
             this.cmbMission.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Left | System.Windows.Forms.AnchorStyles.Right)));
             this.cmbMission.DropDownStyle = System.Windows.Forms.ComboBoxStyle.DropDownList;
             this.cmbMission.FormattingEnabled = true;
-            this.cmbMission.Location = new System.Drawing.Point(2, 1);
+            this.cmbMission.Location = new System.Drawing.Point(20, 1);
             this.cmbMission.Margin = new System.Windows.Forms.Padding(0);
             this.cmbMission.Name = "cmbMission";
-            this.cmbMission.Size = new System.Drawing.Size(146, 21);
+            this.cmbMission.Size = new System.Drawing.Size(140, 21);
             this.cmbMission.TabIndex = 1;
             this.cmbMission.SelectedIndexChanged += new System.EventHandler(this.CmbMission_SelectedIndexChanged);
-            this.cmbMission.MouseLeave += Control_MouseLeave;
             // 
             // panel3
             // 
             this.panel3.Controls.Add(this.btnOptions);
             this.panel3.Dock = System.Windows.Forms.DockStyle.Fill;
-            this.panel3.Location = new System.Drawing.Point(273, 0);
+            this.panel3.Location = new System.Drawing.Point(270, 0);
             this.panel3.Margin = new System.Windows.Forms.Padding(0);
             this.panel3.Name = "panel3";
-            this.panel3.Size = new System.Drawing.Size(27, 23);
+            this.panel3.Size = new System.Drawing.Size(30, 23);
             this.panel3.TabIndex = 3;
             // 
             // btnOptions
@@ -168,7 +177,7 @@ namespace MobiusEditor.Controls
             this.btnOptions.UseVisualStyleBackColor = true;
             this.btnOptions.Click += new System.EventHandler(this.BtnOptions_Click);
             // 
-            // contextMenuStrip1
+            // cmsOptions
             // 
             this.cmsOptions.Items.AddRange(new System.Windows.Forms.ToolStripItem[] {
             this.tsmiDelete,
@@ -177,40 +186,40 @@ namespace MobiusEditor.Controls
             this.tsmiInsert,
             this.tsmiDuplicate});
             this.cmsOptions.Name = "cmsOptions";
-            this.cmsOptions.Size = new System.Drawing.Size(181, 92);
+            this.cmsOptions.Size = new System.Drawing.Size(139, 114);
             // 
             // tsmiDelete
             // 
             this.tsmiDelete.Name = "tsmiDelete";
-            this.tsmiDelete.Size = new System.Drawing.Size(180, 22);
+            this.tsmiDelete.Size = new System.Drawing.Size(138, 22);
             this.tsmiDelete.Text = "&Remove";
             this.tsmiDelete.Click += new System.EventHandler(this.TsmiDelete_Click);
             // 
             // tsmiMoveUp
             // 
             this.tsmiMoveUp.Name = "tsmiMoveUp";
-            this.tsmiMoveUp.Size = new System.Drawing.Size(180, 22);
+            this.tsmiMoveUp.Size = new System.Drawing.Size(138, 22);
             this.tsmiMoveUp.Text = "Move &Up";
             this.tsmiMoveUp.Click += new System.EventHandler(this.TsmiMoveUp_Click);
             // 
             // tsmiMoveDown
             // 
             this.tsmiMoveDown.Name = "tsmiMoveDown";
-            this.tsmiMoveDown.Size = new System.Drawing.Size(180, 22);
+            this.tsmiMoveDown.Size = new System.Drawing.Size(138, 22);
             this.tsmiMoveDown.Text = "Move D&own";
             this.tsmiMoveDown.Click += new System.EventHandler(this.TsmiMoveDown_Click);
             // 
-            // tsmiDuplicate
+            // tsmiInsert
             // 
             this.tsmiInsert.Name = "tsmiInsert";
-            this.tsmiInsert.Size = new System.Drawing.Size(180, 22);
+            this.tsmiInsert.Size = new System.Drawing.Size(138, 22);
             this.tsmiInsert.Text = "Insert &New";
             this.tsmiInsert.Click += new System.EventHandler(this.TsmiInsert_Click);
             // 
             // tsmiDuplicate
             // 
             this.tsmiDuplicate.Name = "tsmiDuplicate";
-            this.tsmiDuplicate.Size = new System.Drawing.Size(180, 22);
+            this.tsmiDuplicate.Size = new System.Drawing.Size(138, 22);
             this.tsmiDuplicate.Text = "&Duplicate";
             this.tsmiDuplicate.Click += new System.EventHandler(this.TsmiDuplicate_Click);
             // 
@@ -225,6 +234,7 @@ namespace MobiusEditor.Controls
             this.panel2.ResumeLayout(false);
             ((System.ComponentModel.ISupportInitialize)(this.numValue)).EndInit();
             this.panel1.ResumeLayout(false);
+            this.panel1.PerformLayout();
             this.panel3.ResumeLayout(false);
             this.cmsOptions.ResumeLayout(false);
             this.ResumeLayout(false);
@@ -247,5 +257,6 @@ namespace MobiusEditor.Controls
         private System.Windows.Forms.ToolStripMenuItem tsmiMoveDown;
         private System.Windows.Forms.ToolStripMenuItem tsmiInsert;
         private System.Windows.Forms.ToolStripMenuItem tsmiDuplicate;
+        private System.Windows.Forms.Label lblIndex;
     }
 }

@@ -146,9 +146,9 @@ namespace MobiusEditor.Model
 
         public static readonly IReadOnlyCollection<String> PersistenceNamesShort = new List<string>()
         {
-            "First",
-            "All",
-            "Each"
+            "Single",
+            "Combined",
+            "Repeat"
         }.AsReadOnly();
 
         public static readonly IReadOnlyCollection<String> MultiStyleNames = new List<string>()

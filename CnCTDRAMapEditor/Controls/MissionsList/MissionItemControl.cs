@@ -35,33 +35,33 @@ namespace MobiusEditor.Controls
         private ToolTip tooltip;
 
         public MissionItemControl()
-            :this(null, null, null, null, 0, null)
+            :this(null, null, null, null, 0, null, -1)
         {
         }
 
         public MissionItemControl(TeamTypeMission info, IListedControlController<TeamTypeMission, char, int> controller,
-            IEnumerable<TeamMission> missions, IEnumerable<ListItem<int>> waypoints, int mapSize, ToolTip tooltip)
+            IEnumerable<TeamMission> missions, IEnumerable<ListItem<int>> waypoints, int mapSize, ToolTip tooltip, int index)
         {
             InitializeComponent();
-            SetInfo(info, controller, missions, waypoints, mapSize, tooltip);
+            SetInfo(info, controller, missions, waypoints, mapSize, tooltip, index);
         }
 
         public void SetInfo(TeamTypeMission info, IListedControlController<TeamTypeMission, char, int> controller,
-            IEnumerable<TeamMission> missions, IEnumerable<ListItem<int>> waypoints, int mapSize, ToolTip tooltip)
+            IEnumerable<TeamMission> missions, IEnumerable<ListItem<int>> waypoints, int mapSize, ToolTip tooltip, int index)
         {
             TeamTypeMission old = Info;
-            bool updatedMissions = false;
-            bool updatedWaypoints = false;
-            bool updatedMapSize = false;
+            bool doFullUpdate = false;
             try
             {
                 m_Loading = true;
+                doFullUpdate = info != null && old != null && (info.Mission != old.Mission || info.Argument != old.Argument);
                 Info = null;
                 m_Controller = controller;
+                lblIndex.Text = index == -1 ? String.Empty : index.ToString();
                 TeamMission[] tmpMissArr = missions.ToArray();
-                if (!ArrayUtils.ArraysAreEqual(missionsArr, tmpMissArr))
+                if (doFullUpdate || !ArrayUtils.ArraysAreEqual(missionsArr, tmpMissArr))
                 {
-                    updatedMissions = true;
+                    doFullUpdate = true;
                     missionsArr = tmpMissArr;
                     defaultMission = missionsArr.FirstOrDefault();
                     cmbMission.DisplayMember = null;
@@ -69,13 +69,16 @@ namespace MobiusEditor.Controls
                     cmbMission.DisplayMember = "Mission";
                 }
                 ListItem<int>[] tmpWpArr = waypoints.ToArray();
-                if (!ArrayUtils.ArraysAreEqual(this.waypoints, tmpWpArr))
+                if (doFullUpdate || !ArrayUtils.ArraysAreEqual(this.waypoints, tmpWpArr))
                 {
-                    updatedWaypoints = true;
+                    doFullUpdate = true;
                     this.waypoints = waypoints.ToArray();
                 }
-                updatedMapSize = this.mapSize != mapSize;
-                this.mapSize = mapSize;
+                if (doFullUpdate || this.mapSize != mapSize)
+                {
+                    doFullUpdate = true;
+                    this.mapSize = mapSize;
+                }
                 this.tooltip = tooltip;
             }
             finally
@@ -84,14 +87,13 @@ namespace MobiusEditor.Controls
             }
             if (info != null)
             {
-                if (!updatedMissions && !updatedWaypoints && !updatedMapSize &&
-                    old != null && info.Mission == old.Mission && info.Argument == old.Argument)
+                if (doFullUpdate)
                 {
-                    Info = info;
+                    UpdateInfo(info); 
                 }
                 else
                 {
-                    UpdateInfo(info);
+                    Info = info;
                 }
                 // When resetting an item, always clear all tooltips.
                 HideAllToolTips();
@@ -341,6 +343,5 @@ namespace MobiusEditor.Controls
                 tooltip.Hide(ctrl);
             }
         }
-
     }
 }

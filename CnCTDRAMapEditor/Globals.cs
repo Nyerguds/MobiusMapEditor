@@ -106,7 +106,7 @@ namespace MobiusEditor
 
             // Mod / 3rd party tweak support
             EnableTd106LineBreaks = Properties.Settings.Default.EnableTd106LineBreaks;
-            EnableTd106Scripting = !Properties.Settings.Default.EnableTd106Scripting;
+            ExpandTdScripting = !Properties.Settings.Default.ExpandTdScripting;
             // Experimental; not enabled for now.
             EnableTdRpmFormat = false;
             EnableTdClassicMultiLine = false;
@@ -251,7 +251,7 @@ namespace MobiusEditor
 
         // Mod / 3rd party tweak support
         public static bool EnableTd106LineBreaks { get; private set; }
-        public static bool EnableTd106Scripting { get; private set; }
+        public static bool ExpandTdScripting { get; private set; }
         // Experimental; not enabled for now.
         /// <summary>Embed the map inside the ini file for TD. This is just an experiment, and not normally enabled.</summary>
         public static bool EnableTdRpmFormat { get; private set; }

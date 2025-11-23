@@ -242,13 +242,13 @@ namespace MobiusEditor.Model
                     return true;
                 case TiberianDawn.ActionTypes.ACTION_DESTROY_UUUU:
                     affectedTrigger = "UUUU";
-                    return Globals.EnableTd106Scripting;
+                    return Globals.ExpandTdScripting;
                 case TiberianDawn.ActionTypes.ACTION_DESTROY_VVVV:
                     affectedTrigger = "VVVV";
-                    return Globals.EnableTd106Scripting;
+                    return Globals.ExpandTdScripting;
                 case TiberianDawn.ActionTypes.ACTION_DESTROY_WWWW:
                     affectedTrigger = "WWWW";
-                    return Globals.EnableTd106Scripting;
+                    return Globals.ExpandTdScripting;
             }
             return false;
         }
