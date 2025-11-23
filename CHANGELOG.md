@@ -238,7 +238,7 @@ Released on 05 Sep 2022 at 14:25 UTC
 
 ### v1.4.3.0:
 
-Released on 13 Sep 2022 at 21:46 GMT
+Released on 13 Sep 2022 at 21:46 UTC
 
 * Fixed a bug where the default House in TD maps was set to "None", causing them to crash the game.
 * Bibs placed as the 'smudge' type now show their full size, and can be placed in ways that makes them partially overlap. As long as at least one cell of a bib exists, the bib exists.
@@ -279,7 +279,7 @@ Released on 13 Sep 2022 at 21:46 GMT
 
 ### v1.4.3.1:
 
-Released on 14 Sep 2022 at 16:52 GMT
+Released on 14 Sep 2022 at 16:52 UTC
 
 * Fixed a crash when flood-clearing with a template that crossed the map bounds.
 * When flood-clearing with a template containing cells on both sides of the map bounds, the clear operation will now ignore the map bounds.
@@ -287,14 +287,14 @@ Released on 14 Sep 2022 at 16:52 GMT
 
 ### v1.4.3.2:
 
-Released on 14 Sep 2022 at 21:20 GMT
+Released on 14 Sep 2022 at 21:20 UTC
 
 * Fixed a crash in the smudge restore system when you delete a smudge or building that is too close to the map edge.
 * Reduced maximum multiplayer start positions in the editor to 8, since the games apparently can't show more.
 
 ### v1.4.4.0:
 
-Released on 14 Nov 2022 at 22:25 GMT
+Released on 14 Nov 2022 at 22:25 UTC
 
 * When your mouse cursor is inside the map bounds and you press \[Ctrl\] in Map mode to enable bounds editing mode, your cursor will now immediately change to the Move cursor, without requiring any mouse movement.
 * The status bar at the bottom will now explicitly mention the sub-position of the infantry under the mouse cursor.
@@ -361,7 +361,7 @@ Released on 14 Nov 2022 at 22:25 GMT
 
 ### v1.4.5.0:
 
-Released on 03 Apr 2023 at 19:20 GMT
+Released on 03 Apr 2023 at 19:20 UTC
 
 * Added igloos (haystacks) to the Overlay in Sole Survivor's Winter theater.
 * Fixed refresh bug where a ghost image of the label indicating a heavy operation remained while repainting the map. The label is now only removed after the following map repaint.
@@ -443,7 +443,7 @@ Released on 03 Apr 2023 at 19:20 GMT
 
 ### v1.5.0.0:
 
-Released on 09 Jul 2023 at 14:58 GMT
+Released on 09 Jul 2023 at 14:58 UTC
 
 Feature updates:
 
@@ -524,7 +524,7 @@ Program bug fixes:
 
 ### v1.5.0.1:
 
-Released on 12 Jul 2023 at 08:28 GMT
+Released on 12 Jul 2023 at 08:28 UTC
 
 * Fixed the classic mode setting wrongly being stated as "ClassicGraphics" instead of "UseClassicFiles" on the game folder selection dialog.
 * Fixed bugs that crashed the undo/redo function on the waypoints tool.
@@ -543,7 +543,7 @@ Released on 12 Jul 2023 at 08:28 GMT
 
 ### v1.5.0.2:
 
-Released on 05 Aug 2023 at 13:50 GMT
+Released on 05 Aug 2023 at 13:50 UTC
 
 * The Cell Trigger tool's "jump to" function will now also jump to placed objects with the attached trigger, to easily review what uses it.
 * The "jump to" function in Waypoints and Cell Triggers mode will now properly update the mouse cell info in the bottom bar.
@@ -587,7 +587,7 @@ Released on 05 Aug 2023 at 13:50 GMT
 
 ### v1.5.0.3:
 
-Released on 31 Jan 2023 at 20:50 GMT
+Released on 31 Jan 2023 at 20:50 UTC
 
 * Added support for fan-added theaters available in CnCNet: Snow for TD; Desert, Jungle, Barren and Cave for RA. These only work in classic mode, and if their theater mix files are found in the configured classic files folder.
 * Mouse zoom is now disabled during drag-scroll operations, since it invariably messed up the position calculations.
@@ -620,7 +620,7 @@ Released on 31 Jan 2023 at 20:50 GMT
 
 ### v1.6.0.0:
 
-Released on 22 Sep 2024 at 15:00 GMT
+Released on 22 Sep 2024 at 15:00 UTC
 
 * Added .mix files to the supported formats to open, giving the ability to load official maps straight from the game's internal archives.
 * Implemented a new scaling method that vastly reduces the saving time of multiplayer map thumbnails and image exports.
@@ -675,7 +675,7 @@ Released on 22 Sep 2024 at 15:00 GMT
 
 ### v1.6.1.0:
 
-Unreleased
+Released on 22 Nov 2024 at 21:00 UTC
 
 * Changed the executable name to "MobiusMapEditor.exe".
 * Overhauled Steam Publish UI; it always shows the preview image, and has a list of optional tags (for multiplayer).
@@ -717,7 +717,7 @@ Unreleased
 * Added compatibility system for loading different language and version variations of the classic Tiberian Dawn strings file.
 * Red Alert's "FAKE" labels in classic graphics mode are now loaded from the game graphics rather than generated from text, meaning they adapt to the game language.
 * In the Triggers dialog, Tiberian Dawn trigger Actions and Events will now give a detailed tooltip when hovering over the dropdown lists.
-* When selecting the Home waypoint, single player missions will now show a "Start view" box indicating the initial area the player will see when starting the mission. This will show both the DOS and Win95 viewport, which roughly correspond to respectively being fully zoomed in and fully zoomed out in the Remaster. Like the area reveal indicators on waypoints, this can be shown permanently through an option in the Extra Indicators, with this new one linked to the F8 key.
+* When selecting the Home waypoint, single player missions will now show a "Start view" box indicating the initial area the player will see when starting the mission. This will show both the DOS and Win95 viewport, which roughly correspond to respectively being fully zoomed in and fully zoomed out in the Remaster. Like the reveal radius indicators on waypoints, this can be shown permanently through an option in the Extra Indicators, with this new one linked to the F8 key.
 * A warning is now shown when trying to publish a map but not setting it "Public", since the C&C Remaster relies on an external maps server that can only find the items if they're fully public.
 * Fixed inconsistencies in zoom level when zooming in and out. The calculation for the zoom factor when zooming out is now the exact inversion of the one done when zooming in.
 * Added more tooltips to the Teamtypes options.
@@ -737,7 +737,6 @@ Unreleased
 * Overlap checks are now only done once when the object is painted, vastly optimising editor responsiveness.
 * Fixed inaccuracies in the effect radiuses of units and buildings; a radius now starts at the center of the cell.
 * Fixed the radar jammer radius; since the distance calculation in the game is actually octagonal, it now shows an octagonal area of effect.
-* Improved the accuracy of the Home waypoint starting view box, with the sidebar area added only as extra info.
 * Unit orders that are in the game but aren't supported in the editor are now recognised and reported as such.
 * An unparseable "Direction" value on a unit in a mission will no longer cause it to skip the entire unit.
 * Added shadows under airplanes.
