@@ -84,7 +84,7 @@ namespace MobiusEditor.Dialogs
                     bool origEmptyState = plugin.Empty;
                     void undoAction(UndoRedoEventArgs ev)
                     {
-                        DialogResult dr = MessageBox.Show(ev.MapPanel, "This will undo all teamtype editing actions you performed. Are you sure you want to continue?",
+                        DialogResult dr = MessageBox.Show(ev.MapPanel, "This will undo all Team Type editing actions you performed. Are you sure you want to continue?",
                             "Warning", MessageBoxButtons.YesNo, MessageBoxIcon.Warning);
                         if (dr == DialogResult.No)
                         {
@@ -101,7 +101,7 @@ namespace MobiusEditor.Dialogs
                     }
                     void redoAction(UndoRedoEventArgs ev)
                     {
-                        DialogResult dr = MessageBox.Show(ev.MapPanel, "This will redo all teamtype editing actions you undid. Are you sure you want to continue?",
+                        DialogResult dr = MessageBox.Show(ev.MapPanel, "This will redo all Team Type editing actions you undid. Are you sure you want to continue?",
                             "Warning", MessageBoxButtons.YesNo, MessageBoxIcon.Warning);
                         if (dr == DialogResult.No)
                         {
@@ -135,7 +135,7 @@ namespace MobiusEditor.Dialogs
             technoTypes = plugin.Map.TeamTechnoTypes;
 
             InitializeComponent();
-            lblTooLong.Text = "Teamtype length exceeds " + maxNameLength + " characters!";
+            lblTooLong.Text = "Team Type name length exceeds " + maxNameLength + " characters!";
             int extraWidthDropdowns = nudRecruitPriority.Width + nudRecruitPriority.Margin.Left + nudRecruitPriority.Margin.Right;
             int extraWidthCheckboxes = nudRecruitPriority.Width - chbAutocreate.Width;
             ttf = new ToolTipFixer(this, toolTip1, 10000, new Dictionary<Type, int>
@@ -655,22 +655,22 @@ namespace MobiusEditor.Dialogs
             else if (curName.Length > maxNameLength)
             {
                 e.CancelEdit = true;
-                MessageBox.Show(this, String.Format("Team name is longer than {0} characters.", maxNameLength), "Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
+                MessageBox.Show(this, String.Format("Team Type name is longer than {0} characters.", maxNameLength), "Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
             }
             else if (TeamType.IsEmpty(curName))
             {
                 e.CancelEdit = true;
-                MessageBox.Show(this, String.Format("Team name '{0}' is reserved and cannot be used.", TeamType.None), "Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
+                MessageBox.Show(this, String.Format("Team Type name '{0}' is reserved and cannot be used.", TeamType.None), "Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
             }
             else if (!INITools.IsValidKey(curName))
             {
                 e.CancelEdit = true;
-                MessageBox.Show(this, String.Format("Team name '{0}' contains illegal characters. This format only supports simple ASCII, and cannot contain '=', '[' or ']'.", curName.ToUpperInvariant()), "Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
+                MessageBox.Show(this, String.Format("Team Type name '{0}' contains illegal characters. This format only supports simple ASCII, and cannot contain '=', '[' or ']'.", curName.ToUpperInvariant()), "Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
             }
             else if (teamTypes.Where(t => (t != SelectedTeamType) && t.Name.Equals(curName, StringComparison.OrdinalIgnoreCase)).Any())
             {
                 e.CancelEdit = true;
-                MessageBox.Show(this, String.Format("Team with name '{0}' already exists.", curName.ToUpperInvariant()), "Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
+                MessageBox.Show(this, String.Format("Team Type with name '{0}' already exists.", curName.ToUpperInvariant()), "Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
             }
             else
             {

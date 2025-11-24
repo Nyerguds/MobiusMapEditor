@@ -193,7 +193,7 @@ namespace MobiusEditor.Dialogs
             this.btnAddTeamType.Name = "btnAddTeamType";
             this.btnAddTeamType.Size = new System.Drawing.Size(168, 30);
             this.btnAddTeamType.TabIndex = 1;
-            this.btnAddTeamType.Text = "&Add Teamtype";
+            this.btnAddTeamType.Text = "&Add Team Type";
             this.btnAddTeamType.UseVisualStyleBackColor = true;
             this.btnAddTeamType.Click += new System.EventHandler(this.BtnAddTeamType_Click);
             // 
@@ -766,7 +766,7 @@ namespace MobiusEditor.Dialogs
             // 
             // nameColumnHeader
             // 
-            this.nameColumnHeader.Text = "Team";
+            this.nameColumnHeader.Text = "Name";
             this.nameColumnHeader.Width = 84;
             // 
             // HouseColumnHeader

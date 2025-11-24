@@ -154,7 +154,7 @@ namespace MobiusEditor.Dialogs
             this.chkTeamType.Name = "chkTeamType";
             this.chkTeamType.Size = new System.Drawing.Size(100, 19);
             this.chkTeamType.TabIndex = 10;
-            this.chkTeamType.Text = "Team";
+            this.chkTeamType.Text = "Team Type";
             this.chkTeamType.UseVisualStyleBackColor = true;
             this.chkTeamType.CheckedChanged += new System.EventHandler(this.ChkTeamType_CheckedChanged);
             // 
