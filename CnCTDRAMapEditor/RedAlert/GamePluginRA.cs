@@ -947,13 +947,17 @@ namespace MobiusEditor.RedAlert
             {
                 return teamTypes;
             }
+            int teamNameLenMax = GameInfo.MaxTeamNameLength;
             foreach (KeyValuePair<string, string> kvp in teamTypesSection)
             {
                 try
                 {
-                    if (kvp.Key.Length > 8)
+                    if (kvp.Key.Length > teamNameLenMax)
                     {
-                        errors.Add(String.Format("TeamType '{0}' has a name that is longer than 8 characters. This will not be corrected by the loading process, but should be addressed, since it can make the teams fail to read correctly, and might even crash the game.", kvp.Key));
+                        errors.Add(String.Format("Team Type '{0}' has a name that is longer than 8 characters." +
+                            " This will not be corrected by the loading process, but should be addressed," +
+                            " since it can make the team types fail to read correctly, and might even crash the game.",
+                            kvp.Key));
                     }
                     TeamType teamType = new TeamType { Name = kvp.Key };
                     string[] tokens = kvp.Value.Split(',');
@@ -962,7 +966,7 @@ namespace MobiusEditor.RedAlert
                     if (teamType.House == null)
                     {
                         HouseType defHouse = Map.HouseTypes.First();
-                        errors.Add(String.Format("Team '{0}' has unknown house ID '{1}'; clearing to '{2}'.", kvp.Key, houseStr, defHouse.Name));
+                        errors.Add(String.Format("Team Type '{0}' has unknown house ID '{1}'; reverting to '{2}'.", kvp.Key, houseStr, defHouse.Name));
                         modified = true;
                         teamType.House = defHouse;
                     }
@@ -987,7 +991,8 @@ namespace MobiusEditor.RedAlert
                         string[] classTokens = tokens[i].Split(':');
                         if (classTokens.Length != 2)
                         {
-                            errors.Add(String.Format("Team '{0}' has wrong number of tokens for class index {1} (has {2}, expecting 2).", kvp.Key, i, classTokens.Length));
+                            errors.Add(String.Format("Team Type '{0}' has wrong number of tokens for class index {1} (has {2}, expecting 2).",
+                                kvp.Key, i, classTokens.Length));
                             modified = true;
                             continue;
                         }
@@ -995,13 +1000,14 @@ namespace MobiusEditor.RedAlert
                         byte count = Byte.Parse(classTokens[1]);
                         if (type == null)
                         {
-                            errors.Add(String.Format("Team '{0}' references unknown class '{1}'.", kvp.Key, classTokens[0]));
+                            errors.Add(String.Format("Team Type '{0}', class index {1}, references unknown class '{2}'; class ignored.", kvp.Key, i, classTokens[0]));
                             modified = true;
                             continue;
                         }
                         if (!Map.BasicSection.ExpansionEnabled && type.IsExpansionOnly)
                         {
-                            errors.Add(String.Format("Team '{0}' contains expansion unit '{1}', but expansion units are not enabled; enabling expansion units.", kvp.Key, type.Name));
+                            errors.Add(String.Format("Team Type '{0}' contains expansion unit '{1}', but expansion units are not enabled; enabling expansion units.",
+                                kvp.Key, type.Name));
                             Map.BasicSection.ExpansionEnabled = true;
                             modified = true;
                         }
@@ -1009,7 +1015,7 @@ namespace MobiusEditor.RedAlert
                     }
                     if (numClasses > GameInfo.MaxTeamClasses)
                     {
-                        errors.Add(String.Format("Team '{0}' has more classes than the game can handle (has {1}, maximum is {2}).", kvp.Key, numClasses, GameInfo.MaxTeamClasses));
+                        errors.Add(String.Format("Team Type '{0}' has more classes than the game can handle (has {1}, maximum is {2}).", kvp.Key, numClasses, GameInfo.MaxTeamClasses));
                         modified = true;
                     }
                     int numMissions = Int32.Parse(tokens[classesIndexEnd]);
@@ -1022,14 +1028,16 @@ namespace MobiusEditor.RedAlert
                         string[] missionTokens = tokens[i].Split(':');
                         if (missionTokens.Length != 2)
                         {
-                            errors.Add(String.Format("Team '{0}' has wrong number of tokens for orders index {1} (has {2}, expecting 2).", kvp.Key, i, missionTokens.Length));
+                            errors.Add(String.Format("Team Type '{0}' has wrong number of tokens for orders index {1} (has {2}, expecting 2).",
+                                kvp.Key, i, missionTokens.Length));
                             modified = true;
                             continue;
                         }
                         int miss;
                         if (!Int32.TryParse(missionTokens[0], out miss))
                         {
-                            errors.Add(String.Format("Team '{0}' has unparseable orders id '{1}'. Skipping.", kvp.Key, missionTokens[0]));
+                            errors.Add(String.Format("Team Type '{0}', orders index {1}, has unparseable orders id '{2}'. Skipping.",
+                                kvp.Key, i, missionTokens[0]));
                             modified = true;
                             continue;
                         }
@@ -1042,13 +1050,14 @@ namespace MobiusEditor.RedAlert
                             modified = true;
                             if (mission == null)
                             {
-                                errors.Add(String.Format("Team '{0}' references unknown orders id {1}. Skipping.", kvp.Key, miss));
+                                errors.Add(String.Format("Team Type '{0}', orders index {1}, references unknown orders id {2}. Skipping.",
+                                    kvp.Key, i, miss));
                                 continue;
                             }
                             else
                             {
-                                errors.Add(String.Format("Team '{0}' references unknown orders id {1} ({1:X8}). Corrected to {2} ({3}).",
-                                    kvp.Key, miss, missCorr, mission.Mission));
+                                errors.Add(String.Format("Team Type '{0}', orders index {1}, references unknown orders id {2} ({2:X8}). Corrected to {3} ({4}).",
+                                    kvp.Key, i, miss, missCorr, mission.Mission));
                             }
                         }
                         int missionOptsMax = mission.DropdownOptions.Length == 0 ? 0 : mission.DropdownOptions.Max(vl => vl.Value);
@@ -1058,12 +1067,13 @@ namespace MobiusEditor.RedAlert
                         bool valreset = false;
                         if (!Int32.TryParse(argStr, out int arg))
                         {
-                            argError = String.Format("Team '{0}', orders index {1} ('{2}') has a non-numeric value '{3}'; reverting to 0.", kvp.Key, i, mission.Mission, argStr);
+                            argError = String.Format("Team Type '{0}', orders index {1} ('{2}'), has a non-numeric value '{3}'; reverting to 0.",
+                                kvp.Key, i, mission.Mission, argStr);
                         }
                         else if (mission.ArgType == TeamMissionArgType.Time && arg < 0)
                         {
                             argCorrect = arg & 0xFFFFFF;
-                            argError = String.Format("Team '{0}', orders index {1} ('{2}') has a bad value {3} for a Time argument; attempting to correct to {5}.",
+                            argError = String.Format("Team Type '{0}', orders index {1} ('{2}'), has a bad value {3} for a Time argument; attempting to correct to {5}.",
                                 kvp.Key, i, mission.Mission, argStr, argCorrect);
                         }
                         else if (mission.ArgType == TeamMissionArgType.Waypoint && (arg < -1 || arg >= Map.Waypoints.Length))
@@ -1074,7 +1084,7 @@ namespace MobiusEditor.RedAlert
                                 valreset = true;
                                 argCorrect = 0;
                             }
-                            argError = String.Format("Team '{0}', orders index {1} ('{2}') has a bad value {3} for a Waypoint argument; {4} to {5}.",
+                            argError = String.Format("Team Type '{0}', orders index {1} ('{2}'), has a bad value {3} for a Waypoint argument; {4} to {5}.",
                                 kvp.Key, i, mission.Mission, argStr + (valreset ? "" : " (0x" + arg.ToString("X8") + ")"), valreset ? "reverting" : "fixing", argCorrect);
                         }
                         else if (mission.ArgType == TeamMissionArgType.OptionsList && (arg < 0 || arg > missionOptsMax))
@@ -1086,7 +1096,7 @@ namespace MobiusEditor.RedAlert
                                 valreset = true;
                                 argCorrect = 0;
                             }
-                            argError = String.Format("Team '{0}', orders index {1} ('{2}') has a bad value {3} for the available options; {4} to {5}.",
+                            argError = String.Format("Team Type '{0}', orders index {1} ('{2}'), has a bad value {3} for the available options; {4} to {5}.",
                                 kvp.Key, i, mission.Mission, argStr + (valreset ? "" : " (0x" + arg.ToString("X8") + ")"), valreset ? "reverting" : "fixing",
                                 argCorrect.ToString() + (opt == null ? "" : " ('" + opt + "')"));
                         }
@@ -1098,7 +1108,7 @@ namespace MobiusEditor.RedAlert
                                 valreset = true;
                                 argCorrect = 0;
                             }
-                            argError = String.Format("Team '{0}', orders index {1} ('{2}') has a bad value {3} for a Cell argument; {4} to {5}.",
+                            argError = String.Format("Team Type '{0}', orders index {1} ('{2}'), has a bad value {3} for a Cell argument; {4} to {5}.",
                                 kvp.Key, i, mission.Mission, argStr + (valreset ? "" : " (0x" + arg.ToString("X8") + ")"), valreset ? "reverting" : "fixing", argCorrect);
                         }
                         else if (mission.ArgType == TeamMissionArgType.MissionNumber && (arg < 0 || arg >= missionsMax))
@@ -1109,14 +1119,14 @@ namespace MobiusEditor.RedAlert
                                 valreset = true;
                                 argCorrect = 0;
                             }
-                            argError = String.Format("Team '{0}', orders index {1} ('{2}') has a bad value {3} for an orders index argument; {4} to {5}.",
+                            argError = String.Format("Team Type '{0}', orders index {1} ('{2}'), has a bad value {3} for an orders index argument; {4} to {5}.",
                                 kvp.Key, i, mission.Mission, argStr + (valreset ? "" : " (0x" + arg.ToString("X8") + ")"), valreset ? "reverting" : "fixing", argCorrect);
                         }
                         //tarcom support isn't really implemented; leave this for now.
                         /*
                         else if (mission.ArgType == TeamMissionArgType.Tarcom && arg < 0)
                         {
-                            argError = String.Format("Team '{0}', orders index {1} ('{2}') has a bad value '{3}' for a Tarcom argument; reverting to 0.", kvp.Key, i, mission.Mission, argStr);
+                            argError = String.Format("Team Type '{0}', orders index {1} ('{2}'), has a bad value '{3}' for a Tarcom argument; reverting to 0.", kvp.Key, i, mission.Mission, argStr);
                         }
                         */
                         // Note: globals are deliberately NOT checked here; the CheckTriggersGlobals logic takes care of checking and correcting overflows in global values.
@@ -1130,14 +1140,15 @@ namespace MobiusEditor.RedAlert
                     }
                     if (numMissions > GameInfo.MaxTeamMissions)
                     {
-                        errors.Add(String.Format("Team '{0}' has more orders than the game can handle (has {1}, maximum is {2}).", kvp.Key, numMissions, GameInfo.MaxTeamMissions));
+                        errors.Add(String.Format("Team Type '{0}' has more orders than the game can handle (has {1}, maximum is {2}).",
+                            kvp.Key, numMissions, GameInfo.MaxTeamMissions));
                         modified = true;
                     }
                     teamTypes.Add(teamType);
                 }
                 catch (Exception ex)
                 {
-                    errors.Add(String.Format("Teamtype '{0}' has errors and can't be parsed: {1}.", kvp.Key, ex.Message));
+                    errors.Add(String.Format("Team Type '{0}' has errors and can't be parsed: {1}.", kvp.Key, ex.Message));
                     modified = true;
                 }
             }
@@ -1235,6 +1246,7 @@ namespace MobiusEditor.RedAlert
             string trigLoopDef = Trigger.PersistenceNamesShort.ToList()[0];
             int trigMulMax = (int)Enum.GetValues(typeof(TriggerMultiStyleType)).Cast<TriggerMultiStyleType>().Max();
             string trigMulDef = Trigger.MultiStyleNames.ToList()[0];
+            int trigNameLenMax = GameInfo.MaxTriggerNameLength;
             foreach (KeyValuePair<string, string> kvp in triggersSection)
             {
                 try
@@ -1246,9 +1258,13 @@ namespace MobiusEditor.RedAlert
                         modified = true;
                         continue;
                     }
-                    if (kvp.Key.Length > 4)
+                    if (kvp.Key.Length > trigNameLenMax)
                     {
-                        errors.Add(String.Format("Trigger '{0}' has a name that is longer than 4 characters. This will not be corrected by the loading process, but should be addressed, since it can make the triggers fail to link correctly to objects and cell triggers, and might even crash the game.", kvp.Key));
+                        errors.Add(String.Format("Trigger '{0}' has a name that is longer than 4 characters." +
+                            " This will not be corrected by the loading process, but should be addressed," +
+                            " since it can make the triggers fail to link correctly to objects and cell triggers," +
+                            " and might even crash the game.",
+                            kvp.Key));
                     }
                     Trigger trigger = new Trigger { Name = kvp.Key };
                     int trigPersist;
@@ -2933,7 +2949,7 @@ namespace MobiusEditor.RedAlert
                 string trigName = indexToName(triggers, teamType.Trigger, Trigger.None);
                 if (!checkUnitTrigs.Contains(trigName))
                 {
-                    errors.Add(String.Format("Team '{0}' links to trigger '{1}' which does not contain an event or action applicable to units; clearing trigger.", teamType.Name, trigName));
+                    errors.Add(String.Format("Team Type '{0}' links to trigger '{1}' which does not contain an event or action applicable to units; clearing trigger.", teamType.Name, trigName));
                     modified = true;
                     teamType.Trigger = Trigger.None;
                 }
@@ -5012,7 +5028,7 @@ namespace MobiusEditor.RedAlert
                     TeamTypeMission ttm = team.Missions[i];
                     if (ttm.Mission.Mission == TeamMissionTypes.SetGlobal.Mission && (ttm.Argument < 0 || ttm.Argument > Constants.HighestGlobal))
                     {
-                        string error = String.Format("Team \"{0}\" Order {1} has an illegal global value \"{2}\": Globals only go from 0 to {3}.",
+                        string error = String.Format("Team Type \"{0}\", orders index {1} has an illegal global value \"{2}\": Globals only go from 0 to {3}.",
                             team.Name, i + 1, ttm.Argument, Constants.HighestGlobal);
                         int fixedVal = -1;
                         if (fixedGlobals != null && fixedGlobals.TryGetValue(ttm.Argument, out int fixVal))
@@ -5206,7 +5222,7 @@ namespace MobiusEditor.RedAlert
             switch (evnt.EventType)
             {
                 case EventTypes.TEVENT_LEAVES_MAP:
-                    errors.Add(prefix + "Event " + nr + ": There is no team set to leave the map.");
+                    errors.Add(prefix + "Event " + nr + ": There is no team type set to leave the map.");
                     break;
             }
         }

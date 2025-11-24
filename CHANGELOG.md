@@ -675,7 +675,7 @@ Released on 22 Sep 2024 at 15:00 UTC
 
 ### v1.6.1.0:
 
-Released on 22 Nov 2024 at 21:00 UTC
+Released on 22 Nov 2025 at 21:00 UTC
 
 * Changed the executable name to "MobiusMapEditor.exe".
 * Overhauled Steam Publish UI; it always shows the preview image, and has a list of optional tags (for multiplayer).

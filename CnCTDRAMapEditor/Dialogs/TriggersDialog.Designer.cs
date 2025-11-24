@@ -409,7 +409,7 @@ namespace MobiusEditor.Dialogs
             this.teamLabel.Padding = new System.Windows.Forms.Padding(0, 6, 0, 0);
             this.teamLabel.Size = new System.Drawing.Size(67, 25);
             this.teamLabel.TabIndex = 21;
-            this.teamLabel.Text = "Team";
+            this.teamLabel.Text = "Team Type";
             // 
             // teamComboBox
             // 

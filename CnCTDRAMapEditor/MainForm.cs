@@ -1328,7 +1328,7 @@ namespace MobiusEditor
                         void undoAction(UndoRedoEventArgs ev)
                         {
                             ClearActiveTool();
-                            DialogResult dr = MessageBox.Show(this, "This will undo all trigger editing actions you performed. Are you sure you want to continue?",
+                            DialogResult dr = MessageBox.Show(this, "This will undo all Trigger editing actions you performed. Are you sure you want to continue?",
                                 "Warning", MessageBoxButtons.YesNo, MessageBoxIcon.Warning);
                             if (dr == DialogResult.No)
                             {
@@ -1369,7 +1369,7 @@ namespace MobiusEditor
                         void redoAction(UndoRedoEventArgs ev)
                         {
                             ClearActiveTool();
-                            DialogResult dr = MessageBox.Show(this, "This will redo all trigger editing actions you undid. Are you sure you want to continue?",
+                            DialogResult dr = MessageBox.Show(this, "This will redo all Trigger editing actions you undid. Are you sure you want to continue?",
                                 "Warning", MessageBoxButtons.YesNo, MessageBoxIcon.Warning);
                             if (dr == DialogResult.No)
                             {
