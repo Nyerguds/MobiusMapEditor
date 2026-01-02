@@ -400,7 +400,7 @@ namespace MobiusEditor.Tools
                     foreach (Point p in eatenOv.Keys)
                     {
                         Overlay oldOverlay = ev.Map.Overlay[p];
-                        if (oldOverlay == null || Map.IsIgnorableOverlay(oldOverlay))
+                        if (oldOverlay == null || Map.IsIgnorableConcrete(oldOverlay))
                         {
                             ev.Map.Overlay[p] = eatenOv[p];
                             // DO NOT REMOVE THE POINTS FROM "eaten": the undo might be done again in the future.
@@ -437,7 +437,7 @@ namespace MobiusEditor.Tools
                     foreach (Point p in eatenOv.Keys)
                     {
                         Overlay oldOverlay = ev.Map.Overlay[p];
-                        if (oldOverlay == null || Map.IsIgnorableOverlay(oldOverlay))
+                        if (oldOverlay == null || Map.IsIgnorableConcrete(oldOverlay))
                         {
                             ev.Map.Overlay[p] = null;
                             // DO NOT REMOVE THE POINTS FROM "eaten": the undo might be done again in the future.

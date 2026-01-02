@@ -3723,7 +3723,7 @@ namespace MobiusEditor.TiberianDawn
             Random rd = new Random();
             foreach ((int cell, Overlay overlay) in Map.Overlay.OrderBy(o => o.Cell))
             {
-                if (Map.IsIgnorableOverlay(overlay))
+                if (Map.IsIgnorableConcrete(overlay))
                 {
                     continue;
                 }
@@ -4260,9 +4260,31 @@ namespace MobiusEditor.TiberianDawn
             {
                 housesWithCY.Add(bld.House.Name);
             }
+            // TODO Add Globals.ExpandTdScripting check to some of this.
+            HashSet<String> teamDeployOrders = new HashSet<String>(StringComparer.OrdinalIgnoreCase)
+            {
+                TeamMissionTypes.Unload.Mission,
+            };
+            foreach (TeamType team in Map.TeamTypes)
+            {
+                bool hasMcv = team.Classes.Select(cl => cl.Type).OfType<UnitType>().Any(b =>
+                "mcv".Equals(b.Name, StringComparison.InvariantCultureIgnoreCase));
+                if (hasMcv && team.Missions.Any(m => teamDeployOrders.Contains(m.Mission.Mission)))
+                {
+                    housesWithCY.Add(team.House.Name);
+                }
+            }
+            HashSet<String> deployOrders = new HashSet<String>(StringComparer.OrdinalIgnoreCase)
+            {
+                MissionTypes.MISSION_UNLOAD,
+                MissionTypes.MISSION_HUNT,
+                MissionTypes.MISSION_TIMED_HUNT,
+                MissionTypes.MISSION_AMBUSH,
+                MissionTypes.MISSION_RESCUE
+            };
             foreach ((_, Unit unit) in Map.Technos.OfType<Unit>().Where(b =>
                 "mcv".Equals(b.Occupier.Type.Name, StringComparison.InvariantCultureIgnoreCase)
-                && "Unload".Equals(b.Occupier.Mission, StringComparison.InvariantCultureIgnoreCase)))
+                && deployOrders.Contains(b.Occupier.Mission)))
             {
                 housesWithCY.Add(unit.House.Name);
             }

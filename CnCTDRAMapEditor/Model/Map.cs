@@ -849,16 +849,9 @@ namespace MobiusEditor.Model
             }
         }
 
-        public static bool IsIgnorableOverlay(Overlay overlay)
+        public static bool IsIgnorableConcrete(Overlay overlay)
         {
-            if (overlay == null)
-                return true;
-            if (overlay.Type.IsConcrete && !GetConcState(overlay).HasFlag(ConcFill.Center))
-            {
-                // Filler cell. Ignore.
-                return true;
-            }
-            return false;
+            return overlay != null && overlay.Type.IsConcrete && !GetConcState(overlay).HasFlag(ConcFill.Center);
         }
 
         public void UpdateConcreteOverlays(ISet<Point> locations)
@@ -869,7 +862,13 @@ namespace MobiusEditor.Model
             }
             if (Globals.FixConcretePavement)
             {
-                UpdateConcreteOverlaysCorrect(locations, false);
+                foreach (Point loc in locations)
+                {
+                    if (Metrics.GetCell(loc, out int c))
+                    {
+                        UpdateConcreteOverlayCell(c);
+                    }
+                }
             }
             else
             {
@@ -877,191 +876,53 @@ namespace MobiusEditor.Model
             }
         }
 
-        private void UpdateConcreteOverlaysCorrect(ISet<Point> locations, bool forExtraCells)
+        private void UpdateConcreteOverlayCell(int cell)
         {
-            // Add the points around extra cells
-            HashSet<Point> updateLocations = new HashSet<Point>(locations);
-            HashSet<Point> newExtraCellsToAdd = new HashSet<Point>();
-            foreach ((Point pt, Overlay overlay) in Overlay.IntersectsWithPoints(locations).Where(o => o.Value.Type.IsConcrete))
+            // This is the new logic also implemented in the game itself. It is vastly simplified compared to the old fixed logic,
+            // and always tries to fill in full isometric squares.
+            OverlayType conc = OverlayTypes.Where(o => o.IsConcrete).FirstOrDefault();
+            if (conc == null) return;
+            // [ -W-1 -W -W+1 ]
+            // [ -1    0    1 ]
+            // [ +W-1 +W +W+1 ]
+            int mw = Metrics.Width;
+            int[] _facingadj_map = {
+                -mw,    // FACING_N,        // North
+		        -mw+1,  // FACING_NE,       // North-East
+		        +1,     // FACING_E,        // East
+		        +mw+1,  // FACING_SE,       // South-East
+		        +mw,    // FACING_S,        // South
+		        +mw-1,  // FACING_SW,       // South-West
+		        -1,     // FACING_W,        // West
+		        -mw-1,  // FACING_NW,       // North-West
+	        };
+
+            Overlay overlay = Overlay[cell];
+            // Cannot override non-conc overlay, and cannot do anything on the top line.
+            if ((overlay != null && overlay.Type != conc) || cell < Metrics.Width)
+                return;
+
+            bool isodd = cell % 2 == 1;
+            // Cells to check around the current cell. In order: top, top-aside, aside, bottom-aside, bottom.
+            FacingType[] checkCells = isodd ? ConcreteCheckOdd : ConcreteCheckEven;
+            ConcFill fillState = BuildConcFillState(cell, checkCells, _facingadj_map);
+            if (overlay == null && fillState == ConcFill.None)
+                return;
+            // Set current cell's fill
+            if (fillState != ConcFill.None)
             {
-                if (IsIgnorableOverlay(overlay))
+                if (overlay == null)
                 {
-                    newExtraCellsToAdd.Add(pt);
+                    overlay = new Overlay();
+                    overlay.Type = conc;
+                    Overlay[cell] = overlay;
                 }
+                overlay.Icon = GetConcIcon(fillState, isodd);
             }
-            HashSet<Point> allExtraCells = new HashSet<Point>();
-            // Add all locations that are adjacent to extra cells in a way that can affect them.
-            while (newExtraCellsToAdd.Count > 0)
+            else if (overlay != null)
             {
-                HashSet<Point> loopList = new HashSet<Point>(newExtraCellsToAdd);
-                newExtraCellsToAdd.Clear();
-                foreach ((Point pt, Overlay overlay) in Overlay.IntersectsWithPoints(loopList).Where(o => o.Value.Type.IsConcrete))
-                {
-                    if (!IsIgnorableOverlay(overlay))
-                    {
-                        continue;
-                    }
-                    FacingType[] adjCells = pt.X % 2 == 1 ? ConcreteCheckOdd : ConcreteCheckEven;
-                    for (int i = 0; i < adjCells.Length; ++i)
-                    {
-                        if (!Metrics.Adjacent(pt, adjCells[i], out Point adjacent))
-                        {
-                            continue;
-                        }
-                        Overlay adj = Overlay[adjacent];
-                        if (adj != null && adj.Type.IsConcrete)
-                        {
-                            updateLocations.Add(adjacent);
-                            if (IsIgnorableOverlay(overlay) && !allExtraCells.Contains(pt))
-                            {
-                                newExtraCellsToAdd.Add(pt);
-                                allExtraCells.Add(pt);
-                            }
-                        }
-                    }
-                }
-            }
-            Dictionary<int, ConcFill> addedCells = new Dictionary<int, ConcFill>();
-            Dictionary<int, OverlayType> ovlTypes = new Dictionary<int, OverlayType>();
-            HashSet<int> toRemove = new HashSet<int>();
-            foreach ((int cell, Overlay overlay) in Overlay.IntersectsWithCells(updateLocations).Where(o => o.Value.Type.IsConcrete))
-            {
-                if (IsIgnorableOverlay(overlay))
-                {
-                    if (!forExtraCells)
-                    {
-                        toRemove.Add(cell);
-                    }
-                    continue;
-                }
-                // Cells to check around the current cell. In order: top, top-aside, aside, bottom-aside, bottom
-                bool isodd = cell % 2 == 1;
-                FacingType[] adjCells = isodd ? ConcreteCheckOdd : ConcreteCheckEven;
-                ConcAdj mask = ConcAdj.None;
-                int[] cells = new int[adjCells.Length];
-                for (int i = 0; i < adjCells.Length; ++i)
-                {
-                    Overlay neighbor = Overlay.Adjacent(cell, adjCells[i]);
-                    cells[i] = -1;
-                    if (Metrics.Adjacent(cell, adjCells[i], out int adjacent))
-                        cells[i] = adjacent;
-                    if (neighbor?.Type == overlay.Type)
-                    {
-                        if (GetConcState(neighbor).HasFlag(ConcFill.Center))
-                        {
-                            mask |= (ConcAdj)(1 << i);
-                        }
-                    }
-                }
-                // Unified logic so the operation becomes identical for the even and odd cells.
-                bool top = mask.HasFlag(ConcAdj.Top);
-                bool topSide = mask.HasFlag(ConcAdj.TopSide);
-                bool side = mask.HasFlag(ConcAdj.Side);
-                bool bottomSide = mask.HasFlag(ConcAdj.BottomSide);
-                bool bottom = mask.HasFlag(ConcAdj.Bottom);
-                // Logic to fill the main cell. Standard for a placed cell is to fill the center.
-                ConcFill fillState = ConcFill.Center;
-                // NEW LOGIC: Fills triangle between two vertical cells
-                // If cell at top, connect. If not, still connect if the two in front are filled.
-                if (top || (topSide && side))
-                {
-                    fillState |= ConcFill.Top;
-                }
-                // If cell at bottom, connect. If not, still connect if the two in front are filled.
-                if (bottom || (bottomSide && side))
-                {
-                    fillState |= ConcFill.Bottom;
-                }
-                // Logic to fill in edge cells. See what the currently evaluated cell will add to it.
-                int cellTop = cells[0];
-                int cellSide = cells[2];
-                int cellBottom = cells[4];
-                ConcFill fillStateTop = ConcFill.None;
-                if (!top && (fillState & ConcFill.Top) != 0)
-                {
-                    fillStateTop |= ConcFill.Bottom;
-                }
-                ConcFill fillStateBottom = ConcFill.None;
-                if (!bottom && (fillState & ConcFill.Bottom) != 0)
-                {
-                    fillStateBottom |= ConcFill.Top;
-                }
-                ConcFill fillStateSide = ConcFill.None;
-                if (!side)
-                {
-                    if (topSide && top)
-                        fillStateSide |= ConcFill.Top;
-                    if (bottomSide && bottom)
-                        fillStateSide |= ConcFill.Bottom;
-                }
-                // Only update if this is not for side cells.
-                if (!forExtraCells)
-                {
-                    overlay.Icon = GetConcIcon(fillState, isodd);
-                }
-                // add concrete to fill up corners, completely fixing the way it should look.
-                if (fillStateTop != ConcFill.None && cellTop != -1)
-                {
-                    ConcFill current = addedCells.ContainsKey(cellTop) ? addedCells[cellTop] : ConcFill.None;
-                    addedCells[cellTop] = current | fillStateTop;
-                    ovlTypes[cellTop] = overlay.Type;
-                }
-                if (fillStateBottom != ConcFill.None && cellBottom != -1)
-                {
-                    ConcFill current = addedCells.ContainsKey(cellBottom) ? addedCells[cellBottom] : ConcFill.None;
-                    addedCells[cellBottom] = current | fillStateBottom;
-                    ovlTypes[cellBottom] = overlay.Type;
-                }
-                if (fillStateSide != ConcFill.None && cellSide != -1)
-                {
-                    ConcFill current = addedCells.ContainsKey(cellSide) ? addedCells[cellSide] : ConcFill.None;
-                    addedCells[cellSide] = current | fillStateSide;
-                    ovlTypes[cellSide] = overlay.Type;
-                }
-            }
-            List<int> addCells = addedCells.Keys.ToList();
-            addCells.Sort();
-            HashSet<Point> addedPoints = new HashSet<Point>();
-            foreach (int cell in addCells)
-            {
-                Point? pt = Metrics.GetLocation(cell);
-                toRemove.Remove(cell);
-                // Only allow updating the actual given points.
-                if (forExtraCells && pt != null && !locations.Contains(pt.Value))
-                    continue;
-                OverlayType toMake = ovlTypes[cell];
-                ConcFill addState = addedCells[cell];
-                Overlay ovl = Overlay[cell];
-                bool isNew = ovl == null;
-                if (isNew)
-                {
-                    ovl = new Overlay();
-                    ovl.Type = toMake;
-                }
-                else
-                {
-                    if (ovl.Type != toMake || !IsIgnorableOverlay(ovl))
-                    {
-                        continue;
-                    }
-                }
-                ovl.Icon = GetConcIcon(addState, cell % 2 == 1);
-                if (isNew)
-                {
-                    Overlay[cell] = ovl;
-                }
-                if (!forExtraCells && pt.HasValue)
-                {
-                    addedPoints.Add(pt.Value);
-                }
-            }
-            foreach (int cell in toRemove)
-            {
+                // Clear ignorable overlay.
                 Overlay[cell] = null;
-            }
-            if (!forExtraCells && addedPoints.Count > 0)
-            {
-                UpdateConcreteOverlaysCorrect(addedPoints, true);
             }
         }
 
@@ -1076,7 +937,7 @@ namespace MobiusEditor.Model
                 for (int i = 0; i < adjCells.Length; ++i)
                 {
                     Overlay neighbor = Overlay.Adjacent(cell, adjCells[i]);
-                    if (neighbor != null && neighbor.Type.IsConcrete && !IsIgnorableOverlay(overlay))
+                    if (neighbor != null && neighbor.Type.IsConcrete && !IsIgnorableConcrete(overlay))
                     {
                         mask |= (ConcAdj)(1 << i);
                     }
@@ -1152,6 +1013,101 @@ namespace MobiusEditor.Model
                 }
                 overlay.Icon = GetConcIcon(fillState, isodd);
             }
+        }
+
+        private ConcFill BuildConcFillState(int cell, FacingType[] checkCells, int[] facingadj_map)
+        {
+            Overlay ovl = Overlay[cell];
+            ConcAdj mask = ConcAdj.None;
+            for (int i = 0; i < checkCells.Length; ++i)
+            {
+                FacingType facing = checkCells[i];
+                if (!AdjacentCellIsValid(cell, facing, true))
+                {
+                    continue;
+                }
+                Metrics.Adjacent(cell, facing, out int neighborcell);
+                Overlay neighbor = Overlay[neighborcell];
+                if (neighbor != null && neighbor.Type.IsConcrete)
+                {
+                    if (GetConcState(neighbor).HasFlag(ConcFill.Center))
+                    {
+                        mask |= (ConcAdj)(1 << i);
+                    }
+                }
+            }
+            // Unified logic so the operation becomes identical for the even and odd cells.
+            bool top = mask.HasFlag(ConcAdj.Top);
+            bool topSide = mask.HasFlag(ConcAdj.TopSide);
+            bool side = mask.HasFlag(ConcAdj.Side);
+            bool bottomSide = mask.HasFlag(ConcAdj.BottomSide);
+            bool bottom = mask.HasFlag(ConcAdj.Bottom);
+            // Logic to fill the main cell. Standard for a placed cell is to fill the center.
+            bool isFilled = ovl != null && ovl.Type.IsConcrete && !IsIgnorableConcrete(ovl);
+            ConcFill fillState = isFilled ? ConcFill.Center : ConcFill.None;
+
+            if (isFilled)
+            {
+                if (top || side || topSide)
+                {
+                    fillState |= ConcFill.Top;
+                }
+                if (bottom || side || bottomSide)
+                {
+                    fillState |= ConcFill.Bottom;
+                }
+            }
+            else
+            {
+                if ((topSide && side) || (topSide && top) || (top && side))
+                {
+                    fillState |= ConcFill.Top;
+                }
+                if ((bottomSide && side) || (bottomSide && bottom) || (bottom && side))
+                {
+                    fillState |= ConcFill.Bottom;
+                }
+            }
+            return fillState;
+        }
+
+        private bool AdjacentCellIsValid(int cell, FacingType face, bool foroverlay)
+        {
+            int mapw = Metrics.Width;
+            int maph = Metrics.Height;
+
+            // A bit of unnecessary calculation, but I'm not gonna copy and refine this for each block...
+            int northend = mapw;
+            if (foroverlay) northend *= 2;
+            int southend = mapw * (maph - (foroverlay ? 2 : 1));
+            bool allowEdgeN = (cell >= northend);
+            bool allowEdgeS = (cell < southend);
+            bool allowEdgeW = (cell % mapw != 0);
+            bool allowEdgeE = ((cell + 1) % mapw != 0);
+
+            switch (face)
+            {
+                case FacingType.None:
+                    if (!foroverlay) return cell >= 0 && cell < mapw * maph;
+                    return cell > mapw && cell < mapw * (maph - 1);
+                case FacingType.North:
+                    return allowEdgeN;
+                case FacingType.NorthEast:
+                    return allowEdgeN && allowEdgeE;
+                case FacingType.East:
+                    return allowEdgeE;
+                case FacingType.SouthEast:
+                    return allowEdgeS && allowEdgeE;
+                case FacingType.South:
+                    return allowEdgeS;
+                case FacingType.SouthWest:
+                    return allowEdgeS && allowEdgeW;
+                case FacingType.West:
+                    return allowEdgeW;
+                case FacingType.NorthWest:
+                    return allowEdgeN && allowEdgeW;
+            }
+            return false;
         }
 
         private static ConcFill GetConcState(Overlay conc)
@@ -1319,9 +1275,9 @@ namespace MobiusEditor.Model
                 else
                 {
                     sb.AppendFormat(", Overlay = {0}", overlayType.DisplayName);
-                    if (IsIgnorableOverlay(overlay))
+                    if (IsIgnorableConcrete(overlay))
                     {
-                        sb.Append(" (corner filler)");
+                        sb.Append(" (edge filler)");
                     }
                 }
             }
@@ -1757,7 +1713,7 @@ namespace MobiusEditor.Model
             {
                 return DefaultMissionHarvest;
             }
-            if (techno.IsAircraft && !techno.IsFixedWing)
+            if (techno is UnitType unit && unit.IsAircraft && !unit.IsFixedWing)
             {
                 // Ground-landable aircraft. Default order should be 'Unload' to make it land on the spot it spawned on.
                 return DefaultMissionAircraft;

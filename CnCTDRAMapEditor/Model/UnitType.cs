@@ -115,7 +115,6 @@ namespace MobiusEditor.Model
         // Content mask is overlap mask without shadow, so only the top cell.
         protected readonly bool[,][] contentMaskFlying = new bool[2, 1][] { { new bool[] { true, true, true, true, true } }, { new bool[5] } };
 
-        /// <summary>If enabled, this aircraft will be rendered as flying.</summary>
         public override bool IsGroundUnit => false;
         public override bool IsAircraft => true;
         public override bool IsFlying { get; set; }
@@ -171,14 +170,23 @@ namespace MobiusEditor.Model
         public int ID { get; private set; }
         public string Name { get; private set; }
         public bool Ownable => true;
+        /// <summary>Display name for this unit.</summary>
         public string DisplayName { get; private set; }
+        /// <summary>Name override from ini file.</summary>
         public string NameOverride { get; set; }
+        /// <summary>Sprite used for the turret.</summary>
         public string Turret { get; private set; }
+        /// <summary>Sprite used for the second turret.</summary>
         public string SecondTurret { get; private set; }
+        /// <summary>Turret offset from the body center, in the facing direction. </summary>
         public int TurretOffset { get; private set; }
+        /// <summary>Turret's northward shift for perspective adjustment.</summary>
         public int TurretY { get; private set; }
+        /// <summary>Unit option flags.</summary>
         public UnitTypeFlag Flags { get; private set; }
+        /// <summary>Frame usage for the unit's body.</summary>
         public FrameUsage BodyFrameUsage { get; private set; }
+        /// <summary>Frame usage for the unit's turret.</summary>
         public FrameUsage TurretFrameUsage { get; private set; }
         public virtual Rectangle OverlapBounds => new Rectangle(-1, -1, 3, 3);
         // Units are big enough to be visible even when partially overlapped, so they only count as overlapped if their center is overlapped.
@@ -189,12 +197,18 @@ namespace MobiusEditor.Model
         public virtual bool[,] OccupyMask => new bool[1, 1] { { true } };
         public virtual bool[,] BaseOccupyMask => new bool[1, 1] { { true } };
         public virtual int ZOrder => Globals.ZOrderDefault;
+        /// <summary>House to use when rendering the preview for this unit.</summary>
         public string OwnerHouse { get; private set; }
+        /// <summary>Is a ground unit, normally stored under [Units] in the map ini.</summary>
         public abstract bool IsGroundUnit { get; }
-        public abstract bool IsAircraft { get; }
-        public virtual bool IsFlying { get { return false; } set { } }
+        /// <summary>Is a flying unit, normally stored under [Aircraft] in the map ini.</summary>
+        public virtual bool IsAircraft { get; }
+        /// <summary>Is a ship unit, normally stored under [Vessels] in the map ini.</summary>
         public abstract bool IsVessel { get; }
-        public abstract bool IsFixedWing { get; }
+        /// <summary>True if this object is a fixed-wing aircraft. This treats it as 16-frame rotation, and affects the default orders for placing it on the map.</summary>
+        public virtual bool IsFixedWing { get; }
+        /// <summary>Aircraft only - This unit is drawn in the air. Only used for Aircraft. This is generally equal to IsFixedWing, but can be tweaked for preview/render purposes.</summary>
+        public virtual bool IsFlying { get { return false; } set { } }
         /// <summary>Has a turret drawn on the unit.</summary>
         public bool HasTurret => Flags.HasFlag(UnitTypeFlag.Turret);
         /// <summary>Needs to render two turrets. Requires a <see cref="UnitType.TurretOffset"/> greater than zero, which will be applied to the second turret with 180° added to the rotated position.</summary>

@@ -125,7 +125,7 @@ namespace MobiusEditor.Model
         {
             if (obj is OverlayType ovl)
             {
-                return ReferenceEquals(this, obj) || (this.ID == ovl.ID && string.Equals(this.Name, ovl.Name, StringComparison.OrdinalIgnoreCase));
+                return ReferenceEquals(this, obj) || (this.ID == ovl.ID && String.Equals(this.Name, ovl.Name, StringComparison.OrdinalIgnoreCase));
             }
             else if (obj is sbyte sb)
             {

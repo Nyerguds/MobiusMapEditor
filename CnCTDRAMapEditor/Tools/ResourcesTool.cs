@@ -228,7 +228,7 @@ namespace MobiusEditor.Tools
                 if (map.Metrics.GetCell(subLocation, out int cell))
                 {
                     Overlay cur = map.Overlay[cell];
-                    if (cur == null || Map.IsIgnorableOverlay(cur))
+                    if (cur == null || Map.IsIgnorableConcrete(cur))
                     {
                         if (!undoOverlays.ContainsKey(cell))
                         {

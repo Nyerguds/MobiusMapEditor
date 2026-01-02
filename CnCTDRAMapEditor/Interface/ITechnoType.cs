@@ -27,10 +27,6 @@ namespace MobiusEditor.Interface
         bool Ownable { get; }
         /// <summary>True if this object has a weapon. This affects the default orders for placing it on the map.</summary>
         bool IsArmed { get; }
-        /// <summary>True if this object is an aircraft, and is normally not placeable on the map.</summary>
-        bool IsAircraft { get; }
-        /// <summary>True if this object is a fixed-wing aircraft. This treats it as 16-frame rotation, and affects the default orders for placing it on the map.</summary>
-        bool IsFixedWing { get; }
         /// <summary>True if this object can harvest resources. This affects the default orders for placing it on the map.</summary>
         bool IsHarvester { get; }
         /// <summary>True if this TechnoType is only available when enabling the game's expansion pack.</summary>

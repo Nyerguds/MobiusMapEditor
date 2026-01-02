@@ -675,7 +675,7 @@ Released on 22 Sep 2024 at 15:00 UTC
 
 ### v1.6.1.0:
 
-Released on 22 Nov 2025 at 21:00 UTC
+Released on 23 Nov 2025 at 21:00 UTC
 
 * Changed the executable name to "MobiusMapEditor.exe".
 * Overhauled Steam Publish UI; it always shows the preview image, and has a list of optional tags (for multiplayer).
@@ -754,3 +754,9 @@ Released on 22 Nov 2025 at 21:00 UTC
 * The Teamtypes and Trigger windows now automatically select the first item when opening.
 * Added indices on the Teamtypes "Orders" list, so "jump to index" orders can be filled in more easily.
 * Classic mode can now fall back on the Remaster's classic files if no included classic files were found.
+
+### v1.6.1.1:
+
+Unreleased
+
+* Overhauled the logic of FixConcretePavement to better connect cells, and to place the CONC pavement per block of 2 cells. This matches the logic the game was supposed to have.

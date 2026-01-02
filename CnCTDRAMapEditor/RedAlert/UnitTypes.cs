@@ -52,7 +52,7 @@ namespace MobiusEditor.RedAlert
         public static readonly UnitType Heli = new AircraftType(5, "heli", "TEXT_UNIT_RA_HELI", "Greece", FrameUsage.Frames32Full, FrameUsage.Rotor, "lrotor", null, 0, -2, UnitTypeFlag.Armed | UnitTypeFlag.Turret);
         public static readonly UnitType Hind = new AircraftType(6, "hind", "TEXT_UNIT_RA_HIND", "USSR", FrameUsage.Frames32Full, FrameUsage.Rotor, "lrotor", null, 0, -2, UnitTypeFlag.Armed | UnitTypeFlag.Turret);
 
-        public static readonly UnitType Submarine = new VesselType(0, "ss", "TEXT_UNIT_RA_SS", "USSR", FrameUsage.Frames16Simple, FrameUsage.Frames32Full, UnitTypeFlag.Armed);
+        public static readonly UnitType Submarine = new VesselType(0, "ss", "TEXT_UNIT_RA_SS", "USSR", FrameUsage.Frames16Simple, UnitTypeFlag.Armed);
         public static readonly UnitType Destroyer = new VesselType(1, "dd", "TEXT_UNIT_RA_DD", "Greece", FrameUsage.Frames16Simple, FrameUsage.Frames32Full, "ssam", null, -8, -4, UnitTypeFlag.Armed | UnitTypeFlag.Turret);
         public static readonly UnitType Cruiser = new VesselType(2, "ca", "TEXT_UNIT_RA_CA", "Greece", FrameUsage.Frames16Simple, FrameUsage.Frames32Full, "turr", "turr", 22, -4, UnitTypeFlag.Armed | UnitTypeFlag.Turret | UnitTypeFlag.DoubleTurret);
         public static readonly UnitType Transport = new VesselType(3, "lst", "TEXT_UNIT_RA_LST", "Greece", FrameUsage.Frames01Single | FrameUsage.HasUnloadFrames);

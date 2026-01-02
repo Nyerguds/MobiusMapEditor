@@ -32,9 +32,10 @@ The triggers dialog contains a "Check" button that will check if any configurati
 
 Under the Tools menu, the following items are available:
 
-* Statistics → Map Objects: Shows how close you are getting to the object limits for each object type. It also gives some info on scripting objects that are currently not used or not used correctly.
-* Statistics → Power Balance: Shows the produced and consumed power for all Houses. This takes damaged and unbuilt buildings into account, and will give extra information on the situation with the affected buildings repaired / built.
-* Statistics → Silo Storage: Shows how much silo space is available for each House.
+* Statistics: Contains a number of options that generate summaries related to what is present on the map:
+    * Map Objects: Shows how close you are getting to the object limits for each object type. It also gives some info on scripting objects that are currently not used or not used correctly.
+    * Power Balance: Shows the produced and consumed power for all Houses. This takes damaged and unbuilt buildings into account, and will give extra information on the situation with the affected buildings repaired / built.
+    * Silo Storage: Shows how much silo space is available for each House.
 * Options: Has a number of usability options that can be enabled and disabled. These options are not saved, but their defaults can be preset in the configuration file (see [Defaults](#defaults) below). The options themselves are fairly self-explanatory:
     * Flood fill is obstructed by map bounds: when using flood fill, the map border indicating the usable map area will stop flood fill from propagating. This works at both sides of the border. Note that flood fill *erasing* (using right click), which takes the entire area of the selected tile into account, can be positioned to cross over the border, which *will* make it clear on both sides.
     * Drag-place map tiles without smearing: When placing down large map tiles such as cliffs and dragging the mouse while placing, a new object will only be placed down once the mouse is completely moved off the previously placed tiles.
