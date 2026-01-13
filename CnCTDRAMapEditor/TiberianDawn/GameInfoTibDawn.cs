@@ -19,15 +19,12 @@ using System.Collections.Generic;
 using System.Drawing;
 using System.IO;
 using System.Linq;
-using System.Security.AccessControl;
 using System.Text.RegularExpressions;
 
 namespace MobiusEditor.TiberianDawn
 {
     public class GameInfoTibDawn : GameInfo
     {
-        private static readonly int HighestTdMapVal = TemplateTypes.GetTypes().Max(t => (int)t.ID);
-
         public override GameType GameType => GameType.TiberianDawn;
         public override string Name => "Tiberian Dawn";
         public override string ShortName => "TD";

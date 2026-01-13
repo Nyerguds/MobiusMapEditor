@@ -177,6 +177,10 @@ namespace MobiusEditor.Model
             {
                 MaskOverrides[String.Empty] = GeneralUtils.GetMaskFromString(iconWidth, iconHeight, maskDefault, '0', ' ');
             }
+            else if (landsDefault != null)
+            {
+                MaskOverrides[String.Empty] = GeneralUtils.GetMaskFromString(iconWidth, iconHeight, landsDefault, 'X', ' ');
+            }
             if (maskOverrides != null && maskOverrides.Keys.Count > 0 && !isRandom)
             {
                 foreach (KeyValuePair<string, string> kvp in maskOverrides)
@@ -243,10 +247,9 @@ namespace MobiusEditor.Model
         /// <param name="iconWidth">Width in cells.</param>
         /// <param name="iconHeight">Height in cells.</param>
         /// <param name="landsDefault">Defaults for the terrain types for each cell. See <see cref="LandTypesMapping"/> for the characters to use.</param>
-        /// <param name="maskDefault">Tile usage mask. Indices with '0' are removed from the tiles. Spaces are ignored and can be added for visual separation.</param>
         /// <param name="equivalentTiles">Equivalent tiles that can be placed down when drag-placing multiple of this.</param>
-        public TemplateType(ushort id, string name, int iconWidth, int iconHeight, string landsDefault, string maskDefault, string[] equivalentTiles)
-            : this(id, name, iconWidth, iconHeight, landsDefault, maskDefault, Point.Empty, equivalentTiles)
+        public TemplateType(ushort id, string name, int iconWidth, int iconHeight, string landsDefault, string[] equivalentTiles)
+            : this(id, name, iconWidth, iconHeight, landsDefault, null, Point.Empty, equivalentTiles)
         {
         }
 
@@ -273,6 +276,20 @@ namespace MobiusEditor.Model
                 this.Flags = TemplateTypeFlag.HasEquivalents;
             }
             this.GroupTiles = equivs == null ? new string[0] : equivs.ToArray();
+        }
+
+        /// <summary>
+        /// Creates a TemplateType object.
+        /// </summary>
+        /// <param name="id">Numeric id in the game map data.</param>
+        /// <param name="name">Name of the associated graphics.</param>
+        /// <param name="iconWidth">Width in cells.</param>
+        /// <param name="iconHeight">Height in cells.</param>
+        /// <param name="landsDefault">Defaults for the terrain types for each cell. See <see cref="LandTypesMapping"/> for the characters to use.</param>
+        /// <param name="maskOverrides">Mask override per theater, for tiles that contain differing numbers of tiles in different theaters.</param>
+        public TemplateType(ushort id, string name, int iconWidth, int iconHeight, string landsDefault, Dictionary<string, string> maskOverrides)
+            : this(id, name, iconWidth, iconHeight, landsDefault, TemplateTypeFlag.None, null, maskOverrides)
+        {
         }
 
         /// <summary>
@@ -389,6 +406,15 @@ namespace MobiusEditor.Model
                 }
             }
             //sb.Append("PrimaryType=").AppendLine(LandType.Clear.ToString());
+        }
+
+        /// <summary>
+        /// Reassigns the land types from string.
+        /// </summary>
+        /// <param name="lands"></param>
+        public void SetLandsDefault(string lands)
+        {
+            this.landsDefault = GetLandTypesFromString(lands);
         }
 
         public LandType GetLandType(int icon)
@@ -791,25 +817,29 @@ namespace MobiusEditor.Model
 
         public static readonly Dictionary<char, LandType> LandTypesMapping = new Dictionary<char, LandType>
         {
-            { 'X', LandType.Clear }, // Filler tile, or [Clear] terrain on 1x1 sets with multiple tiles.
-            { 'C', LandType.Clear }, // [Clear] Normal clear terrain.
-            { 'B', LandType.Beach }, // [Beach] Sandy beach. Can't be built on.
-            { 'I', LandType.Rock }, // [Rock]  Impassable terrain.
-            { 'R', LandType.Road }, // [Road]  Units move faster on this terrain.
-            { 'W', LandType.Water }, // [Water] Ships can travel over this.
-            { 'V', LandType.River }, // [River] Ships normally can't travel over this.
-            { 'H', LandType.Rough }, // [Rough] Rough terrain. Can't be built on
+            { 'X', LandType.Clear },     // Filler tile, or [Clear] terrain on 1x1 sets with multiple tiles.
+            { 'C', LandType.Clear },     // [Clear] Normal clear terrain.
+            { 'R', LandType.Road },      // [Road]  Units move faster on this terrain.
+            { 'W', LandType.Water },     // [Water] Ships can travel over this.
+            { 'I', LandType.Rock },      // [Rock]  Impassable terrain.
+            //{'L', LandType.Wall },     // [Wall]  Obstructs terrain.
+            //{'T', LandType.Tiberium }, // [Tiberium] Resources.
+            { 'B', LandType.Beach },     // [Beach] Sandy beach. Can't be built on.
+            { 'V', LandType.River },     // [River] Ships normally can't travel over this.
+            { 'H', LandType.Rough },     // [Rough] Rough terrain. Can't be built on
         };
 
         public static readonly Dictionary<LandType, char> LandStringsMapping = new Dictionary<LandType, char>
         {
-            {LandType.Clear, 'C' }, // [Clear] Normal clear terrain.
-            {LandType.Beach, 'B' }, // [Beach] Sandy beach. Can't be built on.
-            {LandType.Rock, 'I' },  // [Rock]  Impassable terrain.
-            {LandType.Road, 'R' },  // [Road]  Units move faster on this terrain.
-            {LandType.Water, 'W' }, // [Water] Ships can travel over this.
-            {LandType.River, 'V' }, // [River] Ships normally can't travel over this.
-            {LandType.Rough, 'H' }, // [Rough] Rough terrain. Can't be built on
+            {LandType.Clear, 'C' },      // [Clear] Normal clear terrain.
+            {LandType.Road, 'R' },       // [Road]  Units move faster on this terrain.
+            {LandType.Water, 'W' },      // [Water] Ships can travel over this.
+            {LandType.Rock, 'I' },       // [Rock]  Impassable terrain.
+            //{LandType.Wall, 'L' },     // [Wall]  Obstructs terrain.
+            //{LandType.Tiberium, 'T' }, // [Tiberium] Resources.
+            {LandType.Beach, 'B' },      // [Beach] Sandy beach. Can't be built on.
+            {LandType.River, 'V' },      // [River] Ships normally can't travel over this.
+            {LandType.Rough, 'H' },      // [Rough] Rough terrain. Can't be built on
         };
 
         public static LandType[] GetLandTypesFromString(string types)

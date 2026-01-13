@@ -248,12 +248,12 @@ namespace MobiusEditor.Render
                     //int icon = template?.Icon ?? ((cell & 0x03) | ((cell >> 4) & 0x0C));
                     // For clear terrain, calculate icon from 0-15 using map position.
                     int icon = template?.Icon ?? ((topLeft.X & 0x03) | (topLeft.Y & 0x03) << 2);
-                    // If something is actually placed on the map, show it, even if it has no graphics.
                     string tileName = "template_" + name + "_" + icon.ToString("D4") + "_" + tileSize.Width + "x" + tileSize.Height + (isSmooth ? "_smooth" : String.Empty);
                     Bitmap tileImg = cacheManager.GetImage(tileName);
                     Rectangle renderBounds = new Rectangle(topLeft.X * tileSize.Width, topLeft.Y * tileSize.Height, tileSize.Width, tileSize.Height);
                     if (tileImg == null)
                     {
+                        // If something is actually placed on the map, show it, even if it has no graphics.
                         bool success = Globals.TheTilesetManager.GetTileData(name, icon, out Tile tile, true, false);
                         if (tile != null && tile.Image != null)
                         {

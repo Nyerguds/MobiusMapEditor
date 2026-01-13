@@ -2343,12 +2343,13 @@ namespace MobiusEditor.RedAlert
                     modified = true;
                 }
                 // Do this here, before House or Trigger, since those get ignored if it's a wall type.
-                if (buildingType.IsWall && !Globals.AllowWallBuildings)
+                if (buildingType.IsWall)
                 {
+                    // Wall buildings do not work in RA and will crash the game, so always convert this.
                     OverlayType wall = Map.OverlayTypes.Where(t => t.Equals(kvp.Value)).FirstOrDefault();
                     if (wall != null)
                     {
-                        errors.Add(String.Format("Structure '{0}' on cell {1} is a wall type. It will be treated as wall, not as building.", buildingType.Name, cell));
+                        errors.Add(String.Format("Structure '{0}' on cell {1} is a wall type; it will be treated as wall, not as building.", buildingType.Name, cell));
                         Map.Overlay[cell] = new Overlay() { Type = wall, Icon = 0 };
                         modified = true;
                         continue;

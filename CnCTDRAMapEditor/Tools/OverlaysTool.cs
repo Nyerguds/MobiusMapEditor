@@ -80,8 +80,10 @@ namespace MobiusEditor.Tools
                 {
                     if (placementMode && (selectedOverlayType != null))
                     {
-                        mapPanel.Invalidate(map, GetRefreshArea(navigationWidget.MouseCell, selectedOverlayType));
-                        mapPanel.Invalidate(map, GetRefreshArea(navigationWidget.MouseCell, value));
+                        Point curpos = navigationWidget.MouseCell;
+                        OverlayType underMouse = map.Overlay[curpos]?.Type;
+                        mapPanel.Invalidate(map, GetRefreshArea(curpos, selectedOverlayType, underMouse));
+                        mapPanel.Invalidate(map, GetRefreshArea(curpos, value, underMouse));
                     }
                     selectedOverlayType = value;
                     overlayTypeListBox.SelectedValue = selectedOverlayType;
@@ -199,8 +201,8 @@ namespace MobiusEditor.Tools
                 }
                 if (SelectedOverlayType != null)
                 {
-                    mapPanel.Invalidate(map, GetRefreshArea(e.OldCell, SelectedOverlayType));
-                    mapPanel.Invalidate(map, GetRefreshArea(mouseCell, SelectedOverlayType));
+                    mapPanel.Invalidate(map, GetRefreshArea(e.OldCell, SelectedOverlayType, map.Overlay[e.OldCell]?.Type));
+                    mapPanel.Invalidate(map, GetRefreshArea(mouseCell, SelectedOverlayType, map.Overlay[mouseCell]?.Type));
                 }
             }
             else if ((e.MouseButtons == MouseButtons.Left) || (e.MouseButtons == MouseButtons.Right))
@@ -209,11 +211,11 @@ namespace MobiusEditor.Tools
             }
         }
 
-        private Rectangle GetRefreshArea(Point mousepos, OverlayType selected)
+        private Rectangle GetRefreshArea(Point mousepos, OverlayType selected, OverlayType replaced = null)
         {
             Rectangle refreshArea;
             // If null, it is unknown; refresh maximum area.
-            if (selected == null || selected.IsConcrete)
+            if (selected == null || selected.IsConcrete || (replaced != null && replaced.IsConcrete))
             {
                 if (Globals.FixConcretePavement)
                 {
@@ -255,7 +257,7 @@ namespace MobiusEditor.Tools
             {
                 return;
             }
-            if (cur == null || Map.IsIgnorableConcrete(cur))
+            if (cur == null || Map.IsIgnorableConcrete(cur) || (cur.Type != selected && cur.Type.IsPavement))
             {
                 bool isOdd = (cell % 2) != 0;
                 if (!Globals.FixConcretePavement || !selected.IsConcrete || !previewMap.Metrics.Adjacent(cell, isOdd ? FacingType.West : FacingType.East, out int extracell))
@@ -282,7 +284,7 @@ namespace MobiusEditor.Tools
                         redoOverlays[extracell] = overlay;
                     }
                 }
-                mapPanel.Invalidate(map, GetRefreshArea(location, selected));
+                mapPanel.Invalidate(map, GetRefreshArea(location, selected, cur?.Type));
             }
         }
 
@@ -294,17 +296,17 @@ namespace MobiusEditor.Tools
                 if (overlay != null && overlay.Type.IsOverlay && !Map.IsIgnorableConcrete(overlay))
                 {
                     bool isOdd = (cell % 2) != 0;
-                    if (!Globals.FixConcretePavement || !overlay.Type.IsConcrete || !previewMap.Metrics.Adjacent(cell, isOdd ? FacingType.West : FacingType.East, out int extracell))
-                    {
-                        extracell = -1;
-                    }
+                    int extracell = -1;
+                    bool hasAdjacent = Globals.FixConcretePavement && previewMap.Metrics.Adjacent(cell, isOdd ? FacingType.West : FacingType.East, out extracell);
+                    OverlayType extraCellType = hasAdjacent ? map.Overlay[extracell]?.Type : null;
+                    bool fixCurrent = hasAdjacent && extraCellType != null && extraCellType.IsConcrete;
                     if (!undoOverlays.ContainsKey(cell))
                     {
                         undoOverlays[cell] = map.Overlay[cell];
                     }
                     map.Overlay[cell] = null;
                     redoOverlays[cell] = null;
-                    if (extracell != -1 && map.Overlay[extracell] != null && map.Overlay[extracell].Type == overlay.Type)
+                    if (hasAdjacent && overlay.Type.IsConcrete && extraCellType != null && extraCellType == overlay.Type)
                     {
                         if (!undoOverlays.ContainsKey(extracell))
                         {
@@ -313,7 +315,13 @@ namespace MobiusEditor.Tools
                         map.Overlay[extracell] = null;
                         redoOverlays[extracell] = null;
                     }
-                    mapPanel.Invalidate(map, GetRefreshArea(location, overlay.Type));
+                    else if (fixCurrent)
+                    {
+                        Overlay newConc = new Overlay() { Type = extraCellType, Icon = 0 };
+                        map.Overlay[cell] = newConc;
+                        redoOverlays[cell] = newConc;
+                    }
+                    mapPanel.Invalidate(map, GetRefreshArea(location, overlay.Type, extraCellType));
                 }
             }
         }
@@ -407,7 +415,9 @@ namespace MobiusEditor.Tools
             navigationWidget.PenColor = Color.Red;
             if (SelectedOverlayType != null)
             {
-                mapPanel.Invalidate(map, GetRefreshArea(navigationWidget.MouseCell, SelectedOverlayType));
+                Point curpos = navigationWidget.MouseCell;
+                OverlayType underMouse = map.Overlay[curpos]?.Type;
+                mapPanel.Invalidate(map, GetRefreshArea(curpos, SelectedOverlayType, underMouse));
             }
             UpdateStatus();
         }
@@ -422,10 +432,11 @@ namespace MobiusEditor.Tools
             navigationWidget.MouseoverSize = new Size(1, 1);
             navigationWidget.PenColor = Color.Yellow;
             OverlayType selected = SelectedOverlayType;
-            Point mouse = navigationWidget.MouseCell;
             if (selected != null)
             {
-                mapPanel.Invalidate(map, GetRefreshArea(mouse, selected));
+                Point curpos = navigationWidget.MouseCell;
+                OverlayType underMouse = map.Overlay[curpos]?.Type;
+                mapPanel.Invalidate(map, GetRefreshArea(curpos, selected, underMouse));
             }
             UpdateStatus();
         }
@@ -535,15 +546,16 @@ namespace MobiusEditor.Tools
                 navigationWidget.MouseoverSize = new Size(1, 1);
             }
             Overlay onCell = previewMap.Overlay[cell];
+            OverlayType overlayOnCell = onCell?.Type;
             Overlay overlay = new Overlay { Type = selected, Icon = 0, IsPreview = true };
-            if (onCell == null || Map.IsIgnorableConcrete(onCell))
+            if (onCell == null || Map.IsIgnorableConcrete(onCell) || (selected != overlayOnCell && overlayOnCell.IsPavement))
             {
                 if (selected.IsSolid && !previewMap.Buildings.CanAdd(cell, overlay))
                 {
                     navigationWidget.MouseoverSize = new Size(1, 1);
                     return;
                 }
-                Rectangle refreshArea = GetRefreshArea(navigationWidget.MouseCell, selectedOverlayType);
+                Rectangle refreshArea = GetRefreshArea(navigationWidget.MouseCell, selectedOverlayType, overlayOnCell);
                 previewMap.Overlay[cell] = overlay;
                 // Add second cell
                 if (selected.IsConcrete && Globals.FixConcretePavement)

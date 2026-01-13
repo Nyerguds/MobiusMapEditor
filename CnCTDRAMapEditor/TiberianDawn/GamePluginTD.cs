@@ -2434,6 +2434,7 @@ namespace MobiusEditor.TiberianDawn
                 return;
             }
             int lastLine = Map.Metrics.Height - 1;
+            List<int> addedConcrete = new List<int>();
             foreach (KeyValuePair<string, string> kvp in overlaySection)
             {
                 int cell;
@@ -2471,6 +2472,10 @@ namespace MobiusEditor.TiberianDawn
                     }
                     continue;
                 }
+                if (overlayType.IsConcrete && Globals.FixConcretePavement)
+                {
+                    addedConcrete.Add(cell);
+                }
                 if (Globals.FilterTheaterObjects && !overlayType.ExistsInTheater)
                 {
                     errors.Add(String.Format("Overlay '{0}' is not available in the set theater; skipping.", overlayType.Name));
@@ -2497,6 +2502,29 @@ namespace MobiusEditor.TiberianDawn
                     continue;
                 }
                 Map.Overlay[cell] = new Overlay { Type = overlayType, Icon = 0 };
+            }
+            if (Globals.FixConcretePavement)
+            {
+                List<string> additionalConcCells = new List<string>();
+                foreach (int conc in addedConcrete)
+                {
+                    OverlayType currentOverlay = Map.Overlay[conc]?.Type;
+                    bool isOdd = (conc % 2) != 0;
+                    int extracell = -1;
+                    bool hasAdjacent = Globals.FixConcretePavement && Map.Metrics.Adjacent(conc, isOdd ? FacingType.West : FacingType.East, out extracell);
+                    // This is before any concrete fixing is done, so no need to check for ignorable concrete cells.
+                    OverlayType adjacentOverlay = Map.Overlay[extracell]?.Type;
+                    if (currentOverlay != null && hasAdjacent && adjacentOverlay == null)
+                    {
+                        Map.Overlay[extracell] = new Overlay { Type = currentOverlay, Icon = 0 };
+                        additionalConcCells.Add(extracell.ToString());
+                    }
+                }
+                if (additionalConcCells.Count > 0)
+                {
+                    modified = true;
+                    errors.Add(String.Format("Added extra concrete cells to fill up pairs on cells: {0}.", String.Join(", ", additionalConcCells.ToArray())));
+                }
             }
         }
 

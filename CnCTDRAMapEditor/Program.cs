@@ -79,6 +79,7 @@ namespace MobiusEditor
         [STAThread]
         static void Main(string[] args)
         {
+            // Accessing Globals here immediately initialises all settings.
             if (Globals.EnableDpiAwareness)
             {
                 TryEnableDPIAware();
