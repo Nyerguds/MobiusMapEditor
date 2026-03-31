@@ -24,8 +24,8 @@ namespace MobiusEditor.Interface
         None = 0, // Type detection failed.
         INI, // ini+bin file.
         BIN, // bin+ini file.
-        I64, // N64 ini+map file.
-        B64, // N64 map+ini file.
+        I64, // Nintendo 64 ini+map file.
+        B64, // Nintendo 64 map+ini file.
         MPR, // ini file with embedded map.
         PGM, // Petroglyph map archive in meg format. Contents will be autodetected when opened.
         MIX  // Map selected from inside a mix file; should contain the ini and possibly bin parts behind a '?'.
@@ -49,6 +49,8 @@ namespace MobiusEditor.Interface
         bool Dirty { get; set; }
         /// <summary>True if the currently loaded map is a pristine empty map.</summary>
         bool Empty { get; set; }
+        // Filetype that was loaded from file. The default for this on new maps depends on the game.
+        FileType LoadedFileType { get; }
 
         /// <summary>Initialises this plugin after it has been created, and all resource managers have been reset.</summary>
         /// <returns>A list of errors that occurred during the initialisation.</returns>
@@ -108,14 +110,15 @@ namespace MobiusEditor.Interface
 
         /// <summary>Validate the map to see if there are any blocking errors preventing it from saving.</summary>
         /// <param name="saveType">Save type that this validating is for. If "None", the save type is not yet known, and no type-specific checks should be done.</param>
+        /// <param name="oldType">If the file was saved before, this gives the old type that the map had.</param>
         /// <param name="forResave">
         ///     If true, the checks for savetype "None" should be included despite a specific save type being specified.
         ///     This is meant for a resave of an already-saved map, meaning no Save As dialog was shown, and all checks should
         ///     be done, both for save type "none" and the given save type.
         /// </param>
-        /// <param name="forWarnings">true if this is not the actual map validation, but a check that should return any warnings to show that the user can still choose to ignore.</param>
         /// <returns>Null if the validation succeeded, else a string containing the problems that occurred.</returns>
-        string Validate(FileType saveType, bool forResave, bool forWarnings);
+        /// <param name="forWarnings">true if this is not the actual map validation, but a check that should return any warnings to show that the user can still choose to ignore.</param>
+        string Validate(FileType saveType, FileType oldType, bool forResave, bool forWarnings);
 
         /// <summary>Generates an overview of how many items are on the map and how many are allowed, and does a trigger analysis.</summary>
         /// <returns>The generated map items overview.</returns>

@@ -200,25 +200,19 @@ namespace MobiusEditor.Model
 
         private int updateCount = 0;
         private bool updating = false;
-        private IDictionary<MapLayerFlag, ISet<Point>> invalidateLayers = new Dictionary<MapLayerFlag, ISet<Point>>();
+        private readonly IDictionary<MapLayerFlag, ISet<Point>> invalidateLayers = new Dictionary<MapLayerFlag, ISet<Point>>();
         private bool invalidateOverlappers;
 
         public event EventHandler<MapRefreshEventArgs> RulesChanged;
         public void NotifyRulesChanges(ISet<Point> refreshPoints)
         {
-            if (RulesChanged != null)
-            {
-                RulesChanged(this, new MapRefreshEventArgs(refreshPoints));
-            }
+            RulesChanged?.Invoke(this, new MapRefreshEventArgs(refreshPoints));
         }
 
         public event EventHandler<MapRefreshEventArgs> MapContentsChanged;
         public void NotifyMapContentsChanged(ISet<Point> refreshPoints)
         {
-            if (MapContentsChanged != null)
-            {
-                MapContentsChanged(this, new MapRefreshEventArgs(refreshPoints));
-            }
+            MapContentsChanged?.Invoke(this, new MapRefreshEventArgs(refreshPoints));
         }
 
         public bool ConcreteOverlaysAvailable { get; private set; }
@@ -350,7 +344,21 @@ namespace MobiusEditor.Model
             }
         }
 
-        public readonly List<BuildingType> BuildingTypes;
+        public readonly List<BuildingType> AllBuildingTypes;
+        public List<BuildingType> BuildingTypesNoWalls
+        {
+            get
+            {
+                return AllBuildingTypes.Where(bl => !bl.IsWall).ToList();
+            }
+        }
+
+        public List<BuildingType> BuildingTypes {
+            get
+            {
+                return !Globals.AllowWallBuildings ? BuildingTypesNoWalls : AllBuildingTypes.ToList();
+            }
+        }
 
         public readonly List<ITechnoType> AllTeamTechnoTypes;
         public List<ITechnoType> TeamTechnoTypes
@@ -387,8 +395,7 @@ namespace MobiusEditor.Model
 
         public void NotifyWaypointsUpdate()
         {
-            if (WaypointsUpdated != null)
-                WaypointsUpdated(this, new EventArgs());
+            WaypointsUpdated?.Invoke(this, new EventArgs());
         }
 
         public int DropZoneRadius { get; set; }
@@ -403,8 +410,7 @@ namespace MobiusEditor.Model
 
         public void NotifyTriggersUpdate()
         {
-            if (TriggersUpdated != null)
-                TriggersUpdated(this, new EventArgs());
+            TriggersUpdated?.Invoke(this, new EventArgs());
         }
 
         private List<Trigger> triggers;
@@ -511,7 +517,7 @@ namespace MobiusEditor.Model
             HouseType[] allHouseTypes = houseTypes.ToArray();
             HouseTypesIncludingSpecials = houseTypes.ToArray();
             HouseTypes = allHouseTypes.Where(h => !h.IsSpecial).ToArray();
-            FlagColors = flagColors == null ? new ITeamColor[8] : flagColors;
+            FlagColors = flagColors ?? new ITeamColor[8];
             TheaterTypes = new List<TheaterType>(theaterTypes);
             TemplateTypes = new List<TemplateType>(templateTypes);
             TerrainTypes = new List<TerrainType>(terrainTypes);
@@ -547,7 +553,7 @@ namespace MobiusEditor.Model
             BuildingDirectionTypes = new List<DirectionType>(buildingDirectionTypes);
             AllInfantryTypes = new List<InfantryType>(infantryTypes);
             AllUnitTypes = new List<UnitType>(unitTypes);
-            BuildingTypes = new List<BuildingType>(buildingTypes);
+            AllBuildingTypes = new List<BuildingType>(buildingTypes);
             TeamMissionTypes = teamMissionTypes.ToArray();
             AllTeamTechnoTypes = new List<ITechnoType>(teamTechnoTypes);
             MovieEmpty = emptyMovie;
@@ -591,10 +597,10 @@ namespace MobiusEditor.Model
             ConcreteOverlaysAvailable = OverlayTypes.Any(ovl => ovl.IsConcrete);
             CrateOverlaysAvailable = OverlayTypes.Any(ovl => ovl.IsCrate);
             FlareWaypointAvailable = Waypoints.Any(wpt => wpt.Flags.HasFlag(WaypointFlag.Flare));
-            ExpansionUnitsAvailable = BuildingTypes.Any(tt => tt.IsExpansionOnly)
-                || AllInfantryTypes.Any(tt => tt.IsExpansionOnly)
-                || TerrainTypes.Any(tt => tt.IsExpansionOnly)
-                || AllUnitTypes.Any(tt => tt.IsExpansionOnly);
+            ExpansionUnitsAvailable = BuildingTypesNoWalls.Any(tt => tt.IsExpansionOnly)
+                                    || AllInfantryTypes.Any(tt => tt.IsExpansionOnly)
+                                    || TerrainTypes.Any(tt => tt.IsExpansionOnly)
+                                    || AllUnitTypes.Any(tt => tt.IsExpansionOnly);
 
             MapSection.SetDefault();
             BriefingSection.SetDefault();
@@ -675,7 +681,7 @@ namespace MobiusEditor.Model
                 }
                 DirectionType bldDir = UnitDirectionTypes.Where(d => d.Facing == FacingType.North).First();
                 // No restriction. All get attempted and dummies are all filled in.
-                foreach (BuildingType buildingType in BuildingTypes)
+                foreach (BuildingType buildingType in AllBuildingTypes)
                 {
                     buildingType.Init(gameInfo, HouseTypesIncludingSpecials.Where(h => h.Equals(buildingType.OwnerHouse)).FirstOrDefault(), bldDir);
                 }
@@ -745,8 +751,7 @@ namespace MobiusEditor.Model
             int totalResources = 0;
             foreach ((int cell, Overlay value) in Overlay)
             {
-                Point point;
-                if (!value.Type.IsResource || !Metrics.GetLocation(cell, out point))
+                if (!value.Type.IsResource || !Metrics.GetLocation(cell, out Point point))
                 {
                     continue;
                 }
@@ -872,7 +877,7 @@ namespace MobiusEditor.Model
             }
             else
             {
-                UpdateConcreteOverlaysGame(locations);
+                UpdateConcreteOverlaysRetail(locations);
             }
         }
 
@@ -881,21 +886,11 @@ namespace MobiusEditor.Model
             // This is the new logic also implemented in the game itself. It is vastly simplified compared to the old fixed logic,
             // and always tries to fill in full isometric squares.
             OverlayType conc = OverlayTypes.Where(o => o.IsConcrete).FirstOrDefault();
-            if (conc == null) return;
-            // [ -W-1 -W -W+1 ]
-            // [ -1    0    1 ]
-            // [ +W-1 +W +W+1 ]
+            if (conc == null)
+            {
+                return;
+            }
             int mw = Metrics.Width;
-            int[] _facingadj_map = {
-                -mw,    // FACING_N,        // North
-		        -mw+1,  // FACING_NE,       // North-East
-		        +1,     // FACING_E,        // East
-		        +mw+1,  // FACING_SE,       // South-East
-		        +mw,    // FACING_S,        // South
-		        +mw-1,  // FACING_SW,       // South-West
-		        -1,     // FACING_W,        // West
-		        -mw-1,  // FACING_NW,       // North-West
-	        };
 
             Overlay overlay = Overlay[cell];
             // Cannot override non-conc overlay, and cannot do anything on the top line.
@@ -904,8 +899,7 @@ namespace MobiusEditor.Model
 
             bool isodd = cell % 2 == 1;
             // Cells to check around the current cell. In order: top, top-aside, aside, bottom-aside, bottom.
-            FacingType[] checkCells = isodd ? ConcreteCheckOdd : ConcreteCheckEven;
-            ConcFill fillState = BuildConcFillState(cell, checkCells, _facingadj_map);
+            ConcFill fillState = BuildConcFillState(cell, isodd ? ConcreteCheckOdd : ConcreteCheckEven);
             if (overlay == null && fillState == ConcFill.None)
                 return;
             // Set current cell's fill
@@ -913,8 +907,7 @@ namespace MobiusEditor.Model
             {
                 if (overlay == null)
                 {
-                    overlay = new Overlay();
-                    overlay.Type = conc;
+                    overlay = new Overlay { Type = conc };
                     Overlay[cell] = overlay;
                 }
                 overlay.Icon = GetConcIcon(fillState, isodd);
@@ -926,7 +919,7 @@ namespace MobiusEditor.Model
             }
         }
 
-        private void UpdateConcreteOverlaysGame(ISet<Point> locations)
+        private void UpdateConcreteOverlaysRetail(ISet<Point> locations)
         {
             foreach ((int cell, Overlay overlay) in Overlay.IntersectsWithCells(locations).Where(o => o.Value.Type.IsConcrete))
             {
@@ -1015,7 +1008,7 @@ namespace MobiusEditor.Model
             }
         }
 
-        private ConcFill BuildConcFillState(int cell, FacingType[] checkCells, int[] facingadj_map)
+        private ConcFill BuildConcFillState(int cell, FacingType[] checkCells)
         {
             Overlay ovl = Overlay[cell];
             ConcAdj mask = ConcAdj.None;
@@ -1139,9 +1132,7 @@ namespace MobiusEditor.Model
             int maxX = Math.Min(Metrics.Width, width);
             Dictionary<int, TemplateType> replaceTypes = new Dictionary<int, TemplateType>();
             Dictionary<int, int> replaceIcons = new Dictionary<int, int>();
-            int fillIcon;
-            TemplateType fillTile;
-            SplitTileInfo(fillType, out fillTile, out fillIcon, "fillType", false);
+            SplitTileInfo(fillType, out TemplateType fillTile, out int fillIcon, "fillType", false);
             if (fillTile != null)
             {
                 Point? fillPoint = fillTile.GetIconPoint(fillIcon);
@@ -1153,9 +1144,7 @@ namespace MobiusEditor.Model
             foreach (KeyValuePair<int, string> kvp in types)
             {
                 string tileType = kvp.Value;
-                int tileIcon;
-                TemplateType tile;
-                SplitTileInfo(tileType, out tile, out tileIcon, "types", false);
+                SplitTileInfo(tileType, out TemplateType tile, out int tileIcon, "types", false);
                 replaceTypes[kvp.Key] = tile;
                 if (tile != null)
                 {
@@ -1187,8 +1176,7 @@ namespace MobiusEditor.Model
                 {
                     // ARGB = [BB GG RR AA]
                     int col = 0xFF << 24 | data[offset + 2] << 16 | data[offset + 1] << 8 | data[offset];
-                    TemplateType curr;
-                    if (replaceTypes.TryGetValue(col, out curr))
+                    if (replaceTypes.TryGetValue(col, out TemplateType curr))
                     {
                         // If clear terrain, don't bother doing anything; this started with a map clear.
                         if (curr != null)
@@ -1476,8 +1464,8 @@ namespace MobiusEditor.Model
                 EventTypes, CellEventTypes, UnitEventTypes, BuildingEventTypes, TerrainEventTypes,
                 ActionTypes, CellActionTypes, UnitActionTypes, BuildingActionTypes, TerrainActionTypes,
                 MissionTypes, MissionTypesBad, inputMissionArmed, inputMissionUnarmed, inputMissionHarvest, inputMissionAircraft,
-                UnitDirectionTypes, BuildingDirectionTypes, AllInfantryTypes, AllUnitTypes, BuildingTypes, TeamMissionTypes,
-                AllTeamTechnoTypes, wpPreview, MovieTypes, MovieEmpty, ThemeTypes, ThemeEmpty,
+                UnitDirectionTypes, BuildingDirectionTypes, AllInfantryTypes, AllUnitTypes, AllBuildingTypes,
+                TeamMissionTypes, AllTeamTechnoTypes, wpPreview, MovieTypes, MovieEmpty, ThemeTypes, ThemeEmpty,
                 DropZoneRadius, GapRadius, RadarJamRadius, TiberiumOrGoldValue, GemValue)
             {
                 UsedLandTypes = UsedLandTypes,
@@ -1831,25 +1819,16 @@ namespace MobiusEditor.Model
             return null;
         }
 
-        public void CheckBuildingBlockingCell(int cell, BuildingType buildingType, List<string> errors, ref bool modified)
-        {
-            CheckBuildingBlockingCell(cell, buildingType, errors, ref modified, null);
-        }
-
-        public void CheckBuildingBlockingCell(int cell, BuildingType buildingType, List<string> errors, ref bool modified, string rebuildIndex)
+        public void CheckBuildingBlockingCell(string curType, string entry, BuildingType buildingType, int cell, List<string> errors, ref bool modified)
         {
             ICellOccupier techno = FindBlockingObject(cell, buildingType, true, out int blockingCell, out int placementcell, out bool isbib);
-            string reportString;
-            if (rebuildIndex != null)
-            {
-                string bibRemark = isbib ? "Bib area of b" : "B";
-                reportString = String.Format("{0}ase rebuild entry '{1}', structure '{2}' on cell '{3}'", bibRemark, rebuildIndex, buildingType.Name, cell);
-            }
-            else
-            {
-                string bibRemark = isbib ? "Bib area of s" : "S";
-                reportString = String.Format("{0}tructure '{1}' placed on cell {2}", bibRemark, buildingType.Name, cell);
-            }
+            string prefix = !isbib ? 
+                curType : 
+                ("Bib area of " + (String.IsNullOrEmpty(curType) ?
+                                    String.Empty :
+                                    (" " + curType.Substring(0, 1).ToLowerInvariant() + curType.Substring(1))));
+            string reportString = String.Format("{0} '{1}': {2} on cell {3}",
+                    prefix, entry, buildingType.Name.ToUpperInvariant(), cell);
             string reportCell = blockingCell == -1 ? "<unknown>" : blockingCell.ToString();
             if (techno is Building building)
             {
@@ -2451,17 +2430,31 @@ namespace MobiusEditor.Model
             }
         }
 
+        private class PowerInfo
+        {
+            public int PowerUsage { get; set; }
+            public int ProdCurr { get; set; }
+            public int ProdFull { get; set; }
+
+            public PowerInfo(int usage, int curr, int full)
+            {
+                PowerUsage = usage;
+                ProdCurr = curr;
+                ProdFull = full;
+            }
+        }
+
         public IEnumerable<string> AssessPower(HashSet<string> housesWithProd)
         {
-            Dictionary<string, int[]> powerWithUnbuilt = new Dictionary<string, int[]>(StringComparer.OrdinalIgnoreCase);
-            Dictionary<string, int[]> powerWithoutUnbuilt = new Dictionary<string, int[]>(StringComparer.OrdinalIgnoreCase);
+            Dictionary<string, PowerInfo> powerWithUnbuilt = new Dictionary<string, PowerInfo>(StringComparer.OrdinalIgnoreCase);
+            Dictionary<string, PowerInfo> powerWithoutUnbuilt = new Dictionary<string, PowerInfo>(StringComparer.OrdinalIgnoreCase);
             foreach (HouseType house in HouseTypes)
             {
                 if (housesWithProd.Contains(house.Name))
                 {
-                    powerWithUnbuilt[house.Name] = new int[3];
+                    powerWithUnbuilt[house.Name] = new PowerInfo(0,0,0);
                 }
-                powerWithoutUnbuilt[house.Name] = new int[3];
+                powerWithoutUnbuilt[house.Name] = new PowerInfo(0, 0, 0);
             }
             HashSet<string> hasDamagedPowerPlants = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
             HashSet<string> hasUnbuiltStructures = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
@@ -2475,39 +2468,39 @@ namespace MobiusEditor.Model
                 {
                     if (bld.Strength < 256 && bldProdCur > 0)
                     {
-                        hasDamagedPowerPlants.Add(bld.House.Name);
+                        hasDamagedPowerPlants.Add(bldHouse);
                     }
                     bldProdCur = bldProdCur * bld.Strength / 256;
                 }
-                int[] housePwr;
+                PowerInfo housePwr;
                 // These should all belong to the "rebuild house" due to internal property change listeners; no need to explicitly check.
                 if (!bld.IsPrebuilt)
                 {
                     foreach (string house in housesWithProd)
                     {
-                        if ((HouseNone != null || bld.House.Name == house) && powerWithUnbuilt.TryGetValue(house, out housePwr))
+                        if ((HouseNone != null || bldHouse == house) && powerWithUnbuilt.TryGetValue(house, out housePwr))
                         {
                             if (!hasUnbuiltStructures.Contains(house))
                             {
                                 hasUnbuiltStructures.Add(house);
                             }
-                            housePwr[0] += bldUsage;
-                            housePwr[1] += bldProdHealthy;
-                            housePwr[2] += bldProdHealthy;
+                            housePwr.PowerUsage += bldUsage;
+                            housePwr.ProdCurr += bldProdHealthy;
+                            housePwr.ProdFull += bldProdHealthy;
                         }
                     }
                 }
-                else if (powerWithUnbuilt.TryGetValue(bld.House.Name, out housePwr))
+                else if (powerWithUnbuilt.TryGetValue(bldHouse, out housePwr))
                 {
-                    housePwr[0] += bldUsage;
-                    housePwr[1] += bldProdCur;
-                    housePwr[2] += bldProdHealthy;
+                    housePwr.PowerUsage += bldUsage;
+                    housePwr.ProdCurr += bldProdCur;
+                    housePwr.ProdFull += bldProdHealthy;
                 }
-                if (bld.IsPrebuilt && powerWithoutUnbuilt.TryGetValue(bld.House.Name, out housePwr))
+                if (bld.IsPrebuilt && powerWithoutUnbuilt.TryGetValue(bldHouse, out housePwr))
                 {
-                    housePwr[0] += bldUsage;
-                    housePwr[1] += bldProdCur;
-                    housePwr[2] += bldProdHealthy;
+                    housePwr.PowerUsage += bldUsage;
+                    housePwr.ProdCurr += bldProdCur;
+                    housePwr.ProdFull += bldProdHealthy;
                 }
             }
             List<string> info = new List<string>();
@@ -2522,25 +2515,23 @@ namespace MobiusEditor.Model
             info.Add("Production-capable Houses: " + (prodHouses.Count == 0 ? "None" : String.Join(", ", prodHouses.ToArray())));
             foreach (HouseType house in HouseTypes)
             {
-                int[] housePwrAll;
-                int[] housePwrBuilt;
                 bool hasDamaged = hasDamagedPowerPlants.Contains(house.Name);
-                if (powerWithoutUnbuilt.TryGetValue(house.Name, out housePwrBuilt))
+                if (powerWithoutUnbuilt.TryGetValue(house.Name, out PowerInfo housePwrBuilt))
                 {
                     StringBuilder houseInfo = new StringBuilder();
-                    int houseUsageBuilt = housePwrBuilt[0]; // PowerUsage;
-                    int houseProdBuilt = housePwrBuilt[1]; // PowerProduction at actual strength;
-                    int houseProdBuiltHealthy = housePwrBuilt[2]; // PowerProduction when healthy;
+                    int houseUsageBuilt = housePwrBuilt.PowerUsage; // PowerUsage;
+                    int houseProdBuilt = housePwrBuilt.ProdCurr; // PowerProduction at actual strength;
+                    int houseProdBuiltHealthy = housePwrBuilt.ProdFull; // PowerProduction when healthy;
                     houseInfo.Append(house.Name).Append(": ");
-                    bool canRebuild = powerWithUnbuilt.TryGetValue(house.Name, out housePwrAll);
+                    bool canRebuild = powerWithUnbuilt.TryGetValue(house.Name, out PowerInfo housePwrAll);
                     bool hasUnbuilt = hasUnbuiltStructures.Contains(house.Name);
                     bool listUnbuilt = canRebuild && hasUnbuilt;
                     if (listUnbuilt)
                     {
                         houseInfo.Append("With unbuilt: ");
-                        int houseUsage = housePwrAll[0]; // PowerUsage;
-                        int houseProd = housePwrAll[1]; // PowerProduction;
-                        int houseProdHealthy = housePwrAll[2]; // PowerProduction when healthy;
+                        int houseUsage = housePwrAll.PowerUsage; // PowerUsage;
+                        int houseProd = housePwrAll.ProdCurr; // PowerProduction;
+                        int houseProdHealthy = housePwrAll.ProdFull; // PowerProduction when healthy;
                         houseInfo.Append(houseProd < houseUsage ? "[NOT OK]" : "OK").Append(" - ");
                         if (hasDamaged) houseInfo.Append("Has damaged power plants. ");
                         houseInfo.Append("Produces ").Append(houseProd);
@@ -2584,6 +2575,7 @@ namespace MobiusEditor.Model
             }
             foreach ((_, Building bld) in Buildings.OfType<Building>())
             {
+                string bldHouse = bld.House.Name;
                 int bldStorage = bld.Type.Storage;
                 if (!bld.IsPrebuilt)
                 {
@@ -2595,13 +2587,13 @@ namespace MobiusEditor.Model
                         }
                     }
                 }
-                else if (storageWithUnbuilt.ContainsKey(bld.House.Name))
+                else if (storageWithUnbuilt.ContainsKey(bldHouse))
                 {
-                    storageWithUnbuilt[bld.House.Name] += bldStorage;
+                    storageWithUnbuilt[bldHouse] += bldStorage;
                 }
-                if (bld.IsPrebuilt && storageWithoutUnbuilt.ContainsKey(bld.House.Name))
+                if (bld.IsPrebuilt && storageWithoutUnbuilt.ContainsKey(bldHouse))
                 {
-                    storageWithoutUnbuilt[bld.House.Name] += bldStorage;
+                    storageWithoutUnbuilt[bldHouse] += bldStorage;
                 }
             }
             List<string> info = new List<string>();
@@ -2654,7 +2646,7 @@ namespace MobiusEditor.Model
             {
                 infantryType.Reset();
             }
-            foreach (BuildingType buildingType in BuildingTypes)
+            foreach (BuildingType buildingType in AllBuildingTypes)
             {
                 buildingType.Reset();
             }

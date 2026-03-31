@@ -32,13 +32,13 @@ namespace MobiusEditor.TiberianDawn
             Dictionary<int, ushort> mappingRev;
             // .nms = "N64 Map Scan" originally created by the N64 Map Converter tool. These mappings are the result of scanning all N64 maps
             // that are identical in content to their PC equivalent, and thus building up a full mapping of the cell values of the two types.
-            bool success = LoadMapping("classic\\n64_th_desert.nms", Properties.Resources.n64_th_desert, out mapping, out mappingRev, errors);
+            bool success = LoadMapping("data\\n64_th_desert.nms", Properties.Resources.n64_th_desert, out mapping, out mappingRev, errors);
             if (success)
             {
                 DESERT_MAPPING = mapping;
                 DESERT_MAPPING_REVERSED = mappingRev;
             }
-            success = LoadMapping("classic\\n64_th_desert.nms", Properties.Resources.n64_th_temperate, out mapping, out mappingRev, errors);
+            success = LoadMapping("data\\n64_th_desert.nms", Properties.Resources.n64_th_temperate, out mapping, out mappingRev, errors);
             if (success)
             {
                 TEMPERATE_MAPPING = mapping;
@@ -86,10 +86,7 @@ namespace MobiusEditor.TiberianDawn
                 int amount = (int)ms.Length / 4;
                 if (ms.Length != amount * 4)
                 {
-                    if (errors != null)
-                    {
-                        errors.Add("file size must be divisible by 4!");
-                    }
+                    errors?.Add("file size must be divisible by 4!");
                     return false;
                 }
                 byte[] buffer = new byte[4];
@@ -103,20 +100,14 @@ namespace MobiusEditor.TiberianDawn
                         {
                             int mapped = mapping[cellValN64];
                             bool warnOnly = cellValPc == mapping[cellValN64];
-                            if (errors != null)
-                            {
-                                errors.Add(String.Format("File contains duplicate mapping for value {0}.", cellValN64));
-                            }
+                            errors?.Add(String.Format("File contains duplicate mapping for value {0}.", cellValN64));
                             return false;
                         }
                         if (inverseMapping.ContainsKey(cellValPc))
                         {
                             hasErrors = true;
-                            if (errors != null)
-                            {
-                                errors.Add(String.Format("Value {0} - {1} - PC value {1} already mapped on N64 value {2}",
+                            errors?.Add(String.Format("Value {0} - {1} - PC value {1} already mapped on N64 value {2}",
                                     cellValN64.ToString("X4"), cellValPc.ToString("X4"), inverseMapping[cellValPc].ToString("X4")));
-                            }
                         }
                         else
                         {

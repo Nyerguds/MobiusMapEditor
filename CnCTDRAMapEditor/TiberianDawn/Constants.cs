@@ -23,7 +23,7 @@ namespace MobiusEditor.TiberianDawn
 
         public const int MaxBriefLengthClassic = 510;
         public const int BriefLineCutoffClassic = 74;
-        public const int TiberiumValue = 25;
+        public const int DefaultResourceValue = 25;
         public const string EmptyMapName = "None";
 
         public const int MaxTriggerNameLength = 4;

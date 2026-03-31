@@ -169,8 +169,7 @@ namespace MobiusEditor.Utility
             {
                 using (GameInstallationPathForm gameInstallationPathForm = new GameInstallationPathForm())
                 {
-                    string exeFile = Path.GetFileName(Program.ApplicationPath);
-                    string labelInfo = String.Format(Program.ClassicInstructions, exeFile, Program.ClassicSetting);
+                    string labelInfo = String.Format(Program.ClassicInstructions, Program.ApplicationName, Program.ClassicSetting);
                     gameInstallationPathForm.StartPosition = FormStartPosition.CenterScreen;
                     gameInstallationPathForm.LabelInfo = labelInfo;
                     switch (gameInstallationPathForm.ShowDialog())

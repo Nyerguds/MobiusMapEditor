@@ -242,6 +242,15 @@ namespace MobiusEditor.Properties {
         [global::System.Configuration.ApplicationScopedSettingAttribute()]
         [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
         [global::System.Configuration.DefaultSettingValueAttribute("True")]
+        public bool DefaultExportClassicToPalette {
+            get {
+                return ((bool)(this["DefaultExportClassicToPalette"]));
+            }
+        }
+        
+        [global::System.Configuration.ApplicationScopedSettingAttribute()]
+        [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
+        [global::System.Configuration.DefaultSettingValueAttribute("True")]
         public bool DefaultExportMultiInBounds {
             get {
                 return ((bool)(this["DefaultExportMultiInBounds"]));

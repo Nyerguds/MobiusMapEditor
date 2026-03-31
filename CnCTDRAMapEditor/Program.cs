@@ -59,6 +59,7 @@ namespace MobiusEditor
         public const string ClassicInstructions = "To skip this dialog and always start with the classic graphics, edit {0}.config in a text editor and set the \"{1}\" setting to True.";
         public const string ClassicSetting = "UseClassicFiles";
 
+        public static readonly string ApplicationName = Path.GetFileName(Assembly.GetExecutingAssembly().Location);
         public static readonly string ApplicationPath = Path.GetDirectoryName(Assembly.GetExecutingAssembly().Location);
         public static readonly string ApplicationCompany;
         public static readonly string AssemblyName = Assembly.GetExecutingAssembly().GetName().Name;
@@ -83,6 +84,11 @@ namespace MobiusEditor
             if (Globals.EnableDpiAwareness)
             {
                 TryEnableDPIAware();
+            }
+            int resarg = args.ToList().FindIndex(a => "-RESEARCH".Equals(a, StringComparison.OrdinalIgnoreCase));
+            if (resarg != -1)
+            {
+                Globals.EnableResearchMode();
             }
             // Change current culture to en-US
             if (Thread.CurrentThread.CurrentCulture.Name != "en-US")
@@ -203,14 +209,24 @@ namespace MobiusEditor
                 }
             }
             string arg = null;
-            try
+            for (int i = 0; i < args.Length; ++i)
             {
-                if (args.Length > 0 && File.Exists(args[0]))
-                    arg = args[0];
-            }
-            catch
-            {
-                arg = null;
+                if (i == resarg)
+                {
+                    continue;
+                }
+                try
+                {
+                    if (File.Exists(args[i]))
+                    {
+                        arg = args[i];
+                        break;
+                    }
+                }
+                catch
+                {
+                    // ignore
+                }
             }
             using (MainForm mainForm = new MainForm(arg, romfis))
             {

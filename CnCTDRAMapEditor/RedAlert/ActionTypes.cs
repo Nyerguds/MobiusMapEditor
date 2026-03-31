@@ -62,6 +62,8 @@ namespace MobiusEditor.RedAlert
 
         static ActionTypes()
         {
+            // Note that TACTION_WINLOSE is specifically not filtered out because these
+            // are all stored by index in the map file. So the dummy entry is necessary.
             Types =
                 (from field in typeof(ActionTypes).GetFields(BindingFlags.Static | BindingFlags.Public)
                  where field.IsLiteral && !field.IsInitOnly && typeof(string).IsAssignableFrom(field.FieldType)

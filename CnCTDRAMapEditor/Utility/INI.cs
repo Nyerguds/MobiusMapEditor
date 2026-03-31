@@ -42,7 +42,7 @@ namespace MobiusEditor.Utility
                 case INIDiffType.Updated:
                     return "@";
             }
-            return string.Empty;
+            return String.Empty;
         };
     }
 
@@ -310,7 +310,7 @@ namespace MobiusEditor.Utility
                 string comment = withComment ? Keys.GetComment(item.Key) : null;
                 lines.Add(String.Format("{0}={1}{2}", item.Key, item.Value, comment ?? String.Empty));
             }
-            return string.Join(Environment.NewLine, lines);
+            return String.Join(Environment.NewLine, lines);
         }
     }
 
@@ -534,9 +534,9 @@ namespace MobiusEditor.Utility
                 {
                     lines.Add(item.ToString());
                 }
-                sections.Add(string.Join(lineEnd, lines));
+                sections.Add(String.Join(lineEnd, lines));
             }
-            return string.Join(lineEnd + lineEnd, sections) + lineEnd;
+            return String.Join(lineEnd + lineEnd, sections) + lineEnd;
         }
     }
 
@@ -560,8 +560,7 @@ namespace MobiusEditor.Utility
         {
             get
             {
-                INIDiffType diffType;
-                if (!keyDiff.TryGetValue(key, out diffType))
+                if (!keyDiff.TryGetValue(key, out INIDiffType diffType))
                 {
                     return INIDiffType.None;
                 }

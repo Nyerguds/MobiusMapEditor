@@ -97,6 +97,7 @@ namespace MobiusEditor.RedAlert
         public override Bitmap WorkshopPreviewGeneric => Properties.Resources.UI_CustomMissionPreviewDefault;
         public override Bitmap WorkshopPreviewGenericGame => Properties.Resources.RA_Head;
 
+        public override string GetName(FileType fileType) => Name;
         public override FileType IdentifyMap(INI iniContents, byte[] binContents, bool contentWasSwapped, bool acceptBin, out bool isMegaMap, out string theater)
         {
             isMegaMap = true;

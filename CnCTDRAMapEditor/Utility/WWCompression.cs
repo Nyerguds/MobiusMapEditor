@@ -19,6 +19,7 @@ namespace MobiusEditor.Utility
 {
     /// <summary>
     /// This class contains encoders and decoders for the Westwood XOR Delta and LCW compression schemes.
+    /// It was written by Omniblade.
     /// </summary>
     public static class WWCompression
     {

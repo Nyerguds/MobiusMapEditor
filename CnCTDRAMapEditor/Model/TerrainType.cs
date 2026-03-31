@@ -26,6 +26,7 @@ namespace MobiusEditor.Model
     {
         public int ID { get; private set; }
         public string Name { get; private set; }
+        public string TypeName => "Terrain";
         public bool Ownable => false;
         public string DisplayName { get; private set; }
         public Rectangle OverlapBounds => new Rectangle(Point.Empty, Size);

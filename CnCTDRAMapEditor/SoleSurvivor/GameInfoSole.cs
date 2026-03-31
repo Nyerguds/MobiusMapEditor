@@ -74,6 +74,8 @@ namespace MobiusEditor.SoleSurvivor
         public override Bitmap WorkshopPreviewGeneric => null;
         public override Bitmap WorkshopPreviewGenericGame => null;
 
+        public override string GetName(FileType fileType) => Name;
+
         public override FileType IdentifyMap(INI iniContents, byte[] binContents, bool contentWasSwapped, bool acceptBin, out bool isMegaMap, out string theater)
         {
             isMegaMap = true;

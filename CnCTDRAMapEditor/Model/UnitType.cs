@@ -78,6 +78,7 @@ namespace MobiusEditor.Model
 
     public class VehicleType : UnitType
     {
+        public static string SubTypeName = "Unit";
         public override bool IsGroundUnit => true;
         public override bool IsAircraft => false;
         public override bool IsVessel => false;
@@ -107,6 +108,7 @@ namespace MobiusEditor.Model
 
     public class AircraftType : UnitType
     {
+        public static string SubTypeName = "Aircraft";
         protected readonly Rectangle overlapFlying = new Rectangle(-1, -2, 3, 4);
         // Flying aircraft are treated as overlapping the entire cell. Since they rotate, no detail analysis is done.
         protected readonly Point overlapMaskOffsetFlying = new Point(0, -1);
@@ -139,6 +141,7 @@ namespace MobiusEditor.Model
 
     public class VesselType : UnitType
     {
+        public static string SubTypeName = "Ship";
         public override bool IsGroundUnit => false;
         public override bool IsAircraft => false;
         public override bool IsVessel => true;
@@ -169,6 +172,16 @@ namespace MobiusEditor.Model
     {
         public int ID { get; private set; }
         public string Name { get; private set; }
+        public string TypeName
+        {
+            get
+            {
+                if (IsAircraft) return AircraftType.SubTypeName;
+                if (IsVessel) return VesselType.SubTypeName;
+                if (IsGroundUnit) return VehicleType.SubTypeName;
+                return "Unit";
+            }
+        }
         public bool Ownable => true;
         /// <summary>Display name for this unit.</summary>
         public string DisplayName { get; private set; }

@@ -759,4 +759,11 @@ Released on 23 Nov 2025 at 21:00 UTC
 
 Unreleased
 
+* Trees that are technically saved on the same cell will now be able to be saved in the ini file correctly.
+* Fixed bug where the dialog asking to locate the Remaster path would show a bad filename for the .config file to edit to permanently enable Classic mode.
+* Unified all map load feedback messages so they look and act the same way for all types, for all games.
+* When a fatal parse error occurs on an item, minor warnings about the same item are omitted.
 * Overhauled the logic of FixConcretePavement to better connect cells, and to place the CONC pavement per block of 2 cells. This matches the logic the game was supposed to have.
+* Saving the full ROAD pavement will now no longer make technically-corrupted ini files with duplicate keys.
+* The image export dialog's "Export in original palette" checkbox can now be enabled by default using the setting "DefaultExportClassicToPalette".
+* Starting the editor with -RESEARCH will set it to Research mode, where pretty much all warnings and load remarks are suppressed, and a bunch of special config options are switched on.

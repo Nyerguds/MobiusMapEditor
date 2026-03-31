@@ -30,6 +30,7 @@ namespace MobiusEditor.Dialogs
         private SimpleMultiThreading multiThreader;
 
         IGamePlugin gamePlugin;
+        bool isMulti;
 
         private MapLayerFlag renderLayers;
         public MapLayerFlag RenderLayers
@@ -64,8 +65,12 @@ namespace MobiusEditor.Dialogs
             txtScale.Text = Globals.ExportTileScale.ToString(CultureInfo.InvariantCulture);
             chkSmooth.Checked = Globals.ExportSmoothScale;
             chkOrigPalette.Enabled = Globals.UseClassicFiles;
+            if (Globals.ExportClassicToPalette && Globals.UseClassicFiles)
+            {
+                chkOrigPalette.Checked = true;
+            }
             // For multiplayer maps, default to only exporting the bounds.
-            bool isMulti = !gamePlugin.Map.BasicSection.SoloMission;
+            isMulti = !gamePlugin.Map.BasicSection.SoloMission;
             if (Globals.ExportMultiMapsInBounds && isMulti)
             {
                 chkBoundsOnly.Checked = true;
@@ -379,9 +384,11 @@ namespace MobiusEditor.Dialogs
         {
             txtScale.Enabled = enabled;
             btnSetDimensions.Enabled = enabled;
+            btnSetCellSize.Enabled = enabled;
             chkSmooth.Enabled = enabled;
             chkBoundsOnly.Enabled = enabled;
-            chkHighlightFlags.Enabled = enabled && !gamePlugin.Map.BasicSection.SoloMission;
+            chkOrigPalette.Enabled = Globals.UseClassicFiles && enabled;
+            chkHighlightFlags.Enabled = isMulti && enabled; 
             layersListBox.Enabled = enabled;
             layersListBox.Enabled = enabled;
             indicatorsListBox.Enabled = enabled;

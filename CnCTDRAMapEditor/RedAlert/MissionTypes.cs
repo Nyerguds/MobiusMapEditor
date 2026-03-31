@@ -13,6 +13,7 @@
 // GNU General Public License along with permitted additional restrictions
 // with this program. If not, see https://github.com/electronicarts/CnC_Remastered_Collection
 using System.Collections.Generic;
+using System.Linq;
 
 namespace MobiusEditor.RedAlert
 {
@@ -42,72 +43,52 @@ namespace MobiusEditor.RedAlert
         public const string MISSION_MISSILE = "Missile";
         public const string MISSION_HARMLESS = "Harmless";
 
-        private static readonly string[] Types = new string[]
+        private static readonly (string, bool)[] AllTypes = new (string, bool)[]
         {
-            // Nyerguds upgrade: Removed irrelevant types for preplaced units.
+            // Nyerguds upgrade: filter out types that are irrelevant for preplaced units.
             // Note that TeamTypes use a separate list, defined in the TeamMissionTypes class.
-            MISSION_SLEEP,
-            //MISSION_ATTACK,
-            //MISSION_MOVE,
-            //MISSION_QMOVE,
-            //MISSION_RETREAT,
-            MISSION_STICKY,
-            MISSION_GUARD,
-            //MISSION_ENTER,
-            //MISSION_CAPTURE,
-            MISSION_HARVEST,
-            MISSION_AREAGUARD,
-            MISSION_RETURN,
-            MISSION_STOP,
-            MISSION_AMBUSH,
-            MISSION_HUNT,
-            MISSION_UNLOAD,
-            //MISSION_SABOTAGE,
-            //MISSION_CONSTRUCTION,
-            //MISSION_SELLING,
-            //MISSION_REPAIR,
-            //MISSION_RESCUE,
-            //MISSION_MISSILE,
-            MISSION_HARMLESS,
+            (MISSION_SLEEP, true),
+            (MISSION_ATTACK, false),
+            (MISSION_MOVE, false),
+            (MISSION_QMOVE, false),
+            (MISSION_RETREAT, false),
+            (MISSION_STICKY, true),
+            (MISSION_GUARD, true),
+            (MISSION_ENTER, false),
+            (MISSION_CAPTURE, false),
+            (MISSION_HARVEST, true),
+            (MISSION_AREAGUARD, true),
+            (MISSION_RETURN, true),
+            (MISSION_STOP, true),
+            (MISSION_AMBUSH, true),
+            (MISSION_HUNT, true),
+            (MISSION_UNLOAD, true),
+            (MISSION_SABOTAGE, false),
+            (MISSION_CONSTRUCTION, false),
+            (MISSION_SELLING, false),
+            (MISSION_REPAIR, false),
+            (MISSION_RESCUE, false),
+            (MISSION_MISSILE, false),
+            (MISSION_HARMLESS, true),
         };
 
-        private static readonly string[] UnassignableTypes = new string[]
+        private static readonly string[] UsableTypes;
+        private static readonly string[] UnassignableTypes;
+
+        static MissionTypes()
         {
-            // Nyerguds upgrade: Removed irrelevant types for preplaced units.
-            // Note that TeamTypes use a separate list, defined in the TeamMissionTypes class.
-            //MISSION_SLEEP,
-            MISSION_ATTACK,
-            MISSION_MOVE,
-            MISSION_QMOVE,
-            MISSION_RETREAT,
-            //MISSION_STICKY,
-            //MISSION_GUARD,
-            MISSION_ENTER,
-            MISSION_CAPTURE,
-            //MISSION_HARVEST,
-            //MISSION_AREAGUARD,
-            //MISSION_RETURN,
-            //MISSION_STOP,
-            //MISSION_AMBUSH,
-            //MISSION_HUNT,
-            //MISSION_UNLOAD,
-            MISSION_SABOTAGE,
-            MISSION_CONSTRUCTION,
-            MISSION_SELLING,
-            MISSION_REPAIR,
-            MISSION_RESCUE,
-            MISSION_MISSILE,
-            //MISSION_HARMLESS,
-        };
+            UsableTypes = AllTypes.Where(itm => itm.Item2).Select(itm => itm.Item1).ToArray();
+            UnassignableTypes = AllTypes.Where(itm => !itm.Item2).Select(itm => itm.Item1).ToArray();
+        }
 
         public static IEnumerable<string> GetTypes()
         {
-            return Types;
+            return UsableTypes.ToArray();
         }
 
         public static IEnumerable<string> GetUnassignableTypes()
         {
-            return UnassignableTypes;
+            return UnassignableTypes.ToArray();
         }
     }
 }

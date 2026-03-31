@@ -26,6 +26,7 @@ namespace MobiusEditor
     {
         static Globals()
         {
+            ResearchMode = false;
             // General options
             SetEnabledGames(Properties.Settings.Default.EnabledGames);
             //LazyInitSteam: used directly, since it's only used once on startup.
@@ -50,6 +51,7 @@ namespace MobiusEditor
             CratesOnTop = Properties.Settings.Default.DefaultCratesOnTop;
             //ExportTileScale / ExportTileScaleClassic: auto-selected in ExportTileScale property.
             ExportMultiMapsInBounds = Properties.Settings.Default.DefaultExportMultiInBounds;
+            ExportClassicToPalette = Properties.Settings.Default.DefaultExportClassicToPalette;
             OutlineAllCrates = Properties.Settings.Default.DefaultOutlineAllCrates;
 
             // Fine tuning
@@ -121,6 +123,26 @@ namespace MobiusEditor
             AdjustSoleTeleports = Properties.Settings.Default.DrawSoleTeleports;
         }
 
+        public static void EnableResearchMode()
+        {
+            // Special research mode, should allow quickly opening maps and looking what's on them.
+            ResearchMode = true;
+            UseClassicFiles = true;
+            ReportMissionDetection = false;
+            ZoomToBoundsOnLoad = false;
+            EnforceObjectMaximums = false;
+            EnforceTriggerTypes = false;
+            ExportClassicToPalette = true;
+            BlockingBibs = false;
+            DisableAirUnits = false;
+            ConvertCraters = false;
+            DisableSquishMark = false;
+            // This can give ugly bibs in Interior. Disable.
+            //FilterTheaterObjects = false;
+            AllowWallBuildings = true;
+            NoOwnedObjectsInSole = false;
+        }
+
         private static void SetEnabledGames(string eg)
         {
             string[] enabledGames = (eg ?? String.Empty)
@@ -162,7 +184,12 @@ namespace MobiusEditor
         public static int ZOrderOverlay = 1;
         public static int ZOrderFloor = 0;
 
+        // Special reseach mode setting
+
+        public static bool ResearchMode { get; private set; }
+
         // Global settings
+
         public static HashSet<string> EnabledGames { get; set; }
         public static Dictionary<string, int> EnabledGamesOrder { get; set; }
         public static string EditorLanguage { get; set; }
@@ -184,6 +211,7 @@ namespace MobiusEditor
         public static double ExportTileScale => Math.Max(MinScale, Math.Abs(ExportTileScaleRaw));
         public static bool ExportSmoothScale => ExportTileScaleRaw < 0;
         public static bool ExportMultiMapsInBounds { get; set; }
+        public static bool ExportClassicToPalette { get; set; }
         public static bool OutlineAllCrates { get; set; }
 
         public static bool ZoomToBoundsOnLoad { get; private set; }

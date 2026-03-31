@@ -101,7 +101,7 @@ namespace MobiusEditor
         private readonly ViewToolStripButton[] viewToolStripButtons;
 
         private IGamePlugin plugin;
-        private FileType loadedFileType = FileType.None;
+        //private FileType loadedFileType = FileType.None;
         private string actualLoadedFileName;
         private string loadedMapDisplayFileName;
         private bool shouldCheckUpdate;
@@ -385,7 +385,7 @@ namespace MobiusEditor
             }
             else
             {
-                FileType resave = loadedFileType == FileType.MIX ? gi.DefaultSaveTypeFromMix : gi.DefaultSaveType;
+                FileType resave = plugin.LoadedFileType == FileType.MIX ? gi.DefaultSaveTypeFromMix : gi.DefaultSaveType;
                 FileTypeInfo fti = gi.SupportedFileTypes.FirstOrDefault(st => st.FileType == resave);
                 bool isSolo = plugin.Map.BasicSection.SoloMission;
                 string extension = fti == null ? "ini" : (isSolo ? fti.SaveExtensionSingle[0] : fti.SaveExtensionMulti[0]);
@@ -396,7 +396,7 @@ namespace MobiusEditor
             {
                 mapShowName += " - " + mapName;
             }
-            this.Text = String.Format("{0}{1} [{2}] - {3}{4}{5}", mainTitle, updating, gi.Name, mapShowName, plugin != null && plugin.Dirty ? " *" : String.Empty, connectedToSteamText);
+            this.Text = String.Format("{0}{1} [{2}] - {3}{4}{5}", mainTitle, updating, gi.GetName(plugin.LoadedFileType), mapShowName, plugin != null && plugin.Dirty ? " *" : String.Empty, connectedToSteamText);
         }
 
         private void SteamUpdateTimer_Tick(object sender, EventArgs e)
@@ -848,16 +848,16 @@ namespace MobiusEditor
                 return;
             }
             if (String.IsNullOrEmpty(loadedMapDisplayFileName) || (actualLoadedFileName != null && MixPath.IsMixPath(actualLoadedFileName))
-                || !Directory.Exists(Path.GetDirectoryName(loadedMapDisplayFileName)) || loadedFileType == FileType.MIX
+                || !Directory.Exists(Path.GetDirectoryName(loadedMapDisplayFileName)) || plugin.LoadedFileType == FileType.MIX
 #if !DEVELOPER
-                || loadedFileType == FileType.PGM
+                || plugin.LoadedFileType == FileType.PGM
 #endif
                 )
             {
                 SaveAsAction(afterSaveDone, skipValidation);
                 return;
             }
-            if (!skipValidation && !this.DoValidate(loadedFileType, true))
+            if (!skipValidation && !this.DoValidate(plugin.LoadedFileType, true))
             {
                 if (continueOnError)
                 {
@@ -866,7 +866,7 @@ namespace MobiusEditor
                 return;
             }
             FileInfo fileInfo = new FileInfo(loadedMapDisplayFileName);
-            SaveChosenFile(fileInfo.FullName, loadedFileType, dontResavePreview, afterSaveDone);
+            SaveChosenFile(fileInfo.FullName, plugin.LoadedFileType, dontResavePreview, afterSaveDone);
         }
 
         private void FileSaveAsMenuItem_Click(object sender, EventArgs e)
@@ -904,7 +904,7 @@ namespace MobiusEditor
             int selectedFallbackSecExtIndex = -1;
             string fileName = Path.GetFileName(loadedMapDisplayFileName);
             string curExt = Path.GetExtension(fileName);
-            FileType saveType = loadedFileType;
+            FileType saveType = plugin.LoadedFileType;
             bool correctSaveExt = false;
             if (saveType == FileType.None)
             {
@@ -933,7 +933,7 @@ namespace MobiusEditor
                 curExt = fti == null ? "ini" : (isSolo ? fti.SaveExtensionSingle[0] : fti.SaveExtensionMulti[0]);
             }
             List<string[]> allExtensions = new List<string[]>();
-            if (curExt.StartsWith("."))
+            if (curExt != null && curExt.StartsWith("."))
             {
                 curExt = curExt.Substring(1);
             }
@@ -1039,7 +1039,7 @@ namespace MobiusEditor
                         {
                             // Not found: assume that if e.g. a ".map" file was opened and identified as BIN, then if they resave as ".map" it's still meant to be the BIN.
                             // If the loaded type does not exist in the current chosen list though, all bets are off; revert to default type.
-                            saveType = ftypes.Contains(loadedFileType) ? loadedFileType : ftypes[0];
+                            saveType = ftypes.Contains(plugin.LoadedFileType) ? plugin.LoadedFileType : ftypes[0];
                         }
                     }
                 }
@@ -1075,7 +1075,7 @@ namespace MobiusEditor
 
         private bool DoValidate(FileType fileType, bool forResave)
         {
-            string errors = plugin.Validate(fileType, forResave, true);
+            string errors = plugin.Validate(fileType, plugin.LoadedFileType, forResave, true);
             if (!String.IsNullOrEmpty(errors))
             {
                 string message = errors + "\n\nContinue map save?";
@@ -1085,7 +1085,7 @@ namespace MobiusEditor
                     return false;
                 }
             }
-            errors = plugin.Validate(fileType, forResave, false);
+            errors = plugin.Validate(fileType, plugin.LoadedFileType, forResave, false);
             if (errors != null)
             {
                 SimpleMultiThreading.ShowMessageBoxThreadSafe(this, errors, "Validation Error", MessageBoxButtons.OK, MessageBoxIcon.Warning);
@@ -2401,7 +2401,7 @@ namespace MobiusEditor
             this.plugin = loadInfo.Plugin;
             plugin.FeedBackHandler = this;
             LoadIcons(plugin);
-            if (errors.Length > 0)
+            if (errors.Length > 0 && !Globals.ResearchMode)
             {
                 using (ErrorMessageBox emb = new ErrorMessageBox())
                 {
@@ -2414,7 +2414,7 @@ namespace MobiusEditor
             mapPanel.MapImage = plugin.MapImage;
             loadedMapDisplayFileName = resaveName;
             actualLoadedFileName = loadInfo.FileName;
-            loadedFileType = loadInfo.FileType;
+            //loadedFileType = loadInfo.FileType;
             if (Globals.ZoomToBoundsOnLoad)
             {
                 lock (jumpToBounds_lock)
@@ -2467,7 +2467,7 @@ namespace MobiusEditor
             plugin.Dirty = false;
             url.IndicateSave();
             actualLoadedFileName = fileInfo.FullName;
-            loadedFileType = fileType;
+            //loadedFileType = fileType;
             loadedMapDisplayFileName = fileInfo.FullName;
             SetTitle();
             mru.Add(fileInfo.FullName);
@@ -2519,7 +2519,7 @@ namespace MobiusEditor
                 Globals.TheShapeCacheManager.Reset();
                 // Clean up loaded file status
                 loadedMapDisplayFileName = null;
-                loadedFileType = FileType.None;
+                //loadedFileType = FileType.None;
                 SetTitle();
             }
             catch
@@ -2548,7 +2548,7 @@ namespace MobiusEditor
                 availableToolTypes |= plugin.Map.TerrainTypes.Any(t => !Globals.FilterTheaterObjects || t.ExistsInTheater) ? ToolType.Terrain : ToolType.None;
                 availableToolTypes |= plugin.Map.InfantryTypes.Any() ? ToolType.Infantry : ToolType.None;
                 availableToolTypes |= plugin.Map.UnitTypes.Any() ? ToolType.Unit : ToolType.None;
-                availableToolTypes |= plugin.Map.BuildingTypes.Any(t => !Globals.FilterTheaterObjects || !t.IsTheaterDependent || t.ExistsInTheater) ? ToolType.Building : ToolType.None;
+                availableToolTypes |= plugin.Map.AllBuildingTypes.Any(t => !Globals.FilterTheaterObjects || !t.IsTheaterDependent || t.ExistsInTheater) ? ToolType.Building : ToolType.None;
                 availableToolTypes |= plugin.Map.OverlayTypes.Any(t => t.IsResource && (!Globals.FilterTheaterObjects || t.ExistsInTheater)) ? ToolType.Resources : ToolType.None;
                 availableToolTypes |= plugin.Map.OverlayTypes.Any(t => t.IsWall && (!Globals.FilterTheaterObjects || t.ExistsInTheater)) ? ToolType.Wall : ToolType.None;
                 // Waypoints are always available.
@@ -3099,7 +3099,7 @@ namespace MobiusEditor
                 MessageBox.Show(this,message, Program.ProgramName, MessageBoxButtons.OK, MessageBoxIcon.Error);
                 return;
             }
-            if (loadedFileType == FileType.MIX || loadedFileType == FileType.PGM)
+            if (plugin.LoadedFileType == FileType.MIX || plugin.LoadedFileType == FileType.PGM)
             {
                 MessageBox.Show(this, "Error: The map was loaded from an archive. It must be saved to disk before it can be published.", Program.ProgramName, MessageBoxButtons.OK, MessageBoxIcon.Error);
                 return;
@@ -3168,6 +3168,12 @@ namespace MobiusEditor
             bool steamEnabled = false;
             if (!SteamworksUGC.IsInit && lazyInit)
             {
+                if (Program.RemasterRunPath == null)
+                {
+                    MessageBox.Show(this, "Error: Steam interface cannot be initialized, since no C&C Remastered Collection path was configured.",
+                        Program.ProgramName, MessageBoxButtons.OK, MessageBoxIcon.Error);
+                    return;
+                }
                 try
                 {
                     Environment.CurrentDirectory = Program.RemasterRunPath;
@@ -3499,7 +3505,7 @@ namespace MobiusEditor
         /// <returns>false if the action was aborted.</returns>
         private bool PromptSaveMap(Action nextAction, bool onlyAfterSave)
         {
-            if (plugin?.Dirty ?? false)
+            if ((plugin?.Dirty ?? false) && !Globals.ResearchMode)
             {
                 ClearActiveTool();
                 var message = String.IsNullOrEmpty(loadedMapDisplayFileName) ? "Save new map?" : String.Format("Save map '{0}'?", loadedMapDisplayFileName);

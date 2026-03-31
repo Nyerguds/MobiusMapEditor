@@ -122,7 +122,7 @@ namespace MobiusEditor.Dialogs
             this.chkSmooth.Location = new System.Drawing.Point(18, 52);
             this.chkSmooth.Name = "chkSmooth";
             this.chkSmooth.Size = new System.Drawing.Size(98, 17);
-            this.chkSmooth.TabIndex = 6;
+            this.chkSmooth.TabIndex = 9;
             this.chkSmooth.Text = "Smooth scaling";
             this.chkSmooth.UseVisualStyleBackColor = true;
             this.chkSmooth.CheckedChanged += new System.EventHandler(this.ChkSmooth_CheckedChanged);
@@ -134,7 +134,7 @@ namespace MobiusEditor.Dialogs
             this.label1.Location = new System.Drawing.Point(11, 380);
             this.label1.Name = "label1";
             this.label1.Size = new System.Drawing.Size(84, 13);
-            this.label1.TabIndex = 11;
+            this.label1.TabIndex = 14;
             this.label1.Text = "Output filename:";
             // 
             // txtPath
@@ -145,7 +145,7 @@ namespace MobiusEditor.Dialogs
             this.txtPath.Name = "txtPath";
             this.txtPath.ReadOnly = true;
             this.txtPath.Size = new System.Drawing.Size(418, 20);
-            this.txtPath.TabIndex = 12;
+            this.txtPath.TabIndex = 15;
             // 
             // btnPickFile
             // 
@@ -153,7 +153,7 @@ namespace MobiusEditor.Dialogs
             this.btnPickFile.Location = new System.Drawing.Point(438, 398);
             this.btnPickFile.Name = "btnPickFile";
             this.btnPickFile.Size = new System.Drawing.Size(31, 23);
-            this.btnPickFile.TabIndex = 13;
+            this.btnPickFile.TabIndex = 16;
             this.btnPickFile.Text = "...";
             this.btnPickFile.UseVisualStyleBackColor = true;
             this.btnPickFile.Click += new System.EventHandler(this.btnPickFile_Click);
@@ -177,7 +177,7 @@ namespace MobiusEditor.Dialogs
             this.tableLayoutPanel1.RowStyles.Add(new System.Windows.Forms.RowStyle(System.Windows.Forms.SizeType.Absolute, 20F));
             this.tableLayoutPanel1.RowStyles.Add(new System.Windows.Forms.RowStyle(System.Windows.Forms.SizeType.Percent, 100F));
             this.tableLayoutPanel1.Size = new System.Drawing.Size(460, 226);
-            this.tableLayoutPanel1.TabIndex = 10;
+            this.tableLayoutPanel1.TabIndex = 13;
             // 
             // label2
             // 
@@ -229,7 +229,7 @@ namespace MobiusEditor.Dialogs
             this.btnSetDimensions.Location = new System.Drawing.Point(352, 6);
             this.btnSetDimensions.Name = "btnSetDimensions";
             this.btnSetDimensions.Size = new System.Drawing.Size(120, 23);
-            this.btnSetDimensions.TabIndex = 5;
+            this.btnSetDimensions.TabIndex = 6;
             this.btnSetDimensions.Text = "Set from dimensions...";
             this.btnSetDimensions.UseVisualStyleBackColor = true;
             this.btnSetDimensions.Click += new System.EventHandler(this.BtnSetDimensions_Click);
@@ -240,7 +240,7 @@ namespace MobiusEditor.Dialogs
             this.chkBoundsOnly.Location = new System.Drawing.Point(18, 75);
             this.chkBoundsOnly.Name = "chkBoundsOnly";
             this.chkBoundsOnly.Size = new System.Drawing.Size(194, 17);
-            this.chkBoundsOnly.TabIndex = 7;
+            this.chkBoundsOnly.TabIndex = 10;
             this.chkBoundsOnly.Text = "Only export map area inside bounds";
             this.chkBoundsOnly.UseVisualStyleBackColor = true;
             this.chkBoundsOnly.CheckedChanged += new System.EventHandler(this.ChkBoundsOnly_CheckedChanged);
@@ -251,7 +251,7 @@ namespace MobiusEditor.Dialogs
             this.btnSetCellSize.Location = new System.Drawing.Point(352, 29);
             this.btnSetCellSize.Name = "btnSetCellSize";
             this.btnSetCellSize.Size = new System.Drawing.Size(120, 23);
-            this.btnSetCellSize.TabIndex = 14;
+            this.btnSetCellSize.TabIndex = 7;
             this.btnSetCellSize.Text = "Set from cell size...";
             this.btnSetCellSize.UseVisualStyleBackColor = true;
             this.btnSetCellSize.Click += new System.EventHandler(this.BtnSetCellSize_Click);
@@ -262,7 +262,7 @@ namespace MobiusEditor.Dialogs
             this.lblCellSize.Location = new System.Drawing.Point(236, 32);
             this.lblCellSize.Name = "lblCellSize";
             this.lblCellSize.Size = new System.Drawing.Size(75, 13);
-            this.lblCellSize.TabIndex = 4;
+            this.lblCellSize.TabIndex = 5;
             this.lblCellSize.Text = "Cell size: X * Y";
             // 
             // lblSizeBounds
@@ -271,7 +271,7 @@ namespace MobiusEditor.Dialogs
             this.lblSizeBounds.Location = new System.Drawing.Point(236, 76);
             this.lblSizeBounds.Name = "lblSizeBounds";
             this.lblSizeBounds.Size = new System.Drawing.Size(166, 13);
-            this.lblSizeBounds.TabIndex = 4;
+            this.lblSizeBounds.TabIndex = 8;
             this.lblSizeBounds.Text = "Cell size in bounds: XXXX * YYYY";
             // 
             // chkOrigPalette
@@ -280,7 +280,7 @@ namespace MobiusEditor.Dialogs
             this.chkOrigPalette.Location = new System.Drawing.Point(18, 121);
             this.chkOrigPalette.Name = "chkOrigPalette";
             this.chkOrigPalette.Size = new System.Drawing.Size(138, 17);
-            this.chkOrigPalette.TabIndex = 7;
+            this.chkOrigPalette.TabIndex = 12;
             this.chkOrigPalette.Text = "Export in original palette";
             this.toolTip1.SetToolTip(this.chkOrigPalette, resources.GetString("chkOrigPalette.ToolTip"));
             this.chkOrigPalette.UseVisualStyleBackColor = true;
@@ -291,7 +291,7 @@ namespace MobiusEditor.Dialogs
             this.chkHighlightFlags.Location = new System.Drawing.Point(18, 98);
             this.chkHighlightFlags.Name = "chkHighlightFlags";
             this.chkHighlightFlags.Size = new System.Drawing.Size(187, 17);
-            this.chkHighlightFlags.TabIndex = 7;
+            this.chkHighlightFlags.TabIndex = 11;
             this.chkHighlightFlags.Text = "Highlight multiplayer start locations";
             this.chkHighlightFlags.UseVisualStyleBackColor = true;
             // 

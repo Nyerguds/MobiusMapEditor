@@ -103,10 +103,12 @@ namespace MobiusEditor.TiberianDawn
                  select field.GetValue(null) as BuildingType).ToArray();
         }
 
-        public static IEnumerable<BuildingType> GetTypes()
+        public static IEnumerable<BuildingType> GetTypes(bool withoutWalls)
         {
             // Always preserve originals by cloning. Filter out wall buildings if needed.
-            return Types.Where(b => Globals.AllowWallBuildings || !b.IsWall).Select(b => b.Clone());
+            if (withoutWalls)
+                return Types.Where(t => !t.IsWall).Select(b => b.Clone());
+            return Types.Select(b => b.Clone());
         }
     }
 }

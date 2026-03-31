@@ -21,6 +21,8 @@ namespace MobiusEditor.Interface
         int ID { get; }
         /// <summary>Object ini name</summary>
         string Name { get; }
+        /// <summary>Name for the TechnoType</summary>
+        string TypeName { get; }
         /// <summary>Image override.</summary>
         string ImageOverride { get; }
         /// <summary>True if the object can have a House that owns it.</summary>

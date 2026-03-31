@@ -123,6 +123,9 @@ namespace MobiusEditor.Model
         public abstract bool CanUseNewMixFormat { get; }
         /// <summary>Maximum length of the saved ini data for a map of this game.</summary>
         public abstract long MaxDataSize { get; }
+
+        // TODO Migrate these to game plugin; in RA they can be changed by rules.ini
+
         /// <summary>Maximum amount of aircraft that can be added into a map of this game.</summary>
         public abstract int MaxAircraft { get; }
         /// <summary>Maximum amount of vessels that can be added into a map of this game.</summary>
@@ -147,6 +150,7 @@ namespace MobiusEditor.Model
         public abstract int MaxTeamClasses { get; }
         /// <summary>Maximum amount of missions (orders) in a teamtype for this game.</summary>
         public abstract int MaxTeamMissions { get; }
+
         /// <summary>Threshold (1-256) at which the health bar colour changes from yellow to green in this game.</summary>
         public abstract int HitPointsGreenMinimum { get; }
         /// <summary>Threshold (1-256) at which the health bar colour changes from red to yellow in this game.</summary>
@@ -175,6 +179,12 @@ namespace MobiusEditor.Model
         #endregion
 
         #region functions
+        /// <summary>
+        /// Returns the game name for the current GameInfo, with possible extra info added due to the opened file type.
+        /// </summary>
+        /// <param name="fileType">The type of the opened file.</param>
+        /// <returns></returns>
+        public abstract String GetName(FileType fileType);
         /// <summary>
         /// Identifies if a given map is for this game, and returns the correct type for it.
         /// </summary>

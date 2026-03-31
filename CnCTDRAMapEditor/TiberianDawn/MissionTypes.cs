@@ -13,6 +13,7 @@
 // GNU General Public License along with permitted additional restrictions
 // with this program. If not, see https://github.com/electronicarts/CnC_Remastered_Collection
 using System.Collections.Generic;
+using System.Linq;
 
 namespace MobiusEditor.TiberianDawn
 {
@@ -42,67 +43,51 @@ namespace MobiusEditor.TiberianDawn
         public const string MISSION_RESCUE = "Rescue";
         public const string MISSION_MISSILE = "Missile";
 
-        private static readonly string[] Types = new string[]
+        private static readonly (string, bool)[] AllTypes = new (string, bool)[]
         {
-            // Nyerguds upgrade: Removed irrelevant types for preplaced units.
-            MISSION_SLEEP,
-            //MISSION_ATTACK,
-            //MISSION_MOVE,
-            MISSION_RETREAT,
-            MISSION_GUARD,
-            MISSION_STICKY,
-            //MISSION_ENTER,
-            //MISSION_CAPTURE,
-            MISSION_HARVEST,
-            MISSION_AREA_GUARD,
-            MISSION_RETURN,
-            MISSION_STOP,
-            MISSION_AMBUSH,
-            MISSION_HUNT,
-            //MISSION_TIMED_HUNT,
-            MISSION_UNLOAD,
-            //MISSION_SABOTAGE,
-            //MISSION_CONSTRUCTION,
-            //MISSION_SELLING,
-            //MISSION_REPAIR,
-            //MISSION_RESCUE,
-            //MISSION_MISSILE,
+            // Nyerguds upgrade: filter out types that are irrelevant for preplaced units.
+            // Note that TeamTypes use a separate list, defined in the TeamMissionTypes class.
+            (MISSION_SLEEP, true),
+            (MISSION_ATTACK, false),
+            (MISSION_MOVE, false),
+            (MISSION_RETREAT, true),
+            (MISSION_GUARD, true),
+            (MISSION_STICKY, true),
+            (MISSION_ENTER, false),
+            (MISSION_CAPTURE, false),
+            (MISSION_HARVEST, true),
+            (MISSION_AREA_GUARD, true),
+            (MISSION_RETURN, true),
+            (MISSION_STOP, true),
+            (MISSION_AMBUSH, true),
+            (MISSION_HUNT, true),
+            (MISSION_TIMED_HUNT, false),
+            (MISSION_UNLOAD, true),
+            (MISSION_SABOTAGE, false),
+            (MISSION_CONSTRUCTION, false),
+            (MISSION_SELLING, false),
+            (MISSION_REPAIR, false),
+            (MISSION_RESCUE, false),
+            (MISSION_MISSILE, false),
         };
 
-        private static readonly string[] UnassignableTypes = new string[]
+        private static readonly string[] UsableTypes;
+        private static readonly string[] UnassignableTypes;
+
+        static MissionTypes()
         {
-            //MISSION_SLEEP,
-            MISSION_ATTACK,
-            MISSION_MOVE,
-            //MISSION_RETREAT,
-            //MISSION_GUARD,
-            //MISSION_STICKY,
-            MISSION_ENTER,
-            MISSION_CAPTURE,
-            //MISSION_HARVEST,
-            //MISSION_AREA_GUARD,
-            //MISSION_RETURN,
-            //MISSION_STOP,
-            //MISSION_AMBUSH,
-            //MISSION_HUNT,
-            MISSION_TIMED_HUNT,
-            //MISSION_UNLOAD,
-            MISSION_SABOTAGE,
-            MISSION_CONSTRUCTION,
-            MISSION_SELLING,
-            MISSION_REPAIR,
-            MISSION_RESCUE,
-            MISSION_MISSILE,
-        };
+            UsableTypes= AllTypes.Where(itm => itm.Item2).Select(itm => itm.Item1).ToArray();
+            UnassignableTypes = AllTypes.Where(itm => !itm.Item2).Select(itm => itm.Item1).ToArray();
+        }
 
         public static IEnumerable<string> GetTypes()
         {
-            return Types;
+            return UsableTypes.ToArray();
         }
 
         public static IEnumerable<string> GetUnassignableTypes()
         {
-            return UnassignableTypes;
+            return UnassignableTypes.ToArray();
         }
     }
 }

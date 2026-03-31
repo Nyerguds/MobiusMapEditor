@@ -12,589 +12,301 @@
 // distributed with this program. You should have received a copy of the
 // GNU General Public License along with permitted additional restrictions
 // with this program. If not, see https://github.com/electronicarts/CnC_Remastered_Collection
+using MobiusEditor.Model;
+
 namespace MobiusEditor.RedAlert
 {
     public static class ActionDataTypes
     {
 
-        public static readonly string[] VocNames = new []
+        public static readonly ListItem<string>[] VocTypes = new[]
         {
-            "GIRLOKAY", // VOC_GIRL_OKAY           // "Okay" (female)
-            "GIRLYEAH", // VOC_GIRL_YEAH           // "Yeah?" (female)
-            "GUYOKAY1", // VOC_GUY_OKAY            // "Okay" (male)
-            "GUYYEAH1", // VOC_GUY_YEAH            // "Yeah?" (male)
-            "MINELAY1", // VOC_MINELAY1            // Mine placed
-            "ACKNO",    // VOC_ACKNOWL             // "Acknowledged"
-            "AFFIRM1",  // VOC_AFFIRM              // "Affirmative"
-            "AWAIT1",   // VOC_AWAIT               // "Awaiting orders"
-            "EAFFIRM1", // VOC_ENG_AFFIRM          // "Affirmative" (Engineer)
-            "EENGIN1",  // VOC_ENG_ENG             // "Engineering" (Engineer)
-            "NOPROB",   // VOC_NO_PROB             // "Of course"
-            "READY",    // VOC_READY               // "Ready and waiting"
-            "REPORT1",  // VOC_REPORT              // "Reporting"
-            "RITAWAY",  // VOC_RIGHT_AWAY          // "At once"
-            "ROGER",    // VOC_ROGER               // "Agreed"
-            "UGOTIT",   // VOC_UGOTIT              // "Very well"
-            "VEHIC1",   // VOC_VEHIC               // "Vehicle reporting"
-            "YESSIR1",  // VOC_YESSIR              // "Yes sir?"
-            "DEDMAN1",  // VOC_SCREAM1             // Man dies #1
-            "DEDMAN2",  // VOC_SCREAM3             // Man dies #2
-            "DEDMAN3",  // VOC_SCREAM4             // Man dies #3
-            "DEDMAN4",  // VOC_SCREAM5             // Man dies #4
-            "DEDMAN5",  // VOC_SCREAM6             // Man dies #5
-            "DEDMAN6",  // VOC_SCREAM7             // Man dies #6
-            "DEDMAN7",  // VOC_SCREAM10            // Man dies #7
-            "DEDMAN8",  // VOC_SCREAM11            // Man dies #8
-            "DEDMAN10", // VOC_YELL1               // Man dies #9
-            "CHRONO2",  // VOC_CHRONO              // Chronosphere
-            "CANNON1",  // VOC_CANNON1             // Mammoth Tank gun
-            "CANNON2",  // VOC_CANNON2             // Light Tank gun
-            "IRONCUR9", // VOC_IRON1               // Iron Curtain
-            "EMOVOUT1", // VOC_ENG_MOVEOUT         // "Movin' out" (Engineer)
-            "SONPULSE", // VOC_SONAR               // Sonar pulse
-            "SANDBAG2", // VOC_SANDBAG             // Sandbag crushed
-            "MINEBLO1", // VOC_MINEBLOW            // AT mine explodes
-            "CHUTE1",   // VOC_CHUTE1              // Parachute
-            "DOGY1",    // VOC_DOG_BARK            // Dog bark
-            "DOGW5",    // VOC_DOG_WHINE           // Dog whining
-            "DOGG5P",   // VOC_DOG_GROWL2          // Dog angry
-            "FIREBL3",  // VOC_FIRE_LAUNCH         // Fireball
-            "FIRETRT1", // VOC_FIRE_EXPLODE        // Fireball impact
-            "GRENADE1", // VOC_GRENADE_TOSS        // Grenade throw
-            "GUN11",    // VOC_GUN_5               // Rifle
-            "GUN13",    // VOC_GUN_7               // Pillbox machinegun
-            "EYESSIR1", // VOC_ENG_YES             // "Yes sir" (Engineer)
-            "GUN27",    // VOC_GUN_RIFLE           // Pistol #1
-            "HEAL2",    // VOC_HEAL                // Healing
-            "HYDROD1",  // VOC_DOOR                // Hissing
-            "INVUL2",   // VOC_INVULNERABLE        // Vworap
-            "KABOOM1",  // VOC_KABOOM1             // Building half-destroyed
-            "KABOOM12", // VOC_KABOOM12            // tank shell impact
-            "KABOOM15", // VOC_KABOOM15            // Explosion
-            "SPLASH9",  // VOC_SPLASH              // Water impact
-            "KABOOM22", // VOC_KABOOM22            // big explosion
-            "AACANON3", // VOC_AACANON3            // AA gun
-            "TANDETH1", // VOC_TANYA_DIE           // Tanya screams
-            "MGUNINF1", // VOC_GUN_5F              // Machinegun
-            "MISSILE1", // VOC_MISSILE_1           // AA missile
-            "MISSILE6", // VOC_MISSILE_2           // Cruiser missile
-            "MISSILE7", // VOC_MISSILE_3           // MIG missile
-            "x",        // VOC_x6                  // x
-            "PILLBOX1", // VOC_GUN_5R              // Ranger machinegun
-            "RABEEP1",  // VOC_BEEP                // High-pitched beep
-            "RAMENU1",  // VOC_CLICK               // Menu click
-            "SILENCER", // VOC_SILENCER            // Silenced rifle
-            "TANK5",    // VOC_CANNON6             // Artillery fire
-            "TANK6",    // VOC_CANNON7             // Cruiser cannon
-            "TORPEDO1", // VOC_TORPEDO             // Torpedo
-            "TURRET1",  // VOC_CANNON8             // Turret shot
-            "TSLACHG2", // VOC_TESLA_POWER_UP      // Tesla charging
-            "TESLA1",   // VOC_TESLA_ZAP           // Tesla firing
-            "SQUISHY2", // VOC_SQUISH              // Person crushed
-            "SCOLDY1",  // VOC_SCOLD               // Blip
-            "RADARON2", // VOC_RADAR_ON            // Radar online
-            "RADARDN1", // VOC_RADAR_OFF           // Radar offline
-            "PLACBLDG", // VOC_PLACE_BUILDING_DOWN // Building placed
-            "KABOOM30", // VOC_KABOOM30            // Explosion
-            "KABOOM25", // VOC_KABOOM25            // Artillery impact
-            "x",        // VOC_x7                  // x
-            "DOGW7",    // VOC_DOG_HURT            // Dog dies
-            "DOGW3PX",  // VOC_DOG_YES             // Dog response
-            "CRMBLE2",  // VOC_CRUMBLE             // Building crumbles
-            "CASHUP1",  // VOC_MONEY_UP            // Cash coming in
-            "CASHDN1",  // VOC_MONEY_DOWN          // Cash going out
-            "BUILD5",   // VOC_CONSTRUCTION        // Building up
-            "BLEEP9",   // VOC_GAME_CLOSED         // Radar powering up
-            "BLEEP6",   // VOC_INCOMING_MESSAGE    // Information message
-            "BLEEP5",   // VOC_SYS_ERROR           // Alarm
-            "BLEEP17",  // VOC_OPTIONS_CHANGED     // Soft bleep
-            "BLEEP13",  // VOC_GAME_FORMING        // soft low bleep
-            "BLEEP12",  // VOC_PLAYER_LEFT         // high-pitched bleep down
-            "BLEEP11",  // VOC_PLAYER_JOINED       // High-pitched bleep up
-            "H2OBOMB2", // VOC_DEPTH_CHARGE        // Water explosion
-            "CASHTURN", // VOC_CASHTURN            // Selling sound
-            "TUFFGUY1", // VOC_TANYA_CHEW          // "Chew on this!" (Tanya)
-            "ROKROLL1", // VOC_TANYA_ROCK          // "Let's rock!" (Tanya)
-            "LAUGH1",   // VOC_TANYA_LAUGH         // Tanya laughing
-            "CMON1",    // VOC_TANYA_SHAKE         // "Shake it, baby!" (Tanya)
-            "BOMBIT1",  // VOC_TANYA_CHING         // "Cha-ching!" (Tanya)
-            "GOTIT1",   // VOC_TANYA_GOT           // "That's all you got?" (Tanya)
-            "KEEPEM1",  // VOC_TANYA_KISS          // "Kiss is bye-bye!" (Tanya)
-            "ONIT1",    // VOC_TANYA_THERE         // "I'm there!" (Tanya)
-            "LEFTY1",   // VOC_TANYA_GIVE          // "Give it to me!" (Tanya)
-            "YEAH1",    // VOC_TANYA_YEA           // "Yeah?" (Tanya)
-            "YES1",     // VOC_TANYA_YES           // "Yes, sir?" (Tanya)
-            "YO1",      // VOC_TANYA_WHATS         // "What's up?" (Tanya)
-            "WALLKIL2", // VOC_WALLKILL2           // Fence crushed
-            "x",        // VOC_x8                  // x
-            "GUN5",     // VOC_TRIPLE_SHOT         // Pistol #2
-            "SUBSHOW1", // VOC_SUBSHOW             // Submarine surfacing
-            "EINAH1",   // VOC_E_AH                // "Ah?" (Einstein)
-            "EINOK1",   // VOC_E_OK                // "Incredible!" (Einstein)
-            "EINYES1",  // VOC_E_YES               // "Yes." (Einstein)
-            "MINE1",    // VOC_TRIP_MINE           // AP mine explodes
-            "SCOMND1",  // VOC_SPY_COMMANDER       // "Commander?" (Spy)
-            "SYESSIR1", // VOC_SPY_YESSIR          // "Yes, sir?" (Sky)
-            "SINDEED1", // VOC_SPY_INDEED          // "Indeed" (Spy)
-            "SONWAY1",  // VOC_SPY_ONWAY           // "On my way" (Spy)
-            "SKING1",   // VOC_SPY_KING            // "For king and country" (Spy)
-            "MRESPON1", // VOC_MED_REPORTING       // "Medic reporting" (Medic)
-            "MYESSIR1", // VOC_MED_YESSIR          // "Yes, sir" (Medic)
-            "MAFFIRM1", // VOC_MED_AFFIRM          // "Affirmative" (Medic)
-            "MMOVOUT1", // VOC_MED_MOVEOUT         // "Moving out" (Medic)
-            "BEEPSLCT", // VOC_BEEP_SELECT         // Select beep
-            "SYEAH1",   // VOC_THIEF_YEA           // "Yeah?" (Thief)
-            "ANTDIE",   // VOC_ANTDIE              // Ant dies
-            "ANTBITE",  // VOC_ANTBITE             // Ant bites
-            "SMOUT1",   // VOC_THIEF_MOVEOUT       // "Moving out" (Thief)
-            "SOKAY1",   // VOC_THIEF_OKAY          // "Okay" (Thief)
-            "x",        // VOC_x11                 // x
-            "SWHAT1",   // VOC_THIEF_WHAT          // "What?" (Thief)
-            "SAFFIRM1", // VOC_THIEF_AFFIRM        // "Affirmative" (Thief)
-            "STAVCMDR", // VOC_STAVCMDR            // "Commander?" (Stavros)
-            "STAVCRSE", // VOC_STAVCRSE            // "Of course" (Stavros)
-            "STAVYES",  // VOC_STAVYES             // "Yes" (Stavros)
-            "STAVMOV",  // VOC_STAVMOV             // "Move out" (Stavros)
-            "BUZZY1",   // VOC_BUZZY1              // Warning siren
-            "RAMBO1",   // VOC_RAMBO1              // "I've got a present for ya!" (Commando)
-            "RAMBO2",   // VOC_RAMBO2              // Commando laugh
-            "RAMBO3",   // VOC_RAMBO3              // "Real tough guy!" (Commando)
-            "MYES1",    // VOC_MECHYES1            // "Yes sir" (Mechanic)
-            "MHOWDY1",  // VOC_MECHHOWDY1          // "Howdy?" (Mechanic)
-            "MRISE1",   // VOC_MECHRISE1           // "Rise 'n' shine!" (Mechanic)
-            "MHUH1",    // VOC_MECHHUH1            // "Huh?" (Mechanic)
-            "MHEAR1",   // VOC_MECHHEAR1           // "I hear ya" (Mechanic)
-            "MLAFF1",   // VOC_MECHLAFF1           // Mechanic laugh
-            "MBOSS1",   // VOC_MECHBOSS1           // "Sure thing, boss" (Mechanic)
-            "MYEEHAW1", // VOC_MECHYEEHAW1         // "Yee-haw!" (Mechanic)
-            "MHOTDIG1", // VOC_MECHHOTDIG1         // "Hot diggity!" (Mechanic)
-            "MWRENCH1", // VOC_MECHWRENCH1         // "I'll get my wrench" (Mechanic)
-            "JBURN1",   // VOC_STBURN1             // "Burn, baby, burn!" (Shock Trooper)
-            "JCHRGE1",  // VOC_STCHRGE1            // "Fully charged!" (Shock Trooper)
-            "JCRISP1",  // VOC_STCRISP1            // "Extra crispy!" (Shock Trooper)
-            "JDANCE1",  // VOC_STDANCE1            // "Let's dance!" (Shock Trooper)
-            "JJUICE1",  // VOC_STJUICE1            // "Got juice?" (Shock Trooper)
-            "JJUMP1",   // VOC_STJUMP1             // "Need a jump?" (Shock Trooper)
-            "JLIGHT1",  // VOC_STLIGHT1            // "Lights out" (Shock Trooper)
-            "JPOWER1",  // VOC_STPOWER1            // "Power on!" (Shock Trooper)
-            "JSHOCK1",  // VOC_STSHOCK1            // "Shocking!" (Shock Trooper)
-            "JYES1",    // VOC_STYES1              // "Yes!" (Shock Trooper)
-            "CHROTNK1", // VOC_CHRONOTANK1         // Chrono tank
-            "FIXIT1",   // VOC_MECH_FIXIT1         // Wrench repair sound
-            "MADCHRG2", // VOC_MAD_CHARGE          // M.A.D.tank charging
-            "MADEXPLO", // VOC_MAD_EXPLODE         // M.A.D.tank explosion
-            "SHKTROP1", // VOC_SHOCK_TROOP1        // Shock trooper tesla
-            "BEACON",   // VOC_BEACON			   // Beacon sound
+            new ListItem<string>("GIRLOKAY", "\"Okay\" (female)"),                         // VOC_GIRL_OKAY
+            new ListItem<string>("GIRLYEAH", "\"Yeah?\" (female)"),                        // VOC_GIRL_YEAH
+            new ListItem<string>("GUYOKAY1", "\"Okay\" (male)"),                           // VOC_GUY_OKAY
+            new ListItem<string>("GUYYEAH1", "\"Yeah?\" (male)"),                          // VOC_GUY_YEAH
+            new ListItem<string>("MINELAY1", "Mine placed"),                               // VOC_MINELAY1
+            new ListItem<string>("ACKNO",    "\"Acknowledged\""),                          // VOC_ACKNOWL
+            new ListItem<string>("AFFIRM1",  "\"Affirmative\""),                           // VOC_AFFIRM
+            new ListItem<string>("AWAIT1",   "\"Awaiting orders\""),                       // VOC_AWAIT
+            new ListItem<string>("EAFFIRM1", "\"Affirmative\" (Engineer)"),                // VOC_ENG_AFFIRM
+            new ListItem<string>("EENGIN1",  "\"Engineering\" (Engineer)"),                // VOC_ENG_ENG
+            new ListItem<string>("NOPROB",   "\"Of course\""),                             // VOC_NO_PROB
+            new ListItem<string>("READY",    "\"Ready and waiting\""),                     // VOC_READY
+            new ListItem<string>("REPORT1",  "\"Reporting\""),                             // VOC_REPORT
+            new ListItem<string>("RITAWAY",  "\"At once\""),                               // VOC_RIGHT_AWAY
+            new ListItem<string>("ROGER",    "\"Agreed\""),                                // VOC_ROGER
+            new ListItem<string>("UGOTIT",   "\"Very well\""),                             // VOC_UGOTIT
+            new ListItem<string>("VEHIC1",   "\"Vehicle reporting\""),                     // VOC_VEHIC
+            new ListItem<string>("YESSIR1",  "\"Yes sir?\""),                              // VOC_YESSIR
+            new ListItem<string>("DEDMAN1",  "Man dies #1"),                               // VOC_SCREAM1
+            new ListItem<string>("DEDMAN2",  "Man dies #2"),                               // VOC_SCREAM3
+            new ListItem<string>("DEDMAN3",  "Man dies #3"),                               // VOC_SCREAM4
+            new ListItem<string>("DEDMAN4",  "Man dies #4"),                               // VOC_SCREAM5
+            new ListItem<string>("DEDMAN5",  "Man dies #5"),                               // VOC_SCREAM6
+            new ListItem<string>("DEDMAN6",  "Man dies #6"),                               // VOC_SCREAM7
+            new ListItem<string>("DEDMAN7",  "Man dies #7"),                               // VOC_SCREAM10
+            new ListItem<string>("DEDMAN8",  "Man dies #8"),                               // VOC_SCREAM11
+            new ListItem<string>("DEDMAN10", "Man dies #9"),                               // VOC_YELL1
+            new ListItem<string>("CHRONO2",  "Chronosphere"),                              // VOC_CHRONO
+            new ListItem<string>("CANNON1",  "Mammoth Tank gun"),                          // VOC_CANNON1
+            new ListItem<string>("CANNON2",  "Light Tank gun"),                            // VOC_CANNON2
+            new ListItem<string>("IRONCUR9", "Iron Curtain"),                              // VOC_IRON1
+            new ListItem<string>("EMOVOUT1", "\"Movin' out\" (Engineer)"),                 // VOC_ENG_MOVEOUT
+            new ListItem<string>("SONPULSE", "Sonar pulse"),                               // VOC_SONAR
+            new ListItem<string>("SANDBAG2", "Sandbag crushed"),                           // VOC_SANDBAG
+            new ListItem<string>("MINEBLO1", "AT mine explodes"),                          // VOC_MINEBLOW
+            new ListItem<string>("CHUTE1",   "Parachute"),                                 // VOC_CHUTE1
+            new ListItem<string>("DOGY1",    "Dog bark"),                                  // VOC_DOG_BARK
+            new ListItem<string>("DOGW5",    "Dog whining"),                               // VOC_DOG_WHINE
+            new ListItem<string>("DOGG5P",   "Dog angry"),                                 // VOC_DOG_GROWL2
+            new ListItem<string>("FIREBL3",  "Fireball"),                                  // VOC_FIRE_LAUNCH
+            new ListItem<string>("FIRETRT1", "Fireball impact"),                           // VOC_FIRE_EXPLODE
+            new ListItem<string>("GRENADE1", "Grenade throw"),                             // VOC_GRENADE_TOSS
+            new ListItem<string>("GUN11",    "Rifle"),                                     // VOC_GUN_5
+            new ListItem<string>("GUN13",    "Pillbox machinegun"),                        // VOC_GUN_7
+            new ListItem<string>("EYESSIR1", "\"Yes sir\" (Engineer)"),                    // VOC_ENG_YES
+            new ListItem<string>("GUN27",    "Pistol #1"),                                 // VOC_GUN_RIFLE
+            new ListItem<string>("HEAL2",    "Healing"),                                   // VOC_HEAL
+            new ListItem<string>("HYDROD1",  "Hissing"),                                   // VOC_DOOR
+            new ListItem<string>("INVUL2",   "Vworap"),                                    // VOC_INVULNERABLE
+            new ListItem<string>("KABOOM1",  "Building half-destroyed"),                   // VOC_KABOOM1
+            new ListItem<string>("KABOOM12", "tank shell impact"),                         // VOC_KABOOM12
+            new ListItem<string>("KABOOM15", "Explosion"),                                 // VOC_KABOOM15
+            new ListItem<string>("SPLASH9",  "Water impact"),                              // VOC_SPLASH
+            new ListItem<string>("KABOOM22", "big explosion"),                             // VOC_KABOOM22
+            new ListItem<string>("AACANON3", "AA gun"),                                    // VOC_AACANON3
+            new ListItem<string>("TANDETH1", "Tanya screams"),                             // VOC_TANYA_DIE
+            new ListItem<string>("MGUNINF1", "Machinegun"),                                // VOC_GUN_5F
+            new ListItem<string>("MISSILE1", "AA missile"),                                // VOC_MISSILE_1
+            new ListItem<string>("MISSILE6", "Cruiser missile"),                           // VOC_MISSILE_2
+            new ListItem<string>("MISSILE7", "MIG missile"),                               // VOC_MISSILE_3
+            new ListItem<string>("x",        "x"),                                         // VOC_x6
+            new ListItem<string>("PILLBOX1", "Ranger machinegun"),                         // VOC_GUN_5R
+            new ListItem<string>("RABEEP1",  "High-pitched beep"),                         // VOC_BEEP
+            new ListItem<string>("RAMENU1",  "Menu click"),                                // VOC_CLICK
+            new ListItem<string>("SILENCER", "Silenced rifle"),                            // VOC_SILENCER
+            new ListItem<string>("TANK5",    "Artillery fire"),                            // VOC_CANNON6
+            new ListItem<string>("TANK6",    "Cruiser cannon"),                            // VOC_CANNON7
+            new ListItem<string>("TORPEDO1", "Torpedo"),                                   // VOC_TORPEDO
+            new ListItem<string>("TURRET1",  "Turret shot"),                               // VOC_CANNON8
+            new ListItem<string>("TSLACHG2", "Tesla charging"),                            // VOC_TESLA_POWER_UP
+            new ListItem<string>("TESLA1",   "Tesla firing"),                              // VOC_TESLA_ZAP
+            new ListItem<string>("SQUISHY2", "Person crushed"),                            // VOC_SQUISH
+            new ListItem<string>("SCOLDY1",  "Blip"),                                      // VOC_SCOLD
+            new ListItem<string>("RADARON2", "Radar online"),                              // VOC_RADAR_ON
+            new ListItem<string>("RADARDN1", "Radar offline"),                             // VOC_RADAR_OFF
+            new ListItem<string>("PLACBLDG", "Building placed"),                           // VOC_PLACE_BUILDING_DOWN
+            new ListItem<string>("KABOOM30", "Explosion"),                                 // VOC_KABOOM30
+            new ListItem<string>("KABOOM25", "Artillery impact"),                          // VOC_KABOOM25
+            new ListItem<string>("x",        "x"),                                         // VOC_x7
+            new ListItem<string>("DOGW7",    "Dog dies"),                                  // VOC_DOG_HURT
+            new ListItem<string>("DOGW3PX",  "Dog response"),                              // VOC_DOG_YES
+            new ListItem<string>("CRMBLE2",  "Building crumbles"),                         // VOC_CRUMBLE
+            new ListItem<string>("CASHUP1",  "Cash coming in"),                            // VOC_MONEY_UP
+            new ListItem<string>("CASHDN1",  "Cash going out"),                            // VOC_MONEY_DOWN
+            new ListItem<string>("BUILD5",   "Building up"),                               // VOC_CONSTRUCTION
+            new ListItem<string>("BLEEP9",   "Radar powering up"),                         // VOC_GAME_CLOSED
+            new ListItem<string>("BLEEP6",   "Information message"),                       // VOC_INCOMING_MESSAGE
+            new ListItem<string>("BLEEP5",   "Alarm"),                                     // VOC_SYS_ERROR
+            new ListItem<string>("BLEEP17",  "Soft bleep"),                                // VOC_OPTIONS_CHANGED
+            new ListItem<string>("BLEEP13",  "soft low bleep"),                            // VOC_GAME_FORMING
+            new ListItem<string>("BLEEP12",  "high-pitched bleep down"),                   // VOC_PLAYER_LEFT
+            new ListItem<string>("BLEEP11",  "High-pitched bleep up"),                     // VOC_PLAYER_JOINED
+            new ListItem<string>("H2OBOMB2", "Water explosion"),                           // VOC_DEPTH_CHARGE
+            new ListItem<string>("CASHTURN", "Selling sound"),                             // VOC_CASHTURN
+            new ListItem<string>("TUFFGUY1", "\"Chew on this!\" (Tanya)"),                 // VOC_TANYA_CHEW
+            new ListItem<string>("ROKROLL1", "\"Let's rock!\" (Tanya)"),                   // VOC_TANYA_ROCK
+            new ListItem<string>("LAUGH1",   "Tanya laughing"),                            // VOC_TANYA_LAUGH
+            new ListItem<string>("CMON1",    "\"Shake it, baby!\" (Tanya)"),               // VOC_TANYA_SHAKE
+            new ListItem<string>("BOMBIT1",  "\"Cha-ching!\" (Tanya)"),                    // VOC_TANYA_CHING
+            new ListItem<string>("GOTIT1",   "\"That's all you got?\" (Tanya)"),           // VOC_TANYA_GOT
+            new ListItem<string>("KEEPEM1",  "\"Kiss is bye-bye!\" (Tanya)"),              // VOC_TANYA_KISS
+            new ListItem<string>("ONIT1",    "\"I'm there!\" (Tanya)"),                    // VOC_TANYA_THERE
+            new ListItem<string>("LEFTY1",   "\"Give it to me!\" (Tanya)"),                // VOC_TANYA_GIVE
+            new ListItem<string>("YEAH1",    "\"Yeah?\" (Tanya)"),                         // VOC_TANYA_YEA
+            new ListItem<string>("YES1",     "\"Yes, sir?\" (Tanya)"),                     // VOC_TANYA_YES
+            new ListItem<string>("YO1",      "\"What's up?\" (Tanya)"),                    // VOC_TANYA_WHATS
+            new ListItem<string>("WALLKIL2", "Fence crushed"),                             // VOC_WALLKILL2
+            new ListItem<string>("x",        "x"),                                         // VOC_x8
+            new ListItem<string>("GUN5",     "Pistol #2"),                                 // VOC_TRIPLE_SHOT
+            new ListItem<string>("SUBSHOW1", "Submarine surfacing"),                       // VOC_SUBSHOW
+            new ListItem<string>("EINAH1",   "\"Ah?\" (Einstein)"),                        // VOC_E_AH
+            new ListItem<string>("EINOK1",   "\"Incredible!\" (Einstein)"),                // VOC_E_OK
+            new ListItem<string>("EINYES1",  "\"Yes.\" (Einstein)"),                       // VOC_E_YES
+            new ListItem<string>("MINE1",    "AP mine explodes"),                          // VOC_TRIP_MINE
+            new ListItem<string>("SCOMND1",  "\"Commander?\" (Spy)"),                      // VOC_SPY_COMMANDER
+            new ListItem<string>("SYESSIR1", "\"Yes, sir?\" (Sky)"),                       // VOC_SPY_YESSIR
+            new ListItem<string>("SINDEED1", "\"Indeed\" (Spy)"),                          // VOC_SPY_INDEED
+            new ListItem<string>("SONWAY1",  "\"On my way\" (Spy)"),                       // VOC_SPY_ONWAY
+            new ListItem<string>("SKING1",   "\"For king and country\" (Spy)"),            // VOC_SPY_KING
+            new ListItem<string>("MRESPON1", "\"Medic reporting\" (Medic)"),               // VOC_MED_REPORTING
+            new ListItem<string>("MYESSIR1", "\"Yes, sir\" (Medic)"),                      // VOC_MED_YESSIR
+            new ListItem<string>("MAFFIRM1", "\"Affirmative\" (Medic)"),                   // VOC_MED_AFFIRM
+            new ListItem<string>("MMOVOUT1", "\"Moving out\" (Medic)"),                    // VOC_MED_MOVEOUT
+            new ListItem<string>("BEEPSLCT", "Select beep"),                               // VOC_BEEP_SELECT
+            new ListItem<string>("SYEAH1",   "\"Yeah?\" (Thief)"),                         // VOC_THIEF_YEA
+            new ListItem<string>("ANTDIE",   "Ant dies"),                                  // VOC_ANTDIE
+            new ListItem<string>("ANTBITE",  "Ant bites"),                                 // VOC_ANTBITE
+            new ListItem<string>("SMOUT1",   "\"Moving out\" (Thief)"),                    // VOC_THIEF_MOVEOUT
+            new ListItem<string>("SOKAY1",   "\"Okay\" (Thief)"),                          // VOC_THIEF_OKAY
+            new ListItem<string>("x",        "x"),                                         // VOC_x11
+            new ListItem<string>("SWHAT1",   "\"What?\" (Thief)"),                         // VOC_THIEF_WHAT
+            new ListItem<string>("SAFFIRM1", "\"Affirmative\" (Thief)"),                   // VOC_THIEF_AFFIRM
+            new ListItem<string>("STAVCMDR", "\"Commander?\" (Stavros)"),                  // VOC_STAVCMDR
+            new ListItem<string>("STAVCRSE", "\"Of course\" (Stavros)"),                   // VOC_STAVCRSE
+            new ListItem<string>("STAVYES",  "\"Yes\" (Stavros)"),                         // VOC_STAVYES
+            new ListItem<string>("STAVMOV",  "\"Move out\" (Stavros)"),                    // VOC_STAVMOV
+            new ListItem<string>("BUZZY1",   "Warning siren"),                             // VOC_BUZZY1
+            new ListItem<string>("RAMBO1",   "\"I've got a present for ya!\" (Commando)"), // VOC_RAMBO1
+            new ListItem<string>("RAMBO2",   "Commando laugh"),                            // VOC_RAMBO2
+            new ListItem<string>("RAMBO3",   "\"Real tough guy!\" (Commando)"),            // VOC_RAMBO3
+            new ListItem<string>("MYES1",    "\"Yes sir\" (Mechanic)"),                    // VOC_MECHYES1
+            new ListItem<string>("MHOWDY1",  "\"Howdy?\" (Mechanic)"),                     // VOC_MECHHOWDY1
+            new ListItem<string>("MRISE1",   "\"Rise 'n' shine!\" (Mechanic)"),            // VOC_MECHRISE1
+            new ListItem<string>("MHUH1",    "\"Huh?\" (Mechanic)"),                       // VOC_MECHHUH1
+            new ListItem<string>("MHEAR1",   "\"I hear ya\" (Mechanic)"),                  // VOC_MECHHEAR1
+            new ListItem<string>("MLAFF1",   "Mechanic laugh"),                            // VOC_MECHLAFF1
+            new ListItem<string>("MBOSS1",   "\"Sure thing, boss\" (Mechanic)"),           // VOC_MECHBOSS1
+            new ListItem<string>("MYEEHAW1", "\"Yee-haw!\" (Mechanic)"),                   // VOC_MECHYEEHAW1
+            new ListItem<string>("MHOTDIG1", "\"Hot diggity!\" (Mechanic)"),               // VOC_MECHHOTDIG1
+            new ListItem<string>("MWRENCH1", "\"I'll get my wrench\" (Mechanic)"),         // VOC_MECHWRENCH1
+            new ListItem<string>("JBURN1",   "\"Burn, baby, burn!\" (Shock Trooper)"),     // VOC_STBURN1
+            new ListItem<string>("JCHRGE1",  "\"Fully charged!\" (Shock Trooper)"),        // VOC_STCHRGE1
+            new ListItem<string>("JCRISP1",  "\"Extra crispy!\" (Shock Trooper)"),         // VOC_STCRISP1
+            new ListItem<string>("JDANCE1",  "\"Let's dance!\" (Shock Trooper)"),          // VOC_STDANCE1
+            new ListItem<string>("JJUICE1",  "\"Got juice?\" (Shock Trooper)"),            // VOC_STJUICE1
+            new ListItem<string>("JJUMP1",   "\"Need a jump?\" (Shock Trooper)"),          // VOC_STJUMP1
+            new ListItem<string>("JLIGHT1",  "\"Lights out\" (Shock Trooper)"),            // VOC_STLIGHT1
+            new ListItem<string>("JPOWER1",  "\"Power on!\" (Shock Trooper)"),             // VOC_STPOWER1
+            new ListItem<string>("JSHOCK1",  "\"Shocking!\" (Shock Trooper)"),             // VOC_STSHOCK1
+            new ListItem<string>("JYES1",    "\"Yes!\" (Shock Trooper)"),                  // VOC_STYES1
+            new ListItem<string>("CHROTNK1", "Chrono tank"),                               // VOC_CHRONOTANK1
+            new ListItem<string>("FIXIT1",   "Wrench repair sound"),                       // VOC_MECH_FIXIT1
+            new ListItem<string>("MADCHRG2", "M.A.D. tank charging"),                      // VOC_MAD_CHARGE
+            new ListItem<string>("MADEXPLO", "M.A.D. tank explosion"),                     // VOC_MAD_EXPLODE
+            new ListItem<string>("SHKTROP1", "Shock trooper tesla"),                       // VOC_SHOCK_TROOP1
+            new ListItem<string>("BEACON",   "Beacon sound"),                              // VOC_BEACON
         };
 
-        public static readonly string[] VocDesc = new[]
+        public static readonly ListItem<string>[] VoxTypes = new[]
         {
-            "\"Okay\" (female)",
-            "\"Yeah?\" (female)",
-            "\"Okay\" (male)",
-            "\"Yeah?\" (male)",
-            "Mine placed",
-            "\"Acknowledged\"",
-            "\"Affirmative\"",
-            "\"Awaiting orders\"",
-            "\"Affirmative\" (Engineer)",
-            "\"Engineering\" (Engineer)",
-            "\"Of course\"",
-            "\"Ready and waiting\"",
-            "\"Reporting\"",
-            "\"At once\"",
-            "\"Agreed\"",
-            "\"Very well\"",
-            "\"Vehicle reporting\"",
-            "\"Yes sir?\"",
-            "Man dies #1",
-            "Man dies #2",
-            "Man dies #3",
-            "Man dies #4",
-            "Man dies #5",
-            "Man dies #6",
-            "Man dies #7",
-            "Man dies #8",
-            "Man dies #9",
-            "Chronosphere",
-            "Mammoth Tank gun",
-            "Light Tank gun",
-            "Iron Curtain",
-            "\"Movin' out\" (Engineer)",
-            "Sonar pulse",
-            "Sandbag crushed",
-            "AT mine explodes",
-            "Parachute",
-            "Dog bark",
-            "Dog whining",
-            "Dog angry",
-            "Fireball",
-            "Fireball impact",
-            "Grenade throw",
-            "Rifle",
-            "Pillbox machinegun",
-            "\"Yes sir\" (Engineer)",
-            "Pistol #1",
-            "Healing",
-            "Hissing",
-            "Vworap",
-            "Building half-destroyed",
-            "tank shell impact",
-            "Explosion",
-            "Water impact",
-            "big explosion",
-            "AA gun",
-            "Tanya screams",
-            "Machinegun",
-            "AA missile",
-            "Cruiser missile",
-            "MIG missile",
-            "x",
-            "Ranger machinegun",
-            "High-pitched beep",
-            "Menu click",
-            "Silenced rifle",
-            "Artillery fire",
-            "Cruiser cannon",
-            "Torpedo",
-            "Turret shot",
-            "Tesla charging",
-            "Tesla firing",
-            "Person crushed",
-            "Blip",
-            "Radar online",
-            "Radar offline",
-            "Building placed",
-            "Explosion",
-            "Artillery impact",
-            "x",
-            "Dog dies",
-            "Dog response",
-            "Building crumbles",
-            "Cash coming in",
-            "Cash going out",
-            "Building up",
-            "Radar powering up",
-            "Information message",
-            "Alarm",
-            "Soft bleep",
-            "soft low bleep",
-            "high-pitched bleep down",
-            "High-pitched bleep up",
-            "Water explosion",
-            "Selling sound",
-            "\"Chew on this!\" (Tanya)",
-            "\"Let's rock!\" (Tanya)",
-            "Tanya laughing",
-            "\"Shake it, baby!\" (Tanya)",
-            "\"Cha-ching!\" (Tanya)",
-            "\"That's all you got?\" (Tanya)",
-            "\"Kiss is bye-bye!\" (Tanya)",
-            "\"I'm there!\" (Tanya)",
-            "\"Give it to me!\" (Tanya)",
-            "\"Yeah?\" (Tanya)",
-            "\"Yes, sir?\" (Tanya)",
-            "\"What's up?\" (Tanya)",
-            "Fence crushed",
-            "x",
-            "Pistol #2",
-            "Submarine surfacing",
-            "\"Ah?\" (Einstein)",
-            "\"Incredible!\" (Einstein)",
-            "\"Yes.\" (Einstein)",
-            "AP mine explodes",
-            "\"Commander?\" (Spy)",
-            "\"Yes, sir?\" (Sky)",
-            "\"Indeed\" (Spy)",
-            "\"On my way\" (Spy)",
-            "\"For king and country\" (Spy)",
-            "\"Medic reporting\" (Medic)",
-            "\"Yes, sir\" (Medic)",
-            "\"Affirmative\" (Medic)",
-            "\"Moving out\" (Medic)",
-            "Select beep",
-            "\"Yeah?\" (Thief)",
-            "Ant dies",
-            "Ant bites",
-            "\"Moving out\" (Thief)",
-            "\"Okay\" (Thief)",
-            "x",
-            "\"What?\" (Thief)",
-            "\"Affirmative\" (Thief)",
-            "\"Commander?\" (Stavros)",
-            "\"Of course\" (Stavros)",
-            "\"Yes\" (Stavros)",
-            "\"Move out\" (Stavros)",
-            "Warning siren",
-            "\"I've got a present for ya!\" (Commando)",
-            "Commando laugh",
-            "\"Real tough guy!\" (Commando)",
-            "\"Yes sir\" (Mechanic)",
-            "\"Howdy?\" (Mechanic)",
-            "\"Rise 'n' shine!\" (Mechanic)",
-            "\"Huh?\" (Mechanic)",
-            "\"I hear ya\" (Mechanic)",
-            "Mechanic laugh",
-            "\"Sure thing, boss\" (Mechanic)",
-            "\"Yee-haw!\" (Mechanic)",
-            "\"Hot diggity!\" (Mechanic)",
-            "\"I'll get my wrench\" (Mechanic)",
-            "\"Burn, baby, burn!\" (Shock Trooper)",
-            "\"Fully charged!\" (Shock Trooper)",
-            "\"Extra crispy!\" (Shock Trooper)",
-            "\"Let's dance!\" (Shock Trooper)",
-            "\"Got juice?\" (Shock Trooper)",
-            "\"Need a jump?\" (Shock Trooper)",
-            "\"Lights out\" (Shock Trooper)",
-            "\"Power on!\" (Shock Trooper)",
-            "\"Shocking!\" (Shock Trooper)",
-            "\"Yes!\" (Shock Trooper)",
-            "Chrono tank",
-            "Wrench repair sound",
-            "M.A.D. tank charging",
-            "M.A.D. tank explosion",
-            "Shock trooper tesla",
-            "Beacon sound",
-        };
-
-        public static readonly string[] VoxNames = new[]
-        {
-            "MISNWON1",  // VOX_ACCOMPLISHED              // Mission accomplished
-            "MISNLST1",  // VOX_FAIL                      // Your mission has failed
-            "PROGRES1",  // VOX_NO_FACTORY                // Building in progress
-            "CONSCMP1",  // VOX_CONSTRUCTION              // Construction complete
-            "UNITRDY1",  // VOX_UNIT_READY                // Unit ready
-            "NEWOPT1",   // VOX_NEW_CONSTRUCT             // New construction options
-            "NODEPLY1",  // VOX_DEPLOY                    // Cannot deploy here
-            "STRCKIL1",  // VOX_STRUCTURE_DESTROYED       // Structure destroyed
-            "NOPOWR1",   // VOX_INSUFFICIENT_POWER        // Insufficient power
-            "NOFUNDS1",  // VOX_NO_CASH                   // Insufficient funds
-            "BCT1",      // VOX_CONTROL_EXIT              // Battle control terminated
-            "REINFOR1",  // VOX_REINFORCEMENTS            // Reinforcements arrived
-            "CANCLD1",   // VOX_CANCELED                  // Canceled
-            "ABLDGIN1",  // VOX_BUILDING                  // Building
-            "LOPOWER1",  // VOX_LOW_POWER                 // Low power
-            "NOFUNDS1",  // VOX_NEED_MO_MONEY             // Insufficent funds
-            "BASEATK1",  // VOX_BASE_UNDER_ATTACK         // Our base is under attack
-            "NOBUILD1",  // VOX_UNABLE_TO_BUILD           // Unable to build more
-            "PRIBLDG1",  // VOX_PRIMARY_SELECTED          // Primary building selected
-            "TANK01",    // VOX_MADTANK_DEPLOYED          // M.A.D. Tank Deployed
-            "none",      // VOX_SOVIET_CAPTURED           // None
-            "UNITLST1",  // VOX_UNIT_LOST                 // Unit lost
-            "SLCTTGT1",  // VOX_SELECT_TARGET             // Select target
-            "ENMYAPP1",  // VOX_PREPARE                   // Enemy approaching
-            "SILOND1",   // VOX_NEED_MO_CAPACITY          // Silos needed
-            "ONHOLD1",   // VOX_SUSPENDED                 // On hold
-            "REPAIR1",   // VOX_REPAIRING                 // Repairing
-            "none",      // VOC_none5                     // None
-            "none",      // VOC_none6                     // None
-            "AUNITL1",   // VOX_AIRCRAFT_LOST             // Airborne unit lost
-            "none",      // VOC_none7                     // None
-            "AAPPRO1",   // VOX_ALLIED_FORCES_APPROACHING // Allied forces appr.
-            "AARRIVE1",  // VOX_ALLIED_APPROACHING        // Allied reinf. arrived
-            "none",      // VOC_none8                     // None
-            "none",      // VOC_none9                     // None
-            "BLDGINF1",  // VOX_BUILDING_INFILTRATED      // Building infiltrated
-            "CHROCHR1",  // VOX_CHRONO_CHARGING           // Chronosphere charging
-            "CHRORDY1",  // VOX_CHRONO_READY              // Chronosphere ready
-            "CHROYES1",  // VOX_CHRONO_TEST               // Chrono test successful
-            "CMDCNTR1",  // VOX_HQ_UNDER_ATTACK           // Command cntr under attack
-            "CNTLDED1",  // VOX_CENTER_DEACTIVATED        // Control center deactiv.
-            "CONVYAP1",  // VOX_CONVOY_APPROACHING        // Convoy approaching
-            "CONVLST1",  // VOX_CONVOY_UNIT_LOST          // Convoy unit lost
-            "XPLOPLC1",  // VOX_EXPLOSIVE_PLACED          // Explosive placed
-            "CREDIT1",   // VOX_MONEY_STOLEN              // Credits stolen
-            "NAVYLST1",  // VOX_SHIP_LOST                 // Naval unit lost
-            "SATLNCH1",  // VOX_SATALITE_LAUNCHED         // Sattelite launched
-            "PULSE1",    // VOX_SONAR_AVAILABLE           // Sonar pulse available
-            "none",      // VOC_none10                    // None
-            "SOVFAPP1",  // VOX_SOVIET_FORCES_APPROACHING // Soviet forces approaching
-            "SOVREIN1",  // VOX_SOVIET_REINFROCEMENTS     // Soviet reinf. arrived
-            "TRAIN1",    // VOX_TRAINING                  // Training
-            "AREADY1",   // VOX_ABOMB_READY               // A-bomb ready
-            "ALAUNCH1",  // VOX_ABOMB_LAUNCH              // A-bomb launch detected
-            "AARRIVN1",  // VOX_ALLIES_N                  // Allied reinf. north
-            "AARRIVS1",  // VOX_ALLIES_S                  // Allied reinf. south
-            "AARIVE1",   // VOX_ALLIES_E                  // Allied reinf. east
-            "AARRIVW1",  // VOX_ALLIES_W                  // Allied reinf. west
-            "1OBJMET1",  // VOX_OBJECTIVE1                // 1st objective met
-            "2OBJMET1",  // VOX_OBJECTIVE2                // 2nd objective met
-            "3OBJMET1",  // VOX_OBJECTIVE3                // 3rd objective met
-            "IRONCHG1",  // VOX_IRON_CHARGING             // Iron Curtain charging
-            "IRONRDY1",  // VOX_IRON_READY                // Iron Curtain ready
-            "KOSYRES1",  // VOX_RESCUED                   // Kosygin rescued
-            "OBJNMET1",  // VOX_OBJECTIVE_NOT             // Objective not met
-            "FLAREN1",   // VOX_SIGNAL_N                  // Signal flare north
-            "FLARES1",   // VOX_SIGNAL_S                  // Signal flare south
-            "FLAREE1",   // VOX_SIGNAL_E                  // Signal flare east
-            "FLAREW1",   // VOX_SIGNAL_W                  // Signal flare west
-            "SPYPLN1",   // VOX_SPY_PLANE                 // Spy plane ready
-            "TANYAF1",   // VOX_FREED                     // Tanya Freed
-            "ARMORUP1",  // VOX_UPGRADE_ARMOR             // Unit armor upgraded
-            "FIREPO1",   // VOX_UPGRADE_FIREPOWER         // Unit firepower upgraded
-            "UNITSPD1",  // VOX_UPGRADE_SPEED             // Unit speed upgraded
-            "MTIMEIN1",  // VOX_MISSION_TIMER             // Mission timer initialised
-            "UNITFUL1",  // VOX_UNIT_FULL                 // Unit full
-            "UNITREP1",  // VOX_UNIT_REPAIRED             // Unit repaired
-            "40MINR",    // VOX_TIME_40                   // 40 minutes remaining
-            "30MINR",    // VOX_TIME_30                   // 30 minutes remaining
-            "20MINR",    // VOX_TIME_20                   // 20 minutes remaining
-            "10MINR",    // VOX_TIME_10                   // 10 minutes remaining
-            "5MINR",     // VOX_TIME_5                    // 5 minutes remaining
-            "4MINR",     // VOX_TIME_4                    // 4 minutes remaining
-            "3MINR",     // VOX_TIME_3                    // 3 minutes remaining
-            "2MINR",     // VOX_TIME_2                    // 2 minutes remaining
-            "1MINR",     // VOX_TIME_1                    // 1 minutes remaining
-            "TIMERNO1",  // VOX_TIME_STOP                 // Timer stopped
-            "UNITSLD1",  // VOX_UNIT_SOLD                 // Unit sold
-            "TIMERGO1",  // VOX_TIMER_STARTED             // Timer started
-            "TARGRES1",  // VOX_TARGET_RESCUED            // Target rescued
-            "TARGFRE1",  // VOX_TARGET_FREED              // Target freed
-            "TANYAR1",   // VOX_TANYA_RESCUED             // Tanya rescued
-            "STRUSLD1",  // VOX_STRUCTURE_SOLD            // Structure sold
-            "SOVFORC1",  // VOX_SOVIET_FORCES_FALLEN      // Soviet forces have fallen
-            "SOVEMP1",   // VOX_SOVIET_SELECTED           // Soviet Empire selected
-            "SOVEFAL1",  // VOX_SOVIET_EMPIRE_FALLEN      // Soviet Empire has fallen
-            "OPTERM1",   // VOX_OPERATION_TERMINATED      // Operation control terminated
-            "OBJRCH1",   // VOX_OBJECTIVE_REACHED         // Objective reached
-            "OBJNRCH1",  // VOX_OBJECTIVE_NOT_REACHED     // Objective not reached
-            "OBJMET1",   // VOX_OBJECTIVE_MET             // Objective met
-            "MERCR1",    // VOX_MERCENARY_RESCUED         // Mercenary rescued
-            "MERCF1",    // VOX_MERCENARY_FREED           // Mercenary freed
-            "KOSYFRE1",  // VOX_KOSOYGEN_FREED            // Kosygin freed
-            "FLARE1",    // VOX_FLARE_DETECTED            // Signal flare detected
-            "COMNDOR1",  // VOX_COMMANDO_RESCUED          // Commando rescued
-            "COMNDOF1",  // VOX_COMMANDO_FREED            // Commando freed
-            "BLDGPRG1",  // VOX_BUILDING_IN_PROGRESS      // Building in progress
-            "ATPREP1",   // VOX_ATOM_PREPPING             // Atom bomb prepping
-            "ASELECT1",  // VOX_ALLIED_SELECTED           // Allied forces selected
-            "APREP1",    // VOX_ABOMB_PREPPING            // A-bomb prepping
-            "ATLNCH1",   // VOX_ATOM_LAUNCHED             // Atom bomb launch detected
-            "AFALLEN1",  // VOX_ALLIED_FORCES_FALLEN      // Allied forces have fallen
-            "AAVAIL1",   // VOX_ABOMB_AVAILABLE           // A-bomb available
-            "AARRIVE1",  // VOX_ALLIED_REINFORCEMENTS     // Allied reinf. arrived
-            "SAVE1",     // VOX_MISSION_SAVED             // Mission saved
-            "LOAD1"      // VOX_MISSION_LOADED            // Mission loaded
-        };
-
-        public static readonly string[] VoxDesc = new[]
-        {
-            "Mission accomplished",
-            "Your mission has failed",
-            "Building in progress",
-            "Construction complete",
-            "Unit ready",
-            "New construction options",
-            "Cannot deploy here",
-            "Structure destroyed",
-            "Insufficient power",
-            "Insufficient funds",
-            "Battle control terminated",
-            "Reinforcements arrived",
-            "Canceled",
-            "Building",
-            "Low power",
-            "Insufficent funds",
-            "Our base is under attack",
-            "Unable to build more",
-            "Primary building selected",
-            "M.A.D. Tank Deployed",
-            "None",
-            "Unit lost",
-            "Select target",
-            "Enemy approaching",
-            "Silos needed",
-            "On hold",
-            "Repairing",
-            "None",
-            "None",
-            "Airborne unit lost",
-            "None",
-            "Allied forces appr.",
-            "Allied reinf. arrived",
-            "None",
-            "None",
-            "Building infiltrated",
-            "Chronosphere charging",
-            "Chronosphere ready",
-            "Chrono test successful",
-            "Command cntr under attack",
-            "Control center deactiv.",
-            "Convoy approaching",
-            "Convoy unit lost",
-            "Explosive placed",
-            "Credits stolen",
-            "Naval unit lost",
-            "Sattelite launched",
-            "Sonar pulse available",
-            "None",
-            "Soviet forces approaching",
-            "Soviet reinf. arrived",
-            "Training",
-            "A-bomb ready",
-            "A-bomb launch detected",
-            "Allied reinf. north",
-            "Allied reinf. south",
-            "Allied reinf. east",
-            "Allied reinf. west",
-            "1st objective met",
-            "2nd objective met",
-            "3rd objective met",
-            "Iron Curtain charging",
-            "Iron Curtain ready",
-            "Kosygin rescued",
-            "Objective not met",
-            "Signal flare north",
-            "Signal flare south",
-            "Signal flare east",
-            "Signal flare west",
-            "Spy plane ready",
-            "Tanya Freed",
-            "Unit armor upgraded",
-            "Unit firepower upgraded",
-            "Unit speed upgraded",
-            "Mission timer initialised",
-            "Unit full",
-            "Unit repaired",
-            "40 minutes remaining",
-            "30 minutes remaining",
-            "20 minutes remaining",
-            "10 minutes remaining",
-            "5 minutes remaining",
-            "4 minutes remaining",
-            "3 minutes remaining",
-            "2 minutes remaining",
-            "1 minutes remaining",
-            "Timer stopped",
-            "Unit sold",
-            "Timer started",
-            "Target rescued",
-            "Target freed",
-            "Tanya rescued",
-            "Structure sold",
-            "Soviet forces have fallen",
-            "Soviet Empire selected",
-            "Soviet Empire has fallen",
-            "Operation control terminated",
-            "Objective reached",
-            "Objective not reached",
-            "Objective met",
-            "Mercenary rescued",
-            "Mercenary freed",
-            "Kosygin freed",
-            "Signal flare detected",
-            "Commando rescued",
-            "Commando freed",
-            "Building in progress",
-            "Atom bomb prepping",
-            "Allied forces selected",
-            "A-bomb prepping",
-            "Atom bomb launch detected",
-            "Allied forces have fallen",
-            "A-bomb available",
-            "Allied reinf. arrived",
-            "Mission saved",
-            "Mission loaded",
+            new ListItem<string>("MISNWON1", "Mission accomplished"),         // VOX_ACCOMPLISHED
+            new ListItem<string>("MISNLST1", "Your mission has failed"),      // VOX_FAIL
+            new ListItem<string>("PROGRES1", "Building in progress"),         // VOX_NO_FACTORY
+            new ListItem<string>("CONSCMP1", "Construction complete"),        // VOX_CONSTRUCTION
+            new ListItem<string>("UNITRDY1", "Unit ready"),                   // VOX_UNIT_READY
+            new ListItem<string>("NEWOPT1",  "New construction options"),     // VOX_NEW_CONSTRUCT
+            new ListItem<string>("NODEPLY1", "Cannot deploy here"),           // VOX_DEPLOY
+            new ListItem<string>("STRCKIL1", "Structure destroyed"),          // VOX_STRUCTURE_DESTROYED
+            new ListItem<string>("NOPOWR1",  "Insufficient power"),           // VOX_INSUFFICIENT_POWER
+            new ListItem<string>("NOFUNDS1", "Insufficient funds"),           // VOX_NO_CASH
+            new ListItem<string>("BCT1",     "Battle control terminated"),    // VOX_CONTROL_EXIT
+            new ListItem<string>("REINFOR1", "Reinforcements arrived"),       // VOX_REINFORCEMENTS
+            new ListItem<string>("CANCLD1",  "Canceled"),                     // VOX_CANCELED
+            new ListItem<string>("ABLDGIN1", "Building"),                     // VOX_BUILDING
+            new ListItem<string>("LOPOWER1", "Low power"),                    // VOX_LOW_POWER
+            new ListItem<string>("NOFUNDS1", "Insufficent funds"),            // VOX_NEED_MO_MONEY
+            new ListItem<string>("BASEATK1", "Our base is under attack"),     // VOX_BASE_UNDER_ATTACK
+            new ListItem<string>("NOBUILD1", "Unable to build more"),         // VOX_UNABLE_TO_BUILD
+            new ListItem<string>("PRIBLDG1", "Primary building selected"),    // VOX_PRIMARY_SELECTED
+            new ListItem<string>("TANK01",   "M.A.D. Tank Deployed"),         // VOX_MADTANK_DEPLOYED
+            new ListItem<string>("none",     "None"),                         // VOX_SOVIET_CAPTURED
+            new ListItem<string>("UNITLST1", "Unit lost"),                    // VOX_UNIT_LOST
+            new ListItem<string>("SLCTTGT1", "Select target"),                // VOX_SELECT_TARGET
+            new ListItem<string>("ENMYAPP1", "Enemy approaching"),            // VOX_PREPARE
+            new ListItem<string>("SILOND1",  "Silos needed"),                 // VOX_NEED_MO_CAPACITY
+            new ListItem<string>("ONHOLD1",  "On hold"),                      // VOX_SUSPENDED
+            new ListItem<string>("REPAIR1",  "Repairing"),                    // VOX_REPAIRING
+            new ListItem<string>("none",     "None"),                         // VOX_none5
+            new ListItem<string>("none",     "None"),                         // VOX_none6
+            new ListItem<string>("AUNITL1",  "Airborne unit lost"),           // VOX_AIRCRAFT_LOST
+            new ListItem<string>("none",     "None"),                         // VOX_none7
+            new ListItem<string>("AAPPRO1",  "Allied forces appr."),          // VOX_ALLIED_FORCES_APPROACHING
+            new ListItem<string>("AARRIVE1", "Allied reinf. arrived"),        // VOX_ALLIED_APPROACHING
+            new ListItem<string>("none",     "None"),                         // VOX_none8
+            new ListItem<string>("none",     "None"),                         // VOX_none9
+            new ListItem<string>("BLDGINF1", "Building infiltrated"),         // VOX_BUILDING_INFILTRATED
+            new ListItem<string>("CHROCHR1", "Chronosphere charging"),        // VOX_CHRONO_CHARGING
+            new ListItem<string>("CHRORDY1", "Chronosphere ready"),           // VOX_CHRONO_READY
+            new ListItem<string>("CHROYES1", "Chrono test successful"),       // VOX_CHRONO_TEST
+            new ListItem<string>("CMDCNTR1", "Command cntr under attack"),    // VOX_HQ_UNDER_ATTACK
+            new ListItem<string>("CNTLDED1", "Control center deactiv."),      // VOX_CENTER_DEACTIVATED
+            new ListItem<string>("CONVYAP1", "Convoy approaching"),           // VOX_CONVOY_APPROACHING
+            new ListItem<string>("CONVLST1", "Convoy unit lost"),             // VOX_CONVOY_UNIT_LOST
+            new ListItem<string>("XPLOPLC1", "Explosive placed"),             // VOX_EXPLOSIVE_PLACED
+            new ListItem<string>("CREDIT1",  "Credits stolen"),               // VOX_MONEY_STOLEN
+            new ListItem<string>("NAVYLST1", "Naval unit lost"),              // VOX_SHIP_LOST
+            new ListItem<string>("SATLNCH1", "Sattelite launched"),           // VOX_SATALITE_LAUNCHED
+            new ListItem<string>("PULSE1",   "Sonar pulse available"),        // VOX_SONAR_AVAILABLE
+            new ListItem<string>("none",     "None"),                         // VOX_none10
+            new ListItem<string>("SOVFAPP1", "Soviet forces approaching"),    // VOX_SOVIET_FORCES_APPROACHING
+            new ListItem<string>("SOVREIN1", "Soviet reinf. arrived"),        // VOX_SOVIET_REINFROCEMENTS
+            new ListItem<string>("TRAIN1",   "Training"),                     // VOX_TRAINING
+            new ListItem<string>("AREADY1",  "A-bomb ready"),                 // VOX_ABOMB_READY
+            new ListItem<string>("ALAUNCH1", "A-bomb launch detected"),       // VOX_ABOMB_LAUNCH
+            new ListItem<string>("AARRIVN1", "Allied reinf. north"),          // VOX_ALLIES_N
+            new ListItem<string>("AARRIVS1", "Allied reinf. south"),          // VOX_ALLIES_S
+            new ListItem<string>("AARIVE1",  "Allied reinf. east"),           // VOX_ALLIES_E
+            new ListItem<string>("AARRIVW1", "Allied reinf. west"),           // VOX_ALLIES_W
+            new ListItem<string>("1OBJMET1", "1st objective met"),            // VOX_OBJECTIVE1
+            new ListItem<string>("2OBJMET1", "2nd objective met"),            // VOX_OBJECTIVE2
+            new ListItem<string>("3OBJMET1", "3rd objective met"),            // VOX_OBJECTIVE3
+            new ListItem<string>("IRONCHG1", "Iron Curtain charging"),        // VOX_IRON_CHARGING
+            new ListItem<string>("IRONRDY1", "Iron Curtain ready"),           // VOX_IRON_READY
+            new ListItem<string>("KOSYRES1", "Kosygin rescued"),              // VOX_RESCUED
+            new ListItem<string>("OBJNMET1", "Objective not met"),            // VOX_OBJECTIVE_NOT
+            new ListItem<string>("FLAREN1",  "Signal flare north"),           // VOX_SIGNAL_N
+            new ListItem<string>("FLARES1",  "Signal flare south"),           // VOX_SIGNAL_S
+            new ListItem<string>("FLAREE1",  "Signal flare east"),            // VOX_SIGNAL_E
+            new ListItem<string>("FLAREW1",  "Signal flare west"),            // VOX_SIGNAL_W
+            new ListItem<string>("SPYPLN1",  "Spy plane ready"),              // VOX_SPY_PLANE
+            new ListItem<string>("TANYAF1",  "Tanya Freed"),                  // VOX_FREED
+            new ListItem<string>("ARMORUP1", "Unit armor upgraded"),          // VOX_UPGRADE_ARMOR
+            new ListItem<string>("FIREPO1",  "Unit firepower upgraded"),      // VOX_UPGRADE_FIREPOWER
+            new ListItem<string>("UNITSPD1", "Unit speed upgraded"),          // VOX_UPGRADE_SPEED
+            new ListItem<string>("MTIMEIN1", "Mission timer initialised"),    // VOX_MISSION_TIMER
+            new ListItem<string>("UNITFUL1", "Unit full"),                    // VOX_UNIT_FULL
+            new ListItem<string>("UNITREP1", "Unit repaired"),                // VOX_UNIT_REPAIRED
+            new ListItem<string>("40MINR",   "40 minutes remaining"),         // VOX_TIME_40
+            new ListItem<string>("30MINR",   "30 minutes remaining"),         // VOX_TIME_30
+            new ListItem<string>("20MINR",   "20 minutes remaining"),         // VOX_TIME_20
+            new ListItem<string>("10MINR",   "10 minutes remaining"),         // VOX_TIME_10
+            new ListItem<string>("5MINR",    "5 minutes remaining"),          // VOX_TIME_5
+            new ListItem<string>("4MINR",    "4 minutes remaining"),          // VOX_TIME_4
+            new ListItem<string>("3MINR",    "3 minutes remaining"),          // VOX_TIME_3
+            new ListItem<string>("2MINR",    "2 minutes remaining"),          // VOX_TIME_2
+            new ListItem<string>("1MINR",    "1 minutes remaining"),          // VOX_TIME_1
+            new ListItem<string>("TIMERNO1", "Timer stopped"),                // VOX_TIME_STOP
+            new ListItem<string>("UNITSLD1", "Unit sold"),                    // VOX_UNIT_SOLD
+            new ListItem<string>("TIMERGO1", "Timer started"),                // VOX_TIMER_STARTED
+            new ListItem<string>("TARGRES1", "Target rescued"),               // VOX_TARGET_RESCUED
+            new ListItem<string>("TARGFRE1", "Target freed"),                 // VOX_TARGET_FREED
+            new ListItem<string>("TANYAR1",  "Tanya rescued"),                // VOX_TANYA_RESCUED
+            new ListItem<string>("STRUSLD1", "Structure sold"),               // VOX_STRUCTURE_SOLD
+            new ListItem<string>("SOVFORC1", "Soviet forces have fallen"),    // VOX_SOVIET_FORCES_FALLEN
+            new ListItem<string>("SOVEMP1",  "Soviet Empire selected"),       // VOX_SOVIET_SELECTED
+            new ListItem<string>("SOVEFAL1", "Soviet Empire has fallen"),     // VOX_SOVIET_EMPIRE_FALLEN
+            new ListItem<string>("OPTERM1",  "Operation control terminated"), // VOX_OPERATION_TERMINATED
+            new ListItem<string>("OBJRCH1",  "Objective reached"),            // VOX_OBJECTIVE_REACHED
+            new ListItem<string>("OBJNRCH1", "Objective not reached"),        // VOX_OBJECTIVE_NOT_REACHED
+            new ListItem<string>("OBJMET1",  "Objective met"),                // VOX_OBJECTIVE_MET
+            new ListItem<string>("MERCR1",   "Mercenary rescued"),            // VOX_MERCENARY_RESCUED
+            new ListItem<string>("MERCF1",   "Mercenary freed"),              // VOX_MERCENARY_FREED
+            new ListItem<string>("KOSYFRE1", "Kosygin freed"),                // VOX_KOSOYGEN_FREED
+            new ListItem<string>("FLARE1",   "Signal flare detected"),        // VOX_FLARE_DETECTED
+            new ListItem<string>("COMNDOR1", "Commando rescued"),             // VOX_COMMANDO_RESCUED
+            new ListItem<string>("COMNDOF1", "Commando freed"),               // VOX_COMMANDO_FREED
+            new ListItem<string>("BLDGPRG1", "Building in progress"),         // VOX_BUILDING_IN_PROGRESS
+            new ListItem<string>("ATPREP1",  "Atom bomb prepping"),           // VOX_ATOM_PREPPING
+            new ListItem<string>("ASELECT1", "Allied forces selected"),       // VOX_ALLIED_SELECTED
+            new ListItem<string>("APREP1",   "A-bomb prepping"),              // VOX_ABOMB_PREPPING
+            new ListItem<string>("ATLNCH1",  "Atom bomb launch detected"),    // VOX_ATOM_LAUNCHED
+            new ListItem<string>("AFALLEN1", "Allied forces have fallen"),    // VOX_ALLIED_FORCES_FALLEN
+            new ListItem<string>("AAVAIL1",  "A-bomb available"),             // VOX_ABOMB_AVAILABLE
+            new ListItem<string>("AARRIVE1", "Allied reinf. arrived"),        // VOX_ALLIED_REINFORCEMENTS
+            new ListItem<string>("SAVE1",    "Mission saved"),                // VOX_MISSION_SAVED
+            new ListItem<string>("LOAD1",    "Mission loaded"),               // VOX_MISSION_LOADED
         };
 
         public static readonly string[] TextDesc = new[]

@@ -50,9 +50,9 @@ namespace MobiusEditor.TiberianDawn
                 new FileType[] { FileType.BIN, FileType.INI }, new FileType[] { FileType.BIN, FileType.INI }),
             // Experimental; TD map but saved in single file as RA. Disabled for now.
             new FileTypeInfo(FileType.MPR, "Tiberian Dawn map (compact)", FileTypeFlags.ExpandedType, new string[] { "ini" }, new string[] { "mpr" }),
-            new FileTypeInfo(FileType.I64, "Tiberian Dawn N64 map (ini+map)", new string[] { "ini", "map" }, new string[] { "ini", "map" },
+            new FileTypeInfo(FileType.I64, "Tiberian Dawn Nintendo 64 map (ini+map)", new string[] { "ini", "map" }, new string[] { "ini", "map" },
                 new FileType[] { FileType.I64, FileType.B64 }, new FileType[] { FileType.I64, FileType.B64 }),
-            new FileTypeInfo(FileType.B64, "Tiberian Dawn N64 map (ini+map)", FileTypeFlags.HideFromList, new string[] { "map", "ini" }, new string[] { "map", "ini" },
+            new FileTypeInfo(FileType.B64, "Tiberian Dawn Nintendo 64 map (ini+map)", FileTypeFlags.HideFromList, new string[] { "map", "ini" }, new string[] { "map", "ini" },
                 new FileType[] { FileType.B64, FileType.I64 }, new FileType[] { FileType.B64, FileType.I64 }),
             new FileTypeInfo(FileType.PGM, "Tiberian Dawn map PGM", FileTypeFlags.InternalUse, new string[] { "pgm" }, new string[] { "pgm" })
         };
@@ -105,6 +105,15 @@ namespace MobiusEditor.TiberianDawn
         public override OverlayTypeFlag OverlayIconType => OverlayTypeFlag.Crate;
         public override Bitmap WorkshopPreviewGeneric => Properties.Resources.UI_CustomMissionPreviewDefault;
         public override Bitmap WorkshopPreviewGenericGame => Properties.Resources.TD_Head;
+
+        public override String GetName(FileType fileType)
+        {
+            if (fileType == FileType.B64 || fileType == FileType.I64)
+            {
+                return Name + " - Nintendo 64";
+            }
+            return Name;
+        }
 
         public override FileType IdentifyMap(INI iniContents, byte[] binContents, bool contentWasSwapped, bool acceptBin, out bool isMegaMap, out string theater)
         {

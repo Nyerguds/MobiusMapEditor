@@ -73,10 +73,10 @@ namespace MobiusEditor.Utility
             return _string.Substring(0, index1);
         }
 
-        public static implicit operator EnhFormatString(string code)
-           => new EnhFormatString(code);
-        public static implicit operator string(EnhFormatString language)
-           => language._string;
+        public static implicit operator EnhFormatString(string str)
+           => new EnhFormatString(str);
+        public static implicit operator string(EnhFormatString str)
+           => str._string;
 
         /// <summary>
         /// Finds the highest {#} argument inside the string that matches the EnhFormatString format.

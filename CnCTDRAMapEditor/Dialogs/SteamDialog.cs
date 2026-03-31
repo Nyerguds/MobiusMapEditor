@@ -329,7 +329,7 @@ namespace MobiusEditor.Dialogs
         {
             try
             {
-                string errors = plugin.Validate(gameInfo.SteamFileType, true, false);
+                string errors = plugin.Validate(gameInfo.SteamFileType, plugin.LoadedFileType, true, false);
                 if (!String.IsNullOrWhiteSpace(errors))
                 {
                     return errors.Split('\n')[0];

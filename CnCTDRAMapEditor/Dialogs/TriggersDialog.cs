@@ -1134,7 +1134,7 @@ namespace MobiusEditor.Dialogs
                                 eventValueComboBox.Visible = true;
                                 eventValueComboBox.DisplayMember = "Label";
                                 eventValueComboBox.ValueMember = "Value";
-                                ListItem<long>[] bldData = plugin.Map.BuildingTypes.Select(t => ListItem.Create((long)t.ID, t.DisplayNameWithTheaterInfo)).ToArray();
+                                ListItem<long>[] bldData = plugin.Map.BuildingTypesNoWalls.Select(t => ListItem.Create((long)t.ID, t.DisplayNameWithTheaterInfo)).ToArray();
                                 eventValueComboBox.DataSource = bldData;
                                 correctedData = ListItem.CheckInList(data, bldData);
                                 triggerEvent.Data = correctedData;
@@ -1202,7 +1202,7 @@ namespace MobiusEditor.Dialogs
                                 eventValueComboBox.Visible = true;
                                 eventValueComboBox.DisplayMember = "Label";
                                 eventValueComboBox.ValueMember = "Value";
-                                ListItem<long>[] bldData = plugin.Map.BuildingTypes.Select(t => ListItem.Create((long)t.ID, t.DisplayNameWithTheaterInfo)).ToArray();
+                                ListItem<long>[] bldData = plugin.Map.BuildingTypesNoWalls.Select(t => ListItem.Create((long)t.ID, t.DisplayNameWithTheaterInfo)).ToArray();
                                 eventValueComboBox.DataSource = bldData;
                                 correctedData = ListItem.CheckInList(data, bldData);
                                 triggerEvent.Data = correctedData;
@@ -1414,9 +1414,10 @@ namespace MobiusEditor.Dialogs
                                 actionValueComboBox.Visible = true;
                                 actionValueComboBox.DisplayMember = "Label";
                                 actionValueComboBox.ValueMember = "Value";
-                                ListItem<long>[] vocData = ListItem.Create((long)-1, "None").Yield().Concat(
-                                    RedAlert.ActionDataTypes.VocDesc.Select((t, i) => ListItem.Create((long)i, t + " (" + RedAlert.ActionDataTypes.VocNames[i] + ")"))
-                                    .Where(t => !String.Equals(RedAlert.ActionDataTypes.VocNames[t.Value], "x", StringComparison.OrdinalIgnoreCase))).ToArray();
+                                ListItem<long>[] vocData = ListItem.Create((long)-1, "None").Yield()
+                                    .Concat(RedAlert.ActionDataTypes.VocTypes.Select((t, i) => ListItem.Create((long)i,
+                                    "x".Equals(t.Value, StringComparison.OrdinalIgnoreCase) ? "x" : (t.Label + " (" + t.Value + ")")))
+                                    .Where(vn => !"x".Equals(vn.Label))).ToArray();
                                 actionValueComboBox.DataSource = vocData;
                                 correctedData = ListItem.CheckInList(data, vocData);
                                 triggerAction.Data = correctedData;
@@ -1427,9 +1428,10 @@ namespace MobiusEditor.Dialogs
                                 actionValueComboBox.Visible = true;
                                 actionValueComboBox.DisplayMember = "Label";
                                 actionValueComboBox.ValueMember = "Value";
-                                ListItem<long>[] voxData = ListItem.Create((long)-1, "None").Yield().Concat(
-                                    RedAlert.ActionDataTypes.VoxDesc.Select((t, i) => ListItem.Create((long)i, t + " (" + RedAlert.ActionDataTypes.VoxNames[i] + ")"))
-                                    .Where(t => !String.Equals(RedAlert.ActionDataTypes.VoxNames[t.Value], "none", StringComparison.OrdinalIgnoreCase))).ToArray();
+                                ListItem<long>[] voxData = ListItem.Create((long)-1, "None").Yield()
+                                    .Concat(RedAlert.ActionDataTypes.VoxTypes.Select((t, i) => ListItem.Create((long)i,
+                                    "none".Equals(t.Value, StringComparison.OrdinalIgnoreCase) ? "x" : (t.Label + " (" + t.Value + ")")))
+                                    .Where(vn => !"x".Equals(vn.Label))).ToArray();
                                 actionValueComboBox.DataSource = voxData;
                                 correctedData = ListItem.CheckInList(data, voxData);
                                 triggerAction.Data = correctedData;

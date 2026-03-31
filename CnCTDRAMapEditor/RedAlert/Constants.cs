@@ -23,7 +23,7 @@ namespace MobiusEditor.RedAlert
         public const int MaxBriefLengthClassic = 1022;
         public const int BriefLineCutoffClassic = 74;
 
-        public const int DefaultGoldValue = 25;
+        public const int DefaultResourceValue = 25;
         public const int DefaultGemValue = 50;
         public const int DefaultDropZoneRadius = 4;
         public const int DefaultGapRadius = 10;
@@ -33,6 +33,7 @@ namespace MobiusEditor.RedAlert
         public const int MaxTriggerNameLength = 4;
         public const int MaxTeamNameLength = 8;
 
+        // TODO migrate these to IGamePlugin so RA rules can be taken into account.
         public const int MaxAircraft  /**/ = 100;
         public const int MaxVessels   /**/ = 100;
         public const int MaxBuildings /**/ = 500;

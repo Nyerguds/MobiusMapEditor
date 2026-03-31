@@ -16,16 +16,50 @@ using System.Text;
 
 namespace MobiusEditor.Utility.Hashing
 {
+    public class HashObfuscateSole : HashObfuscate
+    {
+        public override string DisplayName => "Obfuscate Sole (hidden options)";
+        public override string SimpleName => "ObfuscateSole";
+
+        public HashObfuscateSole()
+        {
+            //
+        }
+
+        protected override int GetDataLength(byte[] data)
+        {
+            // Sole Survivor performs a strlen operation on the data,
+            // which means it truncates it after the first found 0-byte.
+            int len = data.Length;
+            for (int i = 0; i < len; ++i)
+            {
+                if (data[i] == 0)
+                {
+                    return i;
+                }
+            }
+            return len;
+        }
+    }
+
     public class HashObfuscate : HashRol
     {
-        public override string DisplayName { get { return "Obsfuscate (hidden options)"; } }
-        public override string SimpleName { get { return "Obsfuscate"; } }
+        public override string DisplayName => "Obfuscate (hidden options)";
+        public override string SimpleName => "Obfuscate";
 
         private static bool[] isGraph = new bool[256];
 
         static HashObfuscate()
         {
-            char[] graphChars = new char[] { '!', '"', '#', '$', '%', '&', '\'', '(', ')', '*', '+', ',', '-', '.', '/', '0', '1', '2', '3', '4', '5', '6', '7', '8', '9', ':', ';', '<', '=', '>', '?', '@', 'A', 'B', 'C', 'D', 'E', 'F', 'G', 'H', 'I', 'J', 'K', 'L', 'M', 'N', 'O', 'P', 'Q', 'R', 'S', 'T', 'U', 'V', 'W', 'X', 'Y', 'Z', '[', '\\', ']', '^', '_', '`', 'a', 'b', 'c', 'd', 'e', 'f', 'g', 'h', 'i', 'j', 'k', 'l', 'm', 'n', 'o', 'p', 'q', 'r', 's', 't', 'u', 'v', 'w', 'x', 'y', 'z', '{', '|', '}', '~' };
+            char[] graphChars = new char[] {
+                '!', '"', '#', '$', '%', '&', '\'', '(', ')', '*', '+', ',', '-', '.', '/', '0',
+                '1', '2', '3', '4', '5', '6', '7', '8', '9', ':', ';', '<', '=', '>', '?', '@',
+                'A', 'B', 'C', 'D', 'E', 'F', 'G', 'H', 'I', 'J', 'K', 'L', 'M', 'N', 'O', 'P',
+                'Q', 'R', 'S', 'T', 'U', 'V', 'W', 'X', 'Y', 'Z', '[', '\\', ']', '^', '_', '`',
+                'a', 'b', 'c', 'd', 'e', 'f', 'g', 'h', 'i', 'j', 'k', 'l', 'm', 'n', 'o', 'p',
+                'q', 'r', 's', 't', 'u', 'v', 'w', 'x', 'y', 'z', '{', '|', '}', '~'
+            };
+            // These have the same value in ASCII and in Unicode, so they can directly be used as indices.
             for (int i = 0; i < graphChars.Length; ++i)
             {
                 isGraph[graphChars[i]] = true;
@@ -37,8 +71,8 @@ namespace MobiusEditor.Utility.Hashing
         }
 
         /*
-		**	Only upper case letters are significant.
-		*/
+        **	Only upper case letters are significant.
+        */
         public override bool NeedsUpperCase => true;
 
         public override uint GetNameIdCorrectCase(string name)
@@ -53,16 +87,18 @@ namespace MobiusEditor.Utility.Hashing
             {
                 return 0;
             }
+
             /*
-			**	Copy key phrase into a working buffer. This hides any transformation done
-			**	to the string.
-			*/
+            **	Copy key phrase into a working buffer. This hides any transformation done
+            **	to the string.
+            */
+            // Ignore the copy operation; data is modified but it's not used after this anyway.
             int length = data.Length;
 
             /*
-			**	Ensure that only visible ASCII characters compose the key phrase. This
-			**	discourages the direct forced illegal character input method of attack.
-			*/
+            **	Ensure that only visible ASCII characters compose the key phrase. This
+            **	discourages the direct forced illegal character input method of attack.
+            */
             for (int index = 0; index < length; ++index)
             {
                 if (!isGraph[data[index]])
@@ -72,12 +108,12 @@ namespace MobiusEditor.Utility.Hashing
             }
 
             /*
-			**	Increase the strength of even short pass phrases by extending the
-			**	length to be at least a minimum number of characters. This helps prevent
-			**	a weak pass phrase from compromising the obfuscation process. This
-			**	process also forces the key phrase to be an even multiple of four.
-			**	This is necessary to support the cypher process that occurs later.
-			*/
+            **	Increase the strength of even short pass phrases by extending the
+            **	length to be at least a minimum number of characters. This helps prevent
+            **	a weak pass phrase from compromising the obfuscation process. This
+            **	process also forces the key phrase to be an even multiple of four.
+            **	This is necessary to support the cypher process that occurs later.
+            */
             if (length < 16 || (length & 0x03) != 0)
             {
                 int maxlen = 16;
@@ -97,19 +133,33 @@ namespace MobiusEditor.Utility.Hashing
                 length = index;
                 data = newBuffer;
             }
-            /*
-			**	Reverse the character string and combine with the previous transformation.
-			**	This doubles the workload of trying to reverse engineer the CRC calculation.
-			*/
-            Array.Reverse(data);
-            int code = (int)GetNameId(data, 1);
+
+            /* 
+            **	Nyerguds's implementation note:
+            **	In the original Westwood code, the hash of the original string was XOR combined
+            **	with the hash of the inverted string in a set of operations that simply ended up
+            **	cancelling each other out, leaving just the inverted string's hash. These useless
+            **	operations were removed from the logic, and replaced by just the two lines below:
+            */
+            // int code = (int)GetNameId(data, GetDataLength(data), 1); // code = A
+            // int copy = code; // copy = A
+            // Array.Reverse(data);
+            // code ^= (int)GetNameId(data, GetDataLength(data), 1); code = A ^ B
+            // code = code ^ copy; // code = (A ^ B) ^ A = B
 
             /*
-			**	Unroll and combine the code value into the pass phrase and then perform
-			**	another self referential transformation. Although this is a trivial cypher
-			**	process, it gives the sophisticated hacker false hope since the strong
-			**	cypher process occurs later.
-			*/
+            **	Transform the buffer into a number. This transformation is character
+            **	order dependent.
+            */
+            Array.Reverse(data);
+            int code = (int)GetNameId(data, GetDataLength(data), 1);
+
+            /*
+            **	Unroll and combine the code value into the pass phrase and then perform
+            **	another self referential transformation. Although this is a trivial cypher
+            **	process, it gives the sophisticated hacker false hope since the strong
+            **	cypher process occurs later.
+            */
             Array.Reverse(data);     // Restore original string order.
             for (int index = 0; index < length; ++index)
             {
@@ -120,10 +170,10 @@ namespace MobiusEditor.Utility.Hashing
             }
 
             /*
-			**	Introduce loss into the vector. This strengthens the key against traditional
-			**	cryptographic attack engines. Since this also weakens the key against
-			**	unconventional attacks, the loss is limited to less than 10%.
-			*/
+            **	Introduce loss into the vector. This strengthens the key against traditional
+            **	cryptographic attack engines. Since this also weakens the key against
+            **	unconventional attacks, the loss is limited to less than 10%.
+            */
             byte[] _lossbits = { 0x00, 0x08, 0x00, 0x20, 0x00, 0x04, 0x10, 0x00 };
             int _lossbitsLen = _lossbits.Length;
             byte[] _addbits = { 0x10, 0x00, 0x00, 0x80, 0x40, 0x00, 0x00, 0x04 };
@@ -135,14 +185,14 @@ namespace MobiusEditor.Utility.Hashing
             }
 
             /*
-			**	Perform a general cypher transformation on the vector
-			**	and use the vector itself as the cypher key. This is a variation on the
-			**	cypher process used in PGP. It is a very strong cypher process with no known
-			**	weaknesses. However, in this case, the cypher key is the vector itself and this
-			**	opens up a weakness against attacks that have access to this transformation
-			**	algorithm. The sheer workload of reversing this transformation should be enough
-			**	to discourage even the most determined hackers.
-			*/
+            **	Perform a general cypher transformation on the vector
+            **	and use the vector itself as the cypher key. This is a variation on the
+            **	cypher process used in PGP. It is a very strong cypher process with no known
+            **	weaknesses. However, in this case, the cypher key is the vector itself and this
+            **	opens up a weakness against attacks that have access to this transformation
+            **	algorithm. The sheer workload of reversing this transformation should be enough
+            **	to discourage even the most determined hackers.
+            */
             for (int index = 0; index < length; index += 4)
             {
                 // Tomsons26's rewrite.
@@ -163,17 +213,23 @@ namespace MobiusEditor.Utility.Hashing
                 data[index + 1] = (byte)(val_3 ^ tmp1);
                 data[index + 2] = (byte)(val_2 ^ tmp2);
                 data[index + 3] = (byte)(tmp2 ^ val_4);
-                //*/
             }
+
             /*
-			**	Convert this final vector into a cypher key code to be
-			**	returned by this routine.
-			*/
-            code = (int)GetNameId(data, 1);
+            **	Convert this final vector into a cypher key code to be
+            **	returned by this routine.
+            */
+
+            code = (int)GetNameId(data, GetDataLength(data), 1);
             /*
-			**	Return the final code value.
-			*/
+            **	Return the final code value.
+            */
             return (uint)code;
+        }
+
+        protected virtual int GetDataLength(byte[] data)
+        {
+            return data.Length;
         }
     }
 }

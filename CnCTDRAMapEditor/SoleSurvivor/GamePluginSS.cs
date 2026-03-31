@@ -113,7 +113,7 @@ namespace MobiusEditor.SoleSurvivor
             string[] unitActionTypes = { };
             string[] structureActionTypes = { };
             string[] terrainActionTypes = { };
-            BuildingType[] buildings = Globals.NoOwnedObjectsInSole ? new BuildingType[0] : BuildingTypes.GetTypes().ToArray();
+            BuildingType[] buildings = Globals.NoOwnedObjectsInSole ? new BuildingType[0] : BuildingTypes.GetTypes(true).ToArray();
             UnitType[] units = Globals.NoOwnedObjectsInSole ? new UnitType[0] : UnitTypes.GetTypes(Globals.DisableAirUnits).ToArray();
             InfantryType[] infantry = Globals.NoOwnedObjectsInSole ? new InfantryType[0] : InfantryTypes.GetTypes().ToArray();
             foreach (BuildingType bld in buildings)
@@ -125,7 +125,7 @@ namespace MobiusEditor.SoleSurvivor
             List<string> movies = movieTypesTD.Concat(movieTypesSole).ToList();
             ExplorerComparer sorter = new ExplorerComparer();
             movies.Sort(sorter);
-            Size mapSize = !megaMap ? Constants.MaxSize : Constants.MaxSizeMega;
+            Size mapSize = !megaMap ? gameTypeInfo.MapSize : gameTypeInfo.MapSizeMega;
             Map = new Map(basicSection, null, mapSize, typeof(TiberianDawn.House), HouseTypes.GetTypes(),
                 null, TheaterTypes.GetTypes(), TemplateTypes.GetTypes(),
                 TerrainTypes.GetTypes(), OverlayTypes.GetTypes(), SmudgeTypes.GetTypes(Globals.ConvertCraters),
@@ -134,8 +134,8 @@ namespace MobiusEditor.SoleSurvivor
                 MissionTypes.GetTypes(), MissionTypes.GetUnassignableTypes(), MissionTypes.MISSION_GUARD, MissionTypes.MISSION_STOP,
                 MissionTypes.MISSION_HARVEST, MissionTypes.MISSION_UNLOAD, DirectionTypes.GetMainTypes(),
                 DirectionTypes.GetAllTypes(), infantry, units, buildings, TeamMissionTypes.GetTypes(), fullTechnoTypes,
-                waypoints, movies, movieEmpty, themeEmpty.Yield().Concat(themeTypesSole), themeEmpty,
-                4, 0, 0, Constants.TiberiumValue, 0);
+                waypoints, movies, MovieEmpty, themeEmpty.Yield().Concat(themeTypesSole), themeEmpty,
+                4, 0, 0, Constants.DefaultResourceValue, 0);
             Map.MapSection.PropertyChanged += MapSection_PropertyChanged;
             // Clean up this mess.
             foreach (Model.House house in Map.Houses)
@@ -258,9 +258,9 @@ namespace MobiusEditor.SoleSurvivor
             SaveIniSmudge(ini);
         }
 
-        public override string Validate(FileType saveType, bool forResave, bool forWarnings)
+        public override string Validate(FileType saveType, FileType oldType, bool forResave, bool forWarnings)
         {
-            return Validate(saveType, forResave, forWarnings, true);
+            return Validate(saveType, oldType, forResave, forWarnings, true);
         }
 
         protected override List<string> ResetMissionRules(INI extraIniText, bool forFootprintTest, out bool footPrintsChanged, HashSet<Point> refreshPoints)

@@ -243,7 +243,7 @@ namespace MobiusEditor.Render
                     Template template = map.Templates[topLeft];
                     TemplateType ttype = template?.Type ?? clear;
                     string name = ttype.Name;
-                    // Old code; produces incorrect tiling on megmaps. Retained for testing purposes.
+                    // Old code; produces incorrect tiling on megamaps. Retained for research purposes since it appears in some prerelease screenshots.
                     //map.Metrics.GetCell(topLeft, out int cell);
                     //int icon = template?.Icon ?? ((cell & 0x03) | ((cell >> 4) & 0x0C));
                     // For clear terrain, calculate icon from 0-15 using map position.

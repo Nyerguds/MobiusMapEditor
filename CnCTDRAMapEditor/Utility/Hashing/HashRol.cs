@@ -58,6 +58,11 @@ namespace MobiusEditor.Utility.Hashing
 
         protected uint GetNameId(byte[] values, int rot)
         {
+            return GetNameId(values, values.Length, rot);
+        }
+
+        protected uint GetNameId(byte[] values, int length, int rot)
+        {
             int i = 0;
             uint id = 0;
             // length of the filename

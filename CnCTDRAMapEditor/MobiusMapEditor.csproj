@@ -368,6 +368,7 @@
     <Compile Include="Model\HouseType.cs" />
     <Compile Include="Model\BuildingType.cs" />
     <Compile Include="Model\Infantry.cs" />
+    <Compile Include="Model\IniParseConstants.cs" />
     <Compile Include="Model\Map.cs" />
     <Compile Include="Model\MapLoadInfo.cs" />
     <Compile Include="Model\MapSection.cs" />
