@@ -135,19 +135,12 @@ namespace MobiusEditor
                 else
                 {
                     // Fallback: use embedded resources to initialise romfis.
-                    INI iniMain = new INI();
-                    iniMain.Parse(Properties.Resources.mixcontent);
-                    INI iniTd = new INI();
-                    iniTd.Parse(Properties.Resources.mixcontent_td);
-                    INI iniRa = new INI();
-                    iniRa.Parse(Properties.Resources.mixcontent_ra1);
-                    INI iniSole = new INI();
-                    iniSole.Parse(Properties.Resources.mixcontent_sole);
+                    INI iniMain = new INI(Properties.Resources.mixcontent);
                     Dictionary<string, INI> sideInis = new Dictionary<string, INI>(StringComparer.OrdinalIgnoreCase)
                     {
-                        { "mixcontent_td.ini", iniTd },
-                        { "mixcontent_ra1.ini", iniRa },
-                        { "mixcontent_sole.ini", iniSole },
+                        { "mixcontent_td.ini", new INI(Properties.Resources.mixcontent_td) },
+                        { "mixcontent_ra1.ini", new INI(Properties.Resources.mixcontent_ra1)},
+                        { "mixcontent_sole.ini", new INI(Properties.Resources.mixcontent_sole) },
                     };
                     romfis = new MixFileNameGenerator(iniMain, sideInis);
                 }

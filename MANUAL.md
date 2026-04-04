@@ -104,7 +104,7 @@ If, for some reason, the Steam game folder detection fails, you can get the prom
 
 ### Map land types and object occupancy.
 
-Land types indicate which cells of the map tilesets are passable to different types of units, and which cells can be built on. They will be showm as hashed pattern when placing down a Map object, and can be permanently enabled under "View" → "Extra indicators" → "Map land types hashing", or simply by pressing F3. Once enabled, the hashing will be shown both on the map and on the map tool window preview.
+Land types indicate which cells of the map tilesets are passable to different types of units, and which cells can be built on. They will be shown as hashed pattern when placing down a Map object, and can be permanently enabled under "View" → "Extra indicators" → "Map land types hashing", or simply by pressing F3. Once enabled, the hashing will be shown both on the map and on the map tool window preview.
 
 The colors for the different land types can be configured in the config file; see [Colors and transparency](#colors-and-transparency) below. These land types exist in the games:
 

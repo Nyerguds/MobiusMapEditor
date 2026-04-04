@@ -2643,7 +2643,7 @@ namespace MobiusEditor.RedAlert
                     continue;
                 }
                 BuildingType buildingType = buildings.Where(t => t.Equals(tokens[0])).FirstOrDefault();
-                bool cellparsed = !Int32.TryParse(tokens[1], out int cell);
+                bool cellparsed = Int32.TryParse(tokens[1], out int cell);
                 bool canPlace = Map.Metrics.Contains(cell);
 
                 if (buildingType == null)

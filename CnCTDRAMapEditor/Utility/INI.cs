@@ -457,6 +457,18 @@ namespace MobiusEditor.Utility
             Sections = new INISectionCollection();
         }
 
+        public INI(TextReader reader)
+            :this()
+        {
+            Parse(reader);
+        }
+
+        public INI(string iniText)
+            :this()
+        {
+            Parse(iniText);
+        }
+
         public void Parse(TextReader reader)
         {
             INISection currentSection = null;

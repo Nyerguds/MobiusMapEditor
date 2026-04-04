@@ -55,8 +55,8 @@ namespace MobiusEditor.Utility
         private static readonly HashMethod defaultHashMethod = HashMethod.GetRegisteredMethods().FirstOrDefault();
 
         /// <summary>input-order version of the keys in <see cref="gameInfo"/>.</summary>
-        private List<string> games = new List<string>();
-        private Dictionary<string, GameDefinition> gameInfo = new Dictionary<string, GameDefinition>();
+        private readonly List<string> games = new List<string>();
+        private readonly Dictionary<string, GameDefinition> gameInfo = new Dictionary<string, GameDefinition>();
 
         /// <summary>
         /// List of games that were read from the hashing information.
@@ -65,7 +65,7 @@ namespace MobiusEditor.Utility
 
         public bool SupportsMixNesting(string game)
         {
-            if (gameInfo == null || !gameInfo.TryGetValue(game, out GameDefinition gd))
+            if (!gameInfo.TryGetValue(game, out GameDefinition gd))
             {
                 return false;
             }
@@ -521,10 +521,12 @@ namespace MobiusEditor.Utility
                 viableGames.Insert(0, forced);
             }
             Dictionary<uint, MixEntry> info = dbFileInfo != null ? new Dictionary<uint, MixEntry>(dbFileInfo) : new Dictionary<uint, MixEntry>();
-            foreach (GameDefinition gd in viableGames)
+            for (int gi = 0; gi < viableGames.Count; ++gi)
             {
-                foreach (MixEntry entry in gd.FileInfo)
+                GameDefinition gd = viableGames[gi];
+                for (int gdi = 0; gdi < gd.FileInfo.Count; ++gdi)
                 {
+                    MixEntry entry = gd.FileInfo[gdi];
                     MixEntry existing;
                     if (!info.TryGetValue(entry.Id, out existing))
                     {
