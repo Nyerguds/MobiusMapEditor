@@ -56,6 +56,9 @@ namespace MobiusEditor.Render
 
     public static class MapRenderer
     {
+        private const double MinOvlContent = 0.5;
+        private const double MinOvlCells = 0.75;
+
         private static readonly int[] Facing16 = new int[256]
         {
             0,0,0,0,0,0,0,0,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,2,2,2,2,2,2,2,2,
@@ -1615,7 +1618,8 @@ namespace MobiusEditor.Render
             }
             // To show an outline, something needs to be overlapped, and the total overlapped sub-cells must be at least half of the visible content.
             // The "at least 3/4th of the graphics-occupied cells" check isn't useful on Overlay since they're 1-cell objects.
-            overlay.IsOverlapped = overlappedSubPositions > 0 && overlappedSubPositions * 2 >= occupiedSubPositions;
+            overlay.IsOverlapped = overlappedSubPositions > 0
+                && (overlappedSubPositions / MinOvlContent) > occupiedSubPositions;
         }
 
         public static void CheckInfantryOverlap(Map map, InfantryGroup group, Point location)
@@ -1680,9 +1684,11 @@ namespace MobiusEditor.Render
                     overlappedCells++;
                 }
             }
-            // To show an outline, something needs to be overlapped, the total overlapped sub-cells must be at least half of the visible content,
+            // To show an outline, something needs to be overlapped, the total overlapped sub-cells must be more than half of the visible content,
             // and at least 3/4th of the graphics-occupied cells need to be at least partially overlapped.
-            techno.IsOverlapped = overlappedSubPositions > 0 && overlappedSubPositions * 2 >= occupiedSubPositions && overlappedCells * 4 / 3 >= opaquePoints.Length;
+            techno.IsOverlapped = overlappedSubPositions > 0
+                && (overlappedSubPositions / MinOvlContent) > occupiedSubPositions
+                && (overlappedCells / MinOvlCells) >= opaquePoints.Length;
         }
 
         public static void RenderAllCrateOutlines(Graphics g, GameInfo gameInfo, Map map, Rectangle visibleCells, Size tileSize, double tileScale, bool onlyIfBehindObjects)
