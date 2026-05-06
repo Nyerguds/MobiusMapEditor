@@ -62,10 +62,11 @@ namespace MobiusEditor.Utility
         {
         }
 
-        public void Clear()
+        public void Clear(bool dirtyLoad)
         {
             undoRedoActions.Clear();
             undoRedoPosition = 0;
+            lastSavePosition = dirtyLoad ? -1 : 0;
             OnTracked();
         }
 

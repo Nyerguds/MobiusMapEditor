@@ -1162,7 +1162,7 @@ namespace MobiusEditor
             ClearActiveTool();
             if (DialogResult.Yes == MessageBox.Show(this, "This will remove all undo/redo information. Are you sure?", Program.ProgramVersionTitle, MessageBoxButtons.YesNo))
             {
-                url.Clear();
+                url.Clear(plugin.Dirty);
             }
             RefreshActiveTool(true);
         }
@@ -1283,7 +1283,7 @@ namespace MobiusEditor
                 // the undo/redo history, so the undo/redo history is cleared to avoid issues.
                 // The rest of the cleanup can be found in the ViewTool class, in the BasicSection_PropertyChanged function.
                 // Rule changes will clear undo to avoid conflicts with placed smudge types.
-                url.Clear();
+                url.Clear(plugin.Dirty);
             }
         }
 
@@ -2426,7 +2426,7 @@ namespace MobiusEditor
             {
                 ZoomReset();
             }
-            url.Clear();
+            url.Clear(plugin.Dirty);
             CleanupTools(oldPlugin?.GameInfo?.GameType ?? GameType.None);
             RefreshUI(oldSelectedTool);
             oldSelectedTool = ToolType.None;
@@ -2488,7 +2488,7 @@ namespace MobiusEditor
         {
             try
             {
-                url.Clear();
+                url.Clear(false);
                 // Disable all tools
                 if (ActiveToolType != ToolType.None)
                 {

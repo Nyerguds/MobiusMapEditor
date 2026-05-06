@@ -162,7 +162,9 @@ Note that for Red Alert, the editor uses the DOS versions of the infantry sprite
 
 * **ModsToLoadTD** / **ModsToLoadRA** / **ModsToLoadSS**: semicolon (or comma) separated list of Remaster mod entries for each supported game.
 
-These refer to mods in the format defined by the Command & Conquer Remastered Collection. A mod entry can be either a Steam workshop ID, or a folder name. Steam workshop IDs are looked up in the game's downloaded Workshop items. Folder names will initially be looked up in the mods folder of the respective game in the **CnCRemastered\\mods\\** folder under your Documents folder, but if nothing is found there, the loading system will also check the Steam workshop files for a matching mod. Sole Survivor will use Tiberian Dawn mods. Note that mods can only apply graphical changes from the tilesets and house colors xml files; the editor can't read any data from compiled dll files. This mods system is mostly meant to apply graphical fixes to the editor.
+These refer to mods in the format defined by the Command & Conquer Remastered Collection. A mod entry can be either a Steam workshop ID, or a folder name. Steam workshop IDs are looked up in the game's downloaded Workshop items. Folder names will initially be looked up in the mods folder of the respective game in the **CnCRemastered\\mods\\** folder under your Documents folder, but if nothing is found there, the loading system will also check the Steam workshop files for a matching mod. Sole Survivor will use Tiberian Dawn mods.
+
+Note that mods can only apply graphical changes from the tilesets and house colors xml files; the editor can't read any data from compiled dll files. This mods system is mostly meant to apply graphical fixes to the editor.
 
 The **ModsToLoadTD** and **ModsToLoadSS** settings will have the `GraphicsFixesTD` mod set by default, to complete the incomplete TD Remastered graphics set, meaning the mod will automatically be loaded if found. Similarly, the **ModsToLoadRA** setting will have the `GraphicsFixesRA` mod set. Note that the editor has no way to check whether mods are enabled in the Remastered Collection games, so that makes no difference.
 
@@ -174,7 +176,7 @@ In classic graphics mode, the editor can still use mods, if they contain classic
 
 Starting from v1.6.0.0, the editor has the ability to open the original games' .mix archives to open the missions inside it. However, the names of the files inside those archives are only stored as hashed numeric values created with a one-way hashing algorithm. This means that, to identify these files, lists of all the original file names are needed. The system to generate these names and their hash values is controlled by a set of ini files, of which the main definitions file is configured in the settings:
 
-* **MixContentInfoFile**: Contains the definitions of the supported games for which mix file content analysis can be done, and any additional files to be loaded to get all information for each game. By default, this is set to "Data\\mixcontent.ini".
+* **MixContentInfoFile**: Contains the definitions of the supported games for which mix file content analysis can be done, and any additional files to be loaded to get all information for each game. By default, this is set to "Data\\mixcontent.ini". Note that there are also specific ini files for each game in that folder. These are not configured in the settings file, but are referenced from the primary "mixcontent.ini" file.
 
 ### Defaults
 
