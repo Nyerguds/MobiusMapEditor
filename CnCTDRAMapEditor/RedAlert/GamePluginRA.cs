@@ -1630,8 +1630,11 @@ namespace MobiusEditor.RedAlert
                 return;
             }
             const string curType = "Smudge";
+            List<string> warnings = new List<string>();
             foreach (KeyValuePair<string, string> kvp in smudgeSection)
             {
+                // Parse warnings. Only add these to the errors list if the item is not skipped entirely with a fatal error.
+                warnings.Clear();
                 if (!Int32.TryParse(kvp.Key, out int cell))
                 {
                     errors.Add(String.Format(IniParseConstants.ParseCellKeyBad,
@@ -1647,12 +1650,17 @@ namespace MobiusEditor.RedAlert
                     continue;
                 }
                 string[] tokens = kvp.Value.Split(',');
-                if (tokens.Length != 3)
+                if (tokens.Length < 3)
                 {
                     errors.Add(String.Format(IniParseConstants.ParseTokensBadNr,
                         curType, kvp.Key, tokens[0], tokens.Length, 3));
                     modified = true;
                     continue;
+                }
+                if (tokens.Length > 3)
+                {
+                    warnings.Add(String.Format(IniParseConstants.ParseTokensHighNr,
+                        curType, kvp.Key, kvp.Value, tokens.Length, 3));
                 }
                 // Craters other than cr1 don't work right in the game. Replace them by stage-0 cr1.
                 bool badCrater = Globals.ConvertCraters && SmudgeTypes.BadCraters.IsMatch(tokens[0]);
@@ -1696,6 +1704,7 @@ namespace MobiusEditor.RedAlert
                         }
                         placeLocation.Y++;
                     }
+                    errors.AddRange(warnings);
                 }
             }
         }
@@ -1708,17 +1717,25 @@ namespace MobiusEditor.RedAlert
             {
                 return;
             }
+            List<string> warnings = new List<string>();
             List<VehicleType> units = Map.AllUnitTypes.OfType<VehicleType>().ToList();
             string curType = VehicleType.SubTypeName;
             foreach (KeyValuePair<string, string> kvp in unitsSection)
             {
+                // Parse warnings. Only add these to the errors list if the item is not skipped entirely with a fatal error.
+                warnings.Clear();
                 string[] tokens = kvp.Value.Split(',');
-                if (tokens.Length != 7)
+                if (tokens.Length < 7)
                 {
                     errors.Add(String.Format(IniParseConstants.ParseTokensBadNr,
                         curType, kvp.Key, kvp.Value, tokens.Length, 7));
                     modified = true;
                     continue;
+                }
+                if (tokens.Length > 7)
+                {
+                    warnings.Add(String.Format(IniParseConstants.ParseTokensHighNr,
+                        curType, kvp.Key, kvp.Value, tokens.Length, 7));
                 }
                 UnitType unitType = units.Where(t => t.Equals(tokens[1])).FirstOrDefault();
                 if (unitType == null)
@@ -1760,14 +1777,14 @@ namespace MobiusEditor.RedAlert
                 if (strength < 0 || strength > 256)
                 {
                     int newStrength = strength.Restrict(0, 256);
-                    errors.Add(String.Format(IniParseConstants.ParseStrengthIllegal,
+                    warnings.Add(String.Format(IniParseConstants.ParseStrengthIllegal,
                         curType, kvp.Key, name, cell, strength, newStrength));
                     strength = newStrength;
                     modified = true;
                 }
                 if (!Int32.TryParse(tokens[4], out int dirValue))
                 {
-                    errors.Add(String.Format(IniParseConstants.ParseDirectionBad,
+                    warnings.Add(String.Format(IniParseConstants.ParseDirectionBad,
                         curType, kvp.Key, name, cell, tokens[4]));
                     modified = true;
                     dirValue = 0;
@@ -1775,9 +1792,11 @@ namespace MobiusEditor.RedAlert
                 DirectionType dirType = DirectionType.FindClosestDirectionType(dirValue, Map.UnitDirectionTypes);
                 if (dirType.ID != dirValue)
                 {
-                    errors.Add(String.Format("Unit entry '{0}': {1} on cell {2} has direction value {3}, which cannot be matched to a known value." +
-                        " Taking closest match value {4} ({5}).",
-                        curType, kvp.Key, name, cell, dirValue, dirType.ID, dirType.Name));
+                    warnings.Add(
+                        String.Format(IniParseConstants.ParseDirectionIllegal + IniParseConstants.ParseDirectionUnknown,
+                        curType, kvp.Key, name, cell, dirValue) +
+                        String.Format(IniParseConstants.ParseDirectionClosest,
+                        dirType.ID, dirType.Name));
                     modified = true;
                 }
                 Unit newUnit = new Unit()
@@ -1794,13 +1813,13 @@ namespace MobiusEditor.RedAlert
                     if (HouseNameItaly.Equals(tokens[0], StringComparison.OrdinalIgnoreCase))
                     {
                         defHouse = HouseTypes.Ukraine;
-                        errors.Add(String.Format(IniParseConstants.ParseHouseObsoleteObj,
+                        warnings.Add(String.Format(IniParseConstants.ParseHouseObsoleteObj,
                             curType, kvp.Key, name, cell, tokens[0], defHouse.Name));
                     }
                     else
                     {
                         defHouse = Map.HouseTypes.First();
-                        errors.Add(String.Format("{0} entry '{1}': {2} on cell {3} references unknown house '{4}'; reverting to '{5}'.",
+                        warnings.Add(String.Format(IniParseConstants.ParseHouseUnknownObj,
                             curType, kvp.Key, name, cell, tokens[0], defHouse.Name));
                     }
                     modified = true;
@@ -1810,9 +1829,8 @@ namespace MobiusEditor.RedAlert
                 {
                     string badOrder = Map.MissionTypesBad.Where(t => t.Equals(tokens[5], StringComparison.InvariantCultureIgnoreCase)).FirstOrDefault();
                     string deforders = Map.GetDefaultMission(unitType);
-                    string reason = badOrder != null ? "unsupported" : "unknown";
-                    errors.Add(String.Format("{0} entry '{1}': {2} on cell {3} references {4} orders '{5}'; changing to '{6}'.",
-                        curType, kvp.Key, name, cell, reason, badOrder ?? tokens[5], deforders));
+                    string message = badOrder != null ? IniParseConstants.ParseOrdersUnsupported : IniParseConstants.ParseOrdersUnknown;
+                    warnings.Add(String.Format(message, curType, kvp.Key, name, cell, badOrder ?? tokens[5], deforders));
                     newUnit.Mission = deforders;
                 }
                 if (!Map.Technos.Add(cell, newUnit))
@@ -1853,14 +1871,14 @@ namespace MobiusEditor.RedAlert
                 }
                 if (!caseTrigs.ContainsKey(tokens[6]))
                 {
-                    errors.Add(String.Format(IniParseConstants.ParseTriggerUnknownObj,
+                    warnings.Add(String.Format(IniParseConstants.ParseTriggerUnknownObj,
                         curType, kvp.Key, name, cell, tokens[6]));
                     modified = true;
                     newUnit.Trigger = Trigger.None;
                 }
                 else if (!checkUnitTrigs.Contains(tokens[6]))
                 {
-                    errors.Add(String.Format("{0} entry '{1}': {2} on cell {3} links to trigger '{4}' which does not contain an event or action applicable to units; clearing trigger.",
+                    warnings.Add(String.Format(IniParseConstants.ParseTriggerIllegalObj,
                         curType, kvp.Key, name, cell, caseTrigs[tokens[6]]));
                     modified = true;
                     newUnit.Trigger = Trigger.None;
@@ -1870,6 +1888,7 @@ namespace MobiusEditor.RedAlert
                     // Adapt to same case
                     newUnit.Trigger = caseTrigs[tokens[6]];
                 }
+                errors.AddRange(warnings);
             }
         }
 
@@ -1893,16 +1912,24 @@ namespace MobiusEditor.RedAlert
                 modified = true;
                 return;
             }
+            List<string> warnings = new List<string>();
             List<AircraftType> aircraft = Map.AllUnitTypes.OfType<AircraftType>().ToList();
             foreach (KeyValuePair<string, string> kvp in aircraftSection)
             {
+                // Parse warnings. Only add these to the errors list if the item is not skipped entirely with a fatal error.
+                warnings.Clear();
                 string[] tokens = kvp.Value.Split(',');
-                if (tokens.Length != 6)
+                if (tokens.Length < 6)
                 {
                     errors.Add(String.Format(IniParseConstants.ParseTokensBadNr,
                         curType, kvp.Key, kvp.Value, tokens.Length, 6));
                     modified = true;
                     continue;
+                }
+                if (tokens.Length > 6)
+                {
+                    warnings.Add(String.Format(IniParseConstants.ParseTokensHighNr,
+                        curType, kvp.Key, kvp.Value, tokens.Length, 6));
                 }
                 UnitType aircraftType = aircraft.Where(t => t.Equals(tokens[1])).FirstOrDefault();
                 if (aircraftType == null)
@@ -1922,45 +1949,48 @@ namespace MobiusEditor.RedAlert
                 }
                 if (!Int32.TryParse(tokens[2], out int strength))
                 {
-                    errors.Add(String.Format("Aircraft entry '{0}': {1} has strength value '{2}' which cannot be parsed; skipping.",
-                        kvp.Key, name, tokens[2]));
+                    errors.Add(String.Format(IniParseConstants.ParseStrengthBad,
+                        curType, kvp.Key, name, tokens[2]));
                     modified = true;
                     continue;
                 }
                 if (!Int32.TryParse(tokens[3], out int cell))
                 {
-                    errors.Add(String.Format("Aircraft entry '{0}': {1} has cell value '{2}' which cannot be parsed; skipping.",
-                        kvp.Key, name, tokens[3]));
+                    errors.Add(String.Format(IniParseConstants.ParseCellBad,
+                        curType, kvp.Key, name, tokens[3]));
                     modified = true;
                     continue;
                 }
                 if (!Map.Metrics.Contains(cell))
                 {
-                    errors.Add(String.Format("Aircraft entry '{0}': {1} has cell value {2} which is not inside the map; skipping.",
-                        kvp.Key, name, cell));
+                    errors.Add(String.Format(IniParseConstants.ParseCellIllegal,
+                        curType, kvp.Key, name, cell));
                     modified = true;
                     continue;
                 }
                 if (strength < 0 || strength > 256)
                 {
                     int newStrength = strength.Restrict(0, 256);
-                    errors.Add(String.Format("Aircraft entry '{0}': {1} on cell {2} has illegal strength value {3}; corrected to {4}.",
-                        kvp.Key, name, cell, strength, newStrength));
+                    warnings.Add(String.Format(IniParseConstants.ParseStrengthIllegal,
+                        curType, kvp.Key, name, cell, strength, newStrength));
                     strength = newStrength;
                     modified = true;
                 }
                 if (!Int32.TryParse(tokens[4], out int dirValue))
                 {
-                    errors.Add(String.Format("Aircraft entry '{0}': {1} on cell {2} has direction value '{3}' which cannot be parsed; reverting to 0.",
-                        kvp.Key, name, cell, tokens[4]));
+                    warnings.Add(String.Format(IniParseConstants.ParseDirectionBad,
+                        curType, kvp.Key, name, cell, tokens[4]));
                     modified = true;
                     dirValue = 0;
                 }
                 DirectionType dirType = DirectionType.FindClosestDirectionType(dirValue, Map.UnitDirectionTypes);
                 if (dirType.ID != dirValue)
                 {
-                    errors.Add(String.Format("Aircraft entry '{0}': {1} has direction value {2} which cannot be matched to a known value. Taking closest match value {3} ({4}).",
-                        kvp.Key, name, cell, dirValue, dirType.ID, dirType.Name));
+                    warnings.Add(
+                        String.Format(IniParseConstants.ParseDirectionIllegal + IniParseConstants.ParseDirectionUnknown,
+                        curType, kvp.Key, name, cell, dirValue) +
+                        String.Format(IniParseConstants.ParseDirectionClosest,
+                        dirType.ID, dirType.Name));
                     modified = true;
                 }
                 Unit newAir = new Unit()
@@ -1977,13 +2007,13 @@ namespace MobiusEditor.RedAlert
                     if (HouseNameItaly.Equals(tokens[0], StringComparison.OrdinalIgnoreCase))
                     {
                         defHouse = HouseTypes.Ukraine;
-                        errors.Add(String.Format(IniParseConstants.ParseHouseObsoleteObj,
+                        warnings.Add(String.Format(IniParseConstants.ParseHouseObsoleteObj,
                             curType, kvp.Key, name, cell, tokens[0], defHouse.Name));
                     }
                     else
                     {
                         defHouse = Map.HouseTypes.First();
-                        errors.Add(String.Format(IniParseConstants.ParseHouseUnknownObj,
+                        warnings.Add(String.Format(IniParseConstants.ParseHouseUnknownObj,
                             curType, kvp.Key, name, cell, tokens[0], defHouse.Name));
                     }
                     modified = true;
@@ -1993,51 +2023,48 @@ namespace MobiusEditor.RedAlert
                 {
                     string badOrder = Map.MissionTypesBad.Where(t => t.Equals(tokens[5], StringComparison.InvariantCultureIgnoreCase)).FirstOrDefault();
                     string deforders = Map.GetDefaultMission(aircraftType);
-                    string reason = badOrder != null ? "unsupported" : "unknown";
-                    errors.Add(String.Format("Aircraft entry '{0}': {1} on cell {2} references {3} orders '{4}'; changing to '{5}'.",
-                        kvp.Key, name, cell, reason, badOrder ?? tokens[5], deforders));
+                    string message = badOrder != null ? IniParseConstants.ParseOrdersUnsupported : IniParseConstants.ParseOrdersUnknown;
+                    warnings.Add(String.Format(message, curType, kvp.Key, name, cell, badOrder ?? tokens[5], deforders));
                     newAir.Mission = deforders;
                 }
                 if (!Map.Technos.Add(cell, newAir))
                 {
-                    ICellOccupier techno = Map.Technos[cell];
-                    //if (techno is Building building)
-                    //{
-                    //    errors.Add(String.Format("Aircraft entry '{0}': {1} on cell {2} overlaps structure {3}; skipping.",
-                    //        kvp.Key, name, cell, building.Type.Name.ToUpperInvariant()));
-                    //}
-                    if (techno is Overlay overlay)
+                    ICellOccupier occupier = Map.Technos[cell];
+                    string blocker;
+                    if (occupier is Overlay overlay)
                     {
-                        errors.Add(String.Format("Aircraft entry '{0}': {1} on cell {2} overlaps overlay {3}; skipping.",
-                            kvp.Key, name, cell, overlay.Type.Name.ToUpperInvariant()));
+                        blocker = overlay.Type.TypeName + " " + overlay.Type.Name.ToUpperInvariant();
                     }
-                    else if (techno is Terrain terrain)
+                    else if (occupier is Terrain terrain)
                     {
-                        errors.Add(String.Format("Aircraft entry '{0}': {1} on cell {2} overlaps terrain {2}; skipping.",
-                            kvp.Key, name, cell, terrain.Type.Name.ToUpperInvariant()));
+                        (Point location, Terrain occupier) occ = Map.Technos.OfType<Terrain>().FirstOrDefault(po => po.Occupier == terrain);
+                        Map.Metrics.GetCell(occ.location, out int placement);
+                        blocker = String.Format(IniParseConstants.ParseBlockerMulticellArg,
+                            terrain.Type.TypeName, terrain.Type.Name.ToUpperInvariant(), placement);
                     }
-                    else if (techno is InfantryGroup infantry)
+                    else if (occupier is InfantryGroup ig)
                     {
-                        Infantry[] inf = infantry.Infantry.Where(i => i != null).ToArray();
-                        string infNames = String.Join(", ", inf.Select(i => i.Type.Name.ToUpperInvariant()).ToArray());
-                        if (inf.Length > 1)
+                        Infantry[] infList = ig.Infantry.Where(i => i != null).ToArray();
+                        string infNames = String.Join(", ", infList.Select(i => i.Type.Name.ToUpperInvariant()).ToArray());
+                        if (infList.Length > 1)
                         {
                             infNames = "(" + infNames + ")";
                         }
-                        errors.Add(String.Format("Aircraft entry '{0}': {1} on cell {2} overlaps infantry {3}; skipping.",
-                            kvp.Key, name, cell, infNames));
+                        // Can never be empty.
+                        blocker = infList[0].TechnoType.TypeName + " " + infNames;
                     }
-                    else if (techno is Unit unit)
+                    else if (occupier is ITechno tech)
                     {
-                        errors.Add(String.Format("Aircraft entry '{0}': {1} on cell {2} overlaps {2} {3}; skipping.",
-                            kvp.Key, name, cell, unit.Type.TypeName, unit.Type.Name.ToUpperInvariant()));
+                        blocker = tech.TechnoType.TypeName + " " + tech.TechnoType.Name.ToUpperInvariant();
                     }
                     else
                     {
-                        errors.Add(String.Format("Aircraft entry '{0}': {1} on cell {2} overlaps unknown techno; skipping.",
-                            kvp.Key, name, cell));
+                        blocker = IniParseConstants.ParseBlockerUnknown;
                     }
+                    errors.Add(String.Format(IniParseConstants.ParseBlocker,
+                        curType, kvp.Key, name, cell, blocker));
                     modified = true;
+                    continue;
                 }
             }
         }
@@ -2974,7 +3001,7 @@ namespace MobiusEditor.RedAlert
                 return;
             }
             string curType = "Waypoint";
-            foreach (KeyValuePair<string, string> kvp in waypointsSection)
+            foreach (KeyValuePair<string, string> kvp in waypointsSection.OrderBy(kvp => Int32.TryParse(kvp.Key, out int ki) ? ki : -1))
             {
                 if (!Int32.TryParse(kvp.Key, out int waypoint))
                 {

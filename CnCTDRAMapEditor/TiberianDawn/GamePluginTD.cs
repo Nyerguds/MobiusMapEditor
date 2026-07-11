@@ -1257,6 +1257,11 @@ namespace MobiusEditor.TiberianDawn
                         modified = true;
                         teamType.House = defHouse;
                     }
+                    if (tokens.Length <= (int)TeamTypeOptions.Classes)
+                    {
+                        errors.Add(String.Format("Team Type '{0}' does not have enough tokens to contain a valid team type.", kvp.Key));
+                        continue;
+                    }
                     teamType.IsRoundAbout = Int32.Parse(tokens[(int)TeamTypeOptions.IsRoundAbout]) != 0;
                     teamType.IsLearning = Int32.Parse(tokens[(int)TeamTypeOptions.IsLearning]) != 0;
                     teamType.IsSuicide = Int32.Parse(tokens[(int)TeamTypeOptions.IsSuicide]) != 0;
@@ -1392,7 +1397,7 @@ namespace MobiusEditor.TiberianDawn
                 }
                 catch (Exception ex)
                 {
-                    errors.Add(String.Format("Team Type '{0}' has errors and can't be parsed: {1}.", kvp.Key, ex.Message));
+                    errors.Add(String.Format("Team Type '{0}' has errors and can't be parsed: {1}: {2}.", kvp.Key, ex.GetType().Name, ex.Message.TrimEnd('.'))) ;
                     modified = true;
                 }
             }
@@ -1411,10 +1416,13 @@ namespace MobiusEditor.TiberianDawn
             int trigLoopMax = (int)Enum.GetValues(typeof(TriggerPersistentType)).Cast<TriggerPersistentType>().Max();
             string trigLoopDef = "'0' (" + Trigger.PersistenceNamesShort.ToList()[0] + ")";
             int trigNameLenMax = GameInfo.MaxTriggerNameLength;
+            List<string> warnings = new List<string>();
             foreach (KeyValuePair<string, string> kvp in triggersSection)
             {
                 try
                 {
+                    // Parse warnings. Only add these to the errors list if the item is not skipped entirely with a fatal error.
+                    warnings.Clear();
                     if (kvp.Key.Length > trigNameLenMax)
                     {
                         errors.Add(String.Format(IniParseConstants.KeyLengthWarning,
@@ -1427,6 +1435,11 @@ namespace MobiusEditor.TiberianDawn
                             curType, kvp.Key, kvp.Value, tokens.Length, "5 or 6"));
                         modified = true;
                         continue;
+                    }
+                    if (tokens.Length > 6)
+                    {
+                        warnings.Add(String.Format(IniParseConstants.ParseTokensHighNr,
+                            curType, kvp.Key, kvp.Value, tokens.Length, "5 or 6"));
                     }
                     Trigger trigger = new Trigger { Name = kvp.Key };
                     string eventType = tokens[0];
@@ -1520,6 +1533,7 @@ namespace MobiusEditor.TiberianDawn
                         trigger.PersistentType = (TriggerPersistentType)trigPersist;
                     }
                     triggers.Add(trigger);
+                    errors.AddRange(warnings);
                 }
                 catch (Exception ex)
                 {
@@ -1539,8 +1553,11 @@ namespace MobiusEditor.TiberianDawn
             }
             bool craterWarningAdded = false;
             const string curType = "Smudge";
+            List<string> warnings = new List<string>();
             foreach (KeyValuePair<string, string> kvp in smudgeSection)
             {
+                // Parse warnings. Only add these to the errors list if the item is not skipped entirely with a fatal error.
+                warnings.Clear();
                 if (!Int32.TryParse(kvp.Key, out int cell))
                 {
                     errors.Add(String.Format(IniParseConstants.ParseCellKeyBad,
@@ -1556,12 +1573,17 @@ namespace MobiusEditor.TiberianDawn
                     continue;
                 }
                 string[] tokens = kvp.Value.Split(',');
-                if (tokens.Length != 3)
+                if (tokens.Length < 3)
                 {
                     errors.Add(String.Format(IniParseConstants.ParseTokensBadNr,
                         curType, kvp.Key, tokens[0], tokens.Length, 3));
                     modified = true;
                     continue;
+                }
+                if (tokens.Length > 3)
+                {
+                    warnings.Add(String.Format(IniParseConstants.ParseTokensHighNr,
+                        curType, kvp.Key, kvp.Value, tokens.Length, 3));
                 }
                 // Craters other than cr1 don't work right in the game. Replace them by stage-0 cr1.
                 bool badCrater = Globals.ConvertCraters && SmudgeTypes.BadCraters.IsMatch(tokens[0]);
@@ -1610,6 +1632,7 @@ namespace MobiusEditor.TiberianDawn
                         }
                         placeLocation.Y++;
                     }
+                    errors.AddRange(warnings);
                 }
             }
         }
@@ -1635,12 +1658,17 @@ namespace MobiusEditor.TiberianDawn
                 // Parse warnings. Only add these to the errors list if the item is not skipped entirely with a fatal error.
                 warnings.Clear();
                 string[] tokens = kvp.Value.Split(',');
-                if (tokens.Length != 8)
+                if (tokens.Length < 8)
                 {
                     errors.Add(String.Format(IniParseConstants.ParseTokensBadNr,
                         curType, kvp.Key, kvp.Value, tokens.Length, 8));
                     modified = true;
                     continue;
+                }
+                if (tokens.Length > 8)
+                {
+                    warnings.Add(String.Format(IniParseConstants.ParseTokensHighNr,
+                        curType, kvp.Key, kvp.Value, tokens.Length, 8));
                 }
                 InfantryType infantryType = Map.InfantryTypes.Where(t => t.Equals(tokens[1])).FirstOrDefault();
                 if (infantryType == null)
@@ -1825,12 +1853,17 @@ namespace MobiusEditor.TiberianDawn
                 // Parse warnings. Only add these to the errors list if the item is not skipped entirely with a fatal error.
                 warnings.Clear();
                 string[] tokens = kvp.Value.Split(',');
-                if (tokens.Length != 7)
+                if (tokens.Length < 7)
                 {
                     errors.Add(String.Format(IniParseConstants.ParseTokensBadNr,
                         curType, kvp.Key, kvp.Value, tokens.Length, 7));
                     modified = true;
                     continue;
+                }
+                if (tokens.Length > 7)
+                {
+                    warnings.Add(String.Format(IniParseConstants.ParseTokensHighNr,
+                        curType, kvp.Key, kvp.Value, tokens.Length, 7));
                 }
                 UnitType unitType = units.Where(t => t.Equals(tokens[1])).FirstOrDefault();
                 if (unitType == null)
@@ -2003,12 +2036,17 @@ namespace MobiusEditor.TiberianDawn
                 // Parse warnings. Only add these to the errors list if the item is not skipped entirely with a fatal error.
                 warnings.Clear();
                 string[] tokens = kvp.Value.Split(',');
-                if (tokens.Length != 6)
+                if (tokens.Length < 6)
                 {
                     errors.Add(String.Format(IniParseConstants.ParseTokensBadNr,
                         curType, kvp.Key, kvp.Value, tokens.Length, 6));
                     modified = true;
                     continue;
+                }
+                if (tokens.Length > 6)
+                {
+                    warnings.Add(String.Format(IniParseConstants.ParseTokensHighNr,
+                        curType, kvp.Key, kvp.Value, tokens.Length, 6));
                 }
                 UnitType aircraftType = aircraft.Where(t => t.Equals(tokens[1])).FirstOrDefault();
                 if (aircraftType == null)
@@ -2150,12 +2188,17 @@ namespace MobiusEditor.TiberianDawn
                 // Parse warnings. Only add these to the errors list if the item is not skipped entirely with a fatal error.
                 warnings.Clear();
                 string[] tokens = kvp.Value.Split(',');
-                if (tokens.Length != 6)
+                if (tokens.Length < 6)
                 {
                     errors.Add(String.Format(IniParseConstants.ParseTokensBadNr,
                         curType, kvp.Key, kvp.Value, tokens.Length, 6));
                     modified = true;
                     continue;
+                }
+                if (tokens.Length > 6)
+                {
+                    warnings.Add(String.Format(IniParseConstants.ParseTokensHighNr,
+                        curType, kvp.Key, kvp.Value, tokens.Length, 6));
                 }
                 BuildingType buildingType = Map.AllBuildingTypes.Where(t => t.Equals(tokens[1])).FirstOrDefault();
                 if (buildingType == null)
@@ -2330,8 +2373,11 @@ namespace MobiusEditor.TiberianDawn
             int curPriorityVal = 0;
             List<BuildingType> buildings = Map.AllBuildingTypes.ToList();
             string strType = buildings.First().TypeName;
+            List<string> warnings = new List<string>();
             for (int i = 0; i < baseCount; ++i)
             {
+                // Parse warnings. Only add these to the errors list if the item is not skipped entirely with a fatal error.
+                warnings.Clear();
                 // This type has no parse warnings. Everything is fatal enough to skip the entry.
                 string key = i.ToString("D3");
                 string value = baseSection.TryGetValue(key);
@@ -2343,12 +2389,17 @@ namespace MobiusEditor.TiberianDawn
                 }
                 baseSection.Remove(key);
                 string[] tokens = value.Split(',');
-                if (tokens.Length != 2)
+                if (tokens.Length < 2)
                 {
                     errors.Add(String.Format(IniParseConstants.ParseTokensBadNr,
                         curType, key, value, tokens.Length, 2));
                     modified = true;
                     continue;
+                }
+                if (tokens.Length > 2)
+                {
+                    warnings.Add(String.Format(IniParseConstants.ParseTokensHighNr,
+                        curType, key, value, tokens.Length, 2));
                 }
                 BuildingType buildingType = Map.AllBuildingTypes.Where(t => t.Equals(tokens[0])).FirstOrDefault();
                 bool foundCoord = Int32.TryParse(tokens[1], out int coord);
@@ -2449,6 +2500,7 @@ namespace MobiusEditor.TiberianDawn
                     continue;
                 }
                 Map.Buildings.Add(location, toRebuild);
+                errors.AddRange(warnings);
             }
             // All base sections removed; remainder are exceeding count.
             foreach (KeyValuePair<string, string> kvp in baseSection)
@@ -2728,7 +2780,7 @@ namespace MobiusEditor.TiberianDawn
                 return;
             }
             string curType = "Waypoint";
-            foreach (KeyValuePair<string, string> kvp in waypointsSection)
+            foreach (KeyValuePair<string, string> kvp in waypointsSection.OrderBy(kvp => Int32.TryParse(kvp.Key, out int ki) ? ki : -1))
             {
                 if (!Int32.TryParse(kvp.Key, out int waypoint))
                 {

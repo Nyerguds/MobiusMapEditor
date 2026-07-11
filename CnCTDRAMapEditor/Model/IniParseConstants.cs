@@ -32,6 +32,7 @@
         public const string ParseInfantryCellSubPos = "{0}, sub-position {1}";
         // Token checks
         public const string ParseTokensBadNr = "{0} entry '{1}', value \"{2}\", has wrong number of tokens (has {3}, expecting {4}); skipping.";
+        public const string ParseTokensHighNr = "{0} entry '{1}', value \"{2}\", has too many tokens (has {3}, expecting {4}).";
         // Type checks
         public const string ParseTypeUnknown = "{0} entry '{1}' references unknown {2} '{3}'; skipping.";
         public const string ParseTypeUnknownCell = "{0} entry '{1}' on cell {2} references unknown {3} '{4}'; skipping.";
@@ -87,7 +88,7 @@
         // Waypoints
         public const string ParseIntKeyBad = "{0} entry '{1}' cannot be parsed as number; skipping.";
         public const string ParseIntKeyPadded = "{0} entry {1} is zero-padded and will never be read by the game; skipping.";
-        public const string ParseIntKeyRange = "{0} entry {0} is out of range: expecting between {1} and {2}; skipping";
+        public const string ParseIntKeyRange = "{0} entry {1} is out of range: expecting between {2} and {3}; skipping";
         // Houses
         public const string ParseEdgeIllegal = "{0} {1} has an unknown edge value '{2}'; reverting to {3}";
         // Triggers

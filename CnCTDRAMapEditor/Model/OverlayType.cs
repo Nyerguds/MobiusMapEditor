@@ -62,6 +62,7 @@ namespace MobiusEditor.Model
     public class OverlayType : ICellOccupier, IBrowsableType, ICellOverlapper
     {
         public int ID { get; private set; }
+        public string TypeName => "Overlay";
         public string Name { get; private set; }
         public string DisplayName { get; private set; }
         public bool ExistsInTheater { get; private set; }
