@@ -70,6 +70,8 @@ namespace MobiusEditor.SoleSurvivor
         public override int MaxTeamNameLength => Constants.MaxTeamNameLength;
         public override int MaxTeamClasses => Globals.MaxTeamClasses;
         public override int MaxTeamMissions => Globals.MaxTeamMissions;
+        public override bool AllowSelectBaseHouse => false;
+        public override bool AllowSelectBaseNodeHouse => false;
         public override OverlayTypeFlag OverlayIconType => OverlayTypeFlag.FlagPlace;
         public override Bitmap WorkshopPreviewGeneric => null;
         public override Bitmap WorkshopPreviewGenericGame => null;

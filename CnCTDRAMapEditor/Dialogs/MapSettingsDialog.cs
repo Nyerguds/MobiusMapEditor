@@ -123,7 +123,7 @@ namespace MobiusEditor.Dialogs
             {
                 settingsTreeView.Nodes.Add(nameof(TreeNodes.Briefing), "Briefing");
             }
-            playersNode = settingsTreeView.Nodes.Add(nameof(TreeNodes.Players), "Players");
+            playersNode = settingsTreeView.Nodes.Add(nameof(TreeNodes.Players), "Houses");
             foreach (var player in this.plugin.Map.Houses)
             {
                 var playerNode = playersNode.Nodes.Add(player.Type.Name, player.Type.Name);

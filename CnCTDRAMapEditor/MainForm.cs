@@ -1689,7 +1689,7 @@ namespace MobiusEditor
             loadMultiThreader.ExecuteThreaded(
                 () => NewFile(gameInfo, imagePath, theater, isMegaMap, isSinglePlay, this),
                 PostLoad, true,
-                (e, l) => LoadUnloadUi(e, l, loadMultiThreader),
+                LoadUnloadUi,
                 loading);
         }
 
@@ -1841,7 +1841,7 @@ namespace MobiusEditor
             loadMultiThreader.ExecuteThreaded(
                 () => LoadFile(fileName, info, gameInfo),
                 PostLoad, true,
-                (e, l) => LoadUnloadUi(e, l, loadMultiThreader),
+                LoadUnloadUi,
                 "Loading map");
         }
 
@@ -1886,7 +1886,7 @@ namespace MobiusEditor
             saveMultiThreader.ExecuteThreaded(
                 () => SaveFile(plugin, saveFilename, saveType, dontResavePreview),
                 (si) => PostSave(si, saveType, afterSaveDone), true,
-                (bl, str) => EnableDisableUi(bl, str, current, saveMultiThreader),
+                (bl, str, mt) => EnableDisableUi(bl, str, current, mt),
                 "Saving map");
         }
 

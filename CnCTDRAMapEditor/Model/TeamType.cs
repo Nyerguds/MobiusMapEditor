@@ -116,6 +116,14 @@ namespace MobiusEditor.Model
 
         public int Argument { get; set; }
 
+        /// <summary>
+        /// If the argument type is Tarcom, Argument will contain the tarcom type as per the game rule.
+        /// Tarcom can technically also be a cell, in which case the Argument contains that info already.
+        /// For other types, this field will be used, with the final value only resolved when saving the map.
+        /// Note that the editor sees Terrain objects as ITechno types, so they can be put in here too.
+        /// </summary>
+        public ITechno Tarcom { get; set; }
+
         public TeamTypeMission Clone()
         {
             return new TeamTypeMission()

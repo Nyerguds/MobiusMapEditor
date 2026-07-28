@@ -12,6 +12,7 @@
 //
 //   0. You just DO WHAT THE FUCK YOU WANT TO.
 using MobiusEditor.Controls.ControlsList;
+using MobiusEditor.Interface;
 using MobiusEditor.Model;
 using MobiusEditor.Utility;
 using System;
@@ -27,30 +28,51 @@ namespace MobiusEditor.Controls
         public TeamTypeMission Info { get; set; }
         private bool m_Loading;
         private IListedControlController<TeamTypeMission, char, int> m_Controller;
-        private TeamMission[] missionsArr;
+        private TeamMission[] teamMissionsList;
         private TeamMission defaultMission;
         private TeamMissionArgType currentType = TeamMissionArgType.None;
-        private ListItem<int>[] waypoints;
+        private ListItem<int>[] waypointsList;
+        private IGamePlugin plugin;
         private int mapSize;
         private ToolTip tooltip;
 
         public MissionItemControl()
-            :this(null, null, null, null, 0, null, -1)
+            :this(null, null, null, null, -1)
         {
         }
 
         public MissionItemControl(TeamTypeMission info, IListedControlController<TeamTypeMission, char, int> controller,
-            IEnumerable<TeamMission> missions, IEnumerable<ListItem<int>> waypoints, int mapSize, ToolTip tooltip, int index)
+            IGamePlugin plugin, ToolTip tooltip, int index)
         {
             InitializeComponent();
-            SetInfo(info, controller, missions, waypoints, mapSize, tooltip, index);
+            SetInfo(info, controller, plugin, tooltip, index);
         }
 
         public void SetInfo(TeamTypeMission info, IListedControlController<TeamTypeMission, char, int> controller,
-            IEnumerable<TeamMission> missions, IEnumerable<ListItem<int>> waypoints, int mapSize, ToolTip tooltip, int index)
+            IGamePlugin plugin, ToolTip tooltip, int index)
         {
             TeamTypeMission old = Info;
             bool doFullUpdate = false;
+            IEnumerable<TeamMission> tmList;
+            TeamMission tmDef;
+            IEnumerable<ListItem<int>> wpList;
+            int mpSize;
+            this.plugin = plugin;
+            if (plugin != null)
+            {
+                tmDef = plugin.Map.TeamMissionDefault;
+                tmList = plugin.Map.TeamMissionTypes ?? new TeamMission[] { new TeamMission(-1, "None", TeamMissionArgType.None) };
+                wpList = plugin.Map.Waypoints.Select((wp, i) => ListItem.Create(i, wp.ToString())).ToArray() ?? new ListItem<int>[0];
+                mpSize = plugin.Map.Metrics.Length;
+            }
+            else
+            {
+                tmDef = new TeamMission(-1, "None", TeamMissionArgType.None);
+                tmList = new TeamMission[] { tmDef };
+                wpList = new ListItem<int>[] { new ListItem<int>(-1, "None") };
+                mpSize = 64 * 64;
+
+            }
             try
             {
                 m_Loading = true;
@@ -58,26 +80,26 @@ namespace MobiusEditor.Controls
                 Info = null;
                 m_Controller = controller;
                 lblIndex.Text = index == -1 ? String.Empty : index.ToString();
-                TeamMission[] tmpMissArr = missions.ToArray();
-                if (doFullUpdate || !ArrayUtils.ArraysAreEqual(missionsArr, tmpMissArr))
+                TeamMission[] tmpMissArr = tmList.ToArray();
+                if (doFullUpdate || !ArrayUtils.ArraysAreEqual(teamMissionsList, tmpMissArr))
                 {
                     doFullUpdate = true;
-                    missionsArr = tmpMissArr;
-                    defaultMission = missionsArr.FirstOrDefault();
+                    teamMissionsList = tmpMissArr;
+                    defaultMission = tmDef;
                     cmbMission.DisplayMember = null;
-                    cmbMission.DataSource = missionsArr;
+                    cmbMission.DataSource = teamMissionsList;
                     cmbMission.DisplayMember = "Mission";
                 }
-                ListItem<int>[] tmpWpArr = waypoints.ToArray();
-                if (doFullUpdate || !ArrayUtils.ArraysAreEqual(this.waypoints, tmpWpArr))
+                ListItem<int>[] tmpWpArr = wpList.ToArray();
+                if (doFullUpdate || !ArrayUtils.ArraysAreEqual(this.waypointsList, tmpWpArr))
                 {
                     doFullUpdate = true;
-                    this.waypoints = waypoints.ToArray();
+                    waypointsList = wpList.ToArray();
                 }
-                if (doFullUpdate || this.mapSize != mapSize)
+                if (doFullUpdate || this.mapSize != mpSize)
                 {
                     doFullUpdate = true;
-                    this.mapSize = mapSize;
+                    mapSize = mpSize;
                 }
                 this.tooltip = tooltip;
             }
@@ -89,7 +111,7 @@ namespace MobiusEditor.Controls
             {
                 if (doFullUpdate)
                 {
-                    UpdateInfo(info); 
+                    UpdateInfo(info);
                 }
                 else
                 {
@@ -162,7 +184,7 @@ namespace MobiusEditor.Controls
                     newValue = SetUpNumValue(0, Int32.MaxValue, 10, value, tooltip, "Time in 1/10th min");
                     break;
                 case TeamMissionArgType.Waypoint:
-                    newValue = SetUpCmbValue(waypoints, value, tooltip, "Waypoint");
+                    newValue = SetUpCmbValue(waypointsList, value, tooltip, "Waypoint");
                     break;
                 case TeamMissionArgType.OptionsList:
                     ListItem<int>[] items = mission.DropdownOptions.Select(ddo => ListItem.Create(ddo.Value, ddo.Label)).ToArray();

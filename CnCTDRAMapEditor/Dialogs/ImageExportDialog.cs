@@ -380,7 +380,7 @@ namespace MobiusEditor.Dialogs
             }
         }
 
-        private void EnableControls(bool enabled, string processingLabel)
+        private void EnableControls(bool enabled, string processingLabel, SimpleMultiThreading currentMultiThreader)
         {
             txtScale.Enabled = enabled;
             btnSetDimensions.Enabled = enabled;
@@ -401,7 +401,7 @@ namespace MobiusEditor.Dialogs
             }
             else
             {
-                this.multiThreader.CreateBusyLabel(this, processingLabel);
+                currentMultiThreader.CreateBusyLabel(this, processingLabel);
             }
         }
 

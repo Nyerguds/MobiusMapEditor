@@ -35,6 +35,8 @@ namespace MobiusEditor.TiberianDawn
         public static readonly TeamMission AttackTarcom = new TeamMission(10, "Attack Tarcom", TeamMissionArgType.Tarcom);
         public static readonly TeamMission Unload = new TeamMission(11, "Unload", TeamMissionArgType.Waypoint);
 
+        public static TeamMission DefaultMission => Move;
+
         private static readonly TeamMission[] Types;
 
         static TeamMissionTypes()

@@ -24,7 +24,7 @@ namespace MobiusEditor.Controls
     {
         const string WarnRa = "Contains semicolon!";
         const string WarnTd = "Contains line breaks!";
-        const string WarnRaFull = "Classic Red Alert's briefing text do not support semicolons\n" +
+        const string WarnRaFull = "Classic Red Alert's briefing text does not support semicolons\n" +
                                   "because the semicolon is a special character in the INI format.";
         const string WarnTdFull = "Classic Tiberian Dawn's briefing text does not support\n" +
                                   "line breaks unless you use the unofficial v1.06 patch.";

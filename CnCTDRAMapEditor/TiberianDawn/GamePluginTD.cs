@@ -593,7 +593,10 @@ namespace MobiusEditor.TiberianDawn
                 EventTypes.EVENT_ANY,
                 EventTypes.EVENT_NONE
             };
-            string[] structureEventTypes = (new[] { EventTypes.EVENT_PLAYER_ENTERED }).Concat(unitEventTypes).ToArray();
+            string[] structureEventTypes = new[]
+            {
+                EventTypes.EVENT_PLAYER_ENTERED
+            }.Concat(unitEventTypes).ToArray();
             string[] terrainEventTypes =
             {
                 EventTypes.EVENT_ATTACKED,
@@ -610,9 +613,9 @@ namespace MobiusEditor.TiberianDawn
                 TerrainTypes.GetTypes(), OverlayTypes.GetTypes(), SmudgeTypes.GetTypes(Globals.ConvertCraters),
                 EventTypes.GetTypes(), cellEventTypes, unitEventTypes, structureEventTypes, terrainEventTypes,
                 ActionTypes.GetTypes(), cellActionTypes, unitActionTypes, structureActionTypes, terrainActionTypes,
-                MissionTypes.GetTypes(), MissionTypes.GetUnassignableTypes(), MissionTypes.MISSION_GUARD, MissionTypes.MISSION_STOP, MissionTypes.MISSION_HARVEST,
+                MissionTypes.GetTypes(), MissionTypes.GetUnassignableTypes(), MissionTypes.MISSION_GUARD, MissionTypes.MISSION_GUARD, MissionTypes.MISSION_HARVEST,
                 MissionTypes.MISSION_UNLOAD, DirectionTypes.GetMainTypes(), DirectionTypes.GetAllTypes(), InfantryTypes.GetTypes(),
-                UnitTypes.GetTypes(Globals.DisableAirUnits), BuildingTypes.GetTypes(false), TeamMissionTypes.GetTypes(),
+                UnitTypes.GetTypes(Globals.DisableAirUnits), BuildingTypes.GetTypes(false), TeamMissionTypes.GetTypes(), TeamMissionTypes.DefaultMission,
                 fullTechnoTypes, waypoints, movieTypes, MovieEmpty, themeEmpty.Yield().Concat(themeTypes), themeEmpty,
                 4, 0, 0, Constants.DefaultResourceValue, 0);
             Map.BasicSection.PropertyChanged += BasicSection_PropertyChanged;
@@ -636,7 +639,7 @@ namespace MobiusEditor.TiberianDawn
                 Map.TopLeft = new Point(1, 1);
                 Map.Size = Map.Metrics.Size - new Size(2, 2);
                 Map.BasicSection.Name = Constants.EmptyMapName;
-                UpdateBasePlayerHouse();
+                UpdateBasePlayerHouse(null);
                 Empty = true;
             }
             finally
@@ -1090,7 +1093,7 @@ namespace MobiusEditor.TiberianDawn
             HashSet<string> checkCellTrigs = Map.FilterCellTriggers(triggers).Select(t => t.Name).ToHashSet(StringComparer.OrdinalIgnoreCase);
             this.LoadIniCellTriggers(ini, caseTrigs, checkCellTrigs, errors, ref modified);
             LoadIniHouses(ini, errors, ref modified);
-            UpdateBasePlayerHouse();
+            UpdateBasePlayerHouse(errors);
             ClearUnusedTriggerArguments(triggers);
             errors.AddRange(CheckTriggers(triggers, true, true, false, out _, true, out bool trigsFixed));
             if (trigsFixed)
@@ -2345,6 +2348,19 @@ namespace MobiusEditor.TiberianDawn
                 return;
             }
             const string curType = "Base building";
+
+            List<HouseType> allHouses = Map.HouseTypes.Concat(Map.HouseNone.Type.Yield()).ToList();
+            if (Globals.UpgradeTdBaseNodes)
+            {
+                HouseType baseHouse = Map.HouseNone.Type;
+                string basePlayer = baseSection.TryGetValue("Player");
+                if (basePlayer != null)
+                {
+                    baseHouse = Map.HouseTypes.Where(t => t.Equals(basePlayer)).FirstOrDefault();
+                }
+                Map.BasicSection.BasePlayer = baseHouse.Name;
+            }
+
             string baseCountStr = baseSection.TryGetValue("Count");
             baseSection.Remove("Count");
             if (!Int32.TryParse(baseCountStr, out int baseCount))
@@ -2470,6 +2486,15 @@ namespace MobiusEditor.TiberianDawn
                         curType, key, name, location.X, location.Y));
                     continue;
                 }
+                HouseType nodeHouse = Map.HouseNone.Type;
+                if (Globals.UpgradeTdBaseNodes && tokens.Length > 2)
+                {
+                    HouseType nodeHs = allHouses.Where(t => t.Equals(tokens[2])).FirstOrDefault();
+                    if (nodeHs != null)
+                    {
+                        nodeHouse = nodeHs;
+                    }
+                }
                 if (Map.Buildings.OfType<Building>().Where(x => x.Location == location && x.Occupier.Type.ID == buildingType.ID).FirstOrDefault().Occupier is Building building)
                 {
                     // Building found: set priority and continue.
@@ -2488,7 +2513,7 @@ namespace MobiusEditor.TiberianDawn
                 Building toRebuild = new Building()
                 {
                     Type = buildingType,
-                    House = HouseTypes.None,
+                    House = nodeHouse,
                     Strength = 256,
                     Direction = Map.BuildingDirectionTypes.FirstOrDefault(),
                     BasePriority = curPriorityVal++,
@@ -2519,6 +2544,10 @@ namespace MobiusEditor.TiberianDawn
         protected void CleanBaseSection(INI ini, INISection baseSection)
         {
             // Clean out and leave; might contain addon keys.
+            if (Globals.UpgradeTdBaseNodes)
+            {
+                baseSection.Remove("Player");
+            }
             baseSection.Remove("Count");
             baseSection.RemoveWhere(k => baseKeyRegex.IsMatch(k));
             if (baseSection.Count == 0)
@@ -3838,14 +3867,22 @@ namespace MobiusEditor.TiberianDawn
             {
                 var baseBuildings = Map.Buildings.OfType<Building>().Where(x => x.Occupier.BasePriority >= 0).OrderByDescending(x => x.Occupier.BasePriority).ToArray();
                 int baseIndex = baseBuildings.Length - 1;
+                if (Globals.UpgradeTdBaseNodes && Map.BasicSection.BasePlayer != Map.HouseNone.Type.Name) {
+                    baseSection["Player"] = Map.BasicSection.BasePlayer;
+                }
                 foreach (var (location, building) in baseBuildings)
                 {
                     string key = baseIndex.ToString("D3");
                     baseIndex--;
-                    baseSection[key] = String.Format("{0},{1}",
+                    String baseNode = String.Format("{0},{1}",
                         building.Type.Name.ToUpperInvariant(),
                         ((location.Y & 0x7F) << 24) | ((location.X & 0x7F) << 8)
                     );
+                    if (Globals.UpgradeTdBaseNodes && !building.House.IsBaseHouse)
+                    {
+                        baseNode += "," + building.House.Name;
+                    }
+                    baseSection[key] = baseNode;
                 }
                 baseSection["Count"] = baseBuildings.Length.ToString();
             }
@@ -4660,7 +4697,7 @@ namespace MobiusEditor.TiberianDawn
             {
                 housesWithCY.Add(unit.House.Name);
             }
-            string cellTriggerHouse = HouseTypes.GetClassicOpposingPlayer(Map.BasicSection.Player);
+            string cellTriggerHouse = HouseTypes.Bad.Equals(Map.BasicSection.Player) ? HouseTypes.Good.Name : HouseTypes.Bad.Name;
             foreach (Trigger trig in Map.Triggers)
             {
                 string triggerHouse = trig.House;
@@ -4778,8 +4815,8 @@ namespace MobiusEditor.TiberianDawn
                 //bool isLinkedToTrees = mapTechnos.Any(tech => (tech is Terrain) && String.Equals(trigName, tech.Trigger, StringComparison.OrdinalIgnoreCase));
                 bool isCellTrig = Map.CellTriggers.Any(c => trigName.Equals(c.Value.Trigger, StringComparison.OrdinalIgnoreCase));
                 bool hasTeam = !TeamType.IsEmpty(trigger.Action1.Team);
-                bool isAll = trigger.PersistentType == TriggerPersistentType.SemiPersistent;
-                bool isEach = trigger.PersistentType == TriggerPersistentType.Persistent;
+                bool isWhenAll = trigger.PersistentType == TriggerPersistentType.SemiPersistent;
+                bool isRepeating = trigger.PersistentType == TriggerPersistentType.Persistent;
                 bool isDestroyableX = "xxxx".Equals(trigName, StringComparison.OrdinalIgnoreCase);
                 bool isDestroyableY = "yyyy".Equals(trigName, StringComparison.OrdinalIgnoreCase);
                 bool isDestroyableZ = "zzzz".Equals(trigName, StringComparison.OrdinalIgnoreCase);
@@ -4809,7 +4846,7 @@ namespace MobiusEditor.TiberianDawn
                 }
                 if (!fatalOnly && event1 == EventTypes.EVENT_DESTROYED && !noOwner)
                 {
-                    if (isAll)
+                    if (isWhenAll)
                     {
                         curErrors.Add(prefix + "A \"Destroyed\" trigger with a House set and repeat status \"When all triggered\" will never work, since a reference to the trigger will be added to the House Triggers list for that House, and since a House can't be \"destroyed\", nothing can ever trigger that instance, making it impossible to clear all objectives required for the trigger to fire.");
                     }
@@ -4847,7 +4884,7 @@ namespace MobiusEditor.TiberianDawn
                 {
                     curErrors.Add(prefix + "This will give the Airstrike to the House that activates the Celltrigger. This will grant the AI house linked to it periodic airstrikes that will only target structure.");
                 }
-                if (!fatalOnly && action1 == ActionTypes.ACTION_WINLOSE && event1 == EventTypes.EVENT_ANY && isAll)
+                if (!fatalOnly && action1 == ActionTypes.ACTION_WINLOSE && event1 == EventTypes.EVENT_ANY && isWhenAll)
                 {
                     curErrors.Add(prefix + "\"Any\" → \"Cap=Win/Des=Lose\" triggers don't function with existence status \"When all triggered\".");
                 }
@@ -4855,7 +4892,7 @@ namespace MobiusEditor.TiberianDawn
                 {
                     curErrors.Add(prefix + "Each \"Allow Win\" trigger increases the \"win blockage\" on the House specified in the trigger, which prevents that house from winning until they are all cleared. However, since only the player can be blocked from winning, such triggers only work when they are linked to the player's House.");
                 }
-                if (!fatalOnly && action1 == ActionTypes.ACTION_ALLOWWIN && isEach && !isDestroyable)
+                if (!fatalOnly && action1 == ActionTypes.ACTION_ALLOWWIN && isRepeating && !isDestroyable)
                 {
                     curErrors.Add(prefix + "Each \"Allow Win\" trigger increases the \"win blockage\" on the House specified in the trigger, which prevents that house from winning until they are all cleared. The blockage is only cleared when the trigger is removed, which only happens either when it can no longer trigger, or when it is explicitly removed by a \"Destroy Trigger\" action. Since this trigger is set to execute \"on each triggering\", it will loop indefinitely and will never be removed.");
                 }
@@ -4867,10 +4904,13 @@ namespace MobiusEditor.TiberianDawn
                         curErrors.Add(prefix + (fatalOnly ? String.Empty : "[FATAL] - ") + "The House set in a \"Production\" trigger determines the House that starts production, except in case of a celltrigger. Having no House will crash the game.");
                         fatal = true;
                     }
-                    //else if (includeExternalData && trigger.Event1.EventType == EventTypes.EVENT_PLAYER_ENTERED && isCellTrig && playerIsNonstandard)
-                    //{
-                    //    curErrors.Add(prefix + "For a celltrigger, the House that starts production is always be the 'classic opposing House' of the player's House.");
-                    //}
+                }
+                if (action1 == ActionTypes.ACTION_CREATE_TEAM)
+                {
+                    if (isRepeating)
+                    {
+                        curErrors.Add("\"Create Team\" trigger should never be looped; this creates teams entries in the game memory without guarantee they can be filled with units. This eventually overflows the whole Teams system, thereby breaking all reinforcement mechanics, including the Nod Airstrip delivery system. The correct way to handle this is to have a few unlooped Create Team triggers as initial attacks, and then enable the Autocreate system.");
+                    }
                 }
                 if (!hasTeam)
                 {
@@ -5191,8 +5231,8 @@ namespace MobiusEditor.TiberianDawn
         {
             switch (e.PropertyName)
             {
-                case "Player":
-                    UpdateBasePlayerHouse();
+                case "BasePlayer":
+                    UpdateBasePlayerHouse(null);
                     break;
                 case "SoloMission":
                     Map.UpdateWaypoints();
@@ -5210,26 +5250,11 @@ namespace MobiusEditor.TiberianDawn
             }
         }
 
-        protected void UpdateBasePlayerHouse()
+        protected void UpdateBasePlayerHouse(List<string> errors)
         {
-            string curr = Map.BasicSection.Player;
-            string opposing = HouseTypes.GetClassicOpposingPlayer(curr);
-            HouseType basePlayer = Map.HouseNone?.Type
-                ?? Map.HouseTypes.Where(t => String.Equals(t.Name, opposing, StringComparison.OrdinalIgnoreCase)).FirstOrDefault()
-                ?? Map.HouseTypes.Where(t => !String.Equals(t.Name, curr, StringComparison.OrdinalIgnoreCase)).FirstOrDefault();
-            if (basePlayer == null)
+            if (Map.BasicSection.BasePlayer == null && Map.HouseNone != null)
             {
-                return;
-            }
-            // Unused in TD, but whatever.
-            Map.BasicSection.BasePlayer = basePlayer.Name;
-            // Not really needed now BasePlayer House is always "None", but whatever.
-            foreach (var (_, building) in Map.Buildings.OfType<Building>())
-            {
-                if (!building.IsPrebuilt)
-                {
-                    building.House = basePlayer;
-                }
+                Map.BasicSection.BasePlayer = Map.HouseNone.Type.Name;
             }
         }
 

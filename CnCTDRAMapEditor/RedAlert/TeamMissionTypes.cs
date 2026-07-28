@@ -39,6 +39,8 @@ namespace MobiusEditor.RedAlert
         public static readonly TeamMission Spy = new TeamMission(15, "Spy at Location...", TeamMissionArgType.Waypoint, "Chronotanks can use this to chronoshift.");
         public static readonly TeamMission Patrol = new TeamMission(16, "Patrol to...", TeamMissionArgType.Waypoint);
 
+        public static TeamMission DefaultMission => Move;
+
         private static readonly TeamMission[] Types;
 
         static TeamMissionTypes()

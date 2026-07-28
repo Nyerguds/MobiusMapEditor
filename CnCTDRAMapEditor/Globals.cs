@@ -120,6 +120,7 @@ namespace MobiusEditor
             LandedHelisRa = Properties.Settings.Default.RaHelisSpawnOnGround;
             FixConcretePavement = Properties.Settings.Default.FixConcretePavement;
             TdWideBridges = Properties.Settings.Default.TdWideBridges;
+            UpgradeTdBaseNodes = Properties.Settings.Default.UpgradeTdBaseNodes;
             AdjustSoleTeleports = Properties.Settings.Default.DrawSoleTeleports;
         }
 
@@ -290,6 +291,7 @@ namespace MobiusEditor
         public static bool FixClassicEinstein { get; private set; }
         public static bool AllowImageModsInMaps { get; private set; }
         public static bool FixConcretePavement { get; private set; }
+        public static bool UpgradeTdBaseNodes { get; private set; }
         public static bool TdWideBridges { get; private set; }
         public static bool LandedHelisTd { get; private set; }
         public static bool LandedHelisRa { get; private set; }

@@ -322,7 +322,11 @@ namespace MobiusEditor.Dialogs
             string extension = plugin.Map.BasicSection.SoloMission ? gameInfo.SteamFileExtensionSolo : gameInfo.SteamFileExtensionMulti;
             var mapPath = Path.Combine(PublishTempDirectory, fileName + extension);
             statusUpdateTimer.Start();
-            multiThreader.ExecuteThreaded(() => SaveMap(PublishTempDirectory, mapPath), (err) => SaveDone(PublishTempDirectory, err), true, EnableControls, "Saving map");
+            multiThreader.ExecuteThreaded(
+                () => SaveMap(PublishTempDirectory, mapPath),
+                (err) => SaveDone(PublishTempDirectory, err), true,
+                (en, lb, mt) => EnableControls(en, lb),
+                "Saving map");
         }
 
         private string SaveMap(string tempPath, string savePath)
@@ -564,7 +568,11 @@ namespace MobiusEditor.Dialogs
         {
             if (!multiThreader.IsExecuting)
             {
-                multiThreader.ExecuteThreaded(() => GeneratePreviews(plugin), HandleGeneratedPreview, true, EnableControls, "Generating map previews");
+                multiThreader.ExecuteThreaded(
+                    () => GeneratePreviews(plugin),
+                    HandleGeneratedPreview, true,
+                    (en, lb, mt) => EnableControls(en, lb),
+                    "Generating map previews");
             }
         }
 

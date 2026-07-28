@@ -356,7 +356,7 @@ namespace MobiusEditor.Controls
                     break;
                 case Building building:
                     {
-                        houseComboBox.Enabled = building.IsPrebuilt;
+                        houseComboBox.Enabled = building.IsPrebuilt || Plugin.GameInfo.AllowSelectBaseNodeHouse;
                         bool directionVisible = (building.Type != null) && building.Type.HasTurret;
                         directionComboBox.ValueMember = "Value";
                         directionComboBox.DisplayMember = "Label";
@@ -465,39 +465,47 @@ namespace MobiusEditor.Controls
 
         private void AdjustToStructurePrebuiltStatus(Building building, PropertiesComboBox houseComboBox)
         {
+            bool allowSelectBaseHouse = Plugin.GameInfo.AllowSelectBaseNodeHouse;
             if (building.BasePriority >= 0 && !building.IsPrebuilt)
             {
                 HouseType house = Plugin.Map.GetBaseHouse(Plugin.GameInfo);
-                if (house.ID >= 0)
-                {
-                    building.House = house;
-                }
-                else
+                if (Plugin.Map.HouseNone != null)
                 {
                     // Fix for changing the combobox to one only contain "None".
                     houseComboBox.DataBindings.Clear();
                     houseComboBox.ValueMember = "Value";
                     houseComboBox.DisplayMember = "Label";
-                    houseComboBox.DataSource = house.Yield().Select(t => ListItem.Create(t, t.Name)).ToArray();
-                    houseComboBox.SelectedIndex = 0;
-                    building.House = house;
+                    ListItem<HouseType>[] houses = Plugin.Map.HouseNone.Yield().Concat(
+                        Plugin.Map.Houses).Select(t => ListItem.Create(t.Type, t.Type.Name)).ToArray();
+                    houseComboBox.DataSource = houses;
+                    if (!allowSelectBaseHouse || building.House.Equals(Plugin.Map.BasicSection.Player))
+                    {
+                        building.House = house;
+                    }
                     houseComboBox.DataBindings.Add("SelectedValue", obj, "House", false, DataSourceUpdateMode.OnPropertyChanged);
+                }
+                else
+                {
+                    building.House = house;
                 }
             }
             else
             {
                 // Fix for restoring "None" to a normal House. Only needed for TD.
                 HouseType selected = houseComboBox.SelectedValue as HouseType;
-                if (selected != null && selected.IsBaseHouse && selected.IsSpecial)
+                if (Plugin.Map.HouseNone != null)
                 {
                     houseComboBox.DataBindings.Clear();
                     houseComboBox.ValueMember = "Value";
                     houseComboBox.DisplayMember = "Label";
                     ListItem<HouseType>[] houses = Plugin.Map.Houses.Select(t => ListItem.Create(t.Type, t.Type.Name)).ToArray();
                     houseComboBox.DataSource = houses;
-                    string opposing = Plugin.GameInfo.GetClassicOpposingPlayer(Plugin.Map.BasicSection.Player);
-                    HouseType restoredHouse = Plugin.Map.Houses.Where(h => h.Type.Equals(opposing)).FirstOrDefault()?.Type ?? houses.First().Value;
-                    building.House = restoredHouse;
+                    if (selected.IsSpecial)
+                    {
+                        string opposing = Plugin.GameInfo.GetClassicOpposingPlayer(Plugin.Map.BasicSection.Player);
+                        HouseType restoredHouse = Plugin.Map.Houses.Where(h => h.Type.Equals(opposing)).FirstOrDefault()?.Type ?? houses.First().Value;
+                        building.House = restoredHouse;
+                    }
                     houseComboBox.DataBindings.Add("SelectedValue", obj, "House", false, DataSourceUpdateMode.OnPropertyChanged);
                 }
             }
@@ -513,7 +521,7 @@ namespace MobiusEditor.Controls
             {
                 directionComboBox.Enabled = building.IsPrebuilt;
             }
-            houseComboBox.Enabled = building.IsPrebuilt;
+            houseComboBox.Enabled = building.IsPrebuilt || allowSelectBaseHouse;
             strengthNud.Enabled = building.IsPrebuilt;
             triggerComboBox.Enabled = building.IsPrebuilt;
             if (sellableCheckBox.Visible)

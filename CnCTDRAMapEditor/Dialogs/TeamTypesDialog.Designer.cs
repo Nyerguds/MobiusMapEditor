@@ -554,6 +554,7 @@ namespace MobiusEditor.Dialogs
             // 
             this.lblInitNum.AutoSize = true;
             this.lblInitNum.Dock = System.Windows.Forms.DockStyle.Fill;
+            this.lblInitNum.Font = new System.Drawing.Font("Microsoft Sans Serif", 8.25F, System.Drawing.FontStyle.Strikeout, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
             this.lblInitNum.Location = new System.Drawing.Point(2, 196);
             this.lblInitNum.Margin = new System.Windows.Forms.Padding(2, 0, 2, 0);
             this.lblInitNum.Name = "lblInitNum";
@@ -561,7 +562,7 @@ namespace MobiusEditor.Dialogs
             this.lblInitNum.TabIndex = 9;
             this.lblInitNum.Text = "Init Num";
             this.lblInitNum.TextAlign = System.Drawing.ContentAlignment.MiddleLeft;
-            this.toolTip1.SetToolTip(this.lblInitNum, "Initial amount of this type of team.");
+            this.toolTip1.SetToolTip(this.lblInitNum, "Initial amount of this type of team.\n(Has no effect)");
             // 
             // lblMaxAllowed
             // 
@@ -581,6 +582,7 @@ namespace MobiusEditor.Dialogs
             // 
             this.lblFear.AutoSize = true;
             this.lblFear.Dock = System.Windows.Forms.DockStyle.Fill;
+            this.lblFear.Font = new System.Drawing.Font("Microsoft Sans Serif", 8.25F, System.Drawing.FontStyle.Strikeout, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
             this.lblFear.Location = new System.Drawing.Point(2, 244);
             this.lblFear.Margin = new System.Windows.Forms.Padding(2, 0, 2, 0);
             this.lblFear.Name = "lblFear";
@@ -588,7 +590,7 @@ namespace MobiusEditor.Dialogs
             this.lblFear.TabIndex = 11;
             this.lblFear.Text = "Fear";
             this.lblFear.TextAlign = System.Drawing.ContentAlignment.MiddleLeft;
-            this.toolTip1.SetToolTip(this.lblFear, "Fear level of this team. No known effect.");
+            this.toolTip1.SetToolTip(this.lblFear, "Fear level of this team.\n(Has no effect)");
             // 
             // nudInitNum
             // 

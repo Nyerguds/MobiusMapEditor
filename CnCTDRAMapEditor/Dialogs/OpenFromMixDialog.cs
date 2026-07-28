@@ -110,7 +110,7 @@ namespace MobiusEditor.Dialogs
             analysisMultiThreader.ExecuteThreaded(
                 () => MixContentAnalysis.AnalyseFiles(current, false, () => this.CheckAbort()),
                 (list) => FillList(list, idToSelect), true,
-                (bl, str) => EnableDisableUi(bl, str, analysisMultiThreader),
+                EnableDisableUi,
                 "Analysis in progress");
         }
 

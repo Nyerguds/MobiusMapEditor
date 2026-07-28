@@ -56,7 +56,11 @@ namespace MobiusEditor.TiberianDawn
 
         public static string GetClassicOpposingPlayer(string player)
         {
-            return Bad.Equals(player) ? Good.Name : Bad.Name;
+            if (Bad.Equals(player))
+                return Good.Name;
+            if (Good.Equals(player))
+                return Bad.Name;
+            else return None.Name;
         }
     }
 }

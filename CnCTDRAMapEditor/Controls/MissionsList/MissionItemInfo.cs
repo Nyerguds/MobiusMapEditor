@@ -12,6 +12,7 @@
 //
 //   0. You just DO WHAT THE FUCK YOU WANT TO.
 using MobiusEditor.Controls.ControlsList;
+using MobiusEditor.Interface;
 using MobiusEditor.Model;
 using System.Collections.Generic;
 using System.Linq;
@@ -21,29 +22,25 @@ namespace MobiusEditor.Controls
 {
     internal class MissionItemInfo : CustomControlInfo<MissionItemControl, TeamTypeMission, char, int>
     {
-        readonly TeamMission[] missions;
-        readonly ListItem<int>[] waypoints;
-        readonly int mapSize;
+        readonly IGamePlugin plugin;
         readonly ToolTip tooltip;
 
-        public MissionItemInfo(string name, IEnumerable<TeamTypeMission> properties, IEnumerable<TeamMission> missions, IEnumerable<ListItem<int>> waypoints, int mapSize, ToolTip tooltip)
+        public MissionItemInfo(string name, IEnumerable<TeamTypeMission> properties, IGamePlugin plugin, ToolTip tooltip)
         {
             Name = name;
             Properties = properties.ToArray();
-            this.missions = missions.ToArray();
-            this.waypoints = waypoints.ToArray();
-            this.mapSize = mapSize;
+            this.plugin = plugin;
             this.tooltip = tooltip;
         }
 
         public override MissionItemControl MakeControl(TeamTypeMission property, IListedControlController<TeamTypeMission, char, int> controller, int index)
         {
-            return new MissionItemControl(property, controller, missions, waypoints, mapSize, tooltip, index);
+            return new MissionItemControl(property, controller, plugin, tooltip, index);
         }
 
         public override void UpdateControl(TeamTypeMission property, IListedControlController<TeamTypeMission, char, int> controller, MissionItemControl control, int index)
         {
-            control.SetInfo(property, controller, missions, waypoints, mapSize, tooltip, index);
+            control.SetInfo(property, controller, plugin, tooltip, index);
         }
 
         public override MissionItemControl GetControlByProperty(TeamTypeMission property, IEnumerable<MissionItemControl> controls)

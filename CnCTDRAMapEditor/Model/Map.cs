@@ -374,23 +374,15 @@ namespace MobiusEditor.Model
         }
 
         public readonly TeamMission[] TeamMissionTypes;
-
+        public readonly TeamMission TeamMissionDefault;
         public readonly CellMetrics Metrics;
-
         public readonly CellGrid<Template> Templates;
-
         public readonly CellGrid<Overlay> Overlay;
-
         public readonly CellGrid<Smudge> Smudge;
-
         public readonly OccupierSet<ICellOccupier> Technos;
-
         public readonly OccupierSet<ICellOccupier> Buildings;
-
         public readonly OverlapperSet<ICellOverlapper> Overlappers;
-
         public readonly Waypoint[] Waypoints;
-
         public event EventHandler<EventArgs> WaypointsUpdated;
 
         public void NotifyWaypointsUpdate()
@@ -488,6 +480,7 @@ namespace MobiusEditor.Model
         /// <param name="unitTypes">The list of all unit types.</param>
         /// <param name="buildingTypes">The list of all building types.</param>
         /// <param name="teamMissionTypes">The list of all mission types (orders) usable by teams.</param>
+        /// <param name="teamMissionDefault">The default mission type for teams.</param>
         /// <param name="teamTechnoTypes">The list of all techno types usable in teams.</param>
         /// <param name="waypoints">The list of waypoints.</param>
         /// <param name="dropZoneRadius">The radius that is revealed around a dropzone waypoint.</param>
@@ -507,7 +500,7 @@ namespace MobiusEditor.Model
             IEnumerable<string> missionTypes, IEnumerable<string> missionTypesBad, string armedMission, string unarmedMission, string harvestMission, string aircraftMission,
             IEnumerable<DirectionType> unitDirectionTypes, IEnumerable<DirectionType> buildingDirectionTypes,
             IEnumerable<InfantryType> infantryTypes, IEnumerable<UnitType> unitTypes, IEnumerable<BuildingType> buildingTypes,
-            IEnumerable<TeamMission> teamMissionTypes, IEnumerable<ITechnoType> teamTechnoTypes, IEnumerable<Waypoint> waypoints,
+            IEnumerable<TeamMission> teamMissionTypes, TeamMission teamMissionDefault, IEnumerable<ITechnoType> teamTechnoTypes, IEnumerable<Waypoint> waypoints,
             IEnumerable<string> movieTypes, string emptyMovie, IEnumerable<string> themeTypes, string emptyTheme,
             int dropZoneRadius, int gapRadius, int jamRadius, int tiberiumOrGoldValue, int gemValue)
         {
@@ -555,6 +548,7 @@ namespace MobiusEditor.Model
             AllUnitTypes = new List<UnitType>(unitTypes);
             AllBuildingTypes = new List<BuildingType>(buildingTypes);
             TeamMissionTypes = teamMissionTypes.ToArray();
+            TeamMissionDefault = teamMissionDefault;
             AllTeamTechnoTypes = new List<ITechnoType>(teamTechnoTypes);
             MovieEmpty = emptyMovie;
             MovieTypes = new List<string>(movieTypes);
@@ -1301,15 +1295,12 @@ namespace MobiusEditor.Model
 
         public HouseType GetBaseHouse(GameInfo gameInfo)
         {
+            List<HouseType> houses = new List<HouseType>(HouseTypes);
             if (HouseNone != null)
-            {
-                return HouseNone.Type;
-            }
-            string oppos = gameInfo.GetClassicOpposingPlayer(BasicSection.Player);
-            return HouseTypes.Where(h => h.Equals(BasicSection.BasePlayer)).FirstOrDefault()
-                ?? HouseTypes.Where(h => h.Equals(oppos)).FirstOrDefault()
-                ?? HouseTypes.First();
-
+                houses.Insert(0, HouseNone.Type);
+            string toSearch = gameInfo.AllowSelectBaseHouse ? BasicSection.BasePlayer : gameInfo.GetClassicOpposingPlayer(BasicSection.Player);
+            HouseType ht = houses.Where(h => h.Equals(toSearch)).FirstOrDefault();
+            return ht ?? HouseNone?.Type ?? houses.First();
         }
 
         private void RemoveBibs(Building building)
@@ -1465,7 +1456,7 @@ namespace MobiusEditor.Model
                 ActionTypes, CellActionTypes, UnitActionTypes, BuildingActionTypes, TerrainActionTypes,
                 MissionTypes, MissionTypesBad, inputMissionArmed, inputMissionUnarmed, inputMissionHarvest, inputMissionAircraft,
                 UnitDirectionTypes, BuildingDirectionTypes, AllInfantryTypes, AllUnitTypes, AllBuildingTypes,
-                TeamMissionTypes, AllTeamTechnoTypes, wpPreview, MovieTypes, MovieEmpty, ThemeTypes, ThemeEmpty,
+                TeamMissionTypes, TeamMissionDefault, AllTeamTechnoTypes, wpPreview, MovieTypes, MovieEmpty, ThemeTypes, ThemeEmpty,
                 DropZoneRadius, GapRadius, RadarJamRadius, TiberiumOrGoldValue, GemValue)
             {
                 UsedLandTypes = UsedLandTypes,

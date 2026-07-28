@@ -157,6 +157,10 @@ namespace MobiusEditor.Model
         public abstract int HitPointsYellowMinimum { get; }
         /// <summary>True if VTOL / helicopter types do not spawn in the air in this game type.</summary>
         public abstract bool LandedHelis { get; }
+        /// <summary>True if the house for unbuilt buildings is configurable in the Map settings.</summary>
+        public abstract bool AllowSelectBaseHouse { get; }
+        /// <summary>True if the house for unbuilt buildings is fully selectable.</summary>
+        public abstract bool AllowSelectBaseNodeHouse { get; }
         /// <summary>Returns the viewport size around the Home waypoint, for DOS resolution, in old pixels.</summary>
         public abstract Size ViewportSizeSmall { get; }
         /// <summary>Returns the extra sidebar part of the viewport size, for DOS resolution, in old pixels. This is always added to the left of the main viewport.</summary>

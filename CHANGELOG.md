@@ -768,3 +768,5 @@ Unreleased
 * The image export dialog's "Export in original palette" checkbox can now be enabled by default using the setting "DefaultExportClassicToPalette".
 * Starting the editor with -RESEARCH will set it to Research mode, where pretty much all warnings and load remarks are suppressed, and a bunch of special config options are switched on.
 * Fixed issue where the "modified" status caused by a dirty load (illegal items getting wiped on map load) would be undone by making an edit and then using the Undo function.
+* Renamed "Players" in the Map settings dialog to "Houses" since the editor refers to them as "Houses" everywhere else.
+* The default order for unarmed units is no longer "Stop"; it prevents civilians from wandering around.

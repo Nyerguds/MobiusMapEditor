@@ -628,11 +628,11 @@ namespace MobiusEditor.RedAlert
                 EventTypes.TEVENT_ANY,
                 EventTypes.TEVENT_NONE
             };
-            string[] structureEventTypes = unitEventTypes.Concat(new[]
+            string[] structureEventTypes = new[]
             {
                 EventTypes.TEVENT_PLAYER_ENTERED,
                 EventTypes.TEVENT_SPIED,
-            }).ToArray();
+            }.Concat(unitEventTypes).ToArray();
             string[] terrainEventTypes = { };
             string[] cellActionTypes = { ActionTypes.TACTION_DESTROY_OBJECT };
             string[] unitActionTypes = { ActionTypes.TACTION_DESTROY_OBJECT };
@@ -648,9 +648,9 @@ namespace MobiusEditor.RedAlert
                 TerrainTypes.GetTypes(), OverlayTypes.GetTypes(), SmudgeTypes.GetTypes(Globals.ConvertCraters),
                 EventTypes.GetTypes(), cellEventTypes, unitEventTypes, structureEventTypes, terrainEventTypes,
                 ActionTypes.GetTypes(), cellActionTypes, unitActionTypes, structureActionTypes, terrainActionTypes,
-                MissionTypes.GetTypes(), MissionTypes.GetUnassignableTypes(), MissionTypes.MISSION_GUARD, MissionTypes.MISSION_STOP, MissionTypes.MISSION_HARVEST,
+                MissionTypes.GetTypes(), MissionTypes.GetUnassignableTypes(), MissionTypes.MISSION_GUARD, MissionTypes.MISSION_GUARD, MissionTypes.MISSION_HARVEST,
                 MissionTypes.MISSION_UNLOAD, DirectionTypes.GetMainTypes(), DirectionTypes.GetAllTypes(), InfantryTypes.GetTypes(),
-                UnitTypes.GetTypes(Globals.DisableAirUnits), BuildingTypes.GetTypes(true), TeamMissionTypes.GetTypes(),
+                UnitTypes.GetTypes(Globals.DisableAirUnits), BuildingTypes.GetTypes(true), TeamMissionTypes.GetTypes(), TeamMissionTypes.DefaultMission,
                 fullTechnoTypes, waypoints, movieTypes, movieEmpty, themeEmpty.Yield().Concat(themeTypes), themeEmpty,
                 Constants.DefaultDropZoneRadius, Constants.DefaultGapRadius, Constants.DefaultJamRadius, Constants.DefaultResourceValue, Constants.DefaultGemValue);
             Map.BasicSection.PropertyChanged += BasicSection_PropertyChanged;
@@ -2625,7 +2625,8 @@ namespace MobiusEditor.RedAlert
                     {
                         HouseType defHouse = Map.HouseTypes.First();
                         errors.Add(String.Format(IniParseConstants.ParseHouseBaseUnknown,
-                            basePlayerStr, basePlayer.Name));
+                            basePlayerStr, defHouse.Name));
+                        basePlayer = defHouse;
                         modified = true;
                     }
                 }
@@ -2662,7 +2663,7 @@ namespace MobiusEditor.RedAlert
                 }
                 baseSection.Remove(key);
                 string[] tokens = value.Split(',');
-                if (tokens.Length != 2)
+                if (tokens.Length < 2)
                 {
                     errors.Add(String.Format(IniParseConstants.ParseTokensBadNr,
                         curType, key, value, tokens.Length, 2));

@@ -96,6 +96,8 @@ namespace MobiusEditor.TiberianDawn
         public override int HitPointsGreenMinimum => 127;
         public override int HitPointsYellowMinimum => 63;
         public override bool LandedHelis => Globals.LandedHelisTd;
+        public override bool AllowSelectBaseHouse => Globals.UpgradeTdBaseNodes;
+        public override bool AllowSelectBaseNodeHouse => Globals.UpgradeTdBaseNodes;
         public override Size ViewportSizeSmall => new Size(240, 192);
         public override Size ViewportSidebarSmall => new Size(80, 192);
         public override Point ViewportOffsetSmall => new Point(0, 0);

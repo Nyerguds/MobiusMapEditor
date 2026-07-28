@@ -29,7 +29,7 @@ namespace MobiusEditor.Utility
 
     /// <summary>
     /// Simple multithreading for heavy operations to not freeze the UI. This just needs a form with a public
-    /// property to get and set a "busy" state label, and the type that is produced by the heavy operation.
+    /// property to get/set a "busy" state label, and the type that is produced by the heavy operation.
     /// The order of operations is: controls are disabled and busy label is set, heavy operation is executed,
     /// controls are enabled and busy label is removed, an optional extra function runs to process the returned result.
     /// In case an error occurred, the UI is re-enabled as usual, a message box is shown with the stack trace, and the
@@ -42,7 +42,7 @@ namespace MobiusEditor.Utility
         public int ProcessingLabelWidth { get; set; } = 300;
         public int ProcessingLabelHeight { get; set; } = 100;
         private Thread processingThread;
-        private Form attachForm;
+        private readonly Form attachForm;
 
         public SimpleMultiThreading(Form attachForm)
         {
@@ -50,7 +50,7 @@ namespace MobiusEditor.Utility
         }
 
         public SimpleMultiThreading(Form attachForm, BorderStyle processingLabelBorder)
-            :this(attachForm)
+            : this(attachForm)
         {
             this.ProcessingLabelBorder = processingLabelBorder;
         }
@@ -76,57 +76,57 @@ namespace MobiusEditor.Utility
         /// <param name="function">The heavy processing function to run on a different thread.</param>
         /// <param name="resultFunction">Optional function to call after <paramref name="function"/> returns a non-null result.</param>
         /// <param name="resultFuncIsInvoked">true if <paramref name="resultFunction"/> is Invoked on the main form.</param>
-        /// <param name="enableFunction">Function to enable/disable UI controls. This should also include a call to <see cref="CreateBusyLabel"/> to create the busy status label. This function is Invoked on the main form.</param>
+        /// <param name="enableFunction">Function to enable/disable UI controls, with a message to show on the UI while disabled. This is given a reference to the current <see cref="SimpleMultiThreading"/> object so it can do a call to <see cref="CreateBusyLabel"/>. This function is Invoked on the main form.</param>
         /// <param name="operationType">Label to show while the operation is busy. This will be passed on as arg to <paramref name="enableFunction"/>.</param>
-        /// <typeparam name="U">Type returned by <paramref name="function"/>, and passed on to <paramref name="resultFunction"/>.</typeparam>
-        public void ExecuteThreaded<U>(Func<U> function, Action<U> resultFunction, bool resultFuncIsInvoked, Action<bool, string> enableFunction, string operationType)
+        /// <typeparam name="T">Type returned by <paramref name="function"/>, and passed on to <paramref name="resultFunction"/>.</typeparam>
+        public void ExecuteThreaded<T>(Func<T> function, Action<T> resultFunction, bool resultFuncIsInvoked, Action<bool, string, SimpleMultiThreading> enableFunction, string operationType)
         {
             if (this.processingThread != null && this.processingThread.IsAlive)
                 return;
             object[] arrParams = { function, resultFunction, resultFuncIsInvoked, enableFunction, operationType };
-            this.processingThread = new Thread(this.ExecuteThreadedActual<U>);
+            this.processingThread = new Thread(this.ExecuteThreadedActual<T>);
             this.processingThread.Start(arrParams);
         }
 
         /// <summary>
         /// Executes a threaded operation while locking the UI. "parameters" must be an array of Object containing 5 items:
-        /// a <see cref="Func{TResult}"/> to execute, returning <typeparamref name="U"/>,
-        /// an <see cref="Action"/> taking a parameter of type <typeparamref name="U"/> to execute after successful processing (optional, can be null),
-        /// a <see cref="bool"/> indicating whether the result-processing function is Invoked on the main form.
-        /// an <see cref="Action"/> to enable/disable form controls, taking a <see cref="bool"/> (enable or disable) and a <see cref="string"/> (message to show on disabled UI),
-        /// a <see cref="string"/> to indicate the process type being executed (e.g. "Loading").
+        ///     a <see cref="Func{TResult}"/> to execute, returning an object of type <typeparamref name="T"/>;
+        ///     an <see cref="Action"/> taking a parameter of type <typeparamref name="T"/> to execute after successful processing (optional, can be null);
+        ///     a <see cref="bool"/> indicating whether the result-processing function is Invoked on the main form;
+        ///     an <see cref="Action"/> to enable/disable form controls, taking a <see cref="bool"/> (enable or disable), a <see cref="string"/> (message to show on disabled UI), and the current <see cref="SimpleMultiThreading"/> object to allow calling <see cref="CreateBusyLabel"/>;
+        ///     a <see cref="string"/> to indicate the process type being executed (eg. "Saving").
         /// </summary>
         /// <param name="parameters">
         ///     Array of Object, containing 5 items:
-        ///     a <see cref="Func{TResult}"/> to execute, returning an object of type <typeparamref name="U"/>,
-        ///     an <see cref="Action"/> taking a parameter of type <typeparamref name="U"/> to execute after successful processing (optional, can be null),
-        ///     a <see cref="bool"/> indicating whether the result-processing function is Invoked on the main form.
-        ///     an <see cref="Action"/> to enable/disable form controls, taking a <see cref="bool"/> (enable or disable) and a <see cref="string"/> (message to show on disabled UI),
+        ///     a <see cref="Func{TResult}"/> to execute, returning an object of type <typeparamref name="T"/>;
+        ///     an <see cref="Action"/> taking a parameter of type <typeparamref name="T"/> to execute after successful processing (optional, can be null);
+        ///     a <see cref="bool"/> indicating whether the result-processing function is Invoked on the main form;
+        ///     an <see cref="Action"/> to enable/disable form controls, taking a <see cref="bool"/> (enable or disable), a <see cref="string"/> (message to show on disabled UI), and the current <see cref="SimpleMultiThreading"/> object to allow calling <see cref="CreateBusyLabel"/>;
         ///     a <see cref="string"/> to indicate the process type being executed (eg. "Saving").
         /// </param>
-        /// <typeparam name="U">Type returned by the processing function, and passed on to the result-processing function.</typeparam>
-        private void ExecuteThreadedActual<U>(object parameters)
+        /// <typeparam name="T">Type returned by the processing function, and passed on to the result-processing function.</typeparam>
+        private void ExecuteThreadedActual<T>(object parameters)
         {
             object[] arrParams = parameters as object[];
-            Func<U> func;
-            Action<U> resAct;
-            Action<bool, string> enableControls;
+            Func<T> func;
+            Action<T> resAct;
+            Action<bool, string, SimpleMultiThreading> enableControls;
             if (arrParams == null || arrParams.Length < 5
-                || ((func = arrParams[0] as Func<U>) == null)
-                || ((resAct = arrParams[1] as Action<U>) == null && arrParams[1] != null)
+                || ((func = arrParams[0] as Func<T>) == null)
+                || ((resAct = arrParams[1] as Action<T>) == null && arrParams[1] != null)
                 || !(arrParams[2] is bool))
             {
                 return;
             }
-            enableControls = arrParams[3] as Action<bool, string>;
+            enableControls = arrParams[3] as Action<bool, string, SimpleMultiThreading>;
             bool resActIsInvoked = (bool)arrParams[2];
             string operationType = (arrParams[4] as string ?? String.Empty).Trim();
             if (enableControls != null)
             {
-                try { this.attachForm.Invoke(new Action(() => enableControls(false, operationType))); }
+                try { this.attachForm.Invoke(new Action(() => enableControls(false, operationType, this))); }
                 catch (InvalidOperationException) { /* ignore */ }
             }
-            U result = default(U);
+            T result = default(T);
             try
             {
                 // Processing code.
@@ -142,7 +142,7 @@ namespace MobiusEditor.Utility
                 ShowMessageBoxThreadSafe(attachForm, message, null, MessageBoxButtons.OK, MessageBoxIcon.Warning);
                 if (enableControls != null)
                 {
-                    try { this.attachForm.Invoke(new Action(() => enableControls(true, null))); }
+                    try { this.attachForm.Invoke(new Action(() => enableControls(true, null, this))); }
                     catch (InvalidOperationException) { /* ignore */ }
                 }
                 return;
@@ -151,7 +151,7 @@ namespace MobiusEditor.Utility
             {
                 if (enableControls != null)
                 {
-                    try { this.attachForm.Invoke(new Action(() => enableControls(true, null))); }
+                    try { this.attachForm.Invoke(new Action(() => enableControls(true, null, this))); }
                     catch (InvalidOperationException) { /* ignore */ }
                 }
                 if (resAct != null)
@@ -199,7 +199,7 @@ namespace MobiusEditor.Utility
         /// This should be called from the "enableFunction" when calling <see cref="ExecuteThreaded"/>.
         /// </summary>
         /// <param name="processingLabel">Processing label. Set to null to remove the label.</param>
-        public void CreateBusyLabel<U>(U form, string processingLabel) where U: Form, IHasStatusLabel
+        public void CreateBusyLabel<T>(T form, string processingLabel) where T : Form, IHasStatusLabel
         {
             // Remove old busy status label if it exists.
             RemoveBusyLabel(form);
@@ -225,7 +225,7 @@ namespace MobiusEditor.Utility
             busyStatusLabel.BringToFront();
         }
 
-        public static void RemoveBusyLabel<U>(U form) where U : Form, IHasStatusLabel
+        public static void RemoveBusyLabel<T>(T form) where T : Form, IHasStatusLabel
         {
             Label busyStatusLabel = form.StatusLabel;
             if (busyStatusLabel == null)

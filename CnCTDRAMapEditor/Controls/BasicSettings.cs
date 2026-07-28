@@ -33,7 +33,10 @@ namespace MobiusEditor.Controls
             playerComboBox.DataSource = plugin.Map.Houses.Select(t => ListItem.Create(t.Type.Name)).ToArray();
             baseComboBox.ValueMember = "Value";
             baseComboBox.DisplayMember = "Label";
-            baseComboBox.DataSource = plugin.Map.Houses.Select(h => ListItem.Create(h.Type.Name)).ToArray();
+            List<House> houses = new List<House>(plugin.Map.Houses);
+            if (plugin.Map.HouseNone != null)
+                houses.Insert(0, plugin.Map.HouseNone);
+            baseComboBox.DataSource = houses.Select(h => ListItem.Create(h.Type.Name)).ToArray();
             List<string> themeData = plugin.Map.ThemeTypes.ToList();
             string noTheme = plugin.Map.ThemeEmpty;
             themeData.Sort(new ExplorerComparer());
@@ -81,13 +84,17 @@ namespace MobiusEditor.Controls
             playerComboBox.DataBindings.Add("SelectedValue", basicSection, "Player", false, DataSourceUpdateMode.OnPropertyChanged);
             authorTxt.DataBindings.Add("Text", basicSection, "Author", false, DataSourceUpdateMode.OnPropertyChanged);
             themeComboBox.DataBindings.Add("SelectedValue", basicSection, "Theme", false, DataSourceUpdateMode.OnPropertyChanged);
+            baseLabel.Visible = baseComboBox.Visible = plugin.GameInfo.AllowSelectBaseHouse;
+            if (plugin.GameInfo.AllowSelectBaseHouse)
+            {
+                baseComboBox.DataBindings.Add("SelectedValue", basicSection, "BasePlayer", false, DataSourceUpdateMode.OnPropertyChanged);
+            }
             switch (plugin.GameInfo.GameType)
             {
                 case GameType.TiberianDawn:
                     isSinglePlayerCheckBox.DataBindings.Add("Checked", basicSection, "SoloMission", false, DataSourceUpdateMode.OnPropertyChanged);
                     buildLevelNud.DataBindings.Add("Value", basicSection, "BuildLevel", false, DataSourceUpdateMode.OnPropertyChanged);
-                    baseLabel.Visible = baseComboBox.Visible = false;
-                    hasExpansionUnitsCheckBox.Visible = false;
+                    hasExpansionUnitsCheckBox.Visible = plugin.Map.ExpansionUnitsAvailable;
                     introComboBox.DropDownStyle = ComboBoxStyle.DropDown;
                     briefComboBox.DropDownStyle = ComboBoxStyle.DropDown;
                     actionComboBox.DropDownStyle = ComboBoxStyle.DropDown;
@@ -109,7 +116,6 @@ namespace MobiusEditor.Controls
                 case GameType.RedAlert:
                     isSinglePlayerCheckBox.DataBindings.Add("Checked", basicSection, "SoloMission", false, DataSourceUpdateMode.OnPropertyChanged);
                     buildLevelNud.Visible = buildLevelLabel.Visible = false;
-                    baseComboBox.DataBindings.Add("SelectedValue", basicSection, "BasePlayer", false, DataSourceUpdateMode.OnPropertyChanged);
                     hasExpansionUnitsCheckBox.DataBindings.Add("Checked", basicSection, "ExpansionEnabled", false, DataSourceUpdateMode.OnPropertyChanged);
                     introComboBox.DataBindings.Add("SelectedValue", basicSection, "Intro", false, DataSourceUpdateMode.OnPropertyChanged);
                     briefComboBox.DataBindings.Add("SelectedValue", basicSection, "Brief", false, DataSourceUpdateMode.OnPropertyChanged);

@@ -59,7 +59,6 @@ namespace MobiusEditor.Dialogs
         private TeamItemInfo teamItemInfo;
         private MissionItemInfo missionItemInfo;
 
-        private readonly IEnumerable<TeamMission> teamMissionTypes;
         private readonly ListItem<int>[] wayPoints;
         private readonly ITechnoType defaultTeam;
         private readonly TeamMission defaultMission;
@@ -195,10 +194,7 @@ namespace MobiusEditor.Dialogs
             cmbTrigger.DisplayMember = "Label";
             cmbTrigger.DataSource = items.Select(tr => ListItem.Create(tr)).ToArray();
             defaultTeam = technoTypes.FirstOrDefault();
-            // Fix for case sensitivity issue in teamtype missions
-            TeamMission[] missions = plugin.Map.TeamMissionTypes;
-            teamMissionTypes = missions.ToArray();
-            defaultMission = missions.FirstOrDefault();
+            defaultMission = plugin.Map.TeamMissionDefault;
 
             // Initialize Classes and Missions lists to full length. Since the control
             // now recycles old items, and hides excess ones without removing them, this
@@ -209,9 +205,9 @@ namespace MobiusEditor.Dialogs
                 Enumerable.Range(0, maxClasses).Select(i => dummyClass.Clone()), technoTypes);
             tilTeams.Populate(dummyClasses, this);
             tilTeams.Reset(false);
-            TeamTypeMission dummyMission = new TeamTypeMission() { Mission = defaultMission, Argument = -1 };
+            TeamTypeMission dummyMission = new TeamTypeMission() { Mission = defaultMission, Argument = 0 };
             MissionItemInfo dummyMissions = new MissionItemInfo(null,
-                Enumerable.Range(0, maxMissions).Select(i => dummyMission.Clone()), teamMissionTypes, wayPoints, plugin.Map.Metrics.Length, toolTip1);
+                Enumerable.Range(0, maxMissions).Select(i => dummyMission.Clone()), plugin, toolTip1);
             milMissions.Populate(dummyMissions, this);
             milMissions.Reset(false);
 
@@ -367,7 +363,7 @@ namespace MobiusEditor.Dialogs
                 teamItemInfo = new TeamItemInfo(null, selected.Classes, technoTypes);
                 tilTeams.Populate(teamItemInfo, this);
                 tilTeams.TabStop = selected.Classes.Count > 0;
-                missionItemInfo = new MissionItemInfo(null, selected.Missions, teamMissionTypes, wayPoints, plugin.Map.Metrics.Length, toolTip1);
+                missionItemInfo = new MissionItemInfo(null, selected.Missions, plugin, toolTip1);
                 milMissions.Populate(missionItemInfo, this);
                 milMissions.TabStop = selected.Missions.Count > 0;
                 btnAddTeam.Enabled = selected.Classes.Count < maxClasses;
@@ -737,7 +733,7 @@ namespace MobiusEditor.Dialogs
                     break;
                 case 'A': // Add at current item's location
                     // Still the same object reference, so this should be found.
-                    TeamTypeMission newTeam = new TeamTypeMission() { Mission = defaultMission, Argument = -1 };
+                    TeamTypeMission newTeam = new TeamTypeMission() { Mission = defaultMission, Argument = 0 };
                     missionsList.Insert(index, newTeam);
                     scrollIndex = Math.Max(0, index);
                     break;
@@ -769,7 +765,7 @@ namespace MobiusEditor.Dialogs
                     return 0;
             }
             // Reset list controller with new list
-            missionItemInfo = new MissionItemInfo(null, missionsList, teamMissionTypes, wayPoints, plugin.Map.Metrics.Length, toolTip1);
+            missionItemInfo = new MissionItemInfo(null, missionsList, plugin, toolTip1);
             milMissions.Populate(missionItemInfo, this);
             btnAddMission.Enabled = missionsList.Count < maxMissions;
             bool hasMissions = missionsList.Count > 0;
@@ -809,9 +805,9 @@ namespace MobiusEditor.Dialogs
             {
                 if (SelectedTeamType.Missions.Count <= maxMissions)
                 {
-                    TeamTypeMission newItem = new TeamTypeMission() { Mission = defaultMission, Argument = -1 };
+                    TeamTypeMission newItem = new TeamTypeMission() { Mission = defaultMission, Argument = 0 };
                     SelectedTeamType.Missions.Add(newItem);
-                    missionItemInfo = new MissionItemInfo(null, SelectedTeamType.Missions, teamMissionTypes, wayPoints, plugin.Map.Metrics.Length, toolTip1);
+                    missionItemInfo = new MissionItemInfo(null, SelectedTeamType.Missions, plugin, toolTip1);
                     milMissions.Populate(missionItemInfo, this);
                     MissionItemControl newCtrl = missionItemInfo.GetControlByProperty(newItem, milMissions.Contents);
                     pnlMissionsScroll.ScrollControlIntoView(newCtrl);
